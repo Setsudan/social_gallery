@@ -1,0 +1,56 @@
+import 'package:drift/drift.dart';
+import 'package:social_gallery/data/local/app_database.dart';
+import 'package:social_gallery/domain/models/folder_info.dart';
+import 'package:social_gallery/domain/models/follow_status.dart';
+import 'package:social_gallery/domain/models/media_item.dart' as domain;
+
+domain.MediaItem mediaItemFromRow(MediaRow row) {
+  return domain.MediaItem(
+    id: row.id,
+    uri: row.uri,
+    displayName: row.displayName,
+    folderName: row.folderName,
+    folderPath: row.folderPath,
+    dateAdded: row.dateAdded,
+    dateModified: row.dateModified,
+    dateTaken: row.dateTaken,
+    size: row.size,
+    mimeType: row.mimeType,
+    width: row.width,
+    height: row.height,
+    isFavorite: row.isFavorite,
+    videoDuration: row.videoDuration,
+  );
+}
+
+domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
+  return domain.MediaItem(
+    id: row.read<int>('id'),
+    uri: row.read<String>('uri'),
+    displayName: row.read<String>('display_name'),
+    folderName: row.read<String>('folder_name'),
+    folderPath: row.read<String>('folder_path'),
+    dateAdded: row.read<int>('date_added'),
+    dateModified: row.read<int>('date_modified'),
+    dateTaken: row.readNullable<int>('date_taken'),
+    size: row.read<int>('size'),
+    mimeType: row.read<String>('mime_type'),
+    width: row.readNullable<int>('width'),
+    height: row.readNullable<int>('height'),
+    isFavorite: row.read<bool>('is_favorite'),
+    videoDuration: row.readNullable<int>('video_duration'),
+  );
+}
+
+FolderInfo folderFromRow(Folder row) {
+  return FolderInfo(
+    path: row.path,
+    name: row.name,
+    mediaCount: row.mediaCount,
+    coverImageUri: row.coverImageUri,
+    followStatus: FollowStatus.fromStorage(row.followStatus),
+    showInStories: row.showInStories,
+    isBiometricLocked: row.isBiometricLocked,
+    biography: row.biography,
+  );
+}
