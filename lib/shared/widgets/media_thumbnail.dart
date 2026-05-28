@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
+import 'package:social_gallery/core/media/asset_media_loader.dart';
 
 class MediaThumbnail extends StatelessWidget {
   const MediaThumbnail({
@@ -9,12 +9,14 @@ class MediaThumbnail extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.showVideoBadge = false,
     this.locked = false,
+    this.heroTag,
   });
 
   final String assetId;
   final BoxFit fit;
   final bool showVideoBadge;
   final bool locked;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -36,18 +38,17 @@ class MediaThumbnail extends StatelessWidget {
           );
         }
 
+        final isVideo = showVideoBadge || AssetMediaLoader.isVideo(entity);
+        final thumbnail = AssetMediaLoader.buildThumbnail(
+          entity: entity,
+          fit: fit,
+        );
+
         return Stack(
           fit: StackFit.expand,
           children: [
-            Image(
-              image: AssetEntityImageProvider(
-                entity,
-                isOriginal: false,
-                thumbnailSize: const ThumbnailSize.square(300),
-              ),
-              fit: fit,
-            ),
-            if (showVideoBadge)
+            heroTag != null ? Hero(tag: heroTag!, child: thumbnail) : thumbnail,
+            if (isVideo)
               const Positioned(
                 right: 4,
                 bottom: 4,

@@ -7,17 +7,32 @@ import 'package:path_provider/path_provider.dart';
 
 import 'tables/folders_table.dart';
 import 'tables/media_items_table.dart';
+import 'tables/travel_modes_table.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Folders, MediaItems])
+@DriftDatabase(tables: [Folders, MediaItems, TravelModes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(mediaItems, mediaItems.isTrashed);
+        await m.addColumn(mediaItems, mediaItems.trashedAt);
+        await m.addColumn(mediaItems, mediaItems.originalPath);
+      }
+      if (from < 3) {
+        await m.createTable(travelModes);
+      }
+    },
+  );
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
@@ -35,17 +50,21 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Stream<List<Folder>> watchAllFoldersOrdered() {
-    return (select(folders)..orderBy([(f) => OrderingTerm.asc(f.name)])).watch();
+    return (select(
+      folders,
+    )..orderBy([(f) => OrderingTerm.asc(f.name)])).watch();
   }
 
   Future<Folder?> getFolder(String path) {
-    return (select(folders)..where((f) => f.path.equals(path)))
-        .getSingleOrNull();
+    return (select(
+      folders,
+    )..where((f) => f.path.equals(path))).getSingleOrNull();
   }
 
   Stream<Folder?> watchFolder(String path) {
-    return (select(folders)..where((f) => f.path.equals(path)))
-        .watchSingleOrNull();
+    return (select(
+      folders,
+    )..where((f) => f.path.equals(path))).watchSingleOrNull();
   }
 
   Future<void> updateFolderFollowStatus(
@@ -60,8 +79,7 @@ class AppDatabase extends _$AppDatabase {
         isBiometricLocked: isBiometricLocked != null
             ? Value(isBiometricLocked)
             : const Value.absent(),
-        biography:
-            biography != null ? Value(biography) : const Value.absent(),
+        biography: biography != null ? Value(biography) : const Value.absent(),
       ),
     );
   }
@@ -74,8 +92,9 @@ class AppDatabase extends _$AppDatabase {
     await (update(folders)..where((f) => f.path.isIn(paths))).write(
       FoldersCompanion(
         followStatus: Value(status),
-        isBiometricLocked:
-            clearBiometric ? const Value(false) : const Value.absent(),
+        isBiometricLocked: clearBiometric
+            ? const Value(false)
+            : const Value.absent(),
       ),
     );
   }
@@ -90,6 +109,7 @@ class AppDatabase extends _$AppDatabase {
       INNER JOIN folders f ON m.folder_path = f.path
       WHERE f.follow_status = 'HOME_FEED'
         AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
       ORDER BY m.date_modified DESC
       LIMIT ? OFFSET ?
       ''',
@@ -109,6 +129,7 @@ class AppDatabase extends _$AppDatabase {
       INNER JOIN folders f ON m.folder_path = f.path
       WHERE f.follow_status = 'HOME_FEED'
         AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
       ORDER BY m.date_modified DESC
       LIMIT ? OFFSET ?
       ''',
@@ -120,7 +141,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<MediaRow>> searchExploreMedia(
     String query, {
-    int limit = 200,
+    required int limit,
+    required int offset,
   }) async {
     final pattern = '%${query.toLowerCase()}%';
     final rows = await customSelect(
@@ -129,17 +151,19 @@ class AppDatabase extends _$AppDatabase {
       INNER JOIN folders f ON m.folder_path = f.path
       WHERE f.follow_status = 'HOME_FEED'
         AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
         AND (
           LOWER(m.display_name) LIKE ?
           OR LOWER(m.folder_name) LIKE ?
         )
       ORDER BY m.date_modified DESC
-      LIMIT ?
+      LIMIT ? OFFSET ?
       ''',
       variables: [
         Variable.withString(pattern),
         Variable.withString(pattern),
         Variable.withInt(limit),
+        Variable.withInt(offset),
       ],
       readsFrom: {mediaItems, folders},
     ).get();
@@ -153,6 +177,7 @@ class AppDatabase extends _$AppDatabase {
       WHERE m.is_favorite = 1
         AND f.follow_status = 'HOME_FEED'
         AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
       ORDER BY m.date_modified DESC
       ''';
     return customSelect(
@@ -163,7 +188,9 @@ class AppDatabase extends _$AppDatabase {
 
   Stream<List<MediaRow>> watchMediaInFolder(String folderPath) {
     return (select(mediaItems)
-          ..where((m) => m.folderPath.equals(folderPath))
+          ..where(
+            (m) => m.folderPath.equals(folderPath) & m.isTrashed.equals(false),
+          )
           ..orderBy([(m) => OrderingTerm.desc(m.dateModified)]))
         .watch();
   }
@@ -185,12 +212,14 @@ class AppDatabase extends _$AppDatabase {
       INNER JOIN folders f ON m.folder_path = f.path
       WHERE f.follow_status = 'HOME_FEED'
         AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
         AND (m.size, COALESCE(m.width, -1), COALESCE(m.height, -1)) IN (
         SELECT size, COALESCE(width, -1), COALESCE(height, -1)
         FROM media_items m2
         INNER JOIN folders f2 ON m2.folder_path = f2.path
         WHERE f2.follow_status = 'HOME_FEED'
         AND f2.is_biometric_locked = 0
+        AND m2.is_trashed = 0
         GROUP BY size, COALESCE(width, -1), COALESCE(height, -1)
         HAVING COUNT(*) > 1
       )
@@ -226,6 +255,7 @@ class AppDatabase extends _$AppDatabase {
       UPDATE folders SET media_count = (
         SELECT COUNT(*) FROM media_items
         WHERE media_items.folder_path = folders.path
+          AND media_items.is_trashed = 0
       )
     ''');
   }
@@ -243,10 +273,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<MediaRow>> getMediaAddedAfter(int timestampMs) async {
-    final rows = await (select(mediaItems)
-          ..where((m) => m.dateAdded.isBiggerOrEqualValue(timestampMs))
-          ..orderBy([(m) => OrderingTerm.desc(m.dateAdded)]))
-        .get();
+    final rows =
+        await (select(mediaItems)
+              ..where(
+                (m) =>
+                    m.dateAdded.isBiggerOrEqualValue(timestampMs) &
+                    m.isTrashed.equals(false),
+              )
+              ..orderBy([(m) => OrderingTerm.desc(m.dateAdded)]))
+            .get();
     return rows;
   }
 
@@ -256,8 +291,7 @@ class AppDatabase extends _$AppDatabase {
           ..where(
             (f) =>
                 f.name.lower().like(pattern) &
-                f.followStatus.equals('HOME_FEED') &
-                f.isBiometricLocked.equals(false),
+                f.followStatus.equals('UNFOLLOWED').not(),
           )
           ..orderBy([(f) => OrderingTerm.asc(f.name)])
           ..limit(8))
@@ -286,6 +320,115 @@ class AppDatabase extends _$AppDatabase {
       lastViewedAt: row.readNullable<int>('last_viewed_at'),
       backupState: row.read<int>('backup_state'),
       lastSyncTime: row.readNullable<int>('last_sync_time'),
+      isTrashed: row.read<bool>('is_trashed'),
+      trashedAt: row.readNullable<int>('trashed_at'),
+      originalPath: row.readNullable<String>('original_path'),
     );
+  }
+
+  // --- NEW WORK: Move, Trash, Restore operations ---
+
+  Future<void> moveMediaItems(
+    List<int> ids,
+    String targetFolderPath,
+    String targetFolderName,
+  ) async {
+    await (update(mediaItems)..where((m) => m.id.isIn(ids))).write(
+      MediaItemsCompanion(
+        folderPath: Value(targetFolderPath),
+        folderName: Value(targetFolderName),
+      ),
+    );
+    await updateFolderCounts();
+  }
+
+  Stream<List<MediaRow>> watchTrashedMedia() {
+    return (select(mediaItems)
+          ..where((m) => m.isTrashed.equals(true))
+          ..orderBy([(m) => OrderingTerm.desc(m.trashedAt)]))
+        .watch();
+  }
+
+  Future<void> trashMediaItems(
+    List<int> ids,
+    int trashedAtTime,
+    Map<int, String> origPaths,
+  ) async {
+    await transaction(() async {
+      for (final id in ids) {
+        final path = origPaths[id];
+        await (update(mediaItems)..where((m) => m.id.equals(id))).write(
+          MediaItemsCompanion(
+            isTrashed: const Value(true),
+            trashedAt: Value(trashedAtTime),
+            originalPath: path != null ? Value(path) : const Value.absent(),
+          ),
+        );
+      }
+    });
+    await updateFolderCounts();
+  }
+
+  Future<void> restoreMediaItems(List<int> ids) async {
+    await (update(mediaItems)..where((m) => m.id.isIn(ids))).write(
+      const MediaItemsCompanion(
+        isTrashed: Value(false),
+        trashedAt: Value.absent(),
+        originalPath: Value.absent(),
+      ),
+    );
+    await updateFolderCounts();
+  }
+
+  Future<List<MediaRow>> getExpiredTrashedMedia(int beforeTimestamp) {
+    return (select(mediaItems)..where(
+          (m) =>
+              m.isTrashed.equals(true) &
+              m.trashedAt.isSmallerThanValue(beforeTimestamp),
+        ))
+        .get();
+  }
+
+  Future<void> updateFolderStories(String path, bool showInStories) async {
+    await (update(folders)..where((f) => f.path.equals(path))).write(
+      FoldersCompanion(showInStories: Value(showInStories)),
+    );
+  }
+
+  Stream<List<TravelMode>> watchAllTravelModes() {
+    return (select(
+      travelModes,
+    )..orderBy([(t) => OrderingTerm.desc(t.startDate)])).watch();
+  }
+
+  Stream<TravelMode?> watchActiveTravelMode() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return (select(travelModes)
+          ..where(
+            (t) =>
+                t.startDate.isSmallerOrEqualValue(now) &
+                t.endDate.isBiggerOrEqualValue(now),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.startDate)])
+          ..limit(1))
+        .watchSingleOrNull();
+  }
+
+  Future<TravelMode?> getTravelModeById(String id) {
+    return (select(
+      travelModes,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  Future<void> insertTravelMode(TravelModesCompanion row) {
+    return into(travelModes).insert(row, mode: InsertMode.replace);
+  }
+
+  Future<void> updateTravelMode(TravelModesCompanion row) {
+    return update(travelModes).replace(row);
+  }
+
+  Future<void> deleteTravelMode(String id) {
+    return (delete(travelModes)..where((t) => t.id.equals(id))).go();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/theme/one_ui_theme.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -17,15 +18,15 @@ class EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(OneUiSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: theme.colorScheme.outline),
-            const SizedBox(height: 16),
+            Icon(icon, size: 64, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(height: OneUiSpacing.md),
             Text(
               title,
-              style: theme.textTheme.titleMedium,
+              style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
             if (message != null) ...[

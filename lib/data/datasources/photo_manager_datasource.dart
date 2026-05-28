@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:drift/drift.dart';
+import 'package:path/path.dart' as p;
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/media/asset_media_kind.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 
 class PhotoManagerDatasource {
@@ -25,6 +29,8 @@ class PhotoManagerDatasource {
 
       for (final asset in assets) {
         final file = await asset.file;
+        final kind = AssetMediaLoader.classify(asset);
+        final mimeType = await AssetMediaLoader.inferMimeType(asset);
         companions.add(
           MediaItemsCompanion.insert(
             id: Value(_stableId(asset)),
@@ -34,15 +40,13 @@ class PhotoManagerDatasource {
             folderPath: folderPath,
             dateAdded: asset.createDateTime.millisecondsSinceEpoch,
             dateModified: asset.modifiedDateTime.millisecondsSinceEpoch,
-            dateTaken: Value(
-              asset.createDateTime.millisecondsSinceEpoch,
-            ),
+            dateTaken: Value(asset.createDateTime.millisecondsSinceEpoch),
             size: await _assetSize(asset, file?.lengthSync()),
-            mimeType: _mimeType(asset),
+            mimeType: mimeType,
             width: Value(asset.width),
             height: Value(asset.height),
             videoDuration: Value(
-              asset.type == AssetType.video ? asset.duration : null,
+              kind == AssetMediaKind.video ? asset.duration : null,
             ),
           ),
         );
@@ -68,8 +72,8 @@ class PhotoManagerDatasource {
           : null;
       final coverPath = cover != null ? (await cover.file)?.path : null;
       final existing = existingFollowStatus[path];
-      final followStatus = existing ??
-          (initialSetupComplete ? 'UNFOLLOWED' : 'HOME_FEED');
+      final followStatus =
+          existing ?? (initialSetupComplete ? 'UNFOLLOWED' : 'HOME_FEED');
 
       rows.add(
         FoldersCompanion.insert(
@@ -113,15 +117,110 @@ class PhotoManagerDatasource {
     return file?.lengthSync() ?? 0;
   }
 
-  String _mimeType(AssetEntity asset) {
-    switch (asset.type) {
-      case AssetType.video:
-        return 'video/mp4';
-      case AssetType.image:
-        return 'image/jpeg';
-      default:
-        return 'application/octet-stream';
+  // --- NEW WORK: Disk File Operations ---
+
+  Future<String?> createAlbumFolder(String folderName) async {
+    if (!Platform.isAndroid) return null;
+    try {
+      final pictures = Directory('/storage/emulated/0/Pictures');
+      if (!await pictures.exists()) return null;
+      final newFolder = Directory(p.join(pictures.path, folderName));
+      if (!await newFolder.exists()) {
+        await newFolder.create(recursive: true);
+      }
+      await PhotoManager.clearFileCache();
+      return newFolder.path;
+    } catch (_) {
+      return null;
     }
+  }
+
+  Future<bool> moveAssetOnDisk(String assetId, String targetFolderPath) async {
+    final entity = await AssetEntity.fromId(assetId);
+    if (entity == null) return false;
+
+    try {
+      final albums = await listAlbums();
+      final targetAlbum = albums
+          .where((a) => a.id == targetFolderPath)
+          .firstOrNull;
+      if (targetAlbum != null) {
+        if (Platform.isAndroid) {
+          await PhotoManager.editor.android.moveAssetToAnother(
+            entity: entity,
+            target: targetAlbum,
+          );
+          return true;
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final file = await entity.file;
+      if (file != null && await file.exists()) {
+        final targetDir = Directory(targetFolderPath);
+        if (!await targetDir.exists()) {
+          await targetDir.create(recursive: true);
+        }
+        final destPath = p.join(targetFolderPath, p.basename(file.path));
+        await file.rename(destPath);
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  Future<String?> trashAssetOnDisk(String assetId) async {
+    final entity = await AssetEntity.fromId(assetId);
+    if (entity == null) return null;
+    try {
+      final file = await entity.file;
+      if (file != null && await file.exists()) {
+        final originalPath = file.path;
+        final dir = p.dirname(originalPath);
+        final name = p.basename(originalPath);
+        final newPath = p.join(dir, '.trashed_$name');
+
+        await file.rename(newPath);
+
+        try {
+          await PhotoManager.editor.deleteWithIds([assetId]);
+        } catch (_) {}
+
+        return originalPath;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<bool> restoreAssetOnDisk(String originalPath) async {
+    try {
+      final dir = p.dirname(originalPath);
+      final name = p.basename(originalPath);
+      final trashedPath = p.join(dir, '.trashed_$name');
+
+      final trashedFile = File(trashedPath);
+      if (await trashedFile.exists()) {
+        await trashedFile.rename(originalPath);
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  Future<bool> deleteTrashedFile(String originalPath) async {
+    try {
+      final dir = p.dirname(originalPath);
+      final name = p.basename(originalPath);
+      final trashedPath = p.join(dir, '.trashed_$name');
+
+      final trashedFile = File(trashedPath);
+      if (await trashedFile.exists()) {
+        await trashedFile.delete();
+        return true;
+      }
+    } catch (_) {}
+    return false;
   }
 }
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:video_player/video_player.dart';
 
 class AssetVideoPlayer extends StatefulWidget {
@@ -9,10 +10,12 @@ class AssetVideoPlayer extends StatefulWidget {
     super.key,
     required this.entity,
     this.autoPlay = true,
+    this.fit = BoxFit.contain,
   });
 
   final AssetEntity entity;
   final bool autoPlay;
+  final BoxFit fit;
 
   @override
   State<AssetVideoPlayer> createState() => _AssetVideoPlayerState();
@@ -33,7 +36,7 @@ class _AssetVideoPlayerState extends State<AssetVideoPlayer> {
 
   Future<void> _initialize() async {
     try {
-      final file = await widget.entity.file;
+      final file = await AssetMediaLoader.resolveDisplayFile(widget.entity);
       if (file == null || !file.existsSync()) {
         _setError('Could not open video file.');
         return;
@@ -135,16 +138,22 @@ class _AssetVideoPlayerState extends State<AssetVideoPlayer> {
             : position.inMilliseconds.clamp(0, maxMs);
         final displayPosition = Duration(milliseconds: currentMs);
 
+        final videoSize = value.size;
+        final videoChild = SizedBox(
+          width: videoSize.width,
+          height: videoSize.height,
+          child: VideoPlayer(controller),
+        );
+
         return ColoredBox(
           color: Colors.black,
           child: Stack(
-            alignment: Alignment.center,
+            fit: StackFit.expand,
             children: [
-              Center(
-                child: AspectRatio(
-                  aspectRatio: value.aspectRatio,
-                  child: VideoPlayer(controller),
-                ),
+              FittedBox(
+                fit: widget.fit,
+                clipBehavior: Clip.hardEdge,
+                child: videoChild,
               ),
               Positioned.fill(
                 child: GestureDetector(

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:social_gallery/app/providers.dart';
-import 'package:social_gallery/shared/widgets/asset_video_player.dart';
+import 'package:social_gallery/shared/widgets/fullscreen_media_content.dart';
 
 class MediaViewerScreen extends ConsumerStatefulWidget {
   const MediaViewerScreen({
@@ -40,9 +39,11 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.black54,
         foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
           IconButton(
             icon: Icon(
@@ -72,20 +73,10 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
             );
           }
 
-          if (entity.type == AssetType.video) {
-            return AssetVideoPlayer(entity: entity);
-          }
-
-          return Center(
-            child: InteractiveViewer(
-              child: Image(
-                image: AssetEntityImageProvider(
-                  entity,
-                  isOriginal: true,
-                ),
-                fit: BoxFit.contain,
-              ),
-            ),
+          return FullscreenMediaContent(
+            entity: entity,
+            videoFit: BoxFit.contain,
+            imageFit: BoxFit.contain,
           );
         },
       ),

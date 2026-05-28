@@ -5,6 +5,7 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class DuplicatesScreen extends ConsumerStatefulWidget {
   const DuplicatesScreen({super.key});
@@ -26,8 +27,9 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final candidates =
-        await ref.read(mediaRepositoryProvider).getPotentialDuplicates();
+    final candidates = await ref
+        .read(mediaRepositoryProvider)
+        .getPotentialDuplicates();
     final groups = ref.read(findDuplicateGroupsProvider)(candidates);
     setState(() {
       _groups = groups;
@@ -39,7 +41,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selected == null ? 'Duplicates' : 'Duplicate group'),
+        title: _selected == null ? null : const Text('Duplicate group'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -54,21 +56,33 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _selected == null
-              ? _buildGroupList()
-              : _buildGroupDetail(),
+          ? _buildGroupList()
+          : _buildGroupDetail(),
     );
   }
 
   Widget _buildGroupList() {
     if (_groups.isEmpty) {
-      return const Center(child: Text('No duplicate groups found.'));
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OneUiPageHeader(title: 'Duplicates'),
+          Expanded(child: Center(child: Text('No duplicate groups found.'))),
+        ],
+      );
     }
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _groups.length,
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: _groups.length + 1,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final group = _groups[index];
+        if (index == 0) {
+          return const OneUiPageHeader(
+            title: 'Duplicates',
+            subtitle: 'Groups of similar photos by size and dimensions.',
+          );
+        }
+        final group = _groups[index - 1];
         final cover = group.items.first;
         return Card(
           clipBehavior: Clip.antiAlias,
@@ -100,8 +114,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
         Padding(
           padding: const EdgeInsets.all(16),
           child: FilledButton.icon(
-            onPressed: () =>
-                context.push(duplicateReviewLocation(group.key)),
+            onPressed: () => context.push(duplicateReviewLocation(group.key)),
             icon: const Icon(Icons.auto_fix_high),
             label: const Text('Keep best and review'),
           ),

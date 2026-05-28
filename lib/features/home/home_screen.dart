@@ -3,12 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/feed_post_card.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
+import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
+import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 import 'package:social_gallery/shared/widgets/stories_row.dart';
 
 final homeStoriesProvider = FutureProvider<List<FolderWithStories>>((ref) {
@@ -103,11 +108,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(syncStateProvider, (previous, current) {
+      if (previous == true && current == false) {
+        _loadPage(refresh: true);
+      }
+    });
+
     final storiesAsync = ref.watch(homeStoriesProvider);
+    final motion = AppMotion.of(context, ref);
+    listenForTabScrollToTop(
+      ref,
+      kShellTabHome,
+      _scrollController,
+      motion: motion,
+    );
 
     return Scaffold(
       extendBody: true,
-      appBar: AppBar(title: const Text('Home')),
       body: RefreshIndicator(
         onRefresh: () => _loadPage(refresh: true),
         child: _buildBody(storiesAsync),
@@ -123,8 +140,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         controller: _scrollController,
         padding: listPadding,
         children: [
+          const OneUiPageHeader(title: 'Home'),
           SizedBox(
-            height: MediaQuery.sizeOf(context).height * 0.5,
+            height: MediaQuery.sizeOf(context).height * 0.4,
             child: EmptyState(
               title: 'Could not load feed',
               message: _error,
@@ -149,9 +167,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         controller: _scrollController,
         padding: listPadding,
         children: [
+          const OneUiPageHeader(title: 'Home'),
           StoriesRow(
             folders: stories,
-            onFolderTap: (path) => context.push(folderProfileLocation(path)),
+            onFolderTap: (path) {
+              AppHaptics.light();
+              context.push(storyViewerLocation(path));
+            },
             onCameraTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Camera capture coming soon')),
@@ -159,7 +181,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
           const SizedBox(
-            height: 400,
+            height: 360,
             child: EmptyState(
               title: 'No posts yet',
               message: 'Add folders to Home Feed in Manage Content.',
@@ -172,12 +194,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: listPadding,
-      itemCount: _items.length + 1 + (_hasMore ? 1 : 0),
+      itemCount: _items.length + 2 + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == 0) {
+          return const OneUiPageHeader(title: 'Home');
+        }
+        if (index == 1) {
           return StoriesRow(
             folders: stories,
-            onFolderTap: (path) => context.push(folderProfileLocation(path)),
+            onFolderTap: (path) {
+              AppHaptics.light();
+              context.push(storyViewerLocation(path));
+            },
             onCameraTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Camera capture coming soon')),
@@ -186,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         }
 
-        final feedIndex = index - 1;
+        final feedIndex = index - 2;
         if (feedIndex >= _items.length) {
           return const Padding(
             padding: EdgeInsets.all(24),
@@ -195,17 +223,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
 
         final item = _items[feedIndex];
-        return FeedPostCard(
-          item: item,
-          onFolderTap: () => context.push(folderProfileLocation(item.folderPath)),
-          onMediaTap: () => context.push(
-            mediaViewerLocation(
-              item.media.uri,
-              mediaId: item.media.id,
-              favorite: item.media.isFavorite,
+        return StaggeredEntrance(
+          index: feedIndex,
+          child: FeedPostCard(
+            item: item,
+            onFolderTap: () =>
+                context.push(folderProfileLocation(item.folderPath)),
+            onMediaTap: () => context.push(
+              mediaViewerLocation(
+                item.media.uri,
+                mediaId: item.media.id,
+                favorite: item.media.isFavorite,
+              ),
             ),
+            onFavoriteTap: () => _toggleFavorite(item),
           ),
-          onFavoriteTap: () => _toggleFavorite(item),
         );
       },
     );

@@ -23,6 +23,10 @@ class MediaItems extends Table {
   IntColumn get backupState => integer().withDefault(const Constant(0))();
   IntColumn get lastSyncTime => integer().nullable()();
 
+  BoolColumn get isTrashed => boolean().withDefault(const Constant(false))();
+  IntColumn get trashedAt => integer().nullable()();
+  TextColumn get originalPath => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

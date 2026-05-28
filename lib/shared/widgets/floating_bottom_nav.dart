@@ -1,10 +1,12 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/theme/one_ui_theme.dart';
+import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 
 /// Pill height + outer bottom margin from [FloatingBottomNav].
-const double kFloatingNavBarExtent = 56;
-const double kFloatingNavOuterBottomMargin = 32;
+const double kFloatingNavBarExtent = 64;
+const double kFloatingNavOuterBottomMargin = 16;
 
 /// Extra scroll padding so the last row clears the overlay.
 const double kFloatingNavScrollGap = 12;
@@ -19,7 +21,8 @@ class FloatingNavInsets extends InheritedWidget {
   final double overlayHeight;
 
   static double overlayHeightOf(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<FloatingNavInsets>();
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<FloatingNavInsets>();
     if (scope != null) {
       return scope.overlayHeight;
     }
@@ -44,7 +47,7 @@ double floatingNavOverlayHeight(BuildContext context) {
       MediaQuery.viewPaddingOf(context).bottom;
 }
 
-class FloatingBottomNav extends StatelessWidget {
+class FloatingBottomNav extends ConsumerWidget {
   const FloatingBottomNav({
     super.key,
     required this.selectedIndex,
@@ -56,104 +59,163 @@ class FloatingBottomNav extends StatelessWidget {
 
   static const _destinations = [
     _NavItem(Icons.home_outlined, Icons.home),
-    _NavItem(Icons.search, Icons.search),
+    _NavItem(Icons.search_outlined, Icons.search),
     _NavItem(Icons.explore_outlined, Icons.explore),
     _NavItem(Icons.favorite_border, Icons.favorite),
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final motion = AppMotion.of(context, ref);
+    final theme = Theme.of(context);
+    final pillSelected = selectedIndex < _destinations.length
+        ? selectedIndex
+        : 0;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        20,
+        OneUiSpacing.pageHorizontal,
         0,
-        32,
-        kFloatingNavOuterBottomMargin + MediaQuery.viewPaddingOf(context).bottom,
+        OneUiSpacing.pageHorizontal,
+        kFloatingNavOuterBottomMargin +
+            MediaQuery.viewPaddingOf(context).bottom,
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _FloatingNavPill(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(_destinations.length, (index) {
-                  final item = _destinations[index];
-                  final selected = selectedIndex == index;
-                  return IconButton(
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 44,
-                      minHeight: 44,
-                    ),
-                    onPressed: () => onDestinationSelected(index),
-                    icon: Icon(
-                      selected ? item.selected : item.unselected,
-                      size: 24,
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+      child: _OneUiNavShell(
+        child: Row(
+          children: [
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final slotWidth = constraints.maxWidth / 4;
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedPositioned(
+                        duration: motion.fade,
+                        curve: motion.enterCurve,
+                        left: slotWidth * pillSelected + (slotWidth - 48) / 2,
+                        top: 8,
+                        child: AnimatedContainer(
+                          duration: motion.fade,
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.14,
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(_destinations.length, (index) {
+                          final item = _destinations[index];
+                          final selected = selectedIndex == index;
+                          return _NavIconButton(
+                            selected: selected,
+                            unselectedIcon: item.unselected,
+                            selectedIcon: item.selected,
+                            filledWhenSelected: index == 0 || index == 2,
+                            onPressed: () => onDestinationSelected(index),
+                          );
+                        }),
+                      ),
+                    ],
                   );
-                }),
+                },
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 56,
-            height: 56,
-            child: _FloatingNavPill(
-              child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                  onTap: () => onDestinationSelected(4),
-                  borderRadius: BorderRadius.circular(28),
-                  child: Center(
-                    child: Icon(
-                      selectedIndex == 4
-                          ? Icons.person
-                          : Icons.person_outline,
-                      size: 24,
-                      color: selectedIndex == 4
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
+            const SizedBox(width: OneUiSpacing.sm),
+            _NavIconButton(
+              selected: selectedIndex == 4,
+              unselectedIcon: Icons.person_outline,
+              selectedIcon: Icons.person_outline,
+              filledWhenSelected: true,
+              onPressed: () => onDestinationSelected(4),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _FloatingNavPill extends StatelessWidget {
-  const _FloatingNavPill({required this.child});
+class _NavIconButton extends ConsumerWidget {
+  const _NavIconButton({
+    required this.selected,
+    required this.unselectedIcon,
+    required this.selectedIcon,
+    required this.onPressed,
+    this.filledWhenSelected = false,
+  });
+
+  final bool selected;
+  final IconData unselectedIcon;
+  final IconData selectedIcon;
+  final VoidCallback onPressed;
+  final bool filledWhenSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final motion = AppMotion.of(context, ref);
+    final theme = Theme.of(context);
+    final color = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+
+    return PressableScale(
+      scale: 0.9,
+      onTap: onPressed,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: AnimatedScale(
+          scale: selected ? 1.05 : 1.0,
+          duration: motion.fadeFast,
+          curve: motion.enterCurve,
+          child: Icon(
+            selected && filledWhenSelected ? selectedIcon : unselectedIcon,
+            size: 26,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One UI bottom bar: rounded top container on flat background.
+class _OneUiNavShell extends StatelessWidget {
+  const _OneUiNavShell({required this.child});
 
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.35),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
+    return Material(
+      elevation: 0,
+      color: theme.colorScheme.surface,
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(OneUiRadii.xl),
+        bottom: Radius.circular(OneUiRadii.pill),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        height: kFloatingNavBarExtent,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(OneUiRadii.xl),
+            bottom: Radius.circular(OneUiRadii.pill),
+          ),
+          border: Border(
+            top: BorderSide(
+              color: theme.colorScheme.outline.withValues(alpha: 0.35),
             ),
           ),
-          child: child,
         ),
+        child: child,
       ),
     );
   }

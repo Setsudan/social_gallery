@@ -8,8 +8,9 @@ void main() {
       FollowStatus.accountOnly,
       FollowStatus.unfollowed,
     ];
-    final feedFolders =
-        statuses.where((s) => s == FollowStatus.homeFeed).toList();
+    final feedFolders = statuses
+        .where((s) => s == FollowStatus.homeFeed)
+        .toList();
     expect(feedFolders.length, 1);
   });
 }

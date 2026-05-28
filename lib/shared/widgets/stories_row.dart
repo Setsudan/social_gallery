@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 
@@ -23,7 +24,10 @@ class StoriesRow extends StatelessWidget {
       height: kStoriesRowHeight,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: OneUiSpacing.pageHorizontal,
+          vertical: 6,
+        ),
         itemCount: folders.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
@@ -184,9 +188,7 @@ class _StoryItem extends StatelessWidget {
                           width: 1,
                         ),
                 ),
-                child: ClipOval(
-                  child: MediaThumbnail(assetId: assetId),
-                ),
+                child: ClipOval(child: MediaThumbnail(assetId: assetId)),
               ),
               const SizedBox(height: 4),
               _StoryBubbleLabel(text: folderName),

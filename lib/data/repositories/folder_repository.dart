@@ -15,9 +15,9 @@ class FolderRepository {
   }
 
   Stream<List<FolderInfo>> watchAll() {
-    return _db
-        .watchAllFoldersOrdered()
-        .map((rows) => rows.map(folderFromRow).toList());
+    return _db.watchAllFoldersOrdered().map(
+      (rows) => rows.map(folderFromRow).toList(),
+    );
   }
 
   Future<FolderInfo?> getFolder(String path) async {
@@ -26,9 +26,9 @@ class FolderRepository {
   }
 
   Stream<FolderInfo?> watchFolder(String path) {
-    return _db.watchFolder(path).map(
-          (row) => row == null ? null : folderFromRow(row),
-        );
+    return _db
+        .watchFolder(path)
+        .map((row) => row == null ? null : folderFromRow(row));
   }
 
   Future<void> updateFollowStatus(
@@ -45,10 +45,11 @@ class FolderRepository {
     );
   }
 
-  Future<void> bulkUpdateFollowStatus(
-    List<String> paths,
-    FollowStatus status,
-  ) {
+  Future<void> updateFolderStories(String path, bool showInStories) {
+    return _db.updateFolderStories(path, showInStories);
+  }
+
+  Future<void> bulkUpdateFollowStatus(List<String> paths, FollowStatus status) {
     return _db.bulkUpdateFollowStatus(
       paths,
       status.storageValue,

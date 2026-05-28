@@ -1064,6 +1064,43 @@ class $MediaItemsTable extends MediaItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _isTrashedMeta = const VerificationMeta(
+    'isTrashed',
+  );
+  @override
+  late final GeneratedColumn<bool> isTrashed = GeneratedColumn<bool>(
+    'is_trashed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_trashed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _trashedAtMeta = const VerificationMeta(
+    'trashedAt',
+  );
+  @override
+  late final GeneratedColumn<int> trashedAt = GeneratedColumn<int>(
+    'trashed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _originalPathMeta = const VerificationMeta(
+    'originalPath',
+  );
+  @override
+  late final GeneratedColumn<String> originalPath = GeneratedColumn<String>(
+    'original_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1086,6 +1123,9 @@ class $MediaItemsTable extends MediaItems
     lastViewedAt,
     backupState,
     lastSyncTime,
+    isTrashed,
+    trashedAt,
+    originalPath,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1253,6 +1293,27 @@ class $MediaItemsTable extends MediaItems
         ),
       );
     }
+    if (data.containsKey('is_trashed')) {
+      context.handle(
+        _isTrashedMeta,
+        isTrashed.isAcceptableOrUnknown(data['is_trashed']!, _isTrashedMeta),
+      );
+    }
+    if (data.containsKey('trashed_at')) {
+      context.handle(
+        _trashedAtMeta,
+        trashedAt.isAcceptableOrUnknown(data['trashed_at']!, _trashedAtMeta),
+      );
+    }
+    if (data.containsKey('original_path')) {
+      context.handle(
+        _originalPathMeta,
+        originalPath.isAcceptableOrUnknown(
+          data['original_path']!,
+          _originalPathMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1342,6 +1403,18 @@ class $MediaItemsTable extends MediaItems
         DriftSqlType.int,
         data['${effectivePrefix}last_sync_time'],
       ),
+      isTrashed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_trashed'],
+      )!,
+      trashedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}trashed_at'],
+      ),
+      originalPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_path'],
+      ),
     );
   }
 
@@ -1372,6 +1445,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
   final int? lastViewedAt;
   final int backupState;
   final int? lastSyncTime;
+  final bool isTrashed;
+  final int? trashedAt;
+  final String? originalPath;
   const MediaRow({
     required this.id,
     required this.uri,
@@ -1393,6 +1469,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     this.lastViewedAt,
     required this.backupState,
     this.lastSyncTime,
+    required this.isTrashed,
+    this.trashedAt,
+    this.originalPath,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1434,6 +1513,13 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     map['backup_state'] = Variable<int>(backupState);
     if (!nullToAbsent || lastSyncTime != null) {
       map['last_sync_time'] = Variable<int>(lastSyncTime);
+    }
+    map['is_trashed'] = Variable<bool>(isTrashed);
+    if (!nullToAbsent || trashedAt != null) {
+      map['trashed_at'] = Variable<int>(trashedAt);
+    }
+    if (!nullToAbsent || originalPath != null) {
+      map['original_path'] = Variable<String>(originalPath);
     }
     return map;
   }
@@ -1478,6 +1564,13 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       lastSyncTime: lastSyncTime == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncTime),
+      isTrashed: Value(isTrashed),
+      trashedAt: trashedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trashedAt),
+      originalPath: originalPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalPath),
     );
   }
 
@@ -1507,6 +1600,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       lastViewedAt: serializer.fromJson<int?>(json['lastViewedAt']),
       backupState: serializer.fromJson<int>(json['backupState']),
       lastSyncTime: serializer.fromJson<int?>(json['lastSyncTime']),
+      isTrashed: serializer.fromJson<bool>(json['isTrashed']),
+      trashedAt: serializer.fromJson<int?>(json['trashedAt']),
+      originalPath: serializer.fromJson<String?>(json['originalPath']),
     );
   }
   @override
@@ -1533,6 +1629,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       'lastViewedAt': serializer.toJson<int?>(lastViewedAt),
       'backupState': serializer.toJson<int>(backupState),
       'lastSyncTime': serializer.toJson<int?>(lastSyncTime),
+      'isTrashed': serializer.toJson<bool>(isTrashed),
+      'trashedAt': serializer.toJson<int?>(trashedAt),
+      'originalPath': serializer.toJson<String?>(originalPath),
     };
   }
 
@@ -1557,6 +1656,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     Value<int?> lastViewedAt = const Value.absent(),
     int? backupState,
     Value<int?> lastSyncTime = const Value.absent(),
+    bool? isTrashed,
+    Value<int?> trashedAt = const Value.absent(),
+    Value<String?> originalPath = const Value.absent(),
   }) => MediaRow(
     id: id ?? this.id,
     uri: uri ?? this.uri,
@@ -1580,6 +1682,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     lastViewedAt: lastViewedAt.present ? lastViewedAt.value : this.lastViewedAt,
     backupState: backupState ?? this.backupState,
     lastSyncTime: lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
+    isTrashed: isTrashed ?? this.isTrashed,
+    trashedAt: trashedAt.present ? trashedAt.value : this.trashedAt,
+    originalPath: originalPath.present ? originalPath.value : this.originalPath,
   );
   MediaRow copyWithCompanion(MediaItemsCompanion data) {
     return MediaRow(
@@ -1623,6 +1728,11 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       lastSyncTime: data.lastSyncTime.present
           ? data.lastSyncTime.value
           : this.lastSyncTime,
+      isTrashed: data.isTrashed.present ? data.isTrashed.value : this.isTrashed,
+      trashedAt: data.trashedAt.present ? data.trashedAt.value : this.trashedAt,
+      originalPath: data.originalPath.present
+          ? data.originalPath.value
+          : this.originalPath,
     );
   }
 
@@ -1648,13 +1758,16 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           ..write('videoDuration: $videoDuration, ')
           ..write('lastViewedAt: $lastViewedAt, ')
           ..write('backupState: $backupState, ')
-          ..write('lastSyncTime: $lastSyncTime')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('isTrashed: $isTrashed, ')
+          ..write('trashedAt: $trashedAt, ')
+          ..write('originalPath: $originalPath')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     uri,
     displayName,
@@ -1675,7 +1788,10 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     lastViewedAt,
     backupState,
     lastSyncTime,
-  );
+    isTrashed,
+    trashedAt,
+    originalPath,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1699,7 +1815,10 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           other.videoDuration == this.videoDuration &&
           other.lastViewedAt == this.lastViewedAt &&
           other.backupState == this.backupState &&
-          other.lastSyncTime == this.lastSyncTime);
+          other.lastSyncTime == this.lastSyncTime &&
+          other.isTrashed == this.isTrashed &&
+          other.trashedAt == this.trashedAt &&
+          other.originalPath == this.originalPath);
 }
 
 class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
@@ -1723,6 +1842,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
   final Value<int?> lastViewedAt;
   final Value<int> backupState;
   final Value<int?> lastSyncTime;
+  final Value<bool> isTrashed;
+  final Value<int?> trashedAt;
+  final Value<String?> originalPath;
   const MediaItemsCompanion({
     this.id = const Value.absent(),
     this.uri = const Value.absent(),
@@ -1744,6 +1866,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.lastViewedAt = const Value.absent(),
     this.backupState = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
+    this.isTrashed = const Value.absent(),
+    this.trashedAt = const Value.absent(),
+    this.originalPath = const Value.absent(),
   });
   MediaItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -1766,6 +1891,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.lastViewedAt = const Value.absent(),
     this.backupState = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
+    this.isTrashed = const Value.absent(),
+    this.trashedAt = const Value.absent(),
+    this.originalPath = const Value.absent(),
   }) : uri = Value(uri),
        displayName = Value(displayName),
        folderName = Value(folderName),
@@ -1795,6 +1923,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Expression<int>? lastViewedAt,
     Expression<int>? backupState,
     Expression<int>? lastSyncTime,
+    Expression<bool>? isTrashed,
+    Expression<int>? trashedAt,
+    Expression<String>? originalPath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1817,6 +1948,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       if (lastViewedAt != null) 'last_viewed_at': lastViewedAt,
       if (backupState != null) 'backup_state': backupState,
       if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
+      if (isTrashed != null) 'is_trashed': isTrashed,
+      if (trashedAt != null) 'trashed_at': trashedAt,
+      if (originalPath != null) 'original_path': originalPath,
     });
   }
 
@@ -1841,6 +1975,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Value<int?>? lastViewedAt,
     Value<int>? backupState,
     Value<int?>? lastSyncTime,
+    Value<bool>? isTrashed,
+    Value<int?>? trashedAt,
+    Value<String?>? originalPath,
   }) {
     return MediaItemsCompanion(
       id: id ?? this.id,
@@ -1863,6 +2000,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       lastViewedAt: lastViewedAt ?? this.lastViewedAt,
       backupState: backupState ?? this.backupState,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      isTrashed: isTrashed ?? this.isTrashed,
+      trashedAt: trashedAt ?? this.trashedAt,
+      originalPath: originalPath ?? this.originalPath,
     );
   }
 
@@ -1929,6 +2069,15 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     if (lastSyncTime.present) {
       map['last_sync_time'] = Variable<int>(lastSyncTime.value);
     }
+    if (isTrashed.present) {
+      map['is_trashed'] = Variable<bool>(isTrashed.value);
+    }
+    if (trashedAt.present) {
+      map['trashed_at'] = Variable<int>(trashedAt.value);
+    }
+    if (originalPath.present) {
+      map['original_path'] = Variable<String>(originalPath.value);
+    }
     return map;
   }
 
@@ -1954,7 +2103,587 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
           ..write('videoDuration: $videoDuration, ')
           ..write('lastViewedAt: $lastViewedAt, ')
           ..write('backupState: $backupState, ')
-          ..write('lastSyncTime: $lastSyncTime')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('isTrashed: $isTrashed, ')
+          ..write('trashedAt: $trashedAt, ')
+          ..write('originalPath: $originalPath')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TravelModesTable extends TravelModes
+    with TableInfo<$TravelModesTable, TravelMode> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TravelModesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<int> startDate = GeneratedColumn<int>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<int> endDate = GeneratedColumn<int>(
+    'end_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startTimeMeta = const VerificationMeta(
+    'startTime',
+  );
+  @override
+  late final GeneratedColumn<int> startTime = GeneratedColumn<int>(
+    'start_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endTimeMeta = const VerificationMeta(
+    'endTime',
+  );
+  @override
+  late final GeneratedColumn<int> endTime = GeneratedColumn<int>(
+    'end_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _folderPathMeta = const VerificationMeta(
+    'folderPath',
+  );
+  @override
+  late final GeneratedColumn<String> folderPath = GeneratedColumn<String>(
+    'folder_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notificationEndingSoonHoursMeta =
+      const VerificationMeta('notificationEndingSoonHours');
+  @override
+  late final GeneratedColumn<int> notificationEndingSoonHours =
+      GeneratedColumn<int>(
+        'notification_ending_soon_hours',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(24),
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    folderPath,
+    createdAt,
+    notificationEndingSoonHours,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'travel_modes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TravelMode> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(
+        _startTimeMeta,
+        startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta),
+      );
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(
+        _endTimeMeta,
+        endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta),
+      );
+    }
+    if (data.containsKey('folder_path')) {
+      context.handle(
+        _folderPathMeta,
+        folderPath.isAcceptableOrUnknown(data['folder_path']!, _folderPathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_folderPathMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('notification_ending_soon_hours')) {
+      context.handle(
+        _notificationEndingSoonHoursMeta,
+        notificationEndingSoonHours.isAcceptableOrUnknown(
+          data['notification_ending_soon_hours']!,
+          _notificationEndingSoonHoursMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TravelMode map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TravelMode(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_date'],
+      )!,
+      startTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_time'],
+      ),
+      endTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_time'],
+      ),
+      folderPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}folder_path'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      notificationEndingSoonHours: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}notification_ending_soon_hours'],
+      )!,
+    );
+  }
+
+  @override
+  $TravelModesTable createAlias(String alias) {
+    return $TravelModesTable(attachedDatabase, alias);
+  }
+}
+
+class TravelMode extends DataClass implements Insertable<TravelMode> {
+  final String id;
+  final String name;
+  final int startDate;
+  final int endDate;
+  final int? startTime;
+  final int? endTime;
+  final String folderPath;
+  final int createdAt;
+  final int notificationEndingSoonHours;
+  const TravelMode({
+    required this.id,
+    required this.name,
+    required this.startDate,
+    required this.endDate,
+    this.startTime,
+    this.endTime,
+    required this.folderPath,
+    required this.createdAt,
+    required this.notificationEndingSoonHours,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['start_date'] = Variable<int>(startDate);
+    map['end_date'] = Variable<int>(endDate);
+    if (!nullToAbsent || startTime != null) {
+      map['start_time'] = Variable<int>(startTime);
+    }
+    if (!nullToAbsent || endTime != null) {
+      map['end_time'] = Variable<int>(endTime);
+    }
+    map['folder_path'] = Variable<String>(folderPath);
+    map['created_at'] = Variable<int>(createdAt);
+    map['notification_ending_soon_hours'] = Variable<int>(
+      notificationEndingSoonHours,
+    );
+    return map;
+  }
+
+  TravelModesCompanion toCompanion(bool nullToAbsent) {
+    return TravelModesCompanion(
+      id: Value(id),
+      name: Value(name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      startTime: startTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startTime),
+      endTime: endTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTime),
+      folderPath: Value(folderPath),
+      createdAt: Value(createdAt),
+      notificationEndingSoonHours: Value(notificationEndingSoonHours),
+    );
+  }
+
+  factory TravelMode.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TravelMode(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      startDate: serializer.fromJson<int>(json['startDate']),
+      endDate: serializer.fromJson<int>(json['endDate']),
+      startTime: serializer.fromJson<int?>(json['startTime']),
+      endTime: serializer.fromJson<int?>(json['endTime']),
+      folderPath: serializer.fromJson<String>(json['folderPath']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      notificationEndingSoonHours: serializer.fromJson<int>(
+        json['notificationEndingSoonHours'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'startDate': serializer.toJson<int>(startDate),
+      'endDate': serializer.toJson<int>(endDate),
+      'startTime': serializer.toJson<int?>(startTime),
+      'endTime': serializer.toJson<int?>(endTime),
+      'folderPath': serializer.toJson<String>(folderPath),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'notificationEndingSoonHours': serializer.toJson<int>(
+        notificationEndingSoonHours,
+      ),
+    };
+  }
+
+  TravelMode copyWith({
+    String? id,
+    String? name,
+    int? startDate,
+    int? endDate,
+    Value<int?> startTime = const Value.absent(),
+    Value<int?> endTime = const Value.absent(),
+    String? folderPath,
+    int? createdAt,
+    int? notificationEndingSoonHours,
+  }) => TravelMode(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+    startTime: startTime.present ? startTime.value : this.startTime,
+    endTime: endTime.present ? endTime.value : this.endTime,
+    folderPath: folderPath ?? this.folderPath,
+    createdAt: createdAt ?? this.createdAt,
+    notificationEndingSoonHours:
+        notificationEndingSoonHours ?? this.notificationEndingSoonHours,
+  );
+  TravelMode copyWithCompanion(TravelModesCompanion data) {
+    return TravelMode(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      folderPath: data.folderPath.present
+          ? data.folderPath.value
+          : this.folderPath,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      notificationEndingSoonHours: data.notificationEndingSoonHours.present
+          ? data.notificationEndingSoonHours.value
+          : this.notificationEndingSoonHours,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TravelMode(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('folderPath: $folderPath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('notificationEndingSoonHours: $notificationEndingSoonHours')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+    folderPath,
+    createdAt,
+    notificationEndingSoonHours,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TravelMode &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.folderPath == this.folderPath &&
+          other.createdAt == this.createdAt &&
+          other.notificationEndingSoonHours ==
+              this.notificationEndingSoonHours);
+}
+
+class TravelModesCompanion extends UpdateCompanion<TravelMode> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<int> startDate;
+  final Value<int> endDate;
+  final Value<int?> startTime;
+  final Value<int?> endTime;
+  final Value<String> folderPath;
+  final Value<int> createdAt;
+  final Value<int> notificationEndingSoonHours;
+  final Value<int> rowid;
+  const TravelModesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.folderPath = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.notificationEndingSoonHours = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TravelModesCompanion.insert({
+    required String id,
+    required String name,
+    required int startDate,
+    required int endDate,
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    required String folderPath,
+    required int createdAt,
+    this.notificationEndingSoonHours = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       startDate = Value(startDate),
+       endDate = Value(endDate),
+       folderPath = Value(folderPath),
+       createdAt = Value(createdAt);
+  static Insertable<TravelMode> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<int>? startDate,
+    Expression<int>? endDate,
+    Expression<int>? startTime,
+    Expression<int>? endTime,
+    Expression<String>? folderPath,
+    Expression<int>? createdAt,
+    Expression<int>? notificationEndingSoonHours,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (folderPath != null) 'folder_path': folderPath,
+      if (createdAt != null) 'created_at': createdAt,
+      if (notificationEndingSoonHours != null)
+        'notification_ending_soon_hours': notificationEndingSoonHours,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TravelModesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<int>? startDate,
+    Value<int>? endDate,
+    Value<int?>? startTime,
+    Value<int?>? endTime,
+    Value<String>? folderPath,
+    Value<int>? createdAt,
+    Value<int>? notificationEndingSoonHours,
+    Value<int>? rowid,
+  }) {
+    return TravelModesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      folderPath: folderPath ?? this.folderPath,
+      createdAt: createdAt ?? this.createdAt,
+      notificationEndingSoonHours:
+          notificationEndingSoonHours ?? this.notificationEndingSoonHours,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<int>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<int>(endDate.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<int>(startTime.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<int>(endTime.value);
+    }
+    if (folderPath.present) {
+      map['folder_path'] = Variable<String>(folderPath.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (notificationEndingSoonHours.present) {
+      map['notification_ending_soon_hours'] = Variable<int>(
+        notificationEndingSoonHours.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TravelModesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('folderPath: $folderPath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('notificationEndingSoonHours: $notificationEndingSoonHours, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1965,11 +2694,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $FoldersTable folders = $FoldersTable(this);
   late final $MediaItemsTable mediaItems = $MediaItemsTable(this);
+  late final $TravelModesTable travelModes = $TravelModesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [folders, mediaItems];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    folders,
+    mediaItems,
+    travelModes,
+  ];
 }
 
 typedef $$FoldersTableCreateCompanionBuilder =
@@ -2375,6 +3109,9 @@ typedef $$MediaItemsTableCreateCompanionBuilder =
       Value<int?> lastViewedAt,
       Value<int> backupState,
       Value<int?> lastSyncTime,
+      Value<bool> isTrashed,
+      Value<int?> trashedAt,
+      Value<String?> originalPath,
     });
 typedef $$MediaItemsTableUpdateCompanionBuilder =
     MediaItemsCompanion Function({
@@ -2398,6 +3135,9 @@ typedef $$MediaItemsTableUpdateCompanionBuilder =
       Value<int?> lastViewedAt,
       Value<int> backupState,
       Value<int?> lastSyncTime,
+      Value<bool> isTrashed,
+      Value<int?> trashedAt,
+      Value<String?> originalPath,
     });
 
 class $$MediaItemsTableFilterComposer
@@ -2506,6 +3246,21 @@ class $$MediaItemsTableFilterComposer
 
   ColumnFilters<int> get lastSyncTime => $composableBuilder(
     column: $table.lastSyncTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isTrashed => $composableBuilder(
+    column: $table.isTrashed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get trashedAt => $composableBuilder(
+    column: $table.trashedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalPath => $composableBuilder(
+    column: $table.originalPath,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2618,6 +3373,21 @@ class $$MediaItemsTableOrderingComposer
     column: $table.lastSyncTime,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isTrashed => $composableBuilder(
+    column: $table.isTrashed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get trashedAt => $composableBuilder(
+    column: $table.trashedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalPath => $composableBuilder(
+    column: $table.originalPath,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MediaItemsTableAnnotationComposer
@@ -2708,6 +3478,17 @@ class $$MediaItemsTableAnnotationComposer
     column: $table.lastSyncTime,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isTrashed =>
+      $composableBuilder(column: $table.isTrashed, builder: (column) => column);
+
+  GeneratedColumn<int> get trashedAt =>
+      $composableBuilder(column: $table.trashedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get originalPath => $composableBuilder(
+    column: $table.originalPath,
+    builder: (column) => column,
+  );
 }
 
 class $$MediaItemsTableTableManager
@@ -2758,6 +3539,9 @@ class $$MediaItemsTableTableManager
                 Value<int?> lastViewedAt = const Value.absent(),
                 Value<int> backupState = const Value.absent(),
                 Value<int?> lastSyncTime = const Value.absent(),
+                Value<bool> isTrashed = const Value.absent(),
+                Value<int?> trashedAt = const Value.absent(),
+                Value<String?> originalPath = const Value.absent(),
               }) => MediaItemsCompanion(
                 id: id,
                 uri: uri,
@@ -2779,6 +3563,9 @@ class $$MediaItemsTableTableManager
                 lastViewedAt: lastViewedAt,
                 backupState: backupState,
                 lastSyncTime: lastSyncTime,
+                isTrashed: isTrashed,
+                trashedAt: trashedAt,
+                originalPath: originalPath,
               ),
           createCompanionCallback:
               ({
@@ -2802,6 +3589,9 @@ class $$MediaItemsTableTableManager
                 Value<int?> lastViewedAt = const Value.absent(),
                 Value<int> backupState = const Value.absent(),
                 Value<int?> lastSyncTime = const Value.absent(),
+                Value<bool> isTrashed = const Value.absent(),
+                Value<int?> trashedAt = const Value.absent(),
+                Value<String?> originalPath = const Value.absent(),
               }) => MediaItemsCompanion.insert(
                 id: id,
                 uri: uri,
@@ -2823,6 +3613,9 @@ class $$MediaItemsTableTableManager
                 lastViewedAt: lastViewedAt,
                 backupState: backupState,
                 lastSyncTime: lastSyncTime,
+                isTrashed: isTrashed,
+                trashedAt: trashedAt,
+                originalPath: originalPath,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -2846,6 +3639,286 @@ typedef $$MediaItemsTableProcessedTableManager =
       MediaRow,
       PrefetchHooks Function()
     >;
+typedef $$TravelModesTableCreateCompanionBuilder =
+    TravelModesCompanion Function({
+      required String id,
+      required String name,
+      required int startDate,
+      required int endDate,
+      Value<int?> startTime,
+      Value<int?> endTime,
+      required String folderPath,
+      required int createdAt,
+      Value<int> notificationEndingSoonHours,
+      Value<int> rowid,
+    });
+typedef $$TravelModesTableUpdateCompanionBuilder =
+    TravelModesCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<int> startDate,
+      Value<int> endDate,
+      Value<int?> startTime,
+      Value<int?> endTime,
+      Value<String> folderPath,
+      Value<int> createdAt,
+      Value<int> notificationEndingSoonHours,
+      Value<int> rowid,
+    });
+
+class $$TravelModesTableFilterComposer
+    extends Composer<_$AppDatabase, $TravelModesTable> {
+  $$TravelModesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get folderPath => $composableBuilder(
+    column: $table.folderPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get notificationEndingSoonHours => $composableBuilder(
+    column: $table.notificationEndingSoonHours,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TravelModesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TravelModesTable> {
+  $$TravelModesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get folderPath => $composableBuilder(
+    column: $table.folderPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get notificationEndingSoonHours => $composableBuilder(
+    column: $table.notificationEndingSoonHours,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TravelModesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TravelModesTable> {
+  $$TravelModesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<int> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<int> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumn<int> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  GeneratedColumn<String> get folderPath => $composableBuilder(
+    column: $table.folderPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get notificationEndingSoonHours => $composableBuilder(
+    column: $table.notificationEndingSoonHours,
+    builder: (column) => column,
+  );
+}
+
+class $$TravelModesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TravelModesTable,
+          TravelMode,
+          $$TravelModesTableFilterComposer,
+          $$TravelModesTableOrderingComposer,
+          $$TravelModesTableAnnotationComposer,
+          $$TravelModesTableCreateCompanionBuilder,
+          $$TravelModesTableUpdateCompanionBuilder,
+          (
+            TravelMode,
+            BaseReferences<_$AppDatabase, $TravelModesTable, TravelMode>,
+          ),
+          TravelMode,
+          PrefetchHooks Function()
+        > {
+  $$TravelModesTableTableManager(_$AppDatabase db, $TravelModesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TravelModesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TravelModesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TravelModesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> startDate = const Value.absent(),
+                Value<int> endDate = const Value.absent(),
+                Value<int?> startTime = const Value.absent(),
+                Value<int?> endTime = const Value.absent(),
+                Value<String> folderPath = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> notificationEndingSoonHours = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TravelModesCompanion(
+                id: id,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                startTime: startTime,
+                endTime: endTime,
+                folderPath: folderPath,
+                createdAt: createdAt,
+                notificationEndingSoonHours: notificationEndingSoonHours,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required int startDate,
+                required int endDate,
+                Value<int?> startTime = const Value.absent(),
+                Value<int?> endTime = const Value.absent(),
+                required String folderPath,
+                required int createdAt,
+                Value<int> notificationEndingSoonHours = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TravelModesCompanion.insert(
+                id: id,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                startTime: startTime,
+                endTime: endTime,
+                folderPath: folderPath,
+                createdAt: createdAt,
+                notificationEndingSoonHours: notificationEndingSoonHours,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TravelModesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TravelModesTable,
+      TravelMode,
+      $$TravelModesTableFilterComposer,
+      $$TravelModesTableOrderingComposer,
+      $$TravelModesTableAnnotationComposer,
+      $$TravelModesTableCreateCompanionBuilder,
+      $$TravelModesTableUpdateCompanionBuilder,
+      (
+        TravelMode,
+        BaseReferences<_$AppDatabase, $TravelModesTable, TravelMode>,
+      ),
+      TravelMode,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2854,4 +3927,6 @@ class $AppDatabaseManager {
       $$FoldersTableTableManager(_db, _db.folders);
   $$MediaItemsTableTableManager get mediaItems =>
       $$MediaItemsTableTableManager(_db, _db.mediaItems);
+  $$TravelModesTableTableManager get travelModes =>
+      $$TravelModesTableTableManager(_db, _db.travelModes);
 }

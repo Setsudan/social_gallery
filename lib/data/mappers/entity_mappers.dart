@@ -20,6 +20,9 @@ domain.MediaItem mediaItemFromRow(MediaRow row) {
     height: row.height,
     isFavorite: row.isFavorite,
     videoDuration: row.videoDuration,
+    isTrashed: row.isTrashed,
+    trashedAt: row.trashedAt,
+    originalPath: row.originalPath,
   );
 }
 
@@ -39,6 +42,9 @@ domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
     height: row.readNullable<int>('height'),
     isFavorite: row.read<bool>('is_favorite'),
     videoDuration: row.readNullable<int>('video_duration'),
+    isTrashed: row.read<bool>('is_trashed'),
+    trashedAt: row.readNullable<int>('trashed_at'),
+    originalPath: row.readNullable<String>('original_path'),
   );
 }
 

@@ -98,9 +98,10 @@ void main() {
     expect(favorites.map((r) => r.folderPath), ['/open']);
   });
 
-  test('search folders only returns HOME_FEED folders', () async {
+  test('search folders returns all non-hidden folders by name', () async {
     await seedFoldersAndMedia();
-    expect((await db.searchFolders('acc')).map((f) => f.path), isEmpty);
+    expect((await db.searchFolders('acc')).map((f) => f.path), ['/account']);
+    expect((await db.searchFolders('lock')).map((f) => f.path), ['/locked']);
     expect((await db.searchFolders('open')).map((f) => f.path), ['/open']);
   });
 

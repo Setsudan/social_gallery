@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final overlayHeight = floatingNavOverlayHeight(context);
 
     return Scaffold(
@@ -27,10 +29,11 @@ class MainShell extends StatelessWidget {
             child: FloatingBottomNav(
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: (index) {
-                navigationShell.goBranch(
-                  index,
-                  initialLocation: index == navigationShell.currentIndex,
-                );
+                final isReselect = index == navigationShell.currentIndex;
+                if (isReselect) {
+                  notifyTabScrollToTop(ref, index);
+                }
+                navigationShell.goBranch(index, initialLocation: isReselect);
               },
             ),
           ),

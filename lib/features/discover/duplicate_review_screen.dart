@@ -6,6 +6,7 @@ import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/dialogs/storage_access_dialog.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class DuplicateReviewScreen extends ConsumerStatefulWidget {
   const DuplicateReviewScreen({super.key, required this.groupKey});
@@ -31,8 +32,9 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
   }
 
   Future<void> _load() async {
-    final candidates =
-        await ref.read(mediaRepositoryProvider).getPotentialDuplicates();
+    final candidates = await ref
+        .read(mediaRepositoryProvider)
+        .getPotentialDuplicates();
     final groups = ref.read(findDuplicateGroupsProvider)(candidates);
     final group = groups.where((g) => g.key == widget.groupKey).firstOrNull;
     if (group == null) {
@@ -56,9 +58,12 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
     if (!hasAccess || !mounted) return;
 
     setState(() => _deleting = true);
-    final toDelete =
-        _group!.items.where((m) => _selectedIds.contains(m.id)).toList();
-    final ok = await ref.read(mediaRepositoryProvider).deleteFromDevice(toDelete);
+    final toDelete = _group!.items
+        .where((m) => _selectedIds.contains(m.id))
+        .toList();
+    final ok = await ref
+        .read(mediaRepositoryProvider)
+        .deleteFromDevice(toDelete);
     if (!mounted) return;
     setState(() => _deleting = false);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -82,9 +87,7 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_group == null) {
       return Scaffold(
@@ -95,10 +98,11 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Review duplicates'),
         actions: [
           TextButton(
-            onPressed: _selectedIds.isEmpty || _deleting ? null : _confirmDelete,
+            onPressed: _selectedIds.isEmpty || _deleting
+                ? null
+                : _confirmDelete,
             child: _deleting
                 ? const SizedBox(
                     width: 18,
@@ -112,12 +116,10 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'Keep best is pre-selected. Tap items to change what will be removed.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+          const OneUiPageHeader(
+            title: 'Review duplicates',
+            subtitle:
+                'Keep best is pre-selected. Tap items to change what will be removed.',
           ),
           Expanded(
             child: GridView.builder(
@@ -164,7 +166,10 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
                         Container(
                           color: Colors.red.withValues(alpha: 0.35),
                           child: const Center(
-                            child: Icon(Icons.delete_outline, color: Colors.white),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                     ],

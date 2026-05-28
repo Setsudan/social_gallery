@@ -14,6 +14,9 @@ class MediaItem {
     this.height,
     this.isFavorite = false,
     this.videoDuration,
+    this.isTrashed = false,
+    this.trashedAt,
+    this.originalPath,
   });
 
   final int id;
@@ -30,6 +33,9 @@ class MediaItem {
   final int? height;
   final bool isFavorite;
   final int? videoDuration;
+  final bool isTrashed;
+  final int? trashedAt;
+  final String? originalPath;
 
   bool get isVideo => mimeType.startsWith('video/');
 
@@ -37,7 +43,12 @@ class MediaItem {
 
   int get pixelCount => (width ?? 0) * (height ?? 0);
 
-  MediaItem copyWith({bool? isFavorite}) {
+  MediaItem copyWith({
+    bool? isFavorite,
+    bool? isTrashed,
+    int? trashedAt,
+    String? originalPath,
+  }) {
     return MediaItem(
       id: id,
       uri: uri,
@@ -53,6 +64,9 @@ class MediaItem {
       height: height,
       isFavorite: isFavorite ?? this.isFavorite,
       videoDuration: videoDuration,
+      isTrashed: isTrashed ?? this.isTrashed,
+      trashedAt: trashedAt ?? this.trashedAt,
+      originalPath: originalPath ?? this.originalPath,
     );
   }
 }

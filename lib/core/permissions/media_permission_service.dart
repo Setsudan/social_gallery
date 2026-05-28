@@ -3,12 +3,7 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-enum MediaPermissionState {
-  checking,
-  granted,
-  denied,
-  limited,
-}
+enum MediaPermissionState { checking, granted, denied, limited }
 
 class MediaPermissionService {
   Future<MediaPermissionState> check() async {
@@ -21,10 +16,7 @@ class MediaPermissionService {
 
   Future<MediaPermissionState> request() async {
     if (Platform.isAndroid) {
-      await [
-        Permission.photos,
-        Permission.videos,
-      ].request();
+      await [Permission.photos, Permission.videos].request();
     }
     final state = await PhotoManager.requestPermissionExtend();
     return _mapState(state);

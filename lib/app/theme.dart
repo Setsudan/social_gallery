@@ -1,27 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/theme/one_ui_theme.dart';
 
 class AppTheme {
-  static ThemeData light() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF6750A4),
-      brightness: Brightness.light,
-    );
-    return ThemeData(
-      colorScheme: scheme,
-      useMaterial3: true,
-      scaffoldBackgroundColor: scheme.surface,
-    );
-  }
-
-  static ThemeData dark() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF6750A4),
-      brightness: Brightness.dark,
-    );
-    return ThemeData(
-      colorScheme: scheme,
-      useMaterial3: true,
-      scaffoldBackgroundColor: scheme.surface,
-    );
-  }
+  static ThemeData light() => OneUiTheme.light();
+  static ThemeData dark() => OneUiTheme.dark();
 }
