@@ -243,7 +243,7 @@ class _FolderManagementScreenState
                       const SizedBox(width: 4),
                       Switch.adaptive(
                         value: folder.showInStories,
-                        activeColor: theme.colorScheme.primary,
+                        activeThumbColor: theme.colorScheme.primary,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         onChanged: (val) async {
                           AppHaptics.medium();
@@ -270,7 +270,7 @@ class _FolderManagementScreenState
                       const SizedBox(width: 4),
                       Switch.adaptive(
                         value: folder.isBiometricLocked,
-                        activeColor: theme.colorScheme.primary,
+                        activeThumbColor: theme.colorScheme.primary,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         onChanged: (val) async {
                           AppHaptics.medium();

@@ -8,12 +8,14 @@ import 'package:video_player/video_player.dart';
 class AssetVideoPlayer extends StatefulWidget {
   const AssetVideoPlayer({
     super.key,
-    required this.entity,
+    this.entity,
+    this.assetPath,
     this.autoPlay = true,
     this.fit = BoxFit.contain,
   });
 
-  final AssetEntity entity;
+  final AssetEntity? entity;
+  final String? assetPath;
   final bool autoPlay;
   final BoxFit fit;
 
@@ -36,7 +38,13 @@ class _AssetVideoPlayerState extends State<AssetVideoPlayer> {
 
   Future<void> _initialize() async {
     try {
-      final file = await AssetMediaLoader.resolveDisplayFile(widget.entity);
+      File? file;
+      if (Platform.isWindows && widget.assetPath != null) {
+        file = File(widget.assetPath!);
+      } else if (widget.entity != null) {
+        file = await AssetMediaLoader.resolveDisplayFile(widget.entity!);
+      }
+
       if (file == null || !file.existsSync()) {
         _setError('Could not open video file.');
         return;

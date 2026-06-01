@@ -45,13 +45,13 @@ final folderUnlockStoreProvider = ChangeNotifierProvider<FolderUnlockStore>((
   return store;
 });
 
-final photoManagerDatasourceProvider = Provider(
-  (ref) => PhotoManagerDatasource(),
-);
-
 final preferencesRepositoryProvider = Provider((ref) {
   return PreferencesRepository(ref.watch(sharedPreferencesProvider));
 });
+
+final photoManagerDatasourceProvider = Provider(
+  (ref) => PhotoManagerDatasource(ref.watch(preferencesRepositoryProvider)),
+);
 
 final mediaRepositoryProvider = Provider((ref) {
   return MediaRepository(

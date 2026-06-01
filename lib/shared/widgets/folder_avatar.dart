@@ -34,7 +34,7 @@ class FolderAvatar extends StatelessWidget {
             child: Image.file(
               file,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _initialAvatar(context),
+              errorBuilder: (context, error, stackTrace) => _initialAvatar(context),
             ),
           ),
         );

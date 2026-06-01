@@ -7,6 +7,9 @@ enum MediaPermissionState { checking, granted, denied, limited }
 
 class MediaPermissionService {
   Future<MediaPermissionState> check() async {
+    if (Platform.isWindows) {
+      return MediaPermissionState.granted;
+    }
     if (!Platform.isAndroid && !Platform.isIOS) {
       return MediaPermissionState.denied;
     }
@@ -15,6 +18,9 @@ class MediaPermissionService {
   }
 
   Future<MediaPermissionState> request() async {
+    if (Platform.isWindows) {
+      return MediaPermissionState.granted;
+    }
     if (Platform.isAndroid) {
       await [Permission.photos, Permission.videos].request();
     }

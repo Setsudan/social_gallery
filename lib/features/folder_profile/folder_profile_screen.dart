@@ -360,26 +360,23 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
             return AlertDialog(
               title: const Text('Folder visibility'),
 
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-
-                children: _FolderVisibilityOption.values
-                    .map(
-                      (option) => ListTile(
-                        title: Text(option.label),
-
-                        leading: Radio<_FolderVisibilityOption>(
-                          value: option,
-
-                          groupValue: choice,
-
-                          onChanged: (v) => setDialogState(() => choice = v!),
+              content: RadioGroup<_FolderVisibilityOption>(
+                groupValue: choice,
+                onChanged: (v) => setDialogState(() => choice = v!),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _FolderVisibilityOption.values
+                      .map(
+                        (option) => ListTile(
+                          title: Text(option.label),
+                          leading: Radio<_FolderVisibilityOption>(
+                            value: option,
+                          ),
+                          onTap: () => setDialogState(() => choice = option),
                         ),
-
-                        onTap: () => setDialogState(() => choice = option),
-                      ),
-                    )
-                    .toList(),
+                      )
+                      .toList(),
+                ),
               ),
 
               actions: [

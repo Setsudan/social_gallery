@@ -44,11 +44,21 @@ class MediaGrid extends ConsumerWidget {
 
     final inSelectionMode = selectedIds.isNotEmpty;
 
+    int columns = crossAxisCount;
+    if (crossAxisCount == 3) {
+      final width = MediaQuery.sizeOf(context).width;
+      if (width > 1200) {
+        columns = 6;
+      } else if (width > 800) {
+        columns = 4;
+      }
+    }
+
     return GridView.builder(
       controller: controller,
       padding: padding,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
+        crossAxisCount: columns,
         crossAxisSpacing: 2,
         mainAxisSpacing: 2,
       ),

@@ -61,7 +61,7 @@ class TravelModeListScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: OneUiSpacing.xl),
             itemCount: modes.length + 1,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               if (index == 0) {
                 return const OneUiPageHeader(

@@ -26,7 +26,7 @@ class FeedPostCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final media = item.media;
 
-    return Card(
+    final Widget card = Card(
       margin: const EdgeInsets.symmetric(
         horizontal: OneUiSpacing.pageHorizontal,
         vertical: OneUiSpacing.sm,
@@ -84,5 +84,17 @@ class FeedPostCard extends ConsumerWidget {
         ],
       ),
     );
+
+    final width = MediaQuery.sizeOf(context).width;
+    if (width > 800) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: card,
+        ),
+      );
+    }
+
+    return card;
   }
 }

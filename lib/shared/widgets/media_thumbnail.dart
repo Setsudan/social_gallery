@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
@@ -24,6 +26,38 @@ class MediaThumbnail extends StatelessWidget {
       return ColoredBox(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         child: const Center(child: Icon(Icons.lock)),
+      );
+    }
+
+    if (Platform.isWindows) {
+      final isWinVideo = assetId.toLowerCase().endsWith('.mp4') ||
+          assetId.toLowerCase().endsWith('.mov') ||
+          assetId.toLowerCase().endsWith('.mkv') ||
+          assetId.toLowerCase().endsWith('.webm') ||
+          assetId.toLowerCase().endsWith('.avi');
+      final isVideo = showVideoBadge || isWinVideo;
+
+      final thumbnail = Image.file(
+        File(assetId),
+        fit: fit,
+        cacheWidth: 500,
+        errorBuilder: (context, error, stackTrace) => ColoredBox(
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          child: const Center(child: Icon(Icons.broken_image_outlined)),
+        ),
+      );
+
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          heroTag != null ? Hero(tag: heroTag!, child: thumbnail) : thumbnail,
+          if (isVideo)
+            const Positioned(
+              right: 4,
+              bottom: 4,
+              child: Icon(Icons.videocam, color: Colors.white, size: 18),
+            ),
+        ],
       );
     }
 

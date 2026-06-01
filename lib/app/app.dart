@@ -55,7 +55,7 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
         );
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaleFactor: settings.fontSizeFactor,
+            textScaler: TextScaler.linear(settings.fontSizeFactor),
             disableAnimations:
                 !motion.enabled || MediaQuery.disableAnimationsOf(context),
           ),

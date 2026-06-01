@@ -74,7 +74,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: 16),
       itemCount: _groups.length + 1,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         if (index == 0) {
           return const OneUiPageHeader(
@@ -119,32 +119,44 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
             label: const Text('Keep best and review'),
           ),
         ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(8),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: group.items.length,
-            itemBuilder: (context, index) {
-              final media = group.items[index];
-              return GestureDetector(
-                onTap: () => context.push(
-                  mediaViewerLocation(
-                    media.uri,
-                    mediaId: media.id,
-                    favorite: media.isFavorite,
-                  ),
+        Builder(
+          builder: (context) {
+            final width = MediaQuery.sizeOf(context).width;
+            int columns = 3;
+            if (width > 1200) {
+              columns = 6;
+            } else if (width > 800) {
+              columns = 4;
+            }
+
+            return Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
                 ),
-                child: MediaThumbnail(
-                  assetId: media.uri,
-                  showVideoBadge: media.isVideo,
-                ),
-              );
-            },
-          ),
+                itemCount: group.items.length,
+                itemBuilder: (context, index) {
+                  final media = group.items[index];
+                  return GestureDetector(
+                    onTap: () => context.push(
+                      mediaViewerLocation(
+                        media.uri,
+                        mediaId: media.id,
+                        favorite: media.isFavorite,
+                      ),
+                    ),
+                    child: MediaThumbnail(
+                      assetId: media.uri,
+                      showVideoBadge: media.isVideo,
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         ),
       ],
     );

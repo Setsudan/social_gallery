@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -63,6 +65,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Future<void> _share() async {
+    if (Platform.isWindows) {
+      final file = File(widget.assetId);
+      if (file.existsSync()) {
+        await Share.shareXFiles([XFile(file.path)], text: _media?.displayName);
+      }
+      return;
+    }
     final entity = await AssetEntity.fromId(widget.assetId);
     if (entity == null) return;
     final file = await entity.file;
@@ -242,6 +251,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Widget _buildBody() {
+    if (Platform.isWindows) {
+      return FullscreenMediaContent(
+        entity: null,
+        assetPath: widget.assetId,
+        heroTag: mediaHeroTag(widget.mediaId),
+        videoFit: BoxFit.contain,
+        imageFit: BoxFit.contain,
+      );
+    }
     return FutureBuilder<AssetEntity?>(
       future: AssetEntity.fromId(widget.assetId),
       builder: (context, snapshot) {

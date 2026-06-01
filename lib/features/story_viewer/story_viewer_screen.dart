@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -224,33 +225,41 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
             children: [
               // Media Viewer
               Positioned.fill(
-                child: FutureBuilder<AssetEntity?>(
-                  future: AssetEntity.fromId(currentMedia.uri),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState != ConnectionState.done) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      );
-                    }
+                child: Platform.isWindows
+                    ? FullscreenMediaContent(
+                        entity: null,
+                        assetPath: currentMedia.uri,
+                        videoFit: BoxFit.contain,
+                        imageFit: BoxFit.contain,
+                        enablePinchZoom: false,
+                      )
+                    : FutureBuilder<AssetEntity?>(
+                        future: AssetEntity.fromId(currentMedia.uri),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState != ConnectionState.done) {
+                            return const Center(
+                              child: CircularProgressIndicator(color: Colors.white),
+                            );
+                          }
 
-                    final entity = snapshot.data;
-                    if (entity == null) {
-                      return const Center(
-                        child: Text(
-                          'Media not found',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      );
-                    }
+                          final entity = snapshot.data;
+                          if (entity == null) {
+                            return const Center(
+                              child: Text(
+                                'Media not found',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            );
+                          }
 
-                    return FullscreenMediaContent(
-                      entity: entity,
-                      videoFit: BoxFit.contain,
-                      imageFit: BoxFit.contain,
-                      enablePinchZoom: false,
-                    );
-                  },
-                ),
+                          return FullscreenMediaContent(
+                            entity: entity,
+                            videoFit: BoxFit.contain,
+                            imageFit: BoxFit.contain,
+                            enablePinchZoom: false,
+                          );
+                        },
+                      ),
               ),
 
               Positioned(

@@ -181,15 +181,25 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                         subtitle:
                             'Deleted files stay here until retention expires.',
                       ),
-                    Expanded(
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(OneUiSpacing.sm),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              crossAxisSpacing: 4,
-                              mainAxisSpacing: 4,
-                            ),
+                    Builder(
+                      builder: (context) {
+                        final width = MediaQuery.sizeOf(context).width;
+                        int columns = 3;
+                        if (width > 1200) {
+                          columns = 6;
+                        } else if (width > 800) {
+                          columns = 4;
+                        }
+
+                        return Expanded(
+                          child: GridView.builder(
+                            padding: const EdgeInsets.all(OneUiSpacing.sm),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  crossAxisSpacing: 4,
+                                  mainAxisSpacing: 4,
+                                ),
                         itemCount: items.length,
                         itemBuilder: (context, index) {
                           final item = items[index];
@@ -272,8 +282,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                               vertical: 8,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(
-                                                0.8,
+                                              color: Colors.black.withValues(
+                                                alpha: 0.8,
                                               ),
                                               borderRadius:
                                                   BorderRadius.circular(8),
@@ -316,12 +326,13 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: Container(
-                                      color: theme.colorScheme.surfaceVariant,
+                                      color: theme.colorScheme.surfaceContainerHighest,
                                       child: trashedFile.existsSync()
                                           ? Image.file(
-                                              trashedFile,
-                                              fit: BoxFit.cover,
-                                            )
+                                                trashedFile,
+                                                fit: BoxFit.cover,
+                                                cacheWidth: 500,
+                                              )
                                           : const Center(
                                               child: Icon(
                                                 Icons.broken_image_outlined,
@@ -361,7 +372,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                   Container(
                                     decoration: BoxDecoration(
                                       color: theme.colorScheme.primary
-                                          .withOpacity(0.35),
+                                          .withValues(alpha: 0.35),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: theme.colorScheme.primary,
@@ -386,9 +397,11 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                           );
                         },
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
+              ],
+            ),
         );
       },
       loading: () =>

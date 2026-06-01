@@ -5,9 +5,136 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
 import 'package:social_gallery/data/local/app_database.dart';
+import 'package:social_gallery/data/repositories/preferences_repository.dart';
 
 class PhotoManagerDatasource {
+  final PreferencesRepository _preferences;
+  PhotoManagerDatasource(this._preferences);
+  static const _imageExtensions = {
+    'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'tif', 'tiff'
+  };
+  static const _videoExtensions = {
+    'mp4', 'mov', 'm4v', 'avi', 'mkv', 'webm', '3gp', 'mpeg', 'mpg', 'wmv', 'flv'
+  };
+  static final _supportedExtensions = {..._imageExtensions, ..._videoExtensions};
+
+  List<File> _scanMediaFiles(String rootPath) {
+    final dir = Directory(rootPath);
+    if (!dir.existsSync()) return [];
+    
+    final files = <File>[];
+    try {
+      final list = dir.listSync(recursive: true, followLinks: false);
+      for (final entity in list) {
+        if (entity is File) {
+          final name = p.basename(entity.path);
+          if (name.startsWith('.trashed_')) continue; // Skip trashed files
+          final ext = p.extension(entity.path).replaceAll('.', '').toLowerCase();
+          if (_supportedExtensions.contains(ext)) {
+            files.add(entity);
+          }
+        }
+      }
+    } catch (_) {}
+    return files;
+  }
+
+  Future<List<MediaItemsCompanion>> _loadAllMediaWindows() async {
+    final root = _preferences.windowsGalleryRootPath;
+    if (root == null || root.isEmpty) return [];
+
+    final files = _scanMediaFiles(root);
+    final companions = <MediaItemsCompanion>[];
+
+    for (final file in files) {
+      final filePath = file.path;
+      final fileName = p.basename(filePath);
+      final folderPath = p.dirname(filePath);
+      final folderName = p.basename(folderPath);
+
+      try {
+        final stat = file.statSync();
+        final size = stat.size;
+        final dateModified = stat.modified.millisecondsSinceEpoch;
+        final dateAdded = stat.changed.millisecondsSinceEpoch;
+
+        final ext = p.extension(filePath).replaceAll('.', '').toLowerCase();
+        final isVideo = _videoExtensions.contains(ext);
+        final mimeType = isVideo ? 'video/mp4' : 'image/jpeg';
+
+        final id = filePath.hashCode & 0x7FFFFFFF;
+
+        companions.add(
+          MediaItemsCompanion.insert(
+            id: Value(id),
+            uri: filePath,
+            displayName: fileName,
+            folderName: folderName,
+            folderPath: folderPath,
+            dateAdded: dateAdded,
+            dateModified: dateModified,
+            dateTaken: Value(dateModified),
+            size: size,
+            mimeType: mimeType,
+            width: const Value(null),
+            height: const Value(null),
+            videoDuration: const Value(null),
+          ),
+        );
+      } catch (_) {}
+    }
+
+    return companions;
+  }
+
+  Future<List<FoldersCompanion>> _loadFoldersWindows(
+    Map<String, String> existingFollowStatus,
+    bool initialSetupComplete,
+  ) async {
+    final root = _preferences.windowsGalleryRootPath;
+    if (root == null || root.isEmpty) return [];
+
+    final files = _scanMediaFiles(root);
+    final folderMap = <String, List<File>>{};
+
+    for (final file in files) {
+      final folderPath = p.dirname(file.path);
+      folderMap.putIfAbsent(folderPath, () => []).add(file);
+    }
+
+    final folderRows = <FoldersCompanion>[];
+
+    for (final entry in folderMap.entries) {
+      final path = entry.key;
+      final folderFiles = entry.value;
+      final count = folderFiles.length;
+
+      final coverFile = folderFiles.firstWhere(
+        (f) => _imageExtensions.contains(p.extension(f.path).replaceAll('.', '').toLowerCase()),
+        orElse: () => folderFiles.first,
+      );
+
+      final existing = existingFollowStatus[path];
+      final followStatus =
+          existing ?? (initialSetupComplete ? 'UNFOLLOWED' : 'HOME_FEED');
+
+      folderRows.add(
+        FoldersCompanion.insert(
+          path: path,
+          name: p.basename(path),
+          mediaCount: Value(count),
+          lastModified: Value(DateTime.now().millisecondsSinceEpoch),
+          coverImageUri: Value(coverFile.path),
+          followStatus: Value(followStatus),
+        ),
+      );
+    }
+
+    return folderRows;
+  }
+
   Future<List<AssetPathEntity>> listAlbums() async {
+    if (Platform.isWindows) return [];
     return PhotoManager.getAssetPathList(
       type: RequestType.common,
       hasAll: true,
@@ -15,6 +142,9 @@ class PhotoManagerDatasource {
   }
 
   Future<List<MediaItemsCompanion>> loadAllMedia() async {
+    if (Platform.isWindows) {
+      return _loadAllMediaWindows();
+    }
     final albums = await listAlbums();
     final companions = <MediaItemsCompanion>[];
 
@@ -60,6 +190,9 @@ class PhotoManagerDatasource {
     Map<String, String> existingFollowStatus,
     bool initialSetupComplete,
   ) async {
+    if (Platform.isWindows) {
+      return _loadFoldersWindows(existingFollowStatus, initialSetupComplete);
+    }
     final albums = await listAlbums();
     final rows = <FoldersCompanion>[];
 
@@ -91,6 +224,17 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> deleteAssets(List<String> assetIds) async {
+    if (Platform.isWindows) {
+      for (final id in assetIds) {
+        try {
+          final file = File(id);
+          if (file.existsSync()) {
+            file.deleteSync();
+          }
+        } catch (_) {}
+      }
+      return true;
+    }
     final entities = <AssetEntity>[];
     for (final id in assetIds) {
       final entity = await AssetEntity.fromId(id);
@@ -120,6 +264,19 @@ class PhotoManagerDatasource {
   // --- NEW WORK: Disk File Operations ---
 
   Future<String?> createAlbumFolder(String folderName) async {
+    if (Platform.isWindows) {
+      try {
+        final root = _preferences.windowsGalleryRootPath;
+        if (root == null || root.isEmpty) return null;
+        final newFolder = Directory(p.join(root, folderName));
+        if (!newFolder.existsSync()) {
+          newFolder.createSync(recursive: true);
+        }
+        return newFolder.path;
+      } catch (_) {
+        return null;
+      }
+    }
     if (!Platform.isAndroid) return null;
     try {
       final pictures = Directory('/storage/emulated/0/Pictures');
@@ -136,6 +293,21 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> moveAssetOnDisk(String assetId, String targetFolderPath) async {
+    if (Platform.isWindows) {
+      try {
+        final file = File(assetId);
+        if (file.existsSync()) {
+          final destDir = Directory(targetFolderPath);
+          if (!destDir.existsSync()) {
+            destDir.createSync(recursive: true);
+          }
+          final destPath = p.join(targetFolderPath, p.basename(assetId));
+          file.renameSync(destPath);
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
     final entity = await AssetEntity.fromId(assetId);
     if (entity == null) return false;
 
@@ -171,6 +343,20 @@ class PhotoManagerDatasource {
   }
 
   Future<String?> trashAssetOnDisk(String assetId) async {
+    if (Platform.isWindows) {
+      try {
+        final file = File(assetId);
+        if (file.existsSync()) {
+          final originalPath = file.path;
+          final dir = p.dirname(originalPath);
+          final name = p.basename(originalPath);
+          final newPath = p.join(dir, '.trashed_$name');
+          file.renameSync(newPath);
+          return originalPath;
+        }
+      } catch (_) {}
+      return null;
+    }
     final entity = await AssetEntity.fromId(assetId);
     if (entity == null) return null;
     try {
@@ -194,6 +380,20 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> restoreAssetOnDisk(String originalPath) async {
+    if (Platform.isWindows) {
+      try {
+        final dir = p.dirname(originalPath);
+        final name = p.basename(originalPath);
+        final trashedPath = p.join(dir, '.trashed_$name');
+
+        final trashedFile = File(trashedPath);
+        if (trashedFile.existsSync()) {
+          trashedFile.renameSync(originalPath);
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
     try {
       final dir = p.dirname(originalPath);
       final name = p.basename(originalPath);
@@ -209,6 +409,20 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> deleteTrashedFile(String originalPath) async {
+    if (Platform.isWindows) {
+      try {
+        final dir = p.dirname(originalPath);
+        final name = p.basename(originalPath);
+        final trashedPath = p.join(dir, '.trashed_$name');
+
+        final trashedFile = File(trashedPath);
+        if (trashedFile.existsSync()) {
+          trashedFile.deleteSync();
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
     try {
       final dir = p.dirname(originalPath);
       final name = p.basename(originalPath);

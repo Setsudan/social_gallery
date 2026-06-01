@@ -29,7 +29,7 @@ class StoriesRow extends StatelessWidget {
           vertical: 6,
         ),
         itemCount: folders.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           if (index == 0) {
             return _CameraStoryItem(onTap: onCameraTap);

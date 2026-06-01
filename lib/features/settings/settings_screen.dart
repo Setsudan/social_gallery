@@ -97,7 +97,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Appearance',
             icon: Icons.palette_outlined,
             child: DropdownButtonFormField<ThemeMode>(
-              value: settings.themeMode,
+              initialValue: settings.themeMode,
               decoration: const InputDecoration(labelText: 'Theme'),
               items: const [
                 DropdownMenuItem(
@@ -162,7 +162,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Animation Speed',
             icon: Icons.motion_photos_auto_outlined,
             child: DropdownButtonFormField<double>(
-              value: settings.animationSpeed,
+              initialValue: settings.animationSpeed,
               decoration: const InputDecoration(labelText: 'Speed Factor'),
               items: const [
                 DropdownMenuItem(

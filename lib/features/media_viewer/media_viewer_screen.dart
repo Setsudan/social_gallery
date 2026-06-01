@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -54,32 +56,39 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<AssetEntity?>(
-        future: AssetEntity.fromId(widget.assetId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            );
-          }
+      body: Platform.isWindows
+          ? FullscreenMediaContent(
+              entity: null,
+              assetPath: widget.assetId,
+              videoFit: BoxFit.contain,
+              imageFit: BoxFit.contain,
+            )
+          : FutureBuilder<AssetEntity?>(
+              future: AssetEntity.fromId(widget.assetId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                }
 
-          final entity = snapshot.data;
-          if (entity == null) {
-            return const Center(
-              child: Text(
-                'Media not found',
-                style: TextStyle(color: Colors.white),
-              ),
-            );
-          }
+                final entity = snapshot.data;
+                if (entity == null) {
+                  return const Center(
+                    child: Text(
+                      'Media not found',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
 
-          return FullscreenMediaContent(
-            entity: entity,
-            videoFit: BoxFit.contain,
-            imageFit: BoxFit.contain,
-          );
-        },
-      ),
+                return FullscreenMediaContent(
+                  entity: entity,
+                  videoFit: BoxFit.contain,
+                  imageFit: BoxFit.contain,
+                );
+              },
+            ),
     );
   }
 }

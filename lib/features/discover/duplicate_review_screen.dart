@@ -121,62 +121,74 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
             subtitle:
                 'Keep best is pre-selected. Tap items to change what will be removed.',
           ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(8),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: _group!.items.length,
-              itemBuilder: (context, index) {
-                final media = _group!.items[index];
-                final isKeeper = media.id == _keeper?.id;
-                final selected = _selectedIds.contains(media.id);
-                return GestureDetector(
-                  onTap: () {
-                    if (isKeeper) return;
-                    setState(() {
-                      if (selected) {
-                        _selectedIds.remove(media.id);
-                      } else {
-                        _selectedIds.add(media.id);
-                      }
-                    });
-                  },
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      MediaThumbnail(
-                        assetId: media.uri,
-                        showVideoBadge: media.isVideo,
-                      ),
-                      if (isKeeper)
-                        Container(
-                          color: Colors.black26,
-                          child: const Center(
-                            child: Chip(
-                              label: Text('Keep'),
-                              backgroundColor: Colors.green,
-                            ),
-                          ),
-                        ),
-                      if (selected && !isKeeper)
-                        Container(
-                          color: Colors.red.withValues(alpha: 0.35),
-                          child: const Center(
-                            child: Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                    ],
+          Builder(
+            builder: (context) {
+              final width = MediaQuery.sizeOf(context).width;
+              int columns = 3;
+              if (width > 1200) {
+                columns = 6;
+              } else if (width > 800) {
+                columns = 4;
+              }
+
+              return Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(8),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
-                );
-              },
-            ),
+                  itemCount: _group!.items.length,
+                  itemBuilder: (context, index) {
+                    final media = _group!.items[index];
+                    final isKeeper = media.id == _keeper?.id;
+                    final selected = _selectedIds.contains(media.id);
+                    return GestureDetector(
+                      onTap: () {
+                        if (isKeeper) return;
+                        setState(() {
+                          if (selected) {
+                            _selectedIds.remove(media.id);
+                          } else {
+                            _selectedIds.add(media.id);
+                          }
+                        });
+                      },
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          MediaThumbnail(
+                            assetId: media.uri,
+                            showVideoBadge: media.isVideo,
+                          ),
+                          if (isKeeper)
+                            Container(
+                              color: Colors.black26,
+                              child: const Center(
+                                child: Chip(
+                                  label: Text('Keep'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              ),
+                            ),
+                          if (selected && !isKeeper)
+                            Container(
+                              color: Colors.red.withValues(alpha: 0.35),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ],
       ),

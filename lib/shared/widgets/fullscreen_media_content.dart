@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -11,14 +13,16 @@ import 'package:social_gallery/shared/widgets/unsupported_media_placeholder.dart
 class FullscreenMediaContent extends ConsumerWidget {
   const FullscreenMediaContent({
     super.key,
-    required this.entity,
+    this.entity,
+    this.assetPath,
     this.heroTag,
     this.videoFit = BoxFit.contain,
     this.imageFit = BoxFit.contain,
     this.enablePinchZoom = true,
   });
 
-  final AssetEntity entity;
+  final AssetEntity? entity;
+  final String? assetPath;
   final String? heroTag;
   final BoxFit videoFit;
   final BoxFit imageFit;
@@ -26,25 +30,80 @@ class FullscreenMediaContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final kind = AssetMediaLoader.classify(entity);
     final size = MediaQuery.sizeOf(context);
 
+    if (Platform.isWindows && assetPath != null) {
+      final isWinVideo = assetPath!.toLowerCase().endsWith('.mp4') ||
+          assetPath!.toLowerCase().endsWith('.mov') ||
+          assetPath!.toLowerCase().endsWith('.mkv') ||
+          assetPath!.toLowerCase().endsWith('.webm') ||
+          assetPath!.toLowerCase().endsWith('.avi');
+
+      if (isWinVideo) {
+        return AssetVideoPlayer(entity: null, assetPath: assetPath, fit: videoFit);
+      }
+
+      final Widget imageChild = Image.file(
+        File(assetPath!),
+        fit: imageFit,
+      );
+
+      final Widget routedImage = heroTag != null
+          ? Hero(
+              tag: heroTag!,
+              flightShuttleBuilder: (
+                flightContext,
+                animation,
+                flightDirection,
+                fromHeroContext,
+                toHeroContext,
+              ) {
+                final shuttleHero = flightDirection == HeroFlightDirection.pop
+                    ? fromHeroContext.widget as Hero
+                    : toHeroContext.widget as Hero;
+                return SizedBox.expand(
+                  child: FittedBox(fit: BoxFit.contain, child: shuttleHero.child),
+                );
+              },
+              child: imageChild,
+            )
+          : imageChild;
+
+      final mediaChild = SizedBox(
+        width: size.width,
+        height: size.height,
+        child: routedImage,
+      );
+
+      if (!enablePinchZoom) {
+        return SizedBox.expand(child: mediaChild);
+      }
+
+      return _FocalZoomViewer(
+        motion: AppMotion.of(context, ref),
+        child: mediaChild,
+      );
+    }
+
+    final nonNullEntity = entity!;
+    final kind = AssetMediaLoader.classify(nonNullEntity);
+
     if (kind == AssetMediaKind.video) {
-      return AssetVideoPlayer(entity: entity, fit: videoFit);
+      return AssetVideoPlayer(entity: nonNullEntity, fit: videoFit);
     }
 
     if (kind == AssetMediaKind.audio || kind == AssetMediaKind.unsupported) {
       return SizedBox.expand(
         child: UnsupportedMediaPlaceholder(
           kind: kind,
-          entity: entity,
+          entity: nonNullEntity,
           fit: BoxFit.contain,
         ),
       );
     }
 
     final imageChild = AssetMediaLoader.buildFullscreenImage(
-      entity: entity,
+      entity: nonNullEntity,
       fit: imageFit,
       heroTag: heroTag,
     );

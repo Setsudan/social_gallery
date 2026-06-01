@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/permissions/media_permission_service.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:social_gallery/core/workers/trash_cleanup_worker.dart';
 
 class StartupScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   MediaPermissionState _state = MediaPermissionState.checking;
 
   bool _showStoragePrompt = false;
+  bool _showWindowsRootPrompt = false;
 
   String? _error;
 
@@ -36,9 +38,8 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   Future<void> _bootstrap() async {
     setState(() {
       _state = MediaPermissionState.checking;
-
       _showStoragePrompt = false;
-
+      _showWindowsRootPrompt = false;
       _error = null;
     });
 
@@ -74,6 +75,17 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
 
     final preferences = ref.read(preferencesRepositoryProvider);
 
+    if (Platform.isWindows) {
+      final rootPath = preferences.windowsGalleryRootPath;
+      if (rootPath == null || rootPath.isEmpty) {
+        setState(() {
+          _showWindowsRootPrompt = true;
+          _showStoragePrompt = false;
+        });
+        return;
+      }
+    }
+
     if (preferences.hasCompletedInitialSetup) {
       _backgroundSync();
 
@@ -83,6 +95,22 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     }
 
     await _syncAndEnter();
+  }
+
+  Future<void> _pickWindowsRootFolder() async {
+    try {
+      final path = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Select Root Gallery Folder',
+      );
+      if (path != null && path.isNotEmpty) {
+        final prefs = ref.read(preferencesRepositoryProvider);
+        await prefs.setWindowsGalleryRootPath(path);
+        setState(() => _showWindowsRootPrompt = false);
+        await _bootstrap();
+      }
+    } catch (e) {
+      setState(() => _error = 'Failed to select folder: $e');
+    }
   }
 
   void _backgroundSync() {
@@ -145,6 +173,48 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_showWindowsRootPrompt) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.folder_open_outlined, size: 56),
+                const SizedBox(height: 16),
+                Text(
+                  'Select Gallery Root Directory',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Choose a local directory on your computer to scan and display photos and videos in your gallery.',
+                  textAlign: TextAlign.center,
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: _pickWindowsRootFolder,
+                  icon: const Icon(Icons.folder),
+                  label: const Text('Choose Folder'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (_showStoragePrompt) {
       return Scaffold(
         body: Center(

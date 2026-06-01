@@ -7,6 +7,7 @@ class PreferencesRepository {
 
   static const _initialSetupKey = 'initial_setup_complete';
   static const _activeProfileFolderKey = 'active_profile_folder';
+  static const _windowsGalleryRootKey = 'windows_gallery_root_path';
   static const _themeModeKey = 'settings_theme_mode';
   static const _fontSizeKey = 'settings_font_size';
   static const _animationSpeedKey = 'settings_animation_speed';
@@ -26,6 +27,13 @@ class PreferencesRepository {
 
   Future<void> setActiveProfileFolderPath(String path) async {
     await _prefs.setString(_activeProfileFolderKey, path);
+  }
+
+  String? get windowsGalleryRootPath =>
+      _prefs.getString(_windowsGalleryRootKey);
+
+  Future<void> setWindowsGalleryRootPath(String path) async {
+    await _prefs.setString(_windowsGalleryRootKey, path);
   }
 
   String get themeMode => _prefs.getString(_themeModeKey) ?? 'system';

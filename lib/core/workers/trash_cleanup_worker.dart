@@ -1,4 +1,4 @@
-﻿import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social_gallery/data/datasources/photo_manager_datasource.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/data/repositories/media_repository.dart';
@@ -16,7 +16,7 @@ void trashCleanupCallbackDispatcher() {
       final prefs = await SharedPreferences.getInstance();
       final preferences = PreferencesRepository(prefs);
       final db = AppDatabase();
-      final repo = MediaRepository(db, PhotoManagerDatasource(), preferences);
+      final repo = MediaRepository(db, PhotoManagerDatasource(preferences), preferences);
       await repo.cleanupExpiredTrash(preferences.trashRetentionDays);
       await db.close();
       return true;

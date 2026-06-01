@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,7 @@ import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/core/auth/folder_access.dart';
 import 'package:social_gallery/shared/widgets/explore_mosaic_grid.dart';
+import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
@@ -418,23 +421,43 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     }
     final loadingMore = _loading && _items.isNotEmpty;
 
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width > 800 || Platform.isWindows;
+
+    final Widget grid = isDesktop
+        ? MediaGrid(
+            controller: _scrollController,
+            items: _items,
+            selectedIds: _selectedIds,
+            onSelectToggle: _toggleSelect,
+            onLongPress: _startSelection,
+            onTap: (item) => context.push(
+              mediaViewerLocation(
+                item.uri,
+                mediaId: item.id,
+                favorite: item.isFavorite,
+              ),
+            ),
+          )
+        : ExploreMosaicGrid(
+            controller: _scrollController,
+            items: _items,
+            showLoadingFooter: loadingMore && _hasMore,
+            selectedIds: _selectedIds,
+            onSelectToggle: _toggleSelect,
+            onLongPress: _startSelection,
+            onTap: (item) => context.push(
+              mediaViewerLocation(
+                item.uri,
+                mediaId: item.id,
+                favorite: item.isFavorite,
+              ),
+            ),
+          );
+
     return RefreshIndicator(
       onRefresh: () => _loadPage(refresh: true),
-      child: ExploreMosaicGrid(
-        controller: _scrollController,
-        items: _items,
-        showLoadingFooter: loadingMore && _hasMore,
-        selectedIds: _selectedIds,
-        onSelectToggle: _toggleSelect,
-        onLongPress: _startSelection,
-        onTap: (item) => context.push(
-          mediaViewerLocation(
-            item.uri,
-            mediaId: item.id,
-            favorite: item.isFavorite,
-          ),
-        ),
-      ),
+      child: grid,
     );
   }
 }
