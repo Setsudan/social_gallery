@@ -10,9 +10,7 @@ import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_lock_gate.dart';
-import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/animation/modal_sheet.dart';
-import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
@@ -237,14 +235,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final activePath = ref.watch(activeProfileFolderProvider);
     final foldersAsync = ref.watch(allFoldersProvider);
     final inSelectionMode = _selectedIds.isNotEmpty;
-    final motion = AppMotion.of(context, ref);
-    listenForTabScrollToTop(
-      ref,
-      kShellTabProfile,
-      _scrollController,
-      motion: motion,
-    );
-
     final profileTitle = foldersAsync.maybeWhen(
       data: (folders) => folders
           .where((f) => f.path == activePath)

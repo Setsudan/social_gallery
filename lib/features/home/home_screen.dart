@@ -194,6 +194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: listPadding,
+      cacheExtent: 600,
       itemCount: _items.length + 2 + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -225,6 +226,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final item = _items[feedIndex];
         return StaggeredEntrance(
           index: feedIndex,
+          playOnceKey: 'feed_${item.media.id}',
           child: FeedPostCard(
             item: item,
             onFolderTap: () =>

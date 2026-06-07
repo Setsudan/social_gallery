@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/exif/exif_reader.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
 import 'package:social_gallery/data/local/app_database.dart';
@@ -161,6 +162,11 @@ class PhotoManagerDatasource {
         final file = await asset.file;
         final kind = AssetMediaLoader.classify(asset);
         final mimeType = await AssetMediaLoader.inferMimeType(asset);
+        final exif = kind == AssetMediaKind.image
+            ? await readExifFromPath(file?.path)
+            : null;
+        final lat = asset.latitude ?? exif?.latitude;
+        final lng = asset.longitude ?? exif?.longitude;
         companions.add(
           MediaItemsCompanion.insert(
             id: Value(_stableId(asset)),
@@ -175,6 +181,14 @@ class PhotoManagerDatasource {
             mimeType: mimeType,
             width: Value(asset.width),
             height: Value(asset.height),
+            latitude: lat != null && lat != 0 ? Value(lat) : const Value(null),
+            longitude: lng != null && lng != 0 ? Value(lng) : const Value(null),
+            cameraMake: Value(exif?.cameraMake),
+            cameraModel: Value(exif?.cameraModel),
+            iso: Value(exif?.iso),
+            shutterSpeed: Value(exif?.shutterSpeed),
+            focalLength: Value(exif?.focalLength),
+            aperture: Value(exif?.aperture),
             videoDuration: Value(
               kind == AssetMediaKind.video ? asset.duration : null,
             ),

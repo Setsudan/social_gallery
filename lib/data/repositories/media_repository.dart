@@ -122,6 +122,10 @@ class MediaRepository {
     return rows.map(mediaItemFromRow).toList();
   }
 
+  Future<List<domain.MediaItem>> getGalleryMediaPage(int page) async {
+    return getExplorePage(page);
+  }
+
   Future<List<domain.MediaItem>> searchExplorePage(
     String query,
     int page,
@@ -155,6 +159,21 @@ class MediaRepository {
 
   Future<List<domain.MediaItem>> getPotentialDuplicates() async {
     final rows = await _db.getPotentialDuplicateMedia();
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<List<domain.MediaItem>> getOrganizeMediaPool() async {
+    final rows = await _db.getOrganizeMediaPool();
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<List<domain.MediaItem>> getAllHomeFeedMedia() async {
+    final rows = await _db.getAllHomeFeedMedia();
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<List<domain.MediaItem>> getFavoriteMediaList() async {
+    final rows = await _db.getFavoriteMediaList();
     return rows.map(mediaItemFromRow).toList();
   }
 

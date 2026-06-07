@@ -132,6 +132,7 @@ class _FolderManagementScreenState
               final folder = folders[folderIndex];
               return StaggeredEntrance(
                 index: folderIndex,
+                playOnceKey: 'folder_${folder.path}',
                 child: _folderTile(folder, theme),
               );
             },

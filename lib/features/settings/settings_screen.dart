@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/core/cache/cache_service.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
@@ -186,6 +187,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiGroupCard(
+            title: 'Gallery',
+            icon: Icons.photo_library_outlined,
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Gallery view mode'),
+              subtitle: const Text(
+                'Replace Home and Explore with a pinch-zoom gallery tab',
+              ),
+              value: settings.galleryViewMode,
+              onChanged: (value) {
+                AppHaptics.medium();
+                ref.read(settingsProvider.notifier).setGalleryViewMode(value);
+              },
+            ),
+          ),
+          const SizedBox(height: OneUiSpacing.sectionGap),
+          OneUiGroupCard(
             title: 'Content',
             icon: Icons.folder_outlined,
             child: Column(
@@ -210,6 +228,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ),
           ),
+          const SizedBox(height: OneUiSpacing.sectionGap),
+          _OrganizeSettingsCard(),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiGroupCard(
             title: 'Trash Retention',
@@ -349,5 +369,66 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (factor < 1.1) return 'Normal';
     if (factor < 1.3) return 'Large';
     return 'Extra Large';
+  }
+}
+
+class _OrganizeSettingsCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final repo = ref.watch(organizeRepositoryProvider);
+    final batchSize = repo.batchSize;
+    final queueOrder = repo.queueOrder;
+
+    return OneUiGroupCard(
+      title: 'Organize',
+      icon: Icons.swipe,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Configure the swipe organizer on the Discover tab.',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: OneUiSpacing.md),
+          Text('Batch size: $batchSize'),
+          Slider(
+            value: batchSize.toDouble(),
+            min: 10,
+            max: 30,
+            divisions: 20,
+            label: '$batchSize',
+            onChanged: (value) => repo.setBatchSize(value.round()),
+          ),
+          const SizedBox(height: OneUiSpacing.sm),
+          SegmentedButton<OrganizeQueueOrder>(
+            segments: const [
+              ButtonSegment(
+                value: OrganizeQueueOrder.random,
+                label: Text('Random'),
+              ),
+              ButtonSegment(
+                value: OrganizeQueueOrder.chronological,
+                label: Text('Time'),
+              ),
+            ],
+            selected: {queueOrder},
+            onSelectionChanged: (set) => repo.setQueueOrder(set.first),
+          ),
+          const SizedBox(height: OneUiSpacing.md),
+          FilledButton.tonal(
+            onPressed: () async {
+              await repo.clearProcessed();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Released kept photos')),
+                );
+              }
+            },
+            child: const Text('Release kept photos'),
+          ),
+        ],
+      ),
+    );
   }
 }

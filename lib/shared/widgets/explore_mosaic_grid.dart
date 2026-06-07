@@ -46,6 +46,7 @@ class ExploreMosaicGrid extends StatelessWidget {
     return ListView.builder(
       controller: controller,
       padding: padding,
+      cacheExtent: 600,
       itemCount: listItemCount,
       itemBuilder: (context, blockIndex) {
         if (blockIndex >= blockCount) {
@@ -66,6 +67,7 @@ class ExploreMosaicGrid extends StatelessWidget {
 
         return StaggeredEntrance(
           index: blockIndex,
+          playOnceKey: 'mosaic_$baseIndex',
           child: Padding(
             padding: EdgeInsets.only(bottom: spacing),
             child: LayoutBuilder(
@@ -289,26 +291,28 @@ class _MosaicTile extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: PressableScale(
-        onTap: () {
-          if (inSelectionMode && onSelectToggle != null) {
-            onSelectToggle!(item!);
-          } else {
-            onTap(item!);
-          }
-        },
-        onLongPress: () {
-          if (onLongPress != null) {
-            onLongPress!(item!);
-          }
-        },
-        child: MediaSelectionOverlay(
-          selected: isSelected,
-          inSelectionMode: inSelectionMode,
-          child: MediaThumbnail(
-            assetId: item!.uri,
-            showVideoBadge: item!.isVideo,
-            heroTag: mediaHeroTag(item!.id),
+      child: RepaintBoundary(
+        child: PressableScale(
+          onTap: () {
+            if (inSelectionMode && onSelectToggle != null) {
+              onSelectToggle!(item!);
+            } else {
+              onTap(item!);
+            }
+          },
+          onLongPress: () {
+            if (onLongPress != null) {
+              onLongPress!(item!);
+            }
+          },
+          child: MediaSelectionOverlay(
+            selected: isSelected,
+            inSelectionMode: inSelectionMode,
+            child: MediaThumbnail(
+              assetId: item!.uri,
+              showVideoBadge: item!.isVideo,
+              heroTag: mediaHeroTag(item!.id),
+            ),
           ),
         ),
       ),

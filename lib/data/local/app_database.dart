@@ -6,19 +6,20 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'tables/folders_table.dart';
+import 'tables/media_analysis_cache_table.dart';
 import 'tables/media_items_table.dart';
 import 'tables/travel_modes_table.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Folders, MediaItems, TravelModes])
+@DriftDatabase(tables: [Folders, MediaItems, TravelModes, MediaAnalysisCache])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -30,6 +31,15 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.createTable(travelModes);
+      }
+      if (from < 4) {
+        await m.addColumn(mediaItems, mediaItems.cameraMake);
+        await m.addColumn(mediaItems, mediaItems.cameraModel);
+        await m.addColumn(mediaItems, mediaItems.iso);
+        await m.addColumn(mediaItems, mediaItems.shutterSpeed);
+        await m.addColumn(mediaItems, mediaItems.focalLength);
+        await m.addColumn(mediaItems, mediaItems.aperture);
+        await m.createTable(mediaAnalysisCache);
       }
     },
   );
@@ -314,6 +324,12 @@ class AppDatabase extends _$AppDatabase {
       height: row.readNullable<int>('height'),
       latitude: row.readNullable<double>('latitude'),
       longitude: row.readNullable<double>('longitude'),
+      cameraMake: row.readNullable<String>('camera_make'),
+      cameraModel: row.readNullable<String>('camera_model'),
+      iso: row.readNullable<int>('iso'),
+      shutterSpeed: row.readNullable<String>('shutter_speed'),
+      focalLength: row.readNullable<double>('focal_length'),
+      aperture: row.readNullable<String>('aperture'),
       isFavorite: row.read<bool>('is_favorite'),
       thumbnailUri: row.readNullable<String>('thumbnail_uri'),
       videoDuration: row.readNullable<int>('video_duration'),
@@ -324,6 +340,70 @@ class AppDatabase extends _$AppDatabase {
       trashedAt: row.readNullable<int>('trashed_at'),
       originalPath: row.readNullable<String>('original_path'),
     );
+  }
+
+  Future<List<MediaRow>> getOrganizeMediaPool() async {
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE f.follow_status = 'HOME_FEED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+      ORDER BY m.date_modified DESC
+      ''',
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<List<MediaRow>> getAllHomeFeedMedia() async {
+    return getOrganizeMediaPool();
+  }
+
+  Future<List<MediaRow>> getFavoriteMediaList() async {
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_favorite = 1
+        AND f.follow_status = 'HOME_FEED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+      ORDER BY m.date_modified DESC
+      ''',
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<MediaAnalysisRow?> getAnalysisForMedia(int mediaId) {
+    return (select(mediaAnalysisCache)
+          ..where((a) => a.mediaId.equals(mediaId)))
+        .getSingleOrNull();
+  }
+
+  Future<List<MediaAnalysisRow>> getAllAnalysisRows() {
+    return select(mediaAnalysisCache).get();
+  }
+
+  Future<void> upsertAnalysisRow(MediaAnalysisCacheCompanion row) {
+    return into(mediaAnalysisCache).insert(row, mode: InsertMode.replace);
+  }
+
+  Future<void> upsertAnalysisRows(List<MediaAnalysisCacheCompanion> rows) async {
+    await batch((b) {
+      for (final row in rows) {
+        b.insert(mediaAnalysisCache, row, mode: InsertMode.replace);
+      }
+    });
+  }
+
+  Future<int> getAnalysisCount() async {
+    final count = mediaAnalysisCache.mediaId.count();
+    final query = selectOnly(mediaAnalysisCache)..addColumns([count]);
+    final row = await query.getSingle();
+    return row.read(count) ?? 0;
   }
 
   // --- NEW WORK: Move, Trash, Restore operations ---

@@ -14,21 +14,24 @@ import 'package:social_gallery/features/discover/discover_stub_screen.dart';
 
 import 'package:social_gallery/features/explore/explore_screen.dart';
 
-import 'package:social_gallery/features/favorites/favorites_screen.dart';
-
 import 'package:social_gallery/features/folder_management/folder_management_screen.dart';
 
 import 'package:social_gallery/features/folder_profile/folder_profile_screen.dart';
 
-import 'package:social_gallery/features/home/home_screen.dart';
-
+import 'package:social_gallery/features/deep_organize/compression_screen.dart';
+import 'package:social_gallery/features/deep_organize/deep_organize_screen.dart';
+import 'package:social_gallery/features/deep_organize/likes_review_screen.dart';
+import 'package:social_gallery/features/deep_organize/low_quality_screen.dart';
+import 'package:social_gallery/features/deep_organize/shooting_stats_screen.dart';
+import 'package:social_gallery/features/deep_organize/similar_photos_screen.dart';
 import 'package:social_gallery/features/discover/discover_screen.dart';
+import 'package:social_gallery/features/organize/organize_screen.dart';
 
 import 'package:social_gallery/features/media_viewer/media_viewer_screen.dart';
 
 import 'package:social_gallery/features/post_detail/post_detail_screen.dart';
 
-import 'package:social_gallery/features/profile/profile_screen.dart';
+import 'package:social_gallery/features/shell/home_branch_screen.dart';
 
 import 'package:social_gallery/features/shell/main_shell.dart';
 
@@ -86,7 +89,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/home',
 
                 pageBuilder: (context, state) =>
-                    _page(context, ref, state, const HomeScreen()),
+                    _page(context, ref, state, const HomeBranchScreen()),
               ),
             ],
           ),
@@ -113,27 +116,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/favorites',
-
-                pageBuilder: (context, state) =>
-                    _page(context, ref, state, const FavoritesScreen()),
-              ),
-            ],
-          ),
-
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/profile',
-
-                pageBuilder: (context, state) =>
-                    _page(context, ref, state, const ProfileScreen()),
-              ),
-            ],
-          ),
         ],
       ),
 
@@ -247,6 +229,55 @@ final routerProvider = Provider<GoRouter>((ref) {
             icon: Icons.place_outlined,
           ),
         ),
+      ),
+
+      GoRoute(
+        path: '/organize',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const OrganizeScreen()),
+      ),
+
+      GoRoute(
+        path: '/discover/deep-organize',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const DeepOrganizeScreen()),
+      ),
+
+      GoRoute(
+        path: '/discover/similar',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const SimilarPhotosScreen()),
+      ),
+
+      GoRoute(
+        path: '/discover/low-quality',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const LowQualityScreen()),
+      ),
+
+      GoRoute(
+        path: '/discover/compression',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const CompressionScreen()),
+      ),
+
+      GoRoute(
+        path: '/discover/shooting-stats',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const ShootingStatsScreen()),
+      ),
+
+      GoRoute(
+        path: '/discover/likes-review',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const LikesReviewScreen()),
       ),
 
       GoRoute(

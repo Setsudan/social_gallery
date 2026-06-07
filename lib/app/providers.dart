@@ -15,9 +15,18 @@ import 'package:social_gallery/data/repositories/travel_mode_repository.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart' as domain;
+import 'package:social_gallery/core/analysis/media_analysis_service.dart';
+import 'package:social_gallery/data/repositories/media_analysis_repository.dart';
+import 'package:social_gallery/data/repositories/organize_repository.dart';
+import 'package:social_gallery/domain/models/media_analysis_result.dart';
+import 'package:social_gallery/domain/usecases/build_organize_queue.dart';
+import 'package:social_gallery/domain/usecases/compute_shooting_stats.dart';
 import 'package:social_gallery/domain/usecases/find_duplicate_groups.dart';
+import 'package:social_gallery/domain/usecases/find_similar_groups.dart';
+import 'package:social_gallery/domain/usecases/score_low_quality.dart';
 import 'package:social_gallery/domain/usecases/suggest_keep_best.dart';
 import 'package:social_gallery/domain/usecases/travel_mode_use_case.dart';
+import 'package:social_gallery/features/discover/discover_hub_controller.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences not initialized');
@@ -79,6 +88,100 @@ final findDuplicateGroupsProvider = Provider((ref) => FindDuplicateGroups());
 
 final suggestKeepBestProvider = Provider((ref) => SuggestKeepBest());
 
+final organizeRepositoryProvider = Provider((ref) {
+  return OrganizeRepository(ref.watch(sharedPreferencesProvider));
+});
+
+final mediaAnalysisRepositoryProvider = Provider((ref) {
+  return MediaAnalysisRepository(ref.watch(databaseProvider));
+});
+
+final mediaAnalysisServiceProvider = Provider((ref) {
+  return MediaAnalysisService();
+});
+
+final buildOrganizeQueueProvider = Provider((ref) => BuildOrganizeQueue());
+
+final findSimilarGroupsProvider = Provider((ref) => FindSimilarGroups());
+
+final scoreLowQualityProvider = Provider((ref) => ScoreLowQuality());
+
+final computeShootingStatsProvider = Provider((ref) => ComputeShootingStats());
+
+final discoverHubProvider =
+    AsyncNotifierProvider<DiscoverHubController, DiscoverHubData>(
+  DiscoverHubController.new,
+);
+
+class MediaAnalysisScanState {
+  const MediaAnalysisScanState({
+    this.isScanning = false,
+    this.scanned = 0,
+    this.total = 0,
+    this.error,
+  });
+
+  final bool isScanning;
+  final int scanned;
+  final int total;
+  final String? error;
+
+  double get progress => total == 0 ? 0 : scanned / total;
+}
+
+class MediaAnalysisController extends StateNotifier<MediaAnalysisScanState> {
+  MediaAnalysisController(this._ref) : super(const MediaAnalysisScanState());
+
+  final Ref _ref;
+
+  Future<Map<int, MediaAnalysisResult>> getCachedAnalysis() async {
+    return _ref.read(mediaAnalysisRepositoryProvider).getAllCached();
+  }
+
+  Future<void> startScan() async {
+    if (state.isScanning) return;
+    state = const MediaAnalysisScanState(isScanning: true);
+
+    try {
+      final mediaRepo = _ref.read(mediaRepositoryProvider);
+      final analysisRepo = _ref.read(mediaAnalysisRepositoryProvider);
+      final service = _ref.read(mediaAnalysisServiceProvider);
+
+      final items = await mediaRepo.getAllHomeFeedMedia();
+      final cached = await analysisRepo.getAllCached();
+      final scannedIds = cached.keys.toSet();
+
+      await for (final progress in service.scanLibrary(
+        items: items,
+        alreadyScanned: scannedIds,
+        onResult: (result) async {
+          await analysisRepo.saveResult(result);
+        },
+      )) {
+        state = MediaAnalysisScanState(
+          isScanning: true,
+          scanned: progress.scanned,
+          total: progress.total,
+        );
+      }
+
+      state = MediaAnalysisScanState(
+        isScanning: false,
+        scanned: items.where((i) => !i.isVideo).length,
+        total: items.where((i) => !i.isVideo).length,
+      );
+      _ref.invalidate(discoverHubProvider);
+    } catch (e) {
+      state = MediaAnalysisScanState(isScanning: false, error: e.toString());
+    }
+  }
+}
+
+final mediaAnalysisControllerProvider =
+    StateNotifierProvider<MediaAnalysisController, MediaAnalysisScanState>(
+  (ref) => MediaAnalysisController(ref),
+);
+
 final syncStateProvider = StateProvider<bool>((ref) => false);
 
 final activeProfileFolderProvider = StateProvider<String?>((ref) => null);
@@ -101,6 +204,7 @@ class AppSettings {
   final int trashRetentionDays;
   final int cacheSizeLimitMb;
   final bool autoClearCacheOnClose;
+  final bool galleryViewMode;
 
   const AppSettings({
     required this.themeMode,
@@ -109,6 +213,7 @@ class AppSettings {
     required this.trashRetentionDays,
     required this.cacheSizeLimitMb,
     required this.autoClearCacheOnClose,
+    required this.galleryViewMode,
   });
 
   AppSettings copyWith({
@@ -118,6 +223,7 @@ class AppSettings {
     int? trashRetentionDays,
     int? cacheSizeLimitMb,
     bool? autoClearCacheOnClose,
+    bool? galleryViewMode,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -127,6 +233,7 @@ class AppSettings {
       cacheSizeLimitMb: cacheSizeLimitMb ?? this.cacheSizeLimitMb,
       autoClearCacheOnClose:
           autoClearCacheOnClose ?? this.autoClearCacheOnClose,
+      galleryViewMode: galleryViewMode ?? this.galleryViewMode,
     );
   }
 }
@@ -149,6 +256,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       trashRetentionDays: prefs.trashRetentionDays,
       cacheSizeLimitMb: prefs.cacheSizeLimitMb,
       autoClearCacheOnClose: prefs.autoClearCacheOnClose,
+      galleryViewMode: prefs.galleryViewMode,
     );
   }
 
@@ -183,6 +291,11 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   Future<void> setAutoClearCacheOnClose(bool enabled) async {
     state = state.copyWith(autoClearCacheOnClose: enabled);
     await _prefs.setAutoClearCacheOnClose(enabled);
+  }
+
+  Future<void> setGalleryViewMode(bool enabled) async {
+    state = state.copyWith(galleryViewMode: enabled);
+    await _prefs.setGalleryViewMode(enabled);
   }
 }
 

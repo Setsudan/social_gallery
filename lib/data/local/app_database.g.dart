@@ -993,6 +993,70 @@ class $MediaItemsTable extends MediaItems
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _cameraMakeMeta = const VerificationMeta(
+    'cameraMake',
+  );
+  @override
+  late final GeneratedColumn<String> cameraMake = GeneratedColumn<String>(
+    'camera_make',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cameraModelMeta = const VerificationMeta(
+    'cameraModel',
+  );
+  @override
+  late final GeneratedColumn<String> cameraModel = GeneratedColumn<String>(
+    'camera_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isoMeta = const VerificationMeta('iso');
+  @override
+  late final GeneratedColumn<int> iso = GeneratedColumn<int>(
+    'iso',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _shutterSpeedMeta = const VerificationMeta(
+    'shutterSpeed',
+  );
+  @override
+  late final GeneratedColumn<String> shutterSpeed = GeneratedColumn<String>(
+    'shutter_speed',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _focalLengthMeta = const VerificationMeta(
+    'focalLength',
+  );
+  @override
+  late final GeneratedColumn<double> focalLength = GeneratedColumn<double>(
+    'focal_length',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _apertureMeta = const VerificationMeta(
+    'aperture',
+  );
+  @override
+  late final GeneratedColumn<String> aperture = GeneratedColumn<String>(
+    'aperture',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
     'isFavorite',
   );
@@ -1117,6 +1181,12 @@ class $MediaItemsTable extends MediaItems
     height,
     latitude,
     longitude,
+    cameraMake,
+    cameraModel,
+    iso,
+    shutterSpeed,
+    focalLength,
+    aperture,
     isFavorite,
     thumbnailUri,
     videoDuration,
@@ -1240,6 +1310,51 @@ class $MediaItemsTable extends MediaItems
       context.handle(
         _longitudeMeta,
         longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    }
+    if (data.containsKey('camera_make')) {
+      context.handle(
+        _cameraMakeMeta,
+        cameraMake.isAcceptableOrUnknown(data['camera_make']!, _cameraMakeMeta),
+      );
+    }
+    if (data.containsKey('camera_model')) {
+      context.handle(
+        _cameraModelMeta,
+        cameraModel.isAcceptableOrUnknown(
+          data['camera_model']!,
+          _cameraModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('iso')) {
+      context.handle(
+        _isoMeta,
+        iso.isAcceptableOrUnknown(data['iso']!, _isoMeta),
+      );
+    }
+    if (data.containsKey('shutter_speed')) {
+      context.handle(
+        _shutterSpeedMeta,
+        shutterSpeed.isAcceptableOrUnknown(
+          data['shutter_speed']!,
+          _shutterSpeedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('focal_length')) {
+      context.handle(
+        _focalLengthMeta,
+        focalLength.isAcceptableOrUnknown(
+          data['focal_length']!,
+          _focalLengthMeta,
+        ),
+      );
+    }
+    if (data.containsKey('aperture')) {
+      context.handle(
+        _apertureMeta,
+        aperture.isAcceptableOrUnknown(data['aperture']!, _apertureMeta),
       );
     }
     if (data.containsKey('is_favorite')) {
@@ -1379,6 +1494,30 @@ class $MediaItemsTable extends MediaItems
         DriftSqlType.double,
         data['${effectivePrefix}longitude'],
       ),
+      cameraMake: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}camera_make'],
+      ),
+      cameraModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}camera_model'],
+      ),
+      iso: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}iso'],
+      ),
+      shutterSpeed: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shutter_speed'],
+      ),
+      focalLength: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}focal_length'],
+      ),
+      aperture: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aperture'],
+      ),
       isFavorite: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_favorite'],
@@ -1439,6 +1578,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
   final int? height;
   final double? latitude;
   final double? longitude;
+  final String? cameraMake;
+  final String? cameraModel;
+  final int? iso;
+  final String? shutterSpeed;
+  final double? focalLength;
+  final String? aperture;
   final bool isFavorite;
   final String? thumbnailUri;
   final int? videoDuration;
@@ -1463,6 +1608,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     this.height,
     this.latitude,
     this.longitude,
+    this.cameraMake,
+    this.cameraModel,
+    this.iso,
+    this.shutterSpeed,
+    this.focalLength,
+    this.aperture,
     required this.isFavorite,
     this.thumbnailUri,
     this.videoDuration,
@@ -1499,6 +1650,24 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     }
     if (!nullToAbsent || longitude != null) {
       map['longitude'] = Variable<double>(longitude);
+    }
+    if (!nullToAbsent || cameraMake != null) {
+      map['camera_make'] = Variable<String>(cameraMake);
+    }
+    if (!nullToAbsent || cameraModel != null) {
+      map['camera_model'] = Variable<String>(cameraModel);
+    }
+    if (!nullToAbsent || iso != null) {
+      map['iso'] = Variable<int>(iso);
+    }
+    if (!nullToAbsent || shutterSpeed != null) {
+      map['shutter_speed'] = Variable<String>(shutterSpeed);
+    }
+    if (!nullToAbsent || focalLength != null) {
+      map['focal_length'] = Variable<double>(focalLength);
+    }
+    if (!nullToAbsent || aperture != null) {
+      map['aperture'] = Variable<String>(aperture);
     }
     map['is_favorite'] = Variable<bool>(isFavorite);
     if (!nullToAbsent || thumbnailUri != null) {
@@ -1550,6 +1719,22 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       longitude: longitude == null && nullToAbsent
           ? const Value.absent()
           : Value(longitude),
+      cameraMake: cameraMake == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cameraMake),
+      cameraModel: cameraModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cameraModel),
+      iso: iso == null && nullToAbsent ? const Value.absent() : Value(iso),
+      shutterSpeed: shutterSpeed == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shutterSpeed),
+      focalLength: focalLength == null && nullToAbsent
+          ? const Value.absent()
+          : Value(focalLength),
+      aperture: aperture == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aperture),
       isFavorite: Value(isFavorite),
       thumbnailUri: thumbnailUri == null && nullToAbsent
           ? const Value.absent()
@@ -1594,6 +1779,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       height: serializer.fromJson<int?>(json['height']),
       latitude: serializer.fromJson<double?>(json['latitude']),
       longitude: serializer.fromJson<double?>(json['longitude']),
+      cameraMake: serializer.fromJson<String?>(json['cameraMake']),
+      cameraModel: serializer.fromJson<String?>(json['cameraModel']),
+      iso: serializer.fromJson<int?>(json['iso']),
+      shutterSpeed: serializer.fromJson<String?>(json['shutterSpeed']),
+      focalLength: serializer.fromJson<double?>(json['focalLength']),
+      aperture: serializer.fromJson<String?>(json['aperture']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       thumbnailUri: serializer.fromJson<String?>(json['thumbnailUri']),
       videoDuration: serializer.fromJson<int?>(json['videoDuration']),
@@ -1623,6 +1814,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       'height': serializer.toJson<int?>(height),
       'latitude': serializer.toJson<double?>(latitude),
       'longitude': serializer.toJson<double?>(longitude),
+      'cameraMake': serializer.toJson<String?>(cameraMake),
+      'cameraModel': serializer.toJson<String?>(cameraModel),
+      'iso': serializer.toJson<int?>(iso),
+      'shutterSpeed': serializer.toJson<String?>(shutterSpeed),
+      'focalLength': serializer.toJson<double?>(focalLength),
+      'aperture': serializer.toJson<String?>(aperture),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'thumbnailUri': serializer.toJson<String?>(thumbnailUri),
       'videoDuration': serializer.toJson<int?>(videoDuration),
@@ -1650,6 +1847,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     Value<int?> height = const Value.absent(),
     Value<double?> latitude = const Value.absent(),
     Value<double?> longitude = const Value.absent(),
+    Value<String?> cameraMake = const Value.absent(),
+    Value<String?> cameraModel = const Value.absent(),
+    Value<int?> iso = const Value.absent(),
+    Value<String?> shutterSpeed = const Value.absent(),
+    Value<double?> focalLength = const Value.absent(),
+    Value<String?> aperture = const Value.absent(),
     bool? isFavorite,
     Value<String?> thumbnailUri = const Value.absent(),
     Value<int?> videoDuration = const Value.absent(),
@@ -1674,6 +1877,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     height: height.present ? height.value : this.height,
     latitude: latitude.present ? latitude.value : this.latitude,
     longitude: longitude.present ? longitude.value : this.longitude,
+    cameraMake: cameraMake.present ? cameraMake.value : this.cameraMake,
+    cameraModel: cameraModel.present ? cameraModel.value : this.cameraModel,
+    iso: iso.present ? iso.value : this.iso,
+    shutterSpeed: shutterSpeed.present ? shutterSpeed.value : this.shutterSpeed,
+    focalLength: focalLength.present ? focalLength.value : this.focalLength,
+    aperture: aperture.present ? aperture.value : this.aperture,
     isFavorite: isFavorite ?? this.isFavorite,
     thumbnailUri: thumbnailUri.present ? thumbnailUri.value : this.thumbnailUri,
     videoDuration: videoDuration.present
@@ -1710,6 +1919,20 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       height: data.height.present ? data.height.value : this.height,
       latitude: data.latitude.present ? data.latitude.value : this.latitude,
       longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      cameraMake: data.cameraMake.present
+          ? data.cameraMake.value
+          : this.cameraMake,
+      cameraModel: data.cameraModel.present
+          ? data.cameraModel.value
+          : this.cameraModel,
+      iso: data.iso.present ? data.iso.value : this.iso,
+      shutterSpeed: data.shutterSpeed.present
+          ? data.shutterSpeed.value
+          : this.shutterSpeed,
+      focalLength: data.focalLength.present
+          ? data.focalLength.value
+          : this.focalLength,
+      aperture: data.aperture.present ? data.aperture.value : this.aperture,
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
@@ -1753,6 +1976,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           ..write('height: $height, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
+          ..write('cameraMake: $cameraMake, ')
+          ..write('cameraModel: $cameraModel, ')
+          ..write('iso: $iso, ')
+          ..write('shutterSpeed: $shutterSpeed, ')
+          ..write('focalLength: $focalLength, ')
+          ..write('aperture: $aperture, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('thumbnailUri: $thumbnailUri, ')
           ..write('videoDuration: $videoDuration, ')
@@ -1782,6 +2011,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     height,
     latitude,
     longitude,
+    cameraMake,
+    cameraModel,
+    iso,
+    shutterSpeed,
+    focalLength,
+    aperture,
     isFavorite,
     thumbnailUri,
     videoDuration,
@@ -1810,6 +2045,12 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           other.height == this.height &&
           other.latitude == this.latitude &&
           other.longitude == this.longitude &&
+          other.cameraMake == this.cameraMake &&
+          other.cameraModel == this.cameraModel &&
+          other.iso == this.iso &&
+          other.shutterSpeed == this.shutterSpeed &&
+          other.focalLength == this.focalLength &&
+          other.aperture == this.aperture &&
           other.isFavorite == this.isFavorite &&
           other.thumbnailUri == this.thumbnailUri &&
           other.videoDuration == this.videoDuration &&
@@ -1836,6 +2077,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
   final Value<int?> height;
   final Value<double?> latitude;
   final Value<double?> longitude;
+  final Value<String?> cameraMake;
+  final Value<String?> cameraModel;
+  final Value<int?> iso;
+  final Value<String?> shutterSpeed;
+  final Value<double?> focalLength;
+  final Value<String?> aperture;
   final Value<bool> isFavorite;
   final Value<String?> thumbnailUri;
   final Value<int?> videoDuration;
@@ -1860,6 +2107,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.height = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
+    this.cameraMake = const Value.absent(),
+    this.cameraModel = const Value.absent(),
+    this.iso = const Value.absent(),
+    this.shutterSpeed = const Value.absent(),
+    this.focalLength = const Value.absent(),
+    this.aperture = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.thumbnailUri = const Value.absent(),
     this.videoDuration = const Value.absent(),
@@ -1885,6 +2138,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.height = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
+    this.cameraMake = const Value.absent(),
+    this.cameraModel = const Value.absent(),
+    this.iso = const Value.absent(),
+    this.shutterSpeed = const Value.absent(),
+    this.focalLength = const Value.absent(),
+    this.aperture = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.thumbnailUri = const Value.absent(),
     this.videoDuration = const Value.absent(),
@@ -1917,6 +2176,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Expression<int>? height,
     Expression<double>? latitude,
     Expression<double>? longitude,
+    Expression<String>? cameraMake,
+    Expression<String>? cameraModel,
+    Expression<int>? iso,
+    Expression<String>? shutterSpeed,
+    Expression<double>? focalLength,
+    Expression<String>? aperture,
     Expression<bool>? isFavorite,
     Expression<String>? thumbnailUri,
     Expression<int>? videoDuration,
@@ -1942,6 +2207,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       if (height != null) 'height': height,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
+      if (cameraMake != null) 'camera_make': cameraMake,
+      if (cameraModel != null) 'camera_model': cameraModel,
+      if (iso != null) 'iso': iso,
+      if (shutterSpeed != null) 'shutter_speed': shutterSpeed,
+      if (focalLength != null) 'focal_length': focalLength,
+      if (aperture != null) 'aperture': aperture,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (thumbnailUri != null) 'thumbnail_uri': thumbnailUri,
       if (videoDuration != null) 'video_duration': videoDuration,
@@ -1969,6 +2240,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Value<int?>? height,
     Value<double?>? latitude,
     Value<double?>? longitude,
+    Value<String?>? cameraMake,
+    Value<String?>? cameraModel,
+    Value<int?>? iso,
+    Value<String?>? shutterSpeed,
+    Value<double?>? focalLength,
+    Value<String?>? aperture,
     Value<bool>? isFavorite,
     Value<String?>? thumbnailUri,
     Value<int?>? videoDuration,
@@ -1994,6 +2271,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       height: height ?? this.height,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      cameraMake: cameraMake ?? this.cameraMake,
+      cameraModel: cameraModel ?? this.cameraModel,
+      iso: iso ?? this.iso,
+      shutterSpeed: shutterSpeed ?? this.shutterSpeed,
+      focalLength: focalLength ?? this.focalLength,
+      aperture: aperture ?? this.aperture,
       isFavorite: isFavorite ?? this.isFavorite,
       thumbnailUri: thumbnailUri ?? this.thumbnailUri,
       videoDuration: videoDuration ?? this.videoDuration,
@@ -2051,6 +2334,24 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     if (longitude.present) {
       map['longitude'] = Variable<double>(longitude.value);
     }
+    if (cameraMake.present) {
+      map['camera_make'] = Variable<String>(cameraMake.value);
+    }
+    if (cameraModel.present) {
+      map['camera_model'] = Variable<String>(cameraModel.value);
+    }
+    if (iso.present) {
+      map['iso'] = Variable<int>(iso.value);
+    }
+    if (shutterSpeed.present) {
+      map['shutter_speed'] = Variable<String>(shutterSpeed.value);
+    }
+    if (focalLength.present) {
+      map['focal_length'] = Variable<double>(focalLength.value);
+    }
+    if (aperture.present) {
+      map['aperture'] = Variable<String>(aperture.value);
+    }
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
     }
@@ -2098,6 +2399,12 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
           ..write('height: $height, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
+          ..write('cameraMake: $cameraMake, ')
+          ..write('cameraModel: $cameraModel, ')
+          ..write('iso: $iso, ')
+          ..write('shutterSpeed: $shutterSpeed, ')
+          ..write('focalLength: $focalLength, ')
+          ..write('aperture: $aperture, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('thumbnailUri: $thumbnailUri, ')
           ..write('videoDuration: $videoDuration, ')
@@ -2689,12 +2996,587 @@ class TravelModesCompanion extends UpdateCompanion<TravelMode> {
   }
 }
 
+class $MediaAnalysisCacheTable extends MediaAnalysisCache
+    with TableInfo<$MediaAnalysisCacheTable, MediaAnalysisRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MediaAnalysisCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _mediaIdMeta = const VerificationMeta(
+    'mediaId',
+  );
+  @override
+  late final GeneratedColumn<int> mediaId = GeneratedColumn<int>(
+    'media_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dHashMeta = const VerificationMeta('dHash');
+  @override
+  late final GeneratedColumn<String> dHash = GeneratedColumn<String>(
+    'd_hash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _blurScoreMeta = const VerificationMeta(
+    'blurScore',
+  );
+  @override
+  late final GeneratedColumn<double> blurScore = GeneratedColumn<double>(
+    'blur_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exposureScoreMeta = const VerificationMeta(
+    'exposureScore',
+  );
+  @override
+  late final GeneratedColumn<double> exposureScore = GeneratedColumn<double>(
+    'exposure_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isSolidColorMeta = const VerificationMeta(
+    'isSolidColor',
+  );
+  @override
+  late final GeneratedColumn<bool> isSolidColor = GeneratedColumn<bool>(
+    'is_solid_color',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_solid_color" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _faceCountMeta = const VerificationMeta(
+    'faceCount',
+  );
+  @override
+  late final GeneratedColumn<int> faceCount = GeneratedColumn<int>(
+    'face_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _hasClosedEyesMeta = const VerificationMeta(
+    'hasClosedEyes',
+  );
+  @override
+  late final GeneratedColumn<bool> hasClosedEyes = GeneratedColumn<bool>(
+    'has_closed_eyes',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_closed_eyes" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _labelsJsonMeta = const VerificationMeta(
+    'labelsJson',
+  );
+  @override
+  late final GeneratedColumn<String> labelsJson = GeneratedColumn<String>(
+    'labels_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _scannedAtMeta = const VerificationMeta(
+    'scannedAt',
+  );
+  @override
+  late final GeneratedColumn<int> scannedAt = GeneratedColumn<int>(
+    'scanned_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    mediaId,
+    dHash,
+    blurScore,
+    exposureScore,
+    isSolidColor,
+    faceCount,
+    hasClosedEyes,
+    labelsJson,
+    scannedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'media_analysis_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MediaAnalysisRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('media_id')) {
+      context.handle(
+        _mediaIdMeta,
+        mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta),
+      );
+    }
+    if (data.containsKey('d_hash')) {
+      context.handle(
+        _dHashMeta,
+        dHash.isAcceptableOrUnknown(data['d_hash']!, _dHashMeta),
+      );
+    }
+    if (data.containsKey('blur_score')) {
+      context.handle(
+        _blurScoreMeta,
+        blurScore.isAcceptableOrUnknown(data['blur_score']!, _blurScoreMeta),
+      );
+    }
+    if (data.containsKey('exposure_score')) {
+      context.handle(
+        _exposureScoreMeta,
+        exposureScore.isAcceptableOrUnknown(
+          data['exposure_score']!,
+          _exposureScoreMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_solid_color')) {
+      context.handle(
+        _isSolidColorMeta,
+        isSolidColor.isAcceptableOrUnknown(
+          data['is_solid_color']!,
+          _isSolidColorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('face_count')) {
+      context.handle(
+        _faceCountMeta,
+        faceCount.isAcceptableOrUnknown(data['face_count']!, _faceCountMeta),
+      );
+    }
+    if (data.containsKey('has_closed_eyes')) {
+      context.handle(
+        _hasClosedEyesMeta,
+        hasClosedEyes.isAcceptableOrUnknown(
+          data['has_closed_eyes']!,
+          _hasClosedEyesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('labels_json')) {
+      context.handle(
+        _labelsJsonMeta,
+        labelsJson.isAcceptableOrUnknown(data['labels_json']!, _labelsJsonMeta),
+      );
+    }
+    if (data.containsKey('scanned_at')) {
+      context.handle(
+        _scannedAtMeta,
+        scannedAt.isAcceptableOrUnknown(data['scanned_at']!, _scannedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scannedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {mediaId};
+  @override
+  MediaAnalysisRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MediaAnalysisRow(
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}media_id'],
+      )!,
+      dHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}d_hash'],
+      ),
+      blurScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}blur_score'],
+      ),
+      exposureScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}exposure_score'],
+      ),
+      isSolidColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_solid_color'],
+      )!,
+      faceCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}face_count'],
+      )!,
+      hasClosedEyes: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_closed_eyes'],
+      )!,
+      labelsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}labels_json'],
+      ),
+      scannedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}scanned_at'],
+      )!,
+    );
+  }
+
+  @override
+  $MediaAnalysisCacheTable createAlias(String alias) {
+    return $MediaAnalysisCacheTable(attachedDatabase, alias);
+  }
+}
+
+class MediaAnalysisRow extends DataClass
+    implements Insertable<MediaAnalysisRow> {
+  final int mediaId;
+  final String? dHash;
+  final double? blurScore;
+  final double? exposureScore;
+  final bool isSolidColor;
+  final int faceCount;
+  final bool hasClosedEyes;
+  final String? labelsJson;
+  final int scannedAt;
+  const MediaAnalysisRow({
+    required this.mediaId,
+    this.dHash,
+    this.blurScore,
+    this.exposureScore,
+    required this.isSolidColor,
+    required this.faceCount,
+    required this.hasClosedEyes,
+    this.labelsJson,
+    required this.scannedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['media_id'] = Variable<int>(mediaId);
+    if (!nullToAbsent || dHash != null) {
+      map['d_hash'] = Variable<String>(dHash);
+    }
+    if (!nullToAbsent || blurScore != null) {
+      map['blur_score'] = Variable<double>(blurScore);
+    }
+    if (!nullToAbsent || exposureScore != null) {
+      map['exposure_score'] = Variable<double>(exposureScore);
+    }
+    map['is_solid_color'] = Variable<bool>(isSolidColor);
+    map['face_count'] = Variable<int>(faceCount);
+    map['has_closed_eyes'] = Variable<bool>(hasClosedEyes);
+    if (!nullToAbsent || labelsJson != null) {
+      map['labels_json'] = Variable<String>(labelsJson);
+    }
+    map['scanned_at'] = Variable<int>(scannedAt);
+    return map;
+  }
+
+  MediaAnalysisCacheCompanion toCompanion(bool nullToAbsent) {
+    return MediaAnalysisCacheCompanion(
+      mediaId: Value(mediaId),
+      dHash: dHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dHash),
+      blurScore: blurScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(blurScore),
+      exposureScore: exposureScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exposureScore),
+      isSolidColor: Value(isSolidColor),
+      faceCount: Value(faceCount),
+      hasClosedEyes: Value(hasClosedEyes),
+      labelsJson: labelsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(labelsJson),
+      scannedAt: Value(scannedAt),
+    );
+  }
+
+  factory MediaAnalysisRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MediaAnalysisRow(
+      mediaId: serializer.fromJson<int>(json['mediaId']),
+      dHash: serializer.fromJson<String?>(json['dHash']),
+      blurScore: serializer.fromJson<double?>(json['blurScore']),
+      exposureScore: serializer.fromJson<double?>(json['exposureScore']),
+      isSolidColor: serializer.fromJson<bool>(json['isSolidColor']),
+      faceCount: serializer.fromJson<int>(json['faceCount']),
+      hasClosedEyes: serializer.fromJson<bool>(json['hasClosedEyes']),
+      labelsJson: serializer.fromJson<String?>(json['labelsJson']),
+      scannedAt: serializer.fromJson<int>(json['scannedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'mediaId': serializer.toJson<int>(mediaId),
+      'dHash': serializer.toJson<String?>(dHash),
+      'blurScore': serializer.toJson<double?>(blurScore),
+      'exposureScore': serializer.toJson<double?>(exposureScore),
+      'isSolidColor': serializer.toJson<bool>(isSolidColor),
+      'faceCount': serializer.toJson<int>(faceCount),
+      'hasClosedEyes': serializer.toJson<bool>(hasClosedEyes),
+      'labelsJson': serializer.toJson<String?>(labelsJson),
+      'scannedAt': serializer.toJson<int>(scannedAt),
+    };
+  }
+
+  MediaAnalysisRow copyWith({
+    int? mediaId,
+    Value<String?> dHash = const Value.absent(),
+    Value<double?> blurScore = const Value.absent(),
+    Value<double?> exposureScore = const Value.absent(),
+    bool? isSolidColor,
+    int? faceCount,
+    bool? hasClosedEyes,
+    Value<String?> labelsJson = const Value.absent(),
+    int? scannedAt,
+  }) => MediaAnalysisRow(
+    mediaId: mediaId ?? this.mediaId,
+    dHash: dHash.present ? dHash.value : this.dHash,
+    blurScore: blurScore.present ? blurScore.value : this.blurScore,
+    exposureScore: exposureScore.present
+        ? exposureScore.value
+        : this.exposureScore,
+    isSolidColor: isSolidColor ?? this.isSolidColor,
+    faceCount: faceCount ?? this.faceCount,
+    hasClosedEyes: hasClosedEyes ?? this.hasClosedEyes,
+    labelsJson: labelsJson.present ? labelsJson.value : this.labelsJson,
+    scannedAt: scannedAt ?? this.scannedAt,
+  );
+  MediaAnalysisRow copyWithCompanion(MediaAnalysisCacheCompanion data) {
+    return MediaAnalysisRow(
+      mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      dHash: data.dHash.present ? data.dHash.value : this.dHash,
+      blurScore: data.blurScore.present ? data.blurScore.value : this.blurScore,
+      exposureScore: data.exposureScore.present
+          ? data.exposureScore.value
+          : this.exposureScore,
+      isSolidColor: data.isSolidColor.present
+          ? data.isSolidColor.value
+          : this.isSolidColor,
+      faceCount: data.faceCount.present ? data.faceCount.value : this.faceCount,
+      hasClosedEyes: data.hasClosedEyes.present
+          ? data.hasClosedEyes.value
+          : this.hasClosedEyes,
+      labelsJson: data.labelsJson.present
+          ? data.labelsJson.value
+          : this.labelsJson,
+      scannedAt: data.scannedAt.present ? data.scannedAt.value : this.scannedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaAnalysisRow(')
+          ..write('mediaId: $mediaId, ')
+          ..write('dHash: $dHash, ')
+          ..write('blurScore: $blurScore, ')
+          ..write('exposureScore: $exposureScore, ')
+          ..write('isSolidColor: $isSolidColor, ')
+          ..write('faceCount: $faceCount, ')
+          ..write('hasClosedEyes: $hasClosedEyes, ')
+          ..write('labelsJson: $labelsJson, ')
+          ..write('scannedAt: $scannedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    mediaId,
+    dHash,
+    blurScore,
+    exposureScore,
+    isSolidColor,
+    faceCount,
+    hasClosedEyes,
+    labelsJson,
+    scannedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MediaAnalysisRow &&
+          other.mediaId == this.mediaId &&
+          other.dHash == this.dHash &&
+          other.blurScore == this.blurScore &&
+          other.exposureScore == this.exposureScore &&
+          other.isSolidColor == this.isSolidColor &&
+          other.faceCount == this.faceCount &&
+          other.hasClosedEyes == this.hasClosedEyes &&
+          other.labelsJson == this.labelsJson &&
+          other.scannedAt == this.scannedAt);
+}
+
+class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
+  final Value<int> mediaId;
+  final Value<String?> dHash;
+  final Value<double?> blurScore;
+  final Value<double?> exposureScore;
+  final Value<bool> isSolidColor;
+  final Value<int> faceCount;
+  final Value<bool> hasClosedEyes;
+  final Value<String?> labelsJson;
+  final Value<int> scannedAt;
+  const MediaAnalysisCacheCompanion({
+    this.mediaId = const Value.absent(),
+    this.dHash = const Value.absent(),
+    this.blurScore = const Value.absent(),
+    this.exposureScore = const Value.absent(),
+    this.isSolidColor = const Value.absent(),
+    this.faceCount = const Value.absent(),
+    this.hasClosedEyes = const Value.absent(),
+    this.labelsJson = const Value.absent(),
+    this.scannedAt = const Value.absent(),
+  });
+  MediaAnalysisCacheCompanion.insert({
+    this.mediaId = const Value.absent(),
+    this.dHash = const Value.absent(),
+    this.blurScore = const Value.absent(),
+    this.exposureScore = const Value.absent(),
+    this.isSolidColor = const Value.absent(),
+    this.faceCount = const Value.absent(),
+    this.hasClosedEyes = const Value.absent(),
+    this.labelsJson = const Value.absent(),
+    required int scannedAt,
+  }) : scannedAt = Value(scannedAt);
+  static Insertable<MediaAnalysisRow> custom({
+    Expression<int>? mediaId,
+    Expression<String>? dHash,
+    Expression<double>? blurScore,
+    Expression<double>? exposureScore,
+    Expression<bool>? isSolidColor,
+    Expression<int>? faceCount,
+    Expression<bool>? hasClosedEyes,
+    Expression<String>? labelsJson,
+    Expression<int>? scannedAt,
+  }) {
+    return RawValuesInsertable({
+      if (mediaId != null) 'media_id': mediaId,
+      if (dHash != null) 'd_hash': dHash,
+      if (blurScore != null) 'blur_score': blurScore,
+      if (exposureScore != null) 'exposure_score': exposureScore,
+      if (isSolidColor != null) 'is_solid_color': isSolidColor,
+      if (faceCount != null) 'face_count': faceCount,
+      if (hasClosedEyes != null) 'has_closed_eyes': hasClosedEyes,
+      if (labelsJson != null) 'labels_json': labelsJson,
+      if (scannedAt != null) 'scanned_at': scannedAt,
+    });
+  }
+
+  MediaAnalysisCacheCompanion copyWith({
+    Value<int>? mediaId,
+    Value<String?>? dHash,
+    Value<double?>? blurScore,
+    Value<double?>? exposureScore,
+    Value<bool>? isSolidColor,
+    Value<int>? faceCount,
+    Value<bool>? hasClosedEyes,
+    Value<String?>? labelsJson,
+    Value<int>? scannedAt,
+  }) {
+    return MediaAnalysisCacheCompanion(
+      mediaId: mediaId ?? this.mediaId,
+      dHash: dHash ?? this.dHash,
+      blurScore: blurScore ?? this.blurScore,
+      exposureScore: exposureScore ?? this.exposureScore,
+      isSolidColor: isSolidColor ?? this.isSolidColor,
+      faceCount: faceCount ?? this.faceCount,
+      hasClosedEyes: hasClosedEyes ?? this.hasClosedEyes,
+      labelsJson: labelsJson ?? this.labelsJson,
+      scannedAt: scannedAt ?? this.scannedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (mediaId.present) {
+      map['media_id'] = Variable<int>(mediaId.value);
+    }
+    if (dHash.present) {
+      map['d_hash'] = Variable<String>(dHash.value);
+    }
+    if (blurScore.present) {
+      map['blur_score'] = Variable<double>(blurScore.value);
+    }
+    if (exposureScore.present) {
+      map['exposure_score'] = Variable<double>(exposureScore.value);
+    }
+    if (isSolidColor.present) {
+      map['is_solid_color'] = Variable<bool>(isSolidColor.value);
+    }
+    if (faceCount.present) {
+      map['face_count'] = Variable<int>(faceCount.value);
+    }
+    if (hasClosedEyes.present) {
+      map['has_closed_eyes'] = Variable<bool>(hasClosedEyes.value);
+    }
+    if (labelsJson.present) {
+      map['labels_json'] = Variable<String>(labelsJson.value);
+    }
+    if (scannedAt.present) {
+      map['scanned_at'] = Variable<int>(scannedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaAnalysisCacheCompanion(')
+          ..write('mediaId: $mediaId, ')
+          ..write('dHash: $dHash, ')
+          ..write('blurScore: $blurScore, ')
+          ..write('exposureScore: $exposureScore, ')
+          ..write('isSolidColor: $isSolidColor, ')
+          ..write('faceCount: $faceCount, ')
+          ..write('hasClosedEyes: $hasClosedEyes, ')
+          ..write('labelsJson: $labelsJson, ')
+          ..write('scannedAt: $scannedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $FoldersTable folders = $FoldersTable(this);
   late final $MediaItemsTable mediaItems = $MediaItemsTable(this);
   late final $TravelModesTable travelModes = $TravelModesTable(this);
+  late final $MediaAnalysisCacheTable mediaAnalysisCache =
+      $MediaAnalysisCacheTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2703,6 +3585,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     folders,
     mediaItems,
     travelModes,
+    mediaAnalysisCache,
   ];
 }
 
@@ -3103,6 +3986,12 @@ typedef $$MediaItemsTableCreateCompanionBuilder =
       Value<int?> height,
       Value<double?> latitude,
       Value<double?> longitude,
+      Value<String?> cameraMake,
+      Value<String?> cameraModel,
+      Value<int?> iso,
+      Value<String?> shutterSpeed,
+      Value<double?> focalLength,
+      Value<String?> aperture,
       Value<bool> isFavorite,
       Value<String?> thumbnailUri,
       Value<int?> videoDuration,
@@ -3129,6 +4018,12 @@ typedef $$MediaItemsTableUpdateCompanionBuilder =
       Value<int?> height,
       Value<double?> latitude,
       Value<double?> longitude,
+      Value<String?> cameraMake,
+      Value<String?> cameraModel,
+      Value<int?> iso,
+      Value<String?> shutterSpeed,
+      Value<double?> focalLength,
+      Value<String?> aperture,
       Value<bool> isFavorite,
       Value<String?> thumbnailUri,
       Value<int?> videoDuration,
@@ -3216,6 +4111,36 @@ class $$MediaItemsTableFilterComposer
 
   ColumnFilters<double> get longitude => $composableBuilder(
     column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cameraMake => $composableBuilder(
+    column: $table.cameraMake,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cameraModel => $composableBuilder(
+    column: $table.cameraModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get iso => $composableBuilder(
+    column: $table.iso,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shutterSpeed => $composableBuilder(
+    column: $table.shutterSpeed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get focalLength => $composableBuilder(
+    column: $table.focalLength,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aperture => $composableBuilder(
+    column: $table.aperture,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3344,6 +4269,36 @@ class $$MediaItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cameraMake => $composableBuilder(
+    column: $table.cameraMake,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cameraModel => $composableBuilder(
+    column: $table.cameraModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get iso => $composableBuilder(
+    column: $table.iso,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shutterSpeed => $composableBuilder(
+    column: $table.shutterSpeed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get focalLength => $composableBuilder(
+    column: $table.focalLength,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aperture => $composableBuilder(
+    column: $table.aperture,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
     builder: (column) => ColumnOrderings(column),
@@ -3449,6 +4404,32 @@ class $$MediaItemsTableAnnotationComposer
   GeneratedColumn<double> get longitude =>
       $composableBuilder(column: $table.longitude, builder: (column) => column);
 
+  GeneratedColumn<String> get cameraMake => $composableBuilder(
+    column: $table.cameraMake,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cameraModel => $composableBuilder(
+    column: $table.cameraModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get iso =>
+      $composableBuilder(column: $table.iso, builder: (column) => column);
+
+  GeneratedColumn<String> get shutterSpeed => $composableBuilder(
+    column: $table.shutterSpeed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get focalLength => $composableBuilder(
+    column: $table.focalLength,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aperture =>
+      $composableBuilder(column: $table.aperture, builder: (column) => column);
+
   GeneratedColumn<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
     builder: (column) => column,
@@ -3533,6 +4514,12 @@ class $$MediaItemsTableTableManager
                 Value<int?> height = const Value.absent(),
                 Value<double?> latitude = const Value.absent(),
                 Value<double?> longitude = const Value.absent(),
+                Value<String?> cameraMake = const Value.absent(),
+                Value<String?> cameraModel = const Value.absent(),
+                Value<int?> iso = const Value.absent(),
+                Value<String?> shutterSpeed = const Value.absent(),
+                Value<double?> focalLength = const Value.absent(),
+                Value<String?> aperture = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<String?> thumbnailUri = const Value.absent(),
                 Value<int?> videoDuration = const Value.absent(),
@@ -3557,6 +4544,12 @@ class $$MediaItemsTableTableManager
                 height: height,
                 latitude: latitude,
                 longitude: longitude,
+                cameraMake: cameraMake,
+                cameraModel: cameraModel,
+                iso: iso,
+                shutterSpeed: shutterSpeed,
+                focalLength: focalLength,
+                aperture: aperture,
                 isFavorite: isFavorite,
                 thumbnailUri: thumbnailUri,
                 videoDuration: videoDuration,
@@ -3583,6 +4576,12 @@ class $$MediaItemsTableTableManager
                 Value<int?> height = const Value.absent(),
                 Value<double?> latitude = const Value.absent(),
                 Value<double?> longitude = const Value.absent(),
+                Value<String?> cameraMake = const Value.absent(),
+                Value<String?> cameraModel = const Value.absent(),
+                Value<int?> iso = const Value.absent(),
+                Value<String?> shutterSpeed = const Value.absent(),
+                Value<double?> focalLength = const Value.absent(),
+                Value<String?> aperture = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<String?> thumbnailUri = const Value.absent(),
                 Value<int?> videoDuration = const Value.absent(),
@@ -3607,6 +4606,12 @@ class $$MediaItemsTableTableManager
                 height: height,
                 latitude: latitude,
                 longitude: longitude,
+                cameraMake: cameraMake,
+                cameraModel: cameraModel,
+                iso: iso,
+                shutterSpeed: shutterSpeed,
+                focalLength: focalLength,
+                aperture: aperture,
                 isFavorite: isFavorite,
                 thumbnailUri: thumbnailUri,
                 videoDuration: videoDuration,
@@ -3919,6 +4924,297 @@ typedef $$TravelModesTableProcessedTableManager =
       TravelMode,
       PrefetchHooks Function()
     >;
+typedef $$MediaAnalysisCacheTableCreateCompanionBuilder =
+    MediaAnalysisCacheCompanion Function({
+      Value<int> mediaId,
+      Value<String?> dHash,
+      Value<double?> blurScore,
+      Value<double?> exposureScore,
+      Value<bool> isSolidColor,
+      Value<int> faceCount,
+      Value<bool> hasClosedEyes,
+      Value<String?> labelsJson,
+      required int scannedAt,
+    });
+typedef $$MediaAnalysisCacheTableUpdateCompanionBuilder =
+    MediaAnalysisCacheCompanion Function({
+      Value<int> mediaId,
+      Value<String?> dHash,
+      Value<double?> blurScore,
+      Value<double?> exposureScore,
+      Value<bool> isSolidColor,
+      Value<int> faceCount,
+      Value<bool> hasClosedEyes,
+      Value<String?> labelsJson,
+      Value<int> scannedAt,
+    });
+
+class $$MediaAnalysisCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $MediaAnalysisCacheTable> {
+  $$MediaAnalysisCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dHash => $composableBuilder(
+    column: $table.dHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get blurScore => $composableBuilder(
+    column: $table.blurScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get exposureScore => $composableBuilder(
+    column: $table.exposureScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSolidColor => $composableBuilder(
+    column: $table.isSolidColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get faceCount => $composableBuilder(
+    column: $table.faceCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasClosedEyes => $composableBuilder(
+    column: $table.hasClosedEyes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get labelsJson => $composableBuilder(
+    column: $table.labelsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get scannedAt => $composableBuilder(
+    column: $table.scannedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MediaAnalysisCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $MediaAnalysisCacheTable> {
+  $$MediaAnalysisCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dHash => $composableBuilder(
+    column: $table.dHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get blurScore => $composableBuilder(
+    column: $table.blurScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get exposureScore => $composableBuilder(
+    column: $table.exposureScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSolidColor => $composableBuilder(
+    column: $table.isSolidColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get faceCount => $composableBuilder(
+    column: $table.faceCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hasClosedEyes => $composableBuilder(
+    column: $table.hasClosedEyes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get labelsJson => $composableBuilder(
+    column: $table.labelsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get scannedAt => $composableBuilder(
+    column: $table.scannedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MediaAnalysisCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MediaAnalysisCacheTable> {
+  $$MediaAnalysisCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get mediaId =>
+      $composableBuilder(column: $table.mediaId, builder: (column) => column);
+
+  GeneratedColumn<String> get dHash =>
+      $composableBuilder(column: $table.dHash, builder: (column) => column);
+
+  GeneratedColumn<double> get blurScore =>
+      $composableBuilder(column: $table.blurScore, builder: (column) => column);
+
+  GeneratedColumn<double> get exposureScore => $composableBuilder(
+    column: $table.exposureScore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isSolidColor => $composableBuilder(
+    column: $table.isSolidColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get faceCount =>
+      $composableBuilder(column: $table.faceCount, builder: (column) => column);
+
+  GeneratedColumn<bool> get hasClosedEyes => $composableBuilder(
+    column: $table.hasClosedEyes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get labelsJson => $composableBuilder(
+    column: $table.labelsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get scannedAt =>
+      $composableBuilder(column: $table.scannedAt, builder: (column) => column);
+}
+
+class $$MediaAnalysisCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MediaAnalysisCacheTable,
+          MediaAnalysisRow,
+          $$MediaAnalysisCacheTableFilterComposer,
+          $$MediaAnalysisCacheTableOrderingComposer,
+          $$MediaAnalysisCacheTableAnnotationComposer,
+          $$MediaAnalysisCacheTableCreateCompanionBuilder,
+          $$MediaAnalysisCacheTableUpdateCompanionBuilder,
+          (
+            MediaAnalysisRow,
+            BaseReferences<
+              _$AppDatabase,
+              $MediaAnalysisCacheTable,
+              MediaAnalysisRow
+            >,
+          ),
+          MediaAnalysisRow,
+          PrefetchHooks Function()
+        > {
+  $$MediaAnalysisCacheTableTableManager(
+    _$AppDatabase db,
+    $MediaAnalysisCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MediaAnalysisCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MediaAnalysisCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MediaAnalysisCacheTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> mediaId = const Value.absent(),
+                Value<String?> dHash = const Value.absent(),
+                Value<double?> blurScore = const Value.absent(),
+                Value<double?> exposureScore = const Value.absent(),
+                Value<bool> isSolidColor = const Value.absent(),
+                Value<int> faceCount = const Value.absent(),
+                Value<bool> hasClosedEyes = const Value.absent(),
+                Value<String?> labelsJson = const Value.absent(),
+                Value<int> scannedAt = const Value.absent(),
+              }) => MediaAnalysisCacheCompanion(
+                mediaId: mediaId,
+                dHash: dHash,
+                blurScore: blurScore,
+                exposureScore: exposureScore,
+                isSolidColor: isSolidColor,
+                faceCount: faceCount,
+                hasClosedEyes: hasClosedEyes,
+                labelsJson: labelsJson,
+                scannedAt: scannedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> mediaId = const Value.absent(),
+                Value<String?> dHash = const Value.absent(),
+                Value<double?> blurScore = const Value.absent(),
+                Value<double?> exposureScore = const Value.absent(),
+                Value<bool> isSolidColor = const Value.absent(),
+                Value<int> faceCount = const Value.absent(),
+                Value<bool> hasClosedEyes = const Value.absent(),
+                Value<String?> labelsJson = const Value.absent(),
+                required int scannedAt,
+              }) => MediaAnalysisCacheCompanion.insert(
+                mediaId: mediaId,
+                dHash: dHash,
+                blurScore: blurScore,
+                exposureScore: exposureScore,
+                isSolidColor: isSolidColor,
+                faceCount: faceCount,
+                hasClosedEyes: hasClosedEyes,
+                labelsJson: labelsJson,
+                scannedAt: scannedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MediaAnalysisCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MediaAnalysisCacheTable,
+      MediaAnalysisRow,
+      $$MediaAnalysisCacheTableFilterComposer,
+      $$MediaAnalysisCacheTableOrderingComposer,
+      $$MediaAnalysisCacheTableAnnotationComposer,
+      $$MediaAnalysisCacheTableCreateCompanionBuilder,
+      $$MediaAnalysisCacheTableUpdateCompanionBuilder,
+      (
+        MediaAnalysisRow,
+        BaseReferences<
+          _$AppDatabase,
+          $MediaAnalysisCacheTable,
+          MediaAnalysisRow
+        >,
+      ),
+      MediaAnalysisRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3929,4 +5225,6 @@ class $AppDatabaseManager {
       $$MediaItemsTableTableManager(_db, _db.mediaItems);
   $$TravelModesTableTableManager get travelModes =>
       $$TravelModesTableTableManager(_db, _db.travelModes);
+  $$MediaAnalysisCacheTableTableManager get mediaAnalysisCache =>
+      $$MediaAnalysisCacheTableTableManager(_db, _db.mediaAnalysisCache);
 }

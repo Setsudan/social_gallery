@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 
-/// Bottom nav branch indices (see [StatefulShellRoute] in router.dart).
-const int kShellTabHome = 0;
-const int kShellTabExplore = 1;
-const int kShellTabDiscover = 2;
-const int kShellTabFavorites = 3;
-const int kShellTabProfile = 4;
+export 'package:social_gallery/shared/navigation/shell_nav_config.dart'
+    show kShellTabDiscover, kShellTabExplore, kShellTabHome;
 
 /// Incremented when the user re-taps the active bottom nav tab.
 final tabScrollToTopProvider = StateProvider.family<int, int>(

@@ -36,14 +36,17 @@ class OneUiSubpageScaffold extends StatelessWidget {
       ),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          OneUiPageHeader(title: title, subtitle: subtitle),
-          Expanded(
-            child: Padding(padding: padding ?? EdgeInsets.zero, child: body),
-          ),
-        ],
+      body: SafeArea(
+        top: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            OneUiPageHeader(title: title, subtitle: subtitle),
+            Expanded(
+              child: Padding(padding: padding ?? EdgeInsets.zero, child: body),
+            ),
+          ],
+        ),
       ),
     );
   }

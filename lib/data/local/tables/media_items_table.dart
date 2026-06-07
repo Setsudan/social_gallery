@@ -16,6 +16,12 @@ class MediaItems extends Table {
   IntColumn get height => integer().nullable()();
   RealColumn get latitude => real().nullable()();
   RealColumn get longitude => real().nullable()();
+  TextColumn get cameraMake => text().nullable()();
+  TextColumn get cameraModel => text().nullable()();
+  IntColumn get iso => integer().nullable()();
+  TextColumn get shutterSpeed => text().nullable()();
+  RealColumn get focalLength => real().nullable()();
+  TextColumn get aperture => text().nullable()();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   TextColumn get thumbnailUri => text().nullable()();
   IntColumn get videoDuration => integer().nullable()();

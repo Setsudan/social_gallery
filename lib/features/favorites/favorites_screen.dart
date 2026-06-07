@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
-import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
-import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
@@ -29,14 +27,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     final favoritesAsync = ref.watch(favoritesStreamProvider);
-    final motion = AppMotion.of(context, ref);
-    listenForTabScrollToTop(
-      ref,
-      kShellTabFavorites,
-      _scrollController,
-      motion: motion,
-    );
-
     return Scaffold(
       extendBody: true,
       body: favoritesAsync.when(

@@ -14,6 +14,7 @@ class PreferencesRepository {
   static const _trashRetentionDaysKey = 'settings_trash_retention_days';
   static const _cacheSizeLimitMbKey = 'settings_cache_size_limit_mb';
   static const _autoClearCacheKey = 'settings_auto_clear_cache_on_close';
+  static const _galleryViewModeKey = 'settings_gallery_view_mode';
 
   bool get hasCompletedInitialSetup =>
       _prefs.getBool(_initialSetupKey) ?? false;
@@ -65,4 +66,16 @@ class PreferencesRepository {
   Future<void> setAutoClearCacheOnClose(bool value) async {
     await _prefs.setBool(_autoClearCacheKey, value);
   }
+
+  String get organizeQueueOrder =>
+      _prefs.getString('organize_queue_order') ?? 'random';
+  Future<void> setOrganizeQueueOrder(String order) async {
+    await _prefs.setString('organize_queue_order', order);
+  }
+
+  bool get galleryViewMode => _prefs.getBool(_galleryViewModeKey) ?? false;
+  Future<void> setGalleryViewMode(bool enabled) async {
+    await _prefs.setBool(_galleryViewModeKey, enabled);
+  }
 }
+

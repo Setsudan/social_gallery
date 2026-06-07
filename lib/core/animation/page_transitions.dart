@@ -9,8 +9,6 @@ const _shellPaths = {
   '/home',
   '/explore',
   '/discover',
-  '/favorites',
-  '/profile',
 };
 
 const _modalPaths = {'/story_viewer', '/media_viewer'};

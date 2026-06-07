@@ -87,6 +87,7 @@ class TravelModeListScreen extends ConsumerWidget {
 
               return StaggeredEntrance(
                 index: listIndex,
+                playOnceKey: 'travel_${mode.id}',
                 child: Dismissible(
                   key: ValueKey(mode.id),
                   direction: DismissDirection.endToStart,

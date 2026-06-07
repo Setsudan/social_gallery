@@ -344,8 +344,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               : const SizedBox.shrink(),
         ),
       ),
-      body: SafeArea(
-        child: Column(
+      body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!inSelectionMode) ...[
@@ -397,7 +396,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             ],
             Expanded(child: _buildGrid()),
           ],
-        ),
       ),
     );
   }

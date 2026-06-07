@@ -57,12 +57,14 @@ class MediaGrid extends ConsumerWidget {
     return GridView.builder(
       controller: controller,
       padding: padding,
+      cacheExtent: 600,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,
         crossAxisSpacing: 2,
         mainAxisSpacing: 2,
       ),
       itemCount: items.length,
+      addRepaintBoundaries: true,
       itemBuilder: (context, index) {
         final item = items[index];
         final isSelected = selectedIds.contains(item.id);
@@ -98,10 +100,14 @@ class MediaGrid extends ConsumerWidget {
         );
 
         if (staggerEntrance) {
-          tile = StaggeredEntrance(index: index, child: tile);
+          tile = StaggeredEntrance(
+            index: index,
+            playOnceKey: 'grid_${item.id}',
+            child: tile,
+          );
         }
 
-        return tile;
+        return RepaintBoundary(child: tile);
       },
     );
   }

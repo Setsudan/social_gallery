@@ -12,6 +12,14 @@ class MediaItem {
     required this.mimeType,
     this.width,
     this.height,
+    this.latitude,
+    this.longitude,
+    this.cameraMake,
+    this.cameraModel,
+    this.iso,
+    this.shutterSpeed,
+    this.focalLength,
+    this.aperture,
     this.isFavorite = false,
     this.videoDuration,
     this.isTrashed = false,
@@ -31,6 +39,14 @@ class MediaItem {
   final String mimeType;
   final int? width;
   final int? height;
+  final double? latitude;
+  final double? longitude;
+  final String? cameraMake;
+  final String? cameraModel;
+  final int? iso;
+  final String? shutterSpeed;
+  final double? focalLength;
+  final String? aperture;
   final bool isFavorite;
   final int? videoDuration;
   final bool isTrashed;
@@ -43,18 +59,26 @@ class MediaItem {
 
   int get pixelCount => (width ?? 0) * (height ?? 0);
 
+  bool get hasLocation =>
+      latitude != null &&
+      longitude != null &&
+      latitude != 0 &&
+      longitude != 0;
+
   MediaItem copyWith({
     bool? isFavorite,
     bool? isTrashed,
     int? trashedAt,
     String? originalPath,
+    String? folderName,
+    String? folderPath,
   }) {
     return MediaItem(
       id: id,
       uri: uri,
       displayName: displayName,
-      folderName: folderName,
-      folderPath: folderPath,
+      folderName: folderName ?? this.folderName,
+      folderPath: folderPath ?? this.folderPath,
       dateAdded: dateAdded,
       dateModified: dateModified,
       dateTaken: dateTaken,
@@ -62,6 +86,14 @@ class MediaItem {
       mimeType: mimeType,
       width: width,
       height: height,
+      latitude: latitude,
+      longitude: longitude,
+      cameraMake: cameraMake,
+      cameraModel: cameraModel,
+      iso: iso,
+      shutterSpeed: shutterSpeed,
+      focalLength: focalLength,
+      aperture: aperture,
       isFavorite: isFavorite ?? this.isFavorite,
       videoDuration: videoDuration,
       isTrashed: isTrashed ?? this.isTrashed,

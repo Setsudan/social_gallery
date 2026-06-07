@@ -186,28 +186,48 @@ class AssetMediaLoader {
     return null;
   }
 
+  /// Preserves source aspect ratio so [BoxFit.cover] can crop in the layout.
+  static ThumbnailSize thumbnailSizeForEntity(
+    AssetEntity entity, {
+    int maxEdge = 800,
+  }) {
+    final w = entity.width;
+    final h = entity.height;
+    if (w <= 0 || h <= 0) {
+      return const ThumbnailSize.square(800);
+    }
+    if (w >= h) {
+      return ThumbnailSize(maxEdge, (maxEdge * h / w).round().clamp(1, maxEdge));
+    }
+    return ThumbnailSize((maxEdge * w / h).round().clamp(1, maxEdge), maxEdge);
+  }
+
   /// Grid / card thumbnail: never uses APIs that throw on [AssetType.other].
   static Widget buildThumbnail({
     required AssetEntity entity,
     BoxFit fit = BoxFit.cover,
-    ThumbnailSize thumbnailSize = const ThumbnailSize.square(800),
+    ThumbnailSize? thumbnailSize,
   }) {
     final kind = classify(entity);
+    final resolvedSize = thumbnailSize ?? thumbnailSizeForEntity(entity);
 
     if (kind == AssetMediaKind.unsupported || kind == AssetMediaKind.audio) {
       return UnsupportedMediaPlaceholder(kind: kind, entity: entity, fit: fit);
     }
 
     if (canUseAssetImageProvider(entity)) {
-      return Image(
-        image: AssetEntityImageProvider(
-          entity,
-          isOriginal: false,
-          thumbnailSize: thumbnailSize,
+      return SizedBox.expand(
+        child: Image(
+          image: AssetEntityImageProvider(
+            entity,
+            isOriginal: false,
+            thumbnailSize: resolvedSize,
+          ),
+          fit: fit,
+          gaplessPlayback: true,
+          errorBuilder: (context, error, stackTrace) =>
+              UnsupportedMediaPlaceholder(kind: kind, entity: entity, fit: fit),
         ),
-        fit: fit,
-        errorBuilder: (context, error, stackTrace) =>
-            UnsupportedMediaPlaceholder(kind: kind, entity: entity, fit: fit),
       );
     }
 
@@ -295,15 +315,19 @@ class _FileThumbnail extends StatelessWidget {
             fit: fit,
           );
         }
-        return Image.file(
-          file,
-          fit: fit,
-          errorBuilder: (context, error, stackTrace) =>
-              UnsupportedMediaPlaceholder(
-                kind: AssetMediaKind.image,
-                entity: entity,
-                fit: fit,
-              ),
+        return SizedBox.expand(
+          child: Image.file(
+            file,
+            fit: fit,
+            cacheWidth: 480,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) =>
+                UnsupportedMediaPlaceholder(
+                  kind: AssetMediaKind.image,
+                  entity: entity,
+                  fit: fit,
+                ),
+          ),
         );
       },
     );
