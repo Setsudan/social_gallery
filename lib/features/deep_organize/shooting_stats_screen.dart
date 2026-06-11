@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/app/providers.dart';
-import 'package:social_gallery/domain/models/media_analysis_result.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
+import 'package:social_gallery/features/discover/discover_providers.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
 
 class ShootingStatsScreen extends ConsumerStatefulWidget {
   const ShootingStatsScreen({super.key});
@@ -14,34 +13,6 @@ class ShootingStatsScreen extends ConsumerStatefulWidget {
 
 class _ShootingStatsScreenState extends ConsumerState<ShootingStatsScreen> {
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
-  bool _loading = true;
-  ShootingStats? _stats;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    final items = await ref.read(mediaRepositoryProvider).getAllHomeFeedMedia();
-    final stats = ref.read(computeShootingStatsProvider)(
-      items: items,
-      month: _month,
-    );
-    setState(() {
-      _stats = stats;
-      _loading = false;
-    });
-  }
-
-  void _shiftMonth(int delta) {
-    setState(() {
-      _month = DateTime(_month.year, _month.month + delta);
-    });
-    _load();
-  }
 
   String _formatDuration(int ms) {
     final minutes = ms ~/ 60000;
@@ -53,63 +24,71 @@ class _ShootingStatsScreenState extends ConsumerState<ShootingStatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+    final statsAsync = ref.watch(shootingStatsProvider(_month));
+
+    return statsAsync.when(
+      loading: () => OneUiSubpageScaffold(
+        title: 'Shooting stats',
+        isLoading: true,
+        body: const SizedBox.shrink(),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
+      error: (e, _) => OneUiSubpageScaffold(
+        title: 'Shooting stats',
+        error: e,
+        body: const SizedBox.shrink(),
+      ),
+      data: (stats) => OneUiSubpageScaffold(
+        title: 'Shooting stats',
+        subtitle: 'Your on-device photography habits.',
+        padding: const EdgeInsets.all(16),
+        body: ListView(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const OneUiPageHeader(
-                  title: 'Shooting stats',
-                  subtitle: 'Your on-device photography habits.',
+                IconButton(
+                  onPressed: () => setState(() {
+                    _month = DateTime(_month.year, _month.month - 1);
+                  }),
+                  icon: const Icon(Icons.chevron_left),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () => _shiftMonth(-1),
-                      icon: const Icon(Icons.chevron_left),
-                    ),
-                    Text(
-                      '${_month.year}-${_month.month.toString().padLeft(2, '0')}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    IconButton(
-                      onPressed: () => _shiftMonth(1),
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _StatTile('Photos', '${_stats?.photoCount ?? 0}'),
-                _StatTile('Videos', '${_stats?.videoCount ?? 0}'),
-                _StatTile('Screenshots', '${_stats?.screenshotCount ?? 0}'),
-                _StatTile('Liked', '${_stats?.likedCount ?? 0}'),
-                _StatTile('Folders', '${_stats?.folderCount ?? 0}'),
-                _StatTile(
-                  'Video duration',
-                  _formatDuration(_stats?.totalVideoDurationMs ?? 0),
-                ),
-                if (_stats?.mostActiveDay != null)
-                  _StatTile(
-                    'Most active day',
-                    '${_stats!.mostActiveDay} (${_stats!.mostActiveDayCount})',
-                  ),
-                const SizedBox(height: 24),
                 Text(
-                  'Activity heatmap',
-                  style: Theme.of(context).textTheme.titleSmall,
+                  '${_month.year}-${_month.month.toString().padLeft(2, '0')}',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 8),
-                _Heatmap(counts: _stats?.dailyCounts ?? {}),
+                IconButton(
+                  onPressed: () => setState(() {
+                    _month = DateTime(_month.year, _month.month + 1);
+                  }),
+                  icon: const Icon(Icons.chevron_right),
+                ),
               ],
             ),
+            const SizedBox(height: 16),
+            _StatTile('Photos', '${stats.photoCount}'),
+            _StatTile('Videos', '${stats.videoCount}'),
+            _StatTile('Screenshots', '${stats.screenshotCount}'),
+            _StatTile('Liked', '${stats.likedCount}'),
+            _StatTile('Folders', '${stats.folderCount}'),
+            _StatTile(
+              'Video duration',
+              _formatDuration(stats.totalVideoDurationMs),
+            ),
+            if (stats.mostActiveDay != null)
+              _StatTile(
+                'Most active day',
+                '${stats.mostActiveDay} (${stats.mostActiveDayCount})',
+              ),
+            const SizedBox(height: 24),
+            Text(
+              'Activity heatmap',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            _Heatmap(counts: stats.dailyCounts),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -14,6 +14,13 @@ void notifyTabScrollToTop(WidgetRef ref, int tabIndex) {
   ref.read(tabScrollToTopProvider(tabIndex).notifier).update((n) => n + 1);
 }
 
+/// Incremented when the Explore tab is selected (switch or re-tap).
+final exploreSearchResetProvider = StateProvider<int>((ref) => 0);
+
+void notifyExploreSearchReset(WidgetRef ref) {
+  ref.read(exploreSearchResetProvider.notifier).update((n) => n + 1);
+}
+
 Future<void> animateScrollControllerToTop(
   ScrollController controller,
   AppMotion motion,

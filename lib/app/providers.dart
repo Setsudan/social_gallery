@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/theme/accent_presets.dart';
+import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social_gallery/core/auth/biometric_service.dart';
 import 'package:social_gallery/core/auth/folder_unlock_store.dart';
+import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/permissions/media_permission_service.dart';
 import 'package:social_gallery/core/permissions/storage_access_service.dart';
 import 'package:social_gallery/data/datasources/photo_manager_datasource.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/core/cache/cache_service.dart';
+import 'package:social_gallery/core/cache/thumbnail_warmup_service.dart';
 import 'package:social_gallery/data/repositories/folder_repository.dart';
 import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
@@ -26,7 +30,10 @@ import 'package:social_gallery/domain/usecases/find_similar_groups.dart';
 import 'package:social_gallery/domain/usecases/score_low_quality.dart';
 import 'package:social_gallery/domain/usecases/suggest_keep_best.dart';
 import 'package:social_gallery/domain/usecases/travel_mode_use_case.dart';
-import 'package:social_gallery/features/discover/discover_hub_controller.dart';
+import 'package:social_gallery/features/discover/discover_providers.dart';
+
+export 'package:social_gallery/features/discover/discover_providers.dart'
+    show discoverHubProvider;
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences not initialized');
@@ -84,6 +91,10 @@ final travelModeUseCaseProvider = Provider((ref) {
 
 final cacheServiceProvider = Provider((ref) => CacheService());
 
+final thumbnailWarmupServiceProvider = Provider(
+  (ref) => ThumbnailWarmupService(),
+);
+
 final findDuplicateGroupsProvider = Provider((ref) => FindDuplicateGroups());
 
 final suggestKeepBestProvider = Provider((ref) => SuggestKeepBest());
@@ -107,11 +118,6 @@ final findSimilarGroupsProvider = Provider((ref) => FindSimilarGroups());
 final scoreLowQualityProvider = Provider((ref) => ScoreLowQuality());
 
 final computeShootingStatsProvider = Provider((ref) => ComputeShootingStats());
-
-final discoverHubProvider =
-    AsyncNotifierProvider<DiscoverHubController, DiscoverHubData>(
-  DiscoverHubController.new,
-);
 
 class MediaAnalysisScanState {
   const MediaAnalysisScanState({
@@ -170,7 +176,7 @@ class MediaAnalysisController extends StateNotifier<MediaAnalysisScanState> {
         scanned: items.where((i) => !i.isVideo).length,
         total: items.where((i) => !i.isVideo).length,
       );
-      _ref.invalidate(discoverHubProvider);
+      invalidateAnalysisProvidersFromRef(_ref);
     } catch (e) {
       state = MediaAnalysisScanState(isScanning: false, error: e.toString());
     }
@@ -182,7 +188,9 @@ final mediaAnalysisControllerProvider =
   (ref) => MediaAnalysisController(ref),
 );
 
-final syncStateProvider = StateProvider<bool>((ref) => false);
+final syncStateProvider = Provider<bool>((ref) {
+  return ref.watch(gallerySyncProvider.select((state) => state.isRunning));
+});
 
 final activeProfileFolderProvider = StateProvider<String?>((ref) => null);
 
@@ -198,7 +206,8 @@ final folderMediaProvider = StreamProvider.family<List<MediaItem>, String>((
 });
 
 class AppSettings {
-  final ThemeMode themeMode;
+  final AppThemeVariant appTheme;
+  final Color accentColor;
   final double fontSizeFactor;
   final double animationSpeed;
   final int trashRetentionDays;
@@ -207,7 +216,8 @@ class AppSettings {
   final bool galleryViewMode;
 
   const AppSettings({
-    required this.themeMode,
+    required this.appTheme,
+    required this.accentColor,
     required this.fontSizeFactor,
     required this.animationSpeed,
     required this.trashRetentionDays,
@@ -217,7 +227,8 @@ class AppSettings {
   });
 
   AppSettings copyWith({
-    ThemeMode? themeMode,
+    AppThemeVariant? appTheme,
+    Color? accentColor,
     double? fontSizeFactor,
     double? animationSpeed,
     int? trashRetentionDays,
@@ -226,7 +237,8 @@ class AppSettings {
     bool? galleryViewMode,
   }) {
     return AppSettings(
-      themeMode: themeMode ?? this.themeMode,
+      appTheme: appTheme ?? this.appTheme,
+      accentColor: accentColor ?? this.accentColor,
       fontSizeFactor: fontSizeFactor ?? this.fontSizeFactor,
       animationSpeed: animationSpeed ?? this.animationSpeed,
       trashRetentionDays: trashRetentionDays ?? this.trashRetentionDays,
@@ -244,13 +256,9 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   final PreferencesRepository _prefs;
 
   static AppSettings _loadInitial(PreferencesRepository prefs) {
-    final modeStr = prefs.themeMode;
-    ThemeMode mode = ThemeMode.system;
-    if (modeStr == 'light') mode = ThemeMode.light;
-    if (modeStr == 'dark') mode = ThemeMode.dark;
-
     return AppSettings(
-      themeMode: mode,
+      appTheme: appThemeVariantFromString(prefs.themeMode),
+      accentColor: AccentPresets.resolve(prefs.accentColorArgb),
       fontSizeFactor: prefs.fontSizeFactor,
       animationSpeed: prefs.animationSpeed,
       trashRetentionDays: prefs.trashRetentionDays,
@@ -260,12 +268,15 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     );
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
-    state = state.copyWith(themeMode: mode);
-    String modeStr = 'system';
-    if (mode == ThemeMode.light) modeStr = 'light';
-    if (mode == ThemeMode.dark) modeStr = 'dark';
-    await _prefs.setThemeMode(modeStr);
+  Future<void> setAppTheme(AppThemeVariant variant) async {
+    state = state.copyWith(appTheme: variant);
+    await _prefs.setThemeMode(appThemeVariantToString(variant));
+  }
+
+  Future<void> setAccentColor(Color color) async {
+    if (!AccentPresets.isPreset(color)) return;
+    state = state.copyWith(accentColor: color);
+    await _prefs.setAccentColorArgb(color.toARGB32());
   }
 
   Future<void> setFontSizeFactor(double factor) async {

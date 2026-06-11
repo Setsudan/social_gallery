@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
+import 'package:social_gallery/features/discover/discover_providers.dart';
 
 class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
   @override
@@ -12,14 +13,9 @@ class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
   Future<DiscoverHubData> _load() async {
     final mediaRepo = ref.read(mediaRepositoryProvider);
     final organizeRepo = ref.read(organizeRepositoryProvider);
-    final analysisRepo = ref.read(mediaAnalysisRepositoryProvider);
-    final findDuplicates = ref.read(findDuplicateGroupsProvider);
-    final findSimilar = ref.read(findSimilarGroupsProvider);
-    final scoreLowQuality = ref.read(scoreLowQualityProvider);
     final buildQueue = ref.read(buildOrganizeQueueProvider);
 
-    final duplicates = await mediaRepo.getPotentialDuplicates();
-    final groups = findDuplicates(duplicates);
+    final groups = await ref.watch(duplicateGroupsProvider.future);
     final dupItems = groups.fold<int>(0, (sum, g) => sum + g.count);
 
     final pool = await mediaRepo.getOrganizeMediaPool();
@@ -31,20 +27,14 @@ class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
     );
 
     final favorites = await mediaRepo.getFavoriteMediaList();
-    final analysis = await analysisRepo.getAllCached();
 
     var similarCount = 0;
     var lowQualityCount = 0;
-    if (analysis.isNotEmpty) {
-      final allMedia = await mediaRepo.getAllHomeFeedMedia();
-      similarCount = findSimilar(
-        items: allMedia,
-        analysisById: analysis,
-      ).length;
-      lowQualityCount = scoreLowQuality(
-        items: allMedia,
-        analysisById: analysis,
-      ).length;
+    final snapshot = await ref.watch(analysisLibrarySnapshotProvider.future);
+    if (snapshot.analysisById.isNotEmpty) {
+      similarCount = (await ref.watch(similarPhotoGroupsProvider.future)).length;
+      lowQualityCount =
+          (await ref.watch(lowQualityQueueProvider.future)).length;
     }
 
     return DiscoverHubData(

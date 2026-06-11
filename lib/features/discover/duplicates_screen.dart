@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
+import 'package:social_gallery/features/discover/discover_providers.dart';
+import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
 
 class DuplicatesScreen extends ConsumerStatefulWidget {
   const DuplicatesScreen({super.key});
@@ -15,30 +18,12 @@ class DuplicatesScreen extends ConsumerStatefulWidget {
 }
 
 class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
-  List<DuplicateGroup> _groups = [];
   DuplicateGroup? _selected;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    final candidates = await ref
-        .read(mediaRepositoryProvider)
-        .getPotentialDuplicates();
-    final groups = ref.read(findDuplicateGroupsProvider)(candidates);
-    setState(() {
-      _groups = groups;
-      _loading = false;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final groupsAsync = ref.watch(duplicateGroupsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: _selected == null ? null : const Text('Duplicate group'),
@@ -53,27 +38,36 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           },
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _selected == null
-          ? _buildGroupList()
-          : _buildGroupDetail(),
+      body: groupsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => OneUiSubpageScaffold(
+          title: 'Duplicates',
+          error: e,
+          body: const SizedBox.shrink(),
+        ),
+        data: (groups) => _selected == null
+            ? _buildGroupList(groups)
+            : _buildGroupDetail(),
+      ),
     );
   }
 
-  Widget _buildGroupList() {
-    if (_groups.isEmpty) {
-      return const Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          OneUiPageHeader(title: 'Duplicates'),
-          Expanded(child: Center(child: Text('No duplicate groups found.'))),
-        ],
+  Widget _buildGroupList(List<DuplicateGroup> groups) {
+    if (groups.isEmpty) {
+      return OneUiSubpageScaffold(
+        title: 'Duplicates',
+        isEmpty: true,
+        empty: const EmptyState(
+          title: 'No duplicate groups found',
+          message: 'Your library looks clean based on file size and dimensions.',
+          icon: Icons.check_circle_outline,
+        ),
+        body: const SizedBox.shrink(),
       );
     }
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: 16),
-      itemCount: _groups.length + 1,
+      itemCount: groups.length + 1,
       separatorBuilder: (_, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -82,7 +76,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
             subtitle: 'Groups of similar photos by size and dimensions.',
           );
         }
-        final group = _groups[index - 1];
+        final group = groups[index - 1];
         final cover = group.items.first;
         return Card(
           clipBehavior: Clip.antiAlias,
@@ -121,13 +115,9 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
         ),
         Builder(
           builder: (context) {
-            final width = MediaQuery.sizeOf(context).width;
-            int columns = 3;
-            if (width > 1200) {
-              columns = 6;
-            } else if (width > 800) {
-              columns = 4;
-            }
+            final columns = gridCrossAxisCountForWidth(
+              MediaQuery.sizeOf(context).width,
+            );
 
             return Expanded(
               child: GridView.builder(

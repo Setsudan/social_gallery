@@ -7,21 +7,21 @@ import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/utils/media_hero.dart';
-import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/domain/models/gallery_grouping_period.dart';
+import 'package:social_gallery/shared/media/media_bulk_actions.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
+import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/usecases/group_media_by_period.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
-import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 // Wider thresholds so one deliberate pinch maps to one period step.
 const _pinchZoomInThreshold = 0.78;
 const _pinchZoomOutThreshold = 1.22;
-const _loadMoreThresholdPx = 400.0;
 const _dragSelectThresholdPx = 8.0;
 
 class GalleryScreen extends ConsumerStatefulWidget {
@@ -36,7 +36,6 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   final _groupMedia = GroupMediaByPeriod();
   GalleryGroupingPeriod _period = GalleryGroupingPeriod.day;
 
-  final List<MediaItem> _items = [];
   final Set<int> _selectedIds = {};
   final Map<int, GlobalKey> _tileKeys = {};
   int? _activeDragPointer;
@@ -44,12 +43,17 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   bool _dragSelecting = false;
   bool? _dragSelectAdding;
   final Set<int> _dragVisitedIds = {};
-  int _page = 0;
-  bool _loading = false;
-  bool _hasMore = true;
-  String? _error;
-
   bool get _inSelectionMode => _selectedIds.isNotEmpty;
+
+  PaginatedListState<MediaItem> get _paginated =>
+      ref.watch(galleryPaginatedProvider);
+
+  List<MediaItem> get _items => _paginated.items;
+
+  void _clearSelectionAndRefresh() {
+    setState(_selectedIds.clear);
+    ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true);
+  }
 
   void _toggleSelect(MediaItem item) {
     AppHaptics.medium();
@@ -168,130 +172,33 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     setState(_resetDragSelectState);
   }
 
-  Future<List<MediaItem>> _selectedItems() async {
-    final repo = ref.read(mediaRepositoryProvider);
-    final items = <MediaItem>[];
-    for (final id in _selectedIds) {
-      final item = await repo.getMediaById(id);
-      if (item != null) items.add(item);
-    }
-    return items;
-  }
+  Future<void> _bulkTrash() => bulkTrash(
+        ref,
+        context,
+        _selectedIds,
+        onDone: _clearSelectionAndRefresh,
+      );
 
-  Future<void> _bulkTrash() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Move to trash'),
-        content: Text(
-          'Move ${_selectedIds.length} items to trash? You can restore them from Settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Move to trash'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _bulkMove() => bulkMove(
+        ref,
+        context,
+        _selectedIds,
+        onDone: _clearSelectionAndRefresh,
+      );
 
-    if (confirmed != true) return;
+  Future<void> _createAlbumAndMove() => createAlbumAndMove(
+        ref,
+        context,
+        _selectedIds,
+        onDone: _clearSelectionAndRefresh,
+      );
 
-    final repo = ref.read(mediaRepositoryProvider);
-    final items = await _selectedItems();
-    await repo.trashMedia(items);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Moved ${items.length} item(s) to trash')),
-    );
-    setState(_selectedIds.clear);
-    await _loadPage(refresh: true);
-  }
-
-  Future<void> _bulkMove() async {
-    final folders = await ref.read(folderRepositoryProvider).watchAll().first;
-    if (!mounted) return;
-
-    final targetPath = await showFolderPickerSheet(
-      context: context,
-      ref: ref,
-      folders: folders,
-    );
-
-    if (targetPath == null) return;
-
-    final repo = ref.read(mediaRepositoryProvider);
-    final items = await _selectedItems();
-    await repo.moveMedia(items, targetPath);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Moved ${items.length} item(s)')),
-    );
-    setState(_selectedIds.clear);
-    await _loadPage(refresh: true);
-  }
-
-  Future<void> _createAlbumAndMove() async {
-    final nameController = TextEditingController();
-    final albumName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create album'),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Album name',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              if (name.isNotEmpty) Navigator.pop(context, name);
-            },
-            child: const Text('Create and move'),
-          ),
-        ],
-      ),
-    );
-
-    if (albumName == null || albumName.isEmpty) return;
-
-    final repo = ref.read(mediaRepositoryProvider);
-    final items = await _selectedItems();
-    final ok = await repo.createFolderAndMoveMedia(albumName, items);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok
-              ? 'Created "$albumName" and moved ${items.length} item(s)'
-              : 'Could not create album. Check storage access.',
-        ),
-      ),
-    );
-    setState(_selectedIds.clear);
-    await _loadPage(refresh: true);
-  }
-
-  Future<void> _bulkFavorite(bool favorite) async {
-    final repo = ref.read(mediaRepositoryProvider);
-    for (final id in _selectedIds) {
-      await repo.setFavorite(id, favorite);
-    }
-    setState(_selectedIds.clear);
-    await _loadPage(refresh: true);
-  }
+  Future<void> _bulkFavorite(bool favorite) => bulkFavorite(
+        ref,
+        _selectedIds,
+        favorite,
+        onDone: _clearSelectionAndRefresh,
+      );
 
   bool _handlePinchZoomIn() {
     if (_inSelectionMode) return false;
@@ -322,7 +229,6 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPage();
     _scrollController.addListener(_onScroll);
   }
 
@@ -335,55 +241,22 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - _loadMoreThresholdPx &&
-        !_loading &&
-        _hasMore) {
-      _loadPage();
-    }
-  }
-
-  Future<void> _loadPage({bool refresh = false}) async {
-    if (_loading) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-      if (refresh) {
-        _page = 0;
-        _items.clear();
-        _tileKeys.clear();
-        _hasMore = true;
-      }
-    });
-
-    final pageToLoad = refresh ? 0 : _page;
-
-    try {
-      final repo = ref.read(mediaRepositoryProvider);
-      final page = await repo.getGalleryMediaPage(pageToLoad);
-      if (!mounted) return;
-      setState(() {
-        if (refresh) _items.clear();
-        _items.addAll(page);
-        _hasMore = page.length >= MediaRepository.pageSize;
-        _page = pageToLoad + 1;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-        if (refresh) _hasMore = false;
-      });
-    }
+    final paginated = ref.read(galleryPaginatedProvider);
+    handlePaginatedScroll(
+      _scrollController.position,
+      isLoading: paginated.isLoading,
+      hasMore: paginated.hasMore,
+      loadMore: () =>
+          ref.read(galleryPaginatedProvider.notifier).loadMore(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<bool>(syncStateProvider, (previous, current) {
       if (previous == true && current == false) {
-        _loadPage(refresh: true);
+        setState(_tileKeys.clear);
+        ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true);
       }
     });
 
@@ -407,50 +280,17 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       },
       child: Scaffold(
         extendBody: true,
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(inSelectionMode ? kToolbarHeight : 0),
-          child: AnimatedSize(
-            duration: motion.fade,
-            curve: motion.enterCurve,
-            alignment: Alignment.topCenter,
-            child: inSelectionMode
-                ? AppBar(
-                    title: Text('${_selectedIds.length} selected'),
-                    leading: IconButton(
-                      icon: const Icon(Icons.close),
-                      tooltip: 'Cancel selection',
-                      onPressed: _exitSelectionMode,
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.favorite),
-                        tooltip: 'Favorite selected',
-                        onPressed: () => _bulkFavorite(true),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.favorite_border),
-                        tooltip: 'Unfavorite selected',
-                        onPressed: () => _bulkFavorite(false),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.drive_file_move_outlined),
-                        tooltip: 'Move selected',
-                        onPressed: _bulkMove,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.create_new_folder_outlined),
-                        tooltip: 'Create album and move',
-                        onPressed: _createAlbumAndMove,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: 'Move to trash',
-                        onPressed: _bulkTrash,
-                      ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          ),
+        appBar: AnimatedMediaSelectionAppBar(
+          visible: inSelectionMode,
+          selectedCount: _selectedIds.length,
+          duration: motion.fade,
+          curve: motion.enterCurve,
+          onCancel: _exitSelectionMode,
+          onFavorite: () => _bulkFavorite(true),
+          onUnfavorite: () => _bulkFavorite(false),
+          onMove: _bulkMove,
+          onTrash: _bulkTrash,
+          onCreateAlbum: _createAlbumAndMove,
         ),
         body: Stack(
           fit: StackFit.expand,
@@ -487,15 +327,15 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   Widget _buildBody(ThemeData theme, AppMotion motion) {
-    if (_error != null && _items.isEmpty) {
+    if (_paginated.error != null && _items.isEmpty) {
       return EmptyState(
         icon: Icons.error_outline,
         title: 'Could not load gallery',
-        message: _error,
+        message: _paginated.error,
       );
     }
 
-    if (_items.isEmpty && _loading) {
+    if (_items.isEmpty && _paginated.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -510,7 +350,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     final groups = _groupMedia(items: _items, period: _period);
     final navPadding = FloatingNavInsets.scrollPadding(context);
     final columns = _columnCount(context);
-    final loadingMore = _loading && _hasMore;
+    final loadingMore = _paginated.isLoading && _paginated.hasMore;
     final inSelectionMode = _inSelectionMode;
 
     Widget scrollContent = CustomScrollView(

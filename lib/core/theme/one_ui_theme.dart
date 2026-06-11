@@ -1,22 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:social_gallery/core/animation/page_transitions.dart';
+import 'package:social_gallery/core/theme/app_theme_variant.dart';
 
 /// Samsung One UI design tokens and [ThemeData] builders.
-abstract final class OneUiColors {
-  static const accent = Color(0xFF0381FE);
+class AppThemePalette {
+  const AppThemePalette({
+    required this.background,
+    required this.surface,
+    required this.surfaceContainer,
+    required this.onSurface,
+    required this.onSurfaceVariant,
+    required this.outline,
+    required this.brightness,
+  });
 
-  static const lightBackground = Color(0xFFF2F2F2);
-  static const lightSurface = Color(0xFFFFFFFF);
-  static const lightOnSurface = Color(0xFF010101);
-  static const lightOnSurfaceVariant = Color(0xFF5E5E5E);
-  static const lightOutline = Color(0xFFE0E0E0);
+  final Color background;
+  final Color surface;
+  final Color surfaceContainer;
+  final Color onSurface;
+  final Color onSurfaceVariant;
+  final Color outline;
+  final Brightness brightness;
 
-  static const darkBackground = Color(0xFF010101);
-  static const darkSurface = Color(0xFF171717);
-  static const darkSurfaceHigh = Color(0xFF252525);
-  static const darkOnSurface = Color(0xFFF2F2F2);
-  static const darkOnSurfaceVariant = Color(0xFF9E9E9E);
-  static const darkOutline = Color(0xFF3A3A3A);
+  static AppThemePalette forVariant(AppThemeVariant variant) {
+    return switch (variant) {
+      AppThemeVariant.light => const AppThemePalette(
+        background: Color(0xFFFFFFFF),
+        surface: Color(0xFFFFFFFF),
+        surfaceContainer: Color(0xFFF0F0F0),
+        onSurface: Color(0xFF010101),
+        onSurfaceVariant: Color(0xFF5E5E5E),
+        outline: Color(0xFFE0E0E0),
+        brightness: Brightness.light,
+      ),
+      AppThemeVariant.solar => const AppThemePalette(
+        background: Color(0xFFF5ECD7),
+        surface: Color(0xFFFAF6EC),
+        surfaceContainer: Color(0xFFEDE4CF),
+        onSurface: Color(0xFF2C2416),
+        onSurfaceVariant: Color(0xFF6B5D48),
+        outline: Color(0xFFD9CEB8),
+        brightness: Brightness.light,
+      ),
+      AppThemeVariant.dark => const AppThemePalette(
+        background: Color(0xFF1A1A1A),
+        surface: Color(0xFF242424),
+        surfaceContainer: Color(0xFF2E2E2E),
+        onSurface: Color(0xFFF2F2F2),
+        onSurfaceVariant: Color(0xFF9E9E9E),
+        outline: Color(0xFF3A3A3A),
+        brightness: Brightness.dark,
+      ),
+      AppThemeVariant.darkOled => const AppThemePalette(
+        background: Color(0xFF000000),
+        surface: Color(0xFF0A0A0A),
+        surfaceContainer: Color(0xFF141414),
+        onSurface: Color(0xFFF2F2F2),
+        onSurfaceVariant: Color(0xFF9E9E9E),
+        outline: Color(0xFF2A2A2A),
+        brightness: Brightness.dark,
+      ),
+      AppThemeVariant.system => forVariant(AppThemeVariant.light),
+    };
+  }
 }
 
 abstract final class OneUiSpacing {
@@ -45,36 +91,25 @@ abstract final class OneUiRadii {
 }
 
 abstract final class OneUiTheme {
-  static ThemeData light() => _build(Brightness.light);
-  static ThemeData dark() => _build(Brightness.dark);
-
-  static ThemeData _build(Brightness brightness) {
-    final isLight = brightness == Brightness.light;
-    final bg = isLight
-        ? OneUiColors.lightBackground
-        : OneUiColors.darkBackground;
-    final surface = isLight
-        ? OneUiColors.lightSurface
-        : OneUiColors.darkSurface;
-    final onSurface = isLight
-        ? OneUiColors.lightOnSurface
-        : OneUiColors.darkOnSurface;
-    final onVariant = isLight
-        ? OneUiColors.lightOnSurfaceVariant
-        : OneUiColors.darkOnSurfaceVariant;
-    final outline = isLight
-        ? OneUiColors.lightOutline
-        : OneUiColors.darkOutline;
-    final surfaceContainer = isLight
-        ? const Color(0xFFEBEBEB)
-        : OneUiColors.darkSurfaceHigh;
+  static ThemeData build({
+    required AppThemeVariant variant,
+    required Color accent,
+  }) {
+    final palette = AppThemePalette.forVariant(variant);
+    final isLight = palette.brightness == Brightness.light;
+    final bg = palette.background;
+    final surface = palette.surface;
+    final onSurface = palette.onSurface;
+    final onVariant = palette.onSurfaceVariant;
+    final outline = palette.outline;
+    final surfaceContainer = palette.surfaceContainer;
 
     final scheme = ColorScheme(
-      brightness: brightness,
-      primary: OneUiColors.accent,
+      brightness: palette.brightness,
+      primary: accent,
       onPrimary: Colors.white,
-      primaryContainer: OneUiColors.accent.withValues(alpha: 0.12),
-      onPrimaryContainer: OneUiColors.accent,
+      primaryContainer: accent.withValues(alpha: 0.12),
+      onPrimaryContainer: accent,
       secondary: onVariant,
       onSecondary: onSurface,
       secondaryContainer: surfaceContainer,
@@ -95,7 +130,7 @@ abstract final class OneUiTheme {
 
     return ThemeData(
       useMaterial3: true,
-      brightness: brightness,
+      brightness: palette.brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: bg,
       textTheme: textTheme,
@@ -141,18 +176,18 @@ abstract final class OneUiTheme {
         elevation: 0,
         height: 64,
         backgroundColor: surface,
-        indicatorColor: OneUiColors.accent.withValues(alpha: 0.14),
+        indicatorColor: accent.withValues(alpha: 0.14),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return textTheme.labelMedium?.copyWith(
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? OneUiColors.accent : onVariant,
+            color: selected ? accent : onVariant,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? OneUiColors.accent : onVariant,
+            color: selected ? accent : onVariant,
             size: 24,
           );
         }),
@@ -201,7 +236,7 @@ abstract final class OneUiTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(OneUiRadii.md),
-          borderSide: const BorderSide(color: OneUiColors.accent, width: 2),
+          borderSide: BorderSide(color: accent, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: OneUiSpacing.md,
@@ -229,7 +264,7 @@ abstract final class OneUiTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: surfaceContainer,
-        selectedColor: OneUiColors.accent.withValues(alpha: 0.14),
+        selectedColor: accent.withValues(alpha: 0.14),
         labelStyle: textTheme.bodyMedium!,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
         shape: RoundedRectangleBorder(
@@ -238,9 +273,9 @@ abstract final class OneUiTheme {
         side: BorderSide.none,
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: OneUiColors.accent,
-        thumbColor: OneUiColors.accent,
-        overlayColor: OneUiColors.accent.withValues(alpha: 0.12),
+        activeTrackColor: accent,
+        thumbColor: accent,
+        overlayColor: accent.withValues(alpha: 0.12),
         inactiveTrackColor: outline,
       ),
       switchTheme: SwitchThemeData(
@@ -252,14 +287,14 @@ abstract final class OneUiTheme {
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return OneUiColors.accent;
+            return accent;
           }
           return surfaceContainer;
         }),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: OneUiColors.accent,
+          backgroundColor: accent,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
@@ -292,26 +327,24 @@ abstract final class OneUiTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: OneUiColors.accent,
+          foregroundColor: accent,
           textStyle: textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: OneUiColors.accent,
+        backgroundColor: accent,
         foregroundColor: Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(OneUiRadii.pill),
         ),
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: OneUiColors.accent,
-      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: accent),
       iconTheme: IconThemeData(color: onSurface, size: 24),
       pageTransitionsTheme: oneUiPageTransitionsTheme,
-      extensions: const [OneUiThemeExtension()],
+      extensions: [OneUiThemeExtension(pageBackground: bg)],
     );
   }
 
@@ -391,31 +424,35 @@ abstract final class OneUiTheme {
 
 /// Access One UI tokens from [Theme.of(context).extension].
 class OneUiThemeExtension extends ThemeExtension<OneUiThemeExtension> {
-  const OneUiThemeExtension();
+  const OneUiThemeExtension({required this.pageBackground});
 
-  Color pageBackground(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    return brightness == Brightness.light
-        ? OneUiColors.lightBackground
-        : OneUiColors.darkBackground;
-  }
+  final Color pageBackground;
 
   Color groupedSurface(BuildContext context) {
     return Theme.of(context).colorScheme.surface;
   }
 
   @override
-  OneUiThemeExtension copyWith() => this;
+  OneUiThemeExtension copyWith({Color? pageBackground}) {
+    return OneUiThemeExtension(
+      pageBackground: pageBackground ?? this.pageBackground,
+    );
+  }
 
   @override
   OneUiThemeExtension lerp(
     ThemeExtension<OneUiThemeExtension>? other,
     double t,
-  ) => this;
+  ) {
+    if (other is! OneUiThemeExtension) return this;
+    return OneUiThemeExtension(
+      pageBackground: Color.lerp(pageBackground, other.pageBackground, t)!,
+    );
+  }
 }
 
 extension OneUiThemeContext on BuildContext {
   OneUiThemeExtension get oneUi =>
       Theme.of(this).extension<OneUiThemeExtension>() ??
-      const OneUiThemeExtension();
+      const OneUiThemeExtension(pageBackground: Color(0xFFFFFFFF));
 }

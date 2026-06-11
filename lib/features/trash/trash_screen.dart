@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_tab_page_scaffold.dart';
 
 class TrashScreen extends ConsumerStatefulWidget {
   const TrashScreen({super.key});
@@ -183,13 +185,9 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                       ),
                     Builder(
                       builder: (context) {
-                        final width = MediaQuery.sizeOf(context).width;
-                        int columns = 3;
-                        if (width > 1200) {
-                          columns = 6;
-                        } else if (width > 800) {
-                          columns = 4;
-                        }
+                        final columns = gridCrossAxisCountForWidth(
+                          MediaQuery.sizeOf(context).width,
+                        );
 
                         return Expanded(
                           child: GridView.builder(
@@ -406,7 +404,11 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text(e.toString()))),
+      error: (e, _) => OneUiTabPageScaffold(
+        title: 'Trash',
+        error: e,
+        body: const SizedBox.shrink(),
+      ),
     );
   }
 }

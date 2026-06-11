@@ -4,6 +4,7 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/app/theme.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/theme/app_theme_variant.dart';
 
 class SocialGalleryApp extends ConsumerStatefulWidget {
   const SocialGalleryApp({super.key});
@@ -42,26 +43,38 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
     final router = ref.watch(routerProvider);
     final settings = ref.watch(settingsProvider);
 
-    return MaterialApp.router(
-      title: 'Social Gallery',
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: settings.themeMode,
-      routerConfig: router,
-      builder: (context, child) {
-        final motion = AppMotion.fromSettings(
-          settings,
-          systemAnimationsDisabled: MediaQuery.disableAnimationsOf(context),
-        );
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(settings.fontSizeFactor),
-            disableAnimations:
-                !motion.enabled || MediaQuery.disableAnimationsOf(context),
-          ),
-          child: child!,
-        );
-      },
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final resolvedTheme = resolveAppThemeVariant(
+      settings.appTheme,
+      platformBrightness,
+    );
+    final theme = AppTheme.build(
+      variant: resolvedTheme,
+      accent: settings.accentColor,
+    );
+
+    return AnimatedTheme(
+      data: theme,
+      duration: const Duration(milliseconds: 200),
+      child: MaterialApp.router(
+        title: 'Social Gallery (beta)',
+        theme: theme,
+        routerConfig: router,
+        builder: (context, child) {
+          final motion = AppMotion.fromSettings(
+            settings,
+            systemAnimationsDisabled: MediaQuery.disableAnimationsOf(context),
+          );
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(settings.fontSizeFactor),
+              disableAnimations:
+                  !motion.enabled || MediaQuery.disableAnimationsOf(context),
+            ),
+            child: child!,
+          );
+        },
+      ),
     );
   }
 }

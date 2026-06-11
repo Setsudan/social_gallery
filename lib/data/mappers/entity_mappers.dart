@@ -4,8 +4,64 @@ import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/follow_status.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
-domain.MediaItem mediaItemFromRow(MediaRow row) {
+domain.MediaItem _mediaItemFromFields({
+  required int id,
+  required String uri,
+  required String displayName,
+  required String folderName,
+  required String folderPath,
+  required int dateAdded,
+  required int dateModified,
+  required int? dateTaken,
+  required int size,
+  required String mimeType,
+  required int? width,
+  required int? height,
+  required double? latitude,
+  required double? longitude,
+  required String? cameraMake,
+  required String? cameraModel,
+  required int? iso,
+  required String? shutterSpeed,
+  required double? focalLength,
+  required String? aperture,
+  required bool isFavorite,
+  required int? videoDuration,
+  required bool isTrashed,
+  required int? trashedAt,
+  required String? originalPath,
+}) {
   return domain.MediaItem(
+    id: id,
+    uri: uri,
+    displayName: displayName,
+    folderName: folderName,
+    folderPath: folderPath,
+    dateAdded: dateAdded,
+    dateModified: dateModified,
+    dateTaken: dateTaken,
+    size: size,
+    mimeType: mimeType,
+    width: width,
+    height: height,
+    latitude: latitude,
+    longitude: longitude,
+    cameraMake: cameraMake,
+    cameraModel: cameraModel,
+    iso: iso,
+    shutterSpeed: shutterSpeed,
+    focalLength: focalLength,
+    aperture: aperture,
+    isFavorite: isFavorite,
+    videoDuration: videoDuration,
+    isTrashed: isTrashed,
+    trashedAt: trashedAt,
+    originalPath: originalPath,
+  );
+}
+
+domain.MediaItem mediaItemFromRow(MediaRow row) {
+  return _mediaItemFromFields(
     id: row.id,
     uri: row.uri,
     displayName: row.displayName,
@@ -35,7 +91,7 @@ domain.MediaItem mediaItemFromRow(MediaRow row) {
 }
 
 domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
-  return domain.MediaItem(
+  return _mediaItemFromFields(
     id: row.read<int>('id'),
     uri: row.read<String>('uri'),
     displayName: row.read<String>('display_name'),

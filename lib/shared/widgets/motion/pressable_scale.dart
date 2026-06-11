@@ -8,6 +8,7 @@ class PressableScale extends ConsumerStatefulWidget {
     super.key,
     required this.child,
     this.onTap,
+    this.onDoubleTap,
     this.onLongPress,
     this.scale = 0.96,
     this.enabled = true,
@@ -15,6 +16,7 @@ class PressableScale extends ConsumerStatefulWidget {
 
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onDoubleTap;
   final VoidCallback? onLongPress;
   final double scale;
   final bool enabled;
@@ -43,6 +45,7 @@ class _PressableScaleState extends ConsumerState<PressableScale> {
           ? () => setState(() => _pressed = false)
           : null,
       onTap: widget.enabled ? widget.onTap : null,
+      onDoubleTap: widget.enabled ? widget.onDoubleTap : null,
       onLongPress: widget.enabled ? widget.onLongPress : null,
       child: AnimatedScale(
         scale: targetScale,

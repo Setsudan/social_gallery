@@ -4,12 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:social_gallery/app/providers.dart';
-import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/core/cache/cache_service.dart';
+import 'package:social_gallery/core/theme/accent_presets.dart';
+import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_group_card.dart';
+import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_settings_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const _privacyPolicyUrl = 'https://example.com/privacy';
@@ -75,15 +77,391 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  String _themeLabel(AppThemeVariant variant) {
+    return appThemeVariantLabel(variant);
+  }
+
+  String _fontLabel(double factor) {
+    if (factor < 0.9) return 'Small';
+    if (factor < 1.1) return 'Normal';
+    if (factor < 1.3) return 'Large';
+    return 'Extra large';
+  }
+
+  String _animationLabel(double speed) {
+    if (speed <= 0.01) return 'Instant';
+    if (speed < 0.75) return 'Fast';
+    if (speed < 1.5) return 'Normal';
+    return 'Slow';
+  }
+
+  Future<void> _pickTheme(AppThemeVariant current) async {
+    final picked = await showOneUiSettingsPicker<AppThemeVariant>(
+      context: context,
+      title: 'Theme',
+      selected: current,
+      options: const [
+        OneUiPickerOption(
+          value: AppThemeVariant.system,
+          label: 'System default',
+        ),
+        OneUiPickerOption(value: AppThemeVariant.light, label: 'Light'),
+        OneUiPickerOption(value: AppThemeVariant.solar, label: 'Solar'),
+        OneUiPickerOption(value: AppThemeVariant.dark, label: 'Dark'),
+        OneUiPickerOption(
+          value: AppThemeVariant.darkOled,
+          label: 'Dark OLED',
+        ),
+      ],
+    );
+    if (picked != null && picked != current) {
+      AppHaptics.medium();
+      ref.read(settingsProvider.notifier).setAppTheme(picked);
+    }
+  }
+
+  Future<void> _pickAccentColor(Color current) async {
+    await showOneUiSettingsSheet<void>(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            OneUiSpacing.pageHorizontal,
+            OneUiSpacing.sm,
+            OneUiSpacing.pageHorizontal,
+            OneUiSpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Accent color', style: theme.textTheme.titleLarge),
+              const SizedBox(height: OneUiSpacing.sm),
+              Text(
+                'Choose the accent used for buttons, links, and highlights.',
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: OneUiSpacing.lg),
+              Wrap(
+                spacing: OneUiSpacing.md,
+                runSpacing: OneUiSpacing.md,
+                children: [
+                  for (final preset in AccentPresets.all)
+                    _AccentSwatch(
+                      preset: preset,
+                      selected:
+                          preset.color.toARGB32() == current.toARGB32(),
+                      onTap: () {
+                        AppHaptics.medium();
+                        ref
+                            .read(settingsProvider.notifier)
+                            .setAccentColor(preset.color);
+                        Navigator.pop(context);
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickFontSize(double initial) async {
+    await showOneUiSettingsSheet<void>(
+      context: context,
+      builder: (context) {
+        var current = initial;
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.sm,
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Font size', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: OneUiSpacing.sm),
+                  Text(
+                    'Scale text across the app.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: OneUiSpacing.lg),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.format_size_outlined,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: current,
+                          min: 0.8,
+                          max: 1.4,
+                          divisions: 3,
+                          label: _fontLabel(current),
+                          onChanged: (value) {
+                            AppHaptics.selection();
+                            ref
+                                .read(settingsProvider.notifier)
+                                .setFontSizeFactor(value);
+                            setSheetState(() => current = value);
+                          },
+                        ),
+                      ),
+                      Icon(
+                        Icons.format_size_outlined,
+                        size: 26,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                  Center(
+                    child: Text(
+                      _fontLabel(current),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAnimationSpeed(double current) async {
+    final picked = await showOneUiSettingsPicker<double>(
+      context: context,
+      title: 'Animation speed',
+      selected: current,
+      options: const [
+        OneUiPickerOption(
+          value: 0.001,
+          label: 'Instant',
+          subtitle: 'Disable motion',
+        ),
+        OneUiPickerOption(value: 0.5, label: 'Fast'),
+        OneUiPickerOption(value: 1.0, label: 'Normal'),
+        OneUiPickerOption(value: 2.0, label: 'Slow'),
+      ],
+    );
+    if (picked != null && picked != current) {
+      AppHaptics.medium();
+      ref.read(settingsProvider.notifier).setAnimationSpeed(picked);
+    }
+  }
+
+  Future<void> _pickTrashRetention(int initial) async {
+    await showOneUiSettingsSheet<void>(
+      context: context,
+      builder: (context) {
+        var current = initial;
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.sm,
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Trash retention', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: OneUiSpacing.sm),
+                  Text(
+                    'Items in trash are permanently removed after this period.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: OneUiSpacing.lg),
+                  Slider(
+                    value: current.toDouble(),
+                    min: 1,
+                    max: 90,
+                    divisions: 89,
+                    label: '$current days',
+                    onChanged: (value) {
+                      AppHaptics.selection();
+                      final days = value.round();
+                      ref
+                          .read(settingsProvider.notifier)
+                          .setTrashRetentionDays(days);
+                      setSheetState(() => current = days);
+                    },
+                  ),
+                  Center(
+                    child: Text(
+                      '$current days',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _pickCacheLimit(int initial) async {
+    await showOneUiSettingsSheet<void>(
+      context: context,
+      builder: (context) {
+        var current = initial;
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.sm,
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Cache size limit', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: OneUiSpacing.sm),
+                  Text(
+                    'Maximum storage used by thumbnails and temp files.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: OneUiSpacing.lg),
+                  Slider(
+                    value: current.toDouble(),
+                    min: 100,
+                    max: 2000,
+                    divisions: 19,
+                    label: '$current MB',
+                    onChanged: (value) {
+                      final mb = value.round();
+                      ref
+                          .read(settingsProvider.notifier)
+                          .setCacheSizeLimitMb(mb);
+                      setSheetState(() => current = mb);
+                    },
+                  ),
+                  Center(
+                    child: Text(
+                      '$current MB',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _pickOrganizeBatchSize(int initial) async {
+    await showOneUiSettingsSheet<void>(
+      context: context,
+      builder: (context) {
+        var current = initial;
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            final repo = ref.read(organizeRepositoryProvider);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.sm,
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Batch size', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: OneUiSpacing.sm),
+                  Text(
+                    'Number of photos per organize session.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: OneUiSpacing.lg),
+                  Slider(
+                    value: current.toDouble(),
+                    min: 10,
+                    max: 30,
+                    divisions: 20,
+                    label: '$current',
+                    onChanged: (value) {
+                      final size = value.round();
+                      repo.setBatchSize(size);
+                      setSheetState(() => current = size);
+                    },
+                  ),
+                  Center(
+                    child: Text(
+                      '$current photos',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _pickQueueOrder(OrganizeQueueOrder current) async {
+    final picked = await showOneUiSettingsPicker<OrganizeQueueOrder>(
+      context: context,
+      title: 'Queue order',
+      selected: current,
+      options: const [
+        OneUiPickerOption(value: OrganizeQueueOrder.random, label: 'Random'),
+        OneUiPickerOption(
+          value: OrganizeQueueOrder.chronological,
+          label: 'Chronological',
+        ),
+      ],
+    );
+    if (picked != null && picked != current) {
+      ref.read(organizeRepositoryProvider).setQueueOrder(picked);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
-    final theme = Theme.of(context);
+    final repo = ref.watch(organizeRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () {
             AppHaptics.light();
             context.pop();
@@ -94,225 +472,165 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.only(bottom: OneUiSpacing.xl),
         children: [
           const OneUiPageHeader(title: 'Settings'),
-          OneUiGroupCard(
+          OneUiSettingsSection(
             title: 'Appearance',
-            icon: Icons.palette_outlined,
-            child: DropdownButtonFormField<ThemeMode>(
-              initialValue: settings.themeMode,
-              decoration: const InputDecoration(labelText: 'Theme'),
-              items: const [
-                DropdownMenuItem(
-                  value: ThemeMode.system,
-                  child: Text('System Default'),
-                ),
-                DropdownMenuItem(
-                  value: ThemeMode.light,
-                  child: Text('Light Mode'),
-                ),
-                DropdownMenuItem(
-                  value: ThemeMode.dark,
-                  child: Text('Dark Mode'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  AppHaptics.medium();
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                }
-              },
+            headerPadding: const EdgeInsets.fromLTRB(
+              OneUiSpacing.pageHorizontal,
+              OneUiSpacing.md,
+              OneUiSpacing.pageHorizontal,
+              OneUiSpacing.sm,
             ),
-          ),
-          const SizedBox(height: OneUiSpacing.sectionGap),
-          OneUiGroupCard(
-            title: 'Font Size',
-            icon: Icons.text_fields_outlined,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Scale the app text size to fit your preferences.',
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: OneUiSpacing.md),
-                Row(
-                  children: [
-                    const Icon(Icons.format_size_outlined, size: 16),
-                    Expanded(
-                      child: Slider(
-                        value: settings.fontSizeFactor,
-                        min: 0.8,
-                        max: 1.4,
-                        divisions: 3,
-                        label: _fontLabel(settings.fontSizeFactor),
-                        onChanged: (value) {
-                          AppHaptics.selection();
-                          ref
-                              .read(settingsProvider.notifier)
-                              .setFontSizeFactor(value);
-                        },
-                      ),
-                    ),
-                    const Icon(Icons.format_size_outlined, size: 28),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: OneUiSpacing.sectionGap),
-          OneUiGroupCard(
-            title: 'Animation Speed',
-            icon: Icons.motion_photos_auto_outlined,
-            child: DropdownButtonFormField<double>(
-              initialValue: settings.animationSpeed,
-              decoration: const InputDecoration(labelText: 'Speed Factor'),
-              items: const [
-                DropdownMenuItem(
-                  value: 0.001,
-                  child: Text('Disabled (Instant)'),
-                ),
-                DropdownMenuItem(
-                  value: 0.5,
-                  child: Text('Fast (0.5x duration)'),
-                ),
-                DropdownMenuItem(value: 1.0, child: Text('Normal (1.0x)')),
-                DropdownMenuItem(value: 2.0, child: Text('Slow Motion (2.0x)')),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  AppHaptics.medium();
-                  ref.read(settingsProvider.notifier).setAnimationSpeed(value);
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: OneUiSpacing.sectionGap),
-          OneUiGroupCard(
-            title: 'Gallery',
-            icon: Icons.photo_library_outlined,
-            child: SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Gallery view mode'),
-              subtitle: const Text(
-                'Replace Home and Explore with a pinch-zoom gallery tab',
+            children: [
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.display,
+                title: 'Theme',
+                value: _themeLabel(settings.appTheme),
+                onTap: () => _pickTheme(settings.appTheme),
               ),
-              value: settings.galleryViewMode,
-              onChanged: (value) {
-                AppHaptics.medium();
-                ref.read(settingsProvider.notifier).setGalleryViewMode(value);
-              },
-            ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.palette,
+                title: 'Accent color',
+                value: AccentPresets.labelFor(settings.accentColor),
+                showDivider: true,
+                onTap: () => _pickAccentColor(settings.accentColor),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.text,
+                title: 'Font size',
+                value: _fontLabel(settings.fontSizeFactor),
+                showDivider: true,
+                onTap: () => _pickFontSize(settings.fontSizeFactor),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.motion,
+                title: 'Animation speed',
+                value: _animationLabel(settings.animationSpeed),
+                showDivider: true,
+                onTap: () => _pickAnimationSpeed(settings.animationSpeed),
+              ),
+            ],
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
-          OneUiGroupCard(
-            title: 'Content',
-            icon: Icons.folder_outlined,
-            child: Column(
-              children: [
-                OneUiListRow(
-                  title: 'Manage Content',
-                  subtitle: 'Folders, home feed, and visibility',
-                  onTap: () {
-                    AppHaptics.light();
-                    context.push('/folder_management');
-                  },
-                ),
-                OneUiListRow(
-                  title: 'Travel Mode',
-                  subtitle: 'Trips and date-range organization',
-                  showDivider: true,
-                  onTap: () {
-                    AppHaptics.light();
-                    context.push('/travel_mode');
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: OneUiSpacing.sectionGap),
-          _OrganizeSettingsCard(),
-          const SizedBox(height: OneUiSpacing.sectionGap),
-          OneUiGroupCard(
-            title: 'Trash Retention',
-            icon: Icons.delete_sweep_outlined,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Items in trash are permanently removed after this period.',
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: OneUiSpacing.md),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Slider(
-                        value: settings.trashRetentionDays.toDouble(),
-                        min: 1,
-                        max: 90,
-                        divisions: 89,
-                        label: '${settings.trashRetentionDays} Days',
-                        onChanged: (value) {
-                          AppHaptics.selection();
-                          ref
-                              .read(settingsProvider.notifier)
-                              .setTrashRetentionDays(value.toInt());
-                        },
-                      ),
-                    ),
-                    Text(
-                      '${settings.trashRetentionDays} Days',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                OneUiListRow(
-                  title: 'Manage Deleted Items',
-                  subtitle: 'View, restore, or empty trash',
-                  showDivider: true,
-                  onTap: () {
-                    AppHaptics.light();
-                    context.push('/trash');
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: OneUiSpacing.sectionGap),
-          OneUiGroupCard(
-            title: 'Cache',
-            icon: Icons.storage_outlined,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Current size'),
-                  subtitle: Text(CacheService.formatBytes(_cacheBytes)),
-                ),
-                FilledButton.tonal(
-                  onPressed: _cacheBytes > 0 ? _clearCache : null,
-                  child: const Text('Clear cache'),
-                ),
-                const SizedBox(height: OneUiSpacing.md),
-                Text('Size limit: ${settings.cacheSizeLimitMb} MB'),
-                Slider(
-                  value: settings.cacheSizeLimitMb.toDouble(),
-                  min: 100,
-                  max: 2000,
-                  divisions: 19,
-                  label: '${settings.cacheSizeLimitMb} MB',
+          OneUiSettingsSection(
+            title: 'Gallery',
+            children: [
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.gallery,
+                title: 'Gallery view mode',
+                subtitle: 'Pinch-zoom gallery tab instead of Home and Explore',
+                trailing: Switch.adaptive(
+                  value: settings.galleryViewMode,
                   onChanged: (value) {
-                    ref
-                        .read(settingsProvider.notifier)
-                        .setCacheSizeLimitMb(value.round());
+                    AppHaptics.medium();
+                    ref.read(settingsProvider.notifier).setGalleryViewMode(value);
                   },
                 ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Auto-clear on close'),
-                  subtitle: const Text('Clear cache when the app is closed'),
+                showChevron: false,
+              ),
+            ],
+          ),
+          const SizedBox(height: OneUiSpacing.sectionGap),
+          OneUiSettingsSection(
+            title: 'Content',
+            children: [
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.folder,
+                title: 'Manage content',
+                subtitle: 'Folders, home feed, and visibility',
+                onTap: () {
+                  AppHaptics.light();
+                  context.push('/folder_management');
+                },
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.travel,
+                title: 'Travel mode',
+                subtitle: 'Trips and date-range organization',
+                showDivider: true,
+                onTap: () {
+                  AppHaptics.light();
+                  context.push('/travel_mode');
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: OneUiSpacing.sectionGap),
+          OneUiSettingsSection(
+            title: 'Organize',
+            children: [
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.organize,
+                title: 'Batch size',
+                value: '${repo.batchSize}',
+                onTap: () => _pickOrganizeBatchSize(repo.batchSize),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.organize,
+                title: 'Queue order',
+                value: repo.queueOrder == OrganizeQueueOrder.random
+                    ? 'Random'
+                    : 'Chronological',
+                showDivider: true,
+                onTap: () => _pickQueueOrder(repo.queueOrder),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.organize,
+                title: 'Release kept photos',
+                subtitle: 'Return processed photos to the organize queue',
+                showDivider: true,
+                onTap: () async {
+                  AppHaptics.light();
+                  await repo.clearProcessed();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Released kept photos')),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: OneUiSpacing.sectionGap),
+          OneUiSettingsSection(
+            title: 'Storage',
+            children: [
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.trash,
+                title: 'Trash retention',
+                value: '${settings.trashRetentionDays} days',
+                onTap: () => _pickTrashRetention(settings.trashRetentionDays),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.trash,
+                title: 'Deleted items',
+                subtitle: 'View, restore, or empty trash',
+                showDivider: true,
+                onTap: () {
+                  AppHaptics.light();
+                  context.push('/trash');
+                },
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.storage,
+                title: 'Cache',
+                value: CacheService.formatBytes(_cacheBytes),
+                showDivider: true,
+                onTap: _cacheBytes > 0 ? _clearCache : null,
+                showChevron: _cacheBytes > 0,
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.storage,
+                title: 'Cache size limit',
+                value: '${settings.cacheSizeLimitMb} MB',
+                showDivider: true,
+                onTap: () => _pickCacheLimit(settings.cacheSizeLimitMb),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.storage,
+                title: 'Auto-clear on close',
+                subtitle: 'Clear cache when the app is closed',
+                showDivider: true,
+                trailing: Switch.adaptive(
                   value: settings.autoClearCacheOnClose,
                   onChanged: (value) {
                     ref
@@ -320,114 +638,86 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         .setAutoClearCacheOnClose(value);
                   },
                 ),
-              ],
-            ),
+                showChevron: false,
+              ),
+            ],
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
-          OneUiGroupCard(
+          OneUiSettingsSection(
             title: 'About',
-            icon: Icons.info_outline,
-            child: Column(
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Version'),
-                  subtitle: Text(_appVersion.isEmpty ? '...' : _appVersion),
+            children: [
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.info,
+                title: 'Version',
+                value: _appVersion.isEmpty ? '...' : _appVersion,
+                showChevron: false,
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.privacy,
+                title: 'Privacy policy',
+                showDivider: true,
+                onTap: () => launchUrl(
+                  Uri.parse(_privacyPolicyUrl),
+                  mode: LaunchMode.externalApplication,
                 ),
-                OneUiListRow(
-                  title: 'Privacy policy',
-                  trailing: const Icon(Icons.open_in_new, size: 18),
-                  showDivider: true,
-                  onTap: () => launchUrl(
-                    Uri.parse(_privacyPolicyUrl),
-                    mode: LaunchMode.externalApplication,
-                  ),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.license,
+                title: 'Open-source licenses',
+                showDivider: true,
+                onTap: () => showLicensePage(context: context),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.share,
+                title: 'Share app',
+                showDivider: true,
+                onTap: () => Share.share(
+                  'Check out Social Gallery - a local-first photo gallery.',
                 ),
-                OneUiListRow(
-                  title: 'Open-source licenses',
-                  showDivider: true,
-                  onTap: () => showLicensePage(context: context),
-                ),
-                OneUiListRow(
-                  title: 'Share app',
-                  trailing: const Icon(Icons.share_outlined, size: 20),
-                  showDivider: true,
-                  onTap: () => Share.share(
-                    'Check out Social Gallery - a local-first photo gallery.',
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-
-  String _fontLabel(double factor) {
-    if (factor < 0.9) return 'Small';
-    if (factor < 1.1) return 'Normal';
-    if (factor < 1.3) return 'Large';
-    return 'Extra Large';
-  }
 }
 
-class _OrganizeSettingsCard extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final repo = ref.watch(organizeRepositoryProvider);
-    final batchSize = repo.batchSize;
-    final queueOrder = repo.queueOrder;
+class _AccentSwatch extends StatelessWidget {
+  const _AccentSwatch({
+    required this.preset,
+    required this.selected,
+    required this.onTap,
+  });
 
-    return OneUiGroupCard(
-      title: 'Organize',
-      icon: Icons.swipe,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Configure the swipe organizer on the Discover tab.',
-            style: theme.textTheme.bodySmall,
+  final AccentPreset preset;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: preset.label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: preset.color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected ? theme.colorScheme.onSurface : Colors.transparent,
+              width: 2,
+            ),
           ),
-          const SizedBox(height: OneUiSpacing.md),
-          Text('Batch size: $batchSize'),
-          Slider(
-            value: batchSize.toDouble(),
-            min: 10,
-            max: 30,
-            divisions: 20,
-            label: '$batchSize',
-            onChanged: (value) => repo.setBatchSize(value.round()),
-          ),
-          const SizedBox(height: OneUiSpacing.sm),
-          SegmentedButton<OrganizeQueueOrder>(
-            segments: const [
-              ButtonSegment(
-                value: OrganizeQueueOrder.random,
-                label: Text('Random'),
-              ),
-              ButtonSegment(
-                value: OrganizeQueueOrder.chronological,
-                label: Text('Time'),
-              ),
-            ],
-            selected: {queueOrder},
-            onSelectionChanged: (set) => repo.setQueueOrder(set.first),
-          ),
-          const SizedBox(height: OneUiSpacing.md),
-          FilledButton.tonal(
-            onPressed: () async {
-              await repo.clearProcessed();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Released kept photos')),
-                );
-              }
-            },
-            child: const Text('Release kept photos'),
-          ),
-        ],
+          child: selected
+              ? const Icon(Icons.check_rounded, color: Colors.white, size: 22)
+              : null,
+        ),
       ),
     );
   }

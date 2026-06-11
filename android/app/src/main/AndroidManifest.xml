@@ -17,7 +17,7 @@
         android:maxSdkVersion="28" />
 
     <application
-        android:label="Social Gallery"
+        android:label="Social Gallery (beta)"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">

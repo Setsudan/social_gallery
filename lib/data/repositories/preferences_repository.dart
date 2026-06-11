@@ -9,6 +9,7 @@ class PreferencesRepository {
   static const _activeProfileFolderKey = 'active_profile_folder';
   static const _windowsGalleryRootKey = 'windows_gallery_root_path';
   static const _themeModeKey = 'settings_theme_mode';
+  static const _accentColorKey = 'settings_accent_color';
   static const _fontSizeKey = 'settings_font_size';
   static const _animationSpeedKey = 'settings_animation_speed';
   static const _trashRetentionDaysKey = 'settings_trash_retention_days';
@@ -40,6 +41,11 @@ class PreferencesRepository {
   String get themeMode => _prefs.getString(_themeModeKey) ?? 'system';
   Future<void> setThemeMode(String theme) async {
     await _prefs.setString(_themeModeKey, theme);
+  }
+
+  int? get accentColorArgb => _prefs.getInt(_accentColorKey);
+  Future<void> setAccentColorArgb(int argb) async {
+    await _prefs.setInt(_accentColorKey, argb);
   }
 
   double get fontSizeFactor => _prefs.getDouble(_fontSizeKey) ?? 1.0;

@@ -70,9 +70,9 @@ class OneUiSectionHeader extends StatelessWidget {
           ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.2,
+          letterSpacing: 0.15,
         ),
       ),
     );

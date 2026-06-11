@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/shared/widgets/async_tab_body.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 /// Pushed screen: minimal top bar + large in-body title (One UI).
@@ -13,6 +14,12 @@ class OneUiSubpageScaffold extends StatelessWidget {
     this.bottomNavigationBar,
     this.onBack,
     this.padding,
+    this.isLoading = false,
+    this.error,
+    this.isEmpty = false,
+    this.empty,
+    this.appBarTitle,
+    this.onRetry,
   });
 
   final String title;
@@ -23,29 +30,41 @@ class OneUiSubpageScaffold extends StatelessWidget {
   final Widget? bottomNavigationBar;
   final VoidCallback? onBack;
   final EdgeInsetsGeometry? padding;
+  final bool isLoading;
+  final Object? error;
+  final bool isEmpty;
+  final Widget? empty;
+  final String? appBarTitle;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final header = OneUiPageHeader(title: title, subtitle: subtitle);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack ?? () => Navigator.maybePop(context),
         ),
+        title: appBarTitle != null ? Text(appBarTitle!) : null,
         actions: actions,
       ),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
       body: SafeArea(
         top: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            OneUiPageHeader(title: title, subtitle: subtitle),
-            Expanded(
-              child: Padding(padding: padding ?? EdgeInsets.zero, child: body),
-            ),
-          ],
+        child: AsyncTabBody(
+          isLoading: isLoading,
+          error: error,
+          isEmpty: isEmpty,
+          empty: empty,
+          onRetry: onRetry,
+          header: header,
+          child: Padding(
+            padding: padding ?? EdgeInsets.zero,
+            child: body,
+          ),
         ),
       ),
     );

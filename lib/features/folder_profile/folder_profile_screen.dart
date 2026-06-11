@@ -14,9 +14,12 @@ import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/shared/widgets/folder_lock_gate.dart';
-import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
+import 'package:social_gallery/features/folder_profile/folder_profile_providers.dart';
+import 'package:social_gallery/shared/media/media_bulk_actions.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
+import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
 
 class FolderProfileScreen extends ConsumerStatefulWidget {
   const FolderProfileScreen({super.key, required this.folderPath});
@@ -50,101 +53,32 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
     });
   }
 
-  Future<void> _bulkDelete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Move to Trash'),
-        content: Text(
-          'Are you sure you want to move ${_selectedIds.length} items to trash? They can be restored in Settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            child: const Text('Move to Trash'),
-          ),
-        ],
-      ),
-    );
+  void _clearSelection() => setState(_selectedIds.clear);
 
-    if (confirmed == true) {
-      AppHaptics.light();
-      final repo = ref.read(mediaRepositoryProvider);
-      final itemsToTrash = <MediaItem>[];
-      for (final id in _selectedIds) {
-        final item = await repo.getMediaById(id);
-        if (item != null) itemsToTrash.add(item);
-      }
+  Future<void> _bulkDelete() => bulkTrash(
+        ref,
+        context,
+        _selectedIds,
+        onDone: _clearSelection,
+        useHaptics: true,
+      );
 
-      await repo.trashMedia(itemsToTrash);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Moved ${itemsToTrash.length} item(s) to trash'),
-          ),
-        );
-      }
-      setState(() {
-        _selectedIds.clear();
-      });
-      AppHaptics.success();
-    }
-  }
+  Future<void> _bulkMove() => bulkMove(
+        ref,
+        context,
+        _selectedIds,
+        excludePaths: {widget.folderPath},
+        onDone: _clearSelection,
+        useHaptics: true,
+      );
 
-  Future<void> _bulkMove() async {
-    final folders = await ref.read(folderRepositoryProvider).watchAll().first;
-    if (!mounted) return;
-
-    final targetPath = await showFolderPickerSheet(
-      context: context,
-      ref: ref,
-      folders: folders,
-      excludePaths: [widget.folderPath],
-    );
-
-    if (targetPath != null) {
-      AppHaptics.light();
-      final repo = ref.read(mediaRepositoryProvider);
-      final itemsToMove = <MediaItem>[];
-      for (final id in _selectedIds) {
-        final item = await repo.getMediaById(id);
-        if (item != null) itemsToMove.add(item);
-      }
-
-      await repo.moveMedia(itemsToMove, targetPath);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Successfully moved ${itemsToMove.length} items'),
-          ),
-        );
-      }
-      setState(() {
-        _selectedIds.clear();
-      });
-      AppHaptics.success();
-    }
-  }
-
-  Future<void> _bulkFavorite(bool favorite) async {
-    AppHaptics.light();
-    final repo = ref.read(mediaRepositoryProvider);
-    for (final id in _selectedIds) {
-      await repo.setFavorite(id, favorite);
-    }
-    setState(() {
-      _selectedIds.clear();
-    });
-  }
+  Future<void> _bulkFavorite(bool favorite) => bulkFavorite(
+        ref,
+        _selectedIds,
+        favorite,
+        onDone: _clearSelection,
+        useHaptics: true,
+      );
 
   @override
   void didChangeDependencies() {
@@ -172,42 +106,19 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
           );
         }
 
+        final PreferredSizeWidget appBar = inSelectionMode
+            ? MediaSelectionAppBar(
+                selectedCount: _selectedIds.length,
+                onCancel: _clearSelection,
+                onFavorite: () => _bulkFavorite(true),
+                onUnfavorite: () => _bulkFavorite(false),
+                onMove: _bulkMove,
+                onTrash: _bulkDelete,
+              )
+            : AppBar(title: const Text(''));
+
         return Scaffold(
-          appBar: AppBar(
-            title: inSelectionMode
-                ? Text('${_selectedIds.length} selected')
-                : const Text(''),
-            leading: inSelectionMode
-                ? IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => setState(() => _selectedIds.clear()),
-                  )
-                : null,
-            actions: inSelectionMode
-                ? [
-                    IconButton(
-                      icon: const Icon(Icons.favorite),
-                      tooltip: 'Favorite selected',
-                      onPressed: () => _bulkFavorite(true),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.favorite_border),
-                      tooltip: 'Unfavorite selected',
-                      onPressed: () => _bulkFavorite(false),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.drive_file_move_outlined),
-                      tooltip: 'Move selected',
-                      onPressed: _bulkMove,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      tooltip: 'Trash selected',
-                      onPressed: _bulkDelete,
-                    ),
-                  ]
-                : null,
-          ),
+          appBar: appBar,
           body: Column(
             children: [
               _header(folder),
@@ -403,6 +314,7 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                     }
 
                     ref.invalidate(folderProvider(folder.path));
+                    refreshFeedProviders(ref);
 
                     if (context.mounted) Navigator.pop(context);
                   },
@@ -449,7 +361,3 @@ enum _FolderVisibilityOption {
 
   final bool locked;
 }
-
-final folderProvider = StreamProvider.family<FolderInfo?, String>(
-  (ref, path) => ref.watch(folderRepositoryProvider).watchFolder(path),
-);

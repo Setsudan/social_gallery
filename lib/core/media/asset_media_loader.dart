@@ -128,6 +128,25 @@ class AssetMediaLoader {
   }
 
   /// Mime for DB sync; prefers platform mime, then extension heuristics.
+  static String inferMimeTypeSync(AssetEntity asset) {
+    final synced = asset.mimeType;
+    if (synced != null && synced.isNotEmpty) {
+      return synced;
+    }
+
+    switch (classify(asset)) {
+      case AssetMediaKind.video:
+        return 'video/mp4';
+      case AssetMediaKind.image:
+        return _imageMimeFromExtension(extensionFromEntity(asset)) ??
+            'image/jpeg';
+      case AssetMediaKind.audio:
+        return 'audio/mpeg';
+      case AssetMediaKind.unsupported:
+        return 'application/octet-stream';
+    }
+  }
+
   static Future<String> inferMimeType(AssetEntity asset) async {
     final synced = asset.mimeType;
     if (synced != null && synced.isNotEmpty) {

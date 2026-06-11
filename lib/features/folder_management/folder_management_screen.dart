@@ -7,10 +7,12 @@ import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/follow_status.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class FolderManagementScreen extends ConsumerStatefulWidget {
@@ -45,6 +47,7 @@ class _FolderManagementScreenState
         .bulkUpdateFollowStatus(_selected.toList(), status);
     setState(_selected.clear);
     ref.invalidate(allFoldersProvider);
+    refreshFeedProviders(ref);
     AppHaptics.success();
   }
 
@@ -139,7 +142,11 @@ class _FolderManagementScreenState
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => EmptyState(
+          title: 'Could not load folders',
+          message: e.toString(),
+          icon: Icons.error_outline,
+        ),
       ),
     );
   }
@@ -208,6 +215,7 @@ class _FolderManagementScreenState
                       ref.read(folderUnlockStoreProvider).lock(folder.path);
                     }
                     ref.invalidate(allFoldersProvider);
+                    refreshFeedProviders(ref);
                   },
                   itemBuilder: (context) => _FolderVisibilityOption.values
                       .map(
@@ -230,67 +238,61 @@ class _FolderManagementScreenState
               ),
               const Divider(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Show in Stories
-                  Row(
-                    children: [
-                      const Icon(Icons.history_toggle_off, size: 16),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Show in Stories',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(width: 4),
-                      Switch.adaptive(
-                        value: folder.showInStories,
-                        activeThumbColor: theme.colorScheme.primary,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (val) async {
-                          AppHaptics.medium();
-                          await ref
-                              .read(folderRepositoryProvider)
-                              .updateFolderStories(folder.path, val);
-                          ref.invalidate(allFoldersProvider);
-                        },
-                      ),
-                    ],
+                  const Icon(Icons.history_toggle_off, size: 16),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text(
+                      'Show in Stories',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
-                  // Secure Lock
-                  Row(
-                    children: [
-                      Icon(
-                        folder.isBiometricLocked ? Icons.lock : Icons.lock_open,
-                        size: 16,
-                        color: folder.isBiometricLocked
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
-                      ),
-                      const SizedBox(width: 6),
-                      const Text('Secure Lock', style: TextStyle(fontSize: 12)),
-                      const SizedBox(width: 4),
-                      Switch.adaptive(
-                        value: folder.isBiometricLocked,
-                        activeThumbColor: theme.colorScheme.primary,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (val) async {
-                          AppHaptics.medium();
-                          await ref
-                              .read(folderRepositoryProvider)
-                              .updateFollowStatus(
-                                folder.path,
-                                folder.followStatus,
-                                isBiometricLocked: val,
-                              );
-                          if (val) {
-                            ref
-                                .read(folderUnlockStoreProvider)
-                                .lock(folder.path);
-                          }
-                          ref.invalidate(allFoldersProvider);
-                        },
-                      ),
-                    ],
+                  Switch.adaptive(
+                    value: folder.showInStories,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onChanged: (val) async {
+                      AppHaptics.medium();
+                      await ref
+                          .read(folderRepositoryProvider)
+                          .updateFolderStories(folder.path, val);
+                      ref.invalidate(allFoldersProvider);
+                      refreshFeedProviders(ref);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    folder.isBiometricLocked ? Icons.lock : Icons.lock_open,
+                    size: 16,
+                    color: folder.isBiometricLocked
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outline,
+                  ),
+                  const SizedBox(width: 6),
+                  const Expanded(
+                    child: Text('Secure Lock', style: TextStyle(fontSize: 12)),
+                  ),
+                  Switch.adaptive(
+                    value: folder.isBiometricLocked,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onChanged: (val) async {
+                      AppHaptics.medium();
+                      await ref
+                          .read(folderRepositoryProvider)
+                          .updateFollowStatus(
+                            folder.path,
+                            folder.followStatus,
+                            isBiometricLocked: val,
+                          );
+                      if (val) {
+                        ref.read(folderUnlockStoreProvider).lock(folder.path);
+                      }
+                      ref.invalidate(allFoldersProvider);
+                      refreshFeedProviders(ref);
+                    },
                   ),
                 ],
               ),

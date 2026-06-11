@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
-import 'package:social_gallery/features/discover/discover_screen.dart';
+import 'package:social_gallery/features/discover/widgets/deep_organize_tools_list.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
+import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
 
 class DeepOrganizeScreen extends ConsumerWidget {
   const DeepOrganizeScreen({super.key});
@@ -14,56 +14,33 @@ class DeepOrganizeScreen extends ConsumerWidget {
     final scan = ref.watch(mediaAnalysisControllerProvider);
     final hub = ref.watch(discoverHubProvider).valueOrNull;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
+    return OneUiSubpageScaffold(
+      title: 'Deep organize',
+      subtitle:
+          'Scan your library on device to find similar and low-quality photos.',
+      padding: const EdgeInsets.all(16),
       body: ListView(
-        padding: const EdgeInsets.all(16),
         children: [
-          const OneUiPageHeader(
-            title: 'Deep organize',
-            subtitle: 'Scan your library on device to find similar and low-quality photos.',
-          ),
           if (scan.isScanning) ...[
-            const SizedBox(height: 16),
             LinearProgressIndicator(value: scan.progress),
             const SizedBox(height: 8),
             Text('Scanning ${scan.scanned} / ${scan.total}'),
+            const SizedBox(height: 16),
           ],
-          const SizedBox(height: OneUiSpacing.sectionGap),
           FilledButton.icon(
             onPressed: scan.isScanning
                 ? null
-                : () => ref.read(mediaAnalysisControllerProvider.notifier).startScan(),
+                : () =>
+                    ref.read(mediaAnalysisControllerProvider.notifier).startScan(),
             icon: const Icon(Icons.document_scanner_outlined),
             label: Text(scan.isScanning ? 'Scanning...' : 'Start scan'),
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
           const OneUiSectionHeader('Tools'),
           const SizedBox(height: OneUiSpacing.sm),
-          DiscoverHubCard(
-            leading: const Icon(Icons.compare),
-            title: 'Similar photos',
-            subtitle: '${hub?.similarGroupCount ?? 0} groups found',
-            onTap: () => context.push('/discover/similar'),
-          ),
-          const SizedBox(height: 8),
-          DiscoverHubCard(
-            leading: const Icon(Icons.blur_off),
-            title: 'Low quality',
-            subtitle: '${hub?.lowQualityCount ?? 0} items flagged',
-            onTap: () => context.push('/discover/low-quality'),
-          ),
-          const SizedBox(height: 8),
-          DiscoverHubCard(
-            leading: const Icon(Icons.compress),
-            title: 'Compression',
-            subtitle: 'Shrink large images on device',
-            onTap: () => context.push('/discover/compression'),
+          DeepOrganizeToolsList(
+            hub: hub,
+            compressionSubtitle: 'Shrink large images on device',
           ),
         ],
       ),

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/features/discover/widgets/deep_organize_tools_list.dart';
+import 'package:social_gallery/shared/widgets/async_tab_body.dart';
+import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
-import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
+import 'package:social_gallery/shared/widgets/one_ui/discover_hub_card.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class DiscoverScreen extends ConsumerStatefulWidget {
@@ -47,8 +50,22 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     return Scaffold(
       extendBody: true,
       body: hubAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const AsyncTabBody(
+          isLoading: true,
+          header: OneUiPageHeader(title: 'Discover'),
+          child: SizedBox.shrink(),
+        ),
+        error: (e, _) => AsyncTabBody(
+          error: e,
+          isLoading: false,
+          header: const OneUiPageHeader(title: 'Discover'),
+          empty: EmptyState(
+            title: 'Could not load discover',
+            message: e.toString(),
+            icon: Icons.error_outline,
+          ),
+          child: const SizedBox.shrink(),
+        ),
         data: (hub) => RefreshIndicator(
           onRefresh: () => ref.read(discoverHubProvider.notifier).refresh(),
           child: ListView(
@@ -90,34 +107,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               StaggeredEntrance(
                 index: 2,
                 playOnceKey: 'discover_2',
-                child: DiscoverHubCard(
-                  leading: const Icon(Icons.compare),
-                  title: 'Similar photos',
-                  subtitle: '${hub.similarGroupCount} groups',
-                  onTap: () => context.push('/discover/similar'),
-                ),
-              ),
-              const SizedBox(height: 8),
-              StaggeredEntrance(
-                index: 3,
-                playOnceKey: 'discover_3',
-                child: DiscoverHubCard(
-                  leading: const Icon(Icons.blur_off),
-                  title: 'Low quality',
-                  subtitle: '${hub.lowQualityCount} items flagged',
-                  onTap: () => context.push('/discover/low-quality'),
-                ),
-              ),
-              const SizedBox(height: 8),
-              StaggeredEntrance(
-                index: 4,
-                playOnceKey: 'discover_4',
-                child: DiscoverHubCard(
-                  leading: const Icon(Icons.compress),
-                  title: 'Compression',
-                  subtitle: 'Shrink large images',
-                  onTap: () => context.push('/discover/compression'),
-                ),
+                child: DeepOrganizeToolsList(hub: hub),
               ),
               const SizedBox(height: OneUiSpacing.sectionGap),
               const OneUiSectionHeader('Insights'),
@@ -208,111 +198,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class DiscoverHeroCard extends StatelessWidget {
-  const DiscoverHeroCard({
-    super.key,
-    required this.unprocessedCount,
-    required this.onTap,
-  });
-
-  final int unprocessedCount;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return PressableScale(
-      onTap: onTap,
-      child: Card(
-        color: theme.colorScheme.primaryContainer,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(OneUiRadii.card),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.swipe,
-                    color: theme.colorScheme.onPrimaryContainer,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Organize',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Swipe through memories -- left delete, right favorite, up keep.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '$unprocessedCount items waiting',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class DiscoverHubCard extends StatelessWidget {
-  const DiscoverHubCard({
-    super.key,
-    required this.leading,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final Widget leading;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return PressableScale(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(OneUiRadii.card),
-        ),
-        child: ListTile(
-          leading: leading,
-          title: Text(title, style: Theme.of(context).textTheme.titleSmall),
-          subtitle: Text(subtitle),
-          trailing: Icon(
-            Icons.chevron_right,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),

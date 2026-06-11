@@ -14,30 +14,28 @@ class FeedPostCard extends ConsumerWidget {
     required this.onFolderTap,
     required this.onMediaTap,
     required this.onFavoriteTap,
+    required this.onShareTap,
   });
 
   final FeedItem item;
   final VoidCallback onFolderTap;
   final VoidCallback onMediaTap;
   final VoidCallback onFavoriteTap;
+  final VoidCallback onShareTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final media = item.media;
+    final borderSide = BorderSide(color: theme.dividerColor);
 
-    final Widget card = Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: OneUiSpacing.pageHorizontal,
-        vertical: OneUiSpacing.sm,
-      ),
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(OneUiRadii.card),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return Padding(
+      padding: const EdgeInsets.only(bottom: OneUiSpacing.sm),
+      child: DecoratedBox(
+        decoration: BoxDecoration(border: Border(top: borderSide)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           PressableScale(
             onTap: onFolderTap,
             child: ListTile(
@@ -54,7 +52,7 @@ class FeedPostCard extends ConsumerWidget {
             aspectRatio: 1,
             child: PressableScale(
               onTap: onMediaTap,
-              onLongPress: onFavoriteTap,
+              onDoubleTap: onFavoriteTap,
               child: MediaThumbnail(
                 assetId: media.uri,
                 showVideoBadge: media.isVideo,
@@ -77,24 +75,24 @@ class FeedPostCard extends ConsumerWidget {
                     ),
                   ),
                 ),
+                PressableScale(
+                  scale: 0.88,
+                  onTap: onShareTap,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(
+                      Icons.share_outlined,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
                 const Spacer(),
               ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
-
-    final width = MediaQuery.sizeOf(context).width;
-    if (width > 800) {
-      return Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: card,
-        ),
-      );
-    }
-
-    return card;
   }
 }

@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_manager/photo_manager.dart';
-import 'package:social_gallery/core/exif/exif_reader.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
@@ -142,31 +145,74 @@ class PhotoManagerDatasource {
     );
   }
 
-  Future<List<MediaItemsCompanion>> loadAllMedia() async {
+  Future<List<MediaItemsCompanion>> loadAllMedia({
+    bool fastScan = false,
+    bool Function()? shouldCancel,
+    GallerySyncProgressCallback? onProgress,
+  }) async {
     if (Platform.isWindows) {
       return _loadAllMediaWindows();
     }
-    final albums = await listAlbums();
-    final companions = <MediaItemsCompanion>[];
 
-    for (final album in albums) {
-      if (album.isAll) continue;
+    final albums = await listAlbums();
+    final scanAlbums = albums.where((album) => !album.isAll).toList();
+    var totalAssets = 0;
+    for (final album in scanAlbums) {
+      totalAssets += await album.assetCountAsync;
+    }
+
+    onProgress?.call(
+      GallerySyncProgress(
+        phase: 'scanning',
+        detail: 'Found $totalAssets items in ${scanAlbums.length} albums',
+        processed: 0,
+        total: totalAssets,
+      ),
+    );
+
+    final companions = <MediaItemsCompanion>[];
+    var processed = 0;
+
+    for (final album in scanAlbums) {
+      if (shouldCancel?.call() == true) break;
+
       final count = await album.assetCountAsync;
       if (count == 0) continue;
+
+      onProgress?.call(
+        GallerySyncProgress(
+          phase: 'scanning',
+          detail: 'Scanning ${album.name}',
+          processed: processed,
+          total: totalAssets,
+        ),
+      );
 
       final assets = await album.getAssetListRange(start: 0, end: count);
       final folderPath = album.id;
       final folderName = album.name;
 
-      for (final asset in assets) {
-        final file = await asset.file;
+      for (var i = 0; i < assets.length; i++) {
+        if (shouldCancel?.call() == true) break;
+        if (i % 40 == 0) {
+          await Future<void>.delayed(Duration.zero);
+        }
+
+        final asset = assets[i];
         final kind = AssetMediaLoader.classify(asset);
-        final mimeType = await AssetMediaLoader.inferMimeType(asset);
-        final exif = kind == AssetMediaKind.image
-            ? await readExifFromPath(file?.path)
-            : null;
-        final lat = asset.latitude ?? exif?.latitude;
-        final lng = asset.longitude ?? exif?.longitude;
+        final mimeType = fastScan
+            ? AssetMediaLoader.inferMimeTypeSync(asset)
+            : await AssetMediaLoader.inferMimeType(asset);
+
+        int size = 0;
+        if (!fastScan) {
+          final file = await asset.file;
+          size = await _assetSize(asset, file?.lengthSync());
+        }
+
+        final lat = asset.latitude;
+        final lng = asset.longitude;
+
         companions.add(
           MediaItemsCompanion.insert(
             id: Value(_stableId(asset)),
@@ -177,23 +223,30 @@ class PhotoManagerDatasource {
             dateAdded: asset.createDateTime.millisecondsSinceEpoch,
             dateModified: asset.modifiedDateTime.millisecondsSinceEpoch,
             dateTaken: Value(asset.createDateTime.millisecondsSinceEpoch),
-            size: await _assetSize(asset, file?.lengthSync()),
+            size: size,
             mimeType: mimeType,
             width: Value(asset.width),
             height: Value(asset.height),
             latitude: lat != null && lat != 0 ? Value(lat) : const Value(null),
             longitude: lng != null && lng != 0 ? Value(lng) : const Value(null),
-            cameraMake: Value(exif?.cameraMake),
-            cameraModel: Value(exif?.cameraModel),
-            iso: Value(exif?.iso),
-            shutterSpeed: Value(exif?.shutterSpeed),
-            focalLength: Value(exif?.focalLength),
-            aperture: Value(exif?.aperture),
             videoDuration: Value(
               kind == AssetMediaKind.video ? asset.duration : null,
             ),
           ),
         );
+
+        processed++;
+        final reportEvery = math.max(300, totalAssets ~/ 40);
+        if (processed % reportEvery == 0 || processed == totalAssets) {
+          onProgress?.call(
+            GallerySyncProgress(
+              phase: 'scanning',
+              detail: 'Indexed $processed of $totalAssets items',
+              processed: processed,
+              total: totalAssets,
+            ),
+          );
+        }
       }
     }
 
@@ -300,10 +353,136 @@ class PhotoManagerDatasource {
         await newFolder.create(recursive: true);
       }
       await PhotoManager.clearFileCache();
-      return newFolder.path;
-    } catch (_) {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      final albums = await listAlbums();
+      final created = albums
+          .where((album) => !album.isAll && album.name == folderName)
+          .toList();
+      if (created.isNotEmpty) {
+        return created.first.id;
+      }
+      return 'Pictures/$folderName';
+    } catch (e) {
+      debugPrint('createAlbumFolder failed: $e');
       return null;
     }
+  }
+
+  Future<String?> resolveTargetAlbumId(String targetFolderPath) async {
+    if (Platform.isWindows) return targetFolderPath;
+
+    final albums = await listAlbums();
+    final byId = albums.where((album) => album.id == targetFolderPath).firstOrNull;
+    if (byId != null) return byId.id;
+
+    final relative = _absoluteToRelativePath(targetFolderPath) ?? targetFolderPath;
+    for (final album in albums) {
+      if (album.isAll) continue;
+      final albumRelative = await album.relativePathAsync;
+      if (albumRelative == relative) return album.id;
+    }
+
+    final name = relative.contains('/')
+        ? relative.substring(relative.lastIndexOf('/') + 1)
+        : relative;
+    final byName = albums
+        .where((album) => !album.isAll && album.name == name)
+        .firstOrNull;
+    return byName?.id;
+  }
+
+  Future<int> moveAssetsOnDisk(
+    List<String> assetIds,
+    String targetFolderPath,
+  ) async {
+    if (assetIds.isEmpty) return 0;
+
+    if (Platform.isWindows) {
+      var moved = 0;
+      for (final assetId in assetIds) {
+        if (await moveAssetOnDisk(assetId, targetFolderPath)) {
+          moved++;
+        }
+      }
+      return moved;
+    }
+
+    final entities = <AssetEntity>[];
+    for (final assetId in assetIds) {
+      final entity = await AssetEntity.fromId(assetId);
+      if (entity != null) entities.add(entity);
+    }
+    if (entities.isEmpty) return 0;
+
+    final albums = await listAlbums();
+    if (Platform.isAndroid) {
+      final relativePath = await _resolveAndroidRelativePath(
+        targetFolderPath,
+        albums,
+      );
+      if (relativePath == null) {
+        debugPrint('moveAssetsOnDisk: could not resolve target path');
+        return 0;
+      }
+
+      try {
+        final moved = await PhotoManager.editor.android.moveAssetsToPath(
+          entities: entities,
+          targetPath: relativePath,
+        );
+        if (moved) {
+          await PhotoManager.clearFileCache();
+          return entities.length;
+        }
+      } catch (e) {
+        debugPrint('moveAssetsToPath failed: $e');
+      }
+
+      if (entities.length == 1) {
+        final targetAlbum = albums
+            .where((album) => album.id == targetFolderPath)
+            .firstOrNull;
+        if (targetAlbum != null) {
+          try {
+            final legacyMoved =
+                await PhotoManager.editor.android.moveAssetToAnother(
+              entity: entities.first,
+              target: targetAlbum,
+            );
+            if (legacyMoved) {
+              await PhotoManager.clearFileCache();
+              return 1;
+            }
+          } catch (e) {
+            debugPrint('moveAssetToAnother failed: $e');
+          }
+        }
+      }
+      return 0;
+    }
+
+    if (Platform.isIOS || Platform.isMacOS) {
+      final targetAlbum = albums
+          .where((album) => album.id == targetFolderPath)
+          .firstOrNull;
+      if (targetAlbum == null) return 0;
+
+      var moved = 0;
+      for (final entity in entities) {
+        try {
+          await PhotoManager.editor.copyAssetToPath(
+            asset: entity,
+            pathEntity: targetAlbum,
+          );
+          moved++;
+        } catch (e) {
+          debugPrint('copyAssetToPath failed: $e');
+        }
+      }
+      return moved;
+    }
+
+    return 0;
   }
 
   Future<bool> moveAssetOnDisk(String assetId, String targetFolderPath) async {
@@ -319,42 +498,57 @@ class PhotoManagerDatasource {
           file.renameSync(destPath);
           return true;
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('moveAssetOnDisk windows failed: $e');
+      }
       return false;
     }
-    final entity = await AssetEntity.fromId(assetId);
-    if (entity == null) return false;
 
-    try {
-      final albums = await listAlbums();
-      final targetAlbum = albums
-          .where((a) => a.id == targetFolderPath)
-          .firstOrNull;
-      if (targetAlbum != null) {
-        if (Platform.isAndroid) {
-          await PhotoManager.editor.android.moveAssetToAnother(
-            entity: entity,
-            target: targetAlbum,
-          );
-          return true;
-        }
-      }
-    } catch (_) {}
-
-    try {
-      final file = await entity.file;
-      if (file != null && await file.exists()) {
-        final targetDir = Directory(targetFolderPath);
-        if (!await targetDir.exists()) {
-          await targetDir.create(recursive: true);
-        }
-        final destPath = p.join(targetFolderPath, p.basename(file.path));
-        await file.rename(destPath);
-        return true;
-      }
-    } catch (_) {}
-    return false;
+    final moved = await moveAssetsOnDisk([assetId], targetFolderPath);
+    return moved > 0;
   }
+
+  Future<String?> _resolveAndroidRelativePath(
+    String targetFolderPath,
+    List<AssetPathEntity> albums,
+  ) async {
+    final byId = albums.where((album) => album.id == targetFolderPath).firstOrNull;
+    if (byId != null) {
+      return await byId.relativePathAsync ?? _albumNameToRelativePath(byId.name);
+    }
+
+    final absoluteRelative = _absoluteToRelativePath(targetFolderPath);
+    if (absoluteRelative != null) return absoluteRelative;
+
+    if (!targetFolderPath.startsWith('/') && targetFolderPath.contains('/')) {
+      return targetFolderPath;
+    }
+
+    final name = targetFolderPath.contains('/')
+        ? targetFolderPath.substring(targetFolderPath.lastIndexOf('/') + 1)
+        : targetFolderPath;
+    final byName = albums
+        .where((album) => !album.isAll && album.name == name)
+        .firstOrNull;
+    if (byName != null) {
+      return await byName.relativePathAsync ?? _albumNameToRelativePath(name);
+    }
+
+    return _albumNameToRelativePath(name);
+  }
+
+  String? _absoluteToRelativePath(String path) {
+    const markers = ['Pictures/', 'DCIM/', 'Download/'];
+    for (final marker in markers) {
+      final index = path.indexOf(marker);
+      if (index >= 0) {
+        return path.substring(index);
+      }
+    }
+    return null;
+  }
+
+  String _albumNameToRelativePath(String albumName) => 'Pictures/$albumName';
 
   Future<String?> trashAssetOnDisk(String assetId) async {
     if (Platform.isWindows) {

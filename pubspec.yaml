@@ -1,7 +1,7 @@
 name: social_gallery
 description: Local-first social-style photo gallery.
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.0.6+1
 
 environment:
   sdk: ^3.11.5

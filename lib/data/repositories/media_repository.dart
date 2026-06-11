@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:social_gallery/data/datasources/photo_manager_datasource.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/data/mappers/entity_mappers.dart';
+import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
@@ -17,7 +19,11 @@ class MediaRepository {
   static const pageSize = 60;
   static const storyWindowHours = 24;
 
-  Future<void> syncFromDevice() async {
+  Future<void> syncFromDevice({
+    bool fastScan = false,
+    bool Function()? shouldCancel,
+    GallerySyncProgressCallback? onProgress,
+  }) async {
     final existingFolders = await _db.select(_db.folders).get();
     final statusMap = {for (final f in existingFolders) f.path: f.followStatus};
 
@@ -27,13 +33,36 @@ class MediaRepository {
       if (row.isFavorite) favoriteIds.add(row.id);
     }
 
+    onProgress?.call(
+      const GallerySyncProgress(
+        phase: 'folders',
+        detail: 'Reading albums on your device',
+      ),
+    );
+
     final folderRows = await _photoManager.loadFolders(
       statusMap,
       _preferences.hasCompletedInitialSetup,
     );
+    if (shouldCancel?.call() == true) return;
     await _db.upsertFolders(folderRows);
 
-    final mediaRows = await _photoManager.loadAllMedia();
+    final mediaRows = await _photoManager.loadAllMedia(
+      fastScan: fastScan,
+      shouldCancel: shouldCancel,
+      onProgress: onProgress,
+    );
+    if (shouldCancel?.call() == true) return;
+
+    onProgress?.call(
+      GallerySyncProgress(
+        phase: 'saving',
+        detail: 'Saving ${mediaRows.length} items to your library',
+        processed: 0,
+        total: mediaRows.length,
+      ),
+    );
+
     final mergedMedia = mediaRows.map((row) {
       final id = row.id.value;
       if (favoriteIds.contains(id)) {
@@ -43,6 +72,13 @@ class MediaRepository {
     }).toList();
     await _db.replaceAllMedia(mergedMedia);
     await _db.updateFolderCounts();
+
+    onProgress?.call(
+      const GallerySyncProgress(
+        phase: 'finishing',
+        detail: 'Finishing setup',
+      ),
+    );
 
     if (!_preferences.hasCompletedInitialSetup) {
       await _preferences.setInitialSetupComplete();
@@ -184,6 +220,14 @@ class MediaRepository {
     return row == null ? null : mediaItemFromRow(row);
   }
 
+  Future<List<domain.MediaItem>> getMediaByIds(Set<int> ids) async {
+    if (ids.isEmpty) return [];
+    final rows = await (_db.select(_db.mediaItems)
+          ..where((m) => m.id.isIn(ids.toList())))
+        .get();
+    return rows.map(mediaItemFromRow).toList();
+  }
+
   Future<bool> deleteFromDevice(List<domain.MediaItem> items) async {
     final assetIds = items.map((e) => e.uri).toList();
     final deleted = await _photoManager.deleteAssets(assetIds);
@@ -213,24 +257,49 @@ class MediaRepository {
     return true;
   }
 
-  Future<void> moveMedia(
+  Future<int> moveMedia(
     List<domain.MediaItem> items,
     String targetFolderPath,
   ) async {
-    final folder = await (_db.select(
-      _db.folders,
-    )..where((f) => f.path.equals(targetFolderPath))).getSingleOrNull();
-    final folderName = folder?.name ?? 'Album';
+    if (items.isEmpty) return 0;
 
-    for (final item in items) {
-      final success = await _photoManager.moveAssetOnDisk(
-        item.uri,
-        targetFolderPath,
+    final resolvedPath =
+        await _photoManager.resolveTargetAlbumId(targetFolderPath) ??
+            targetFolderPath;
+
+    final folder = await (_db.select(_db.folders)
+          ..where((f) => f.path.equals(resolvedPath)))
+        .getSingleOrNull();
+    final folderName = folder?.name ?? _folderNameFromPath(resolvedPath);
+
+    final moved = await _photoManager.moveAssetsOnDisk(
+      items.map((item) => item.uri).toList(),
+      targetFolderPath,
+    );
+
+    if (moved > 0) {
+      final movedItems = items.take(moved).toList();
+      await _db.moveMediaItems(
+        movedItems.map((item) => item.id).toList(),
+        resolvedPath,
+        folderName,
       );
-      if (success) {
-        await _db.moveMediaItems([item.id], targetFolderPath, folderName);
-      }
+      await _db.updateFolderCounts();
+    } else {
+      debugPrint(
+        'moveMedia: 0/${items.length} moved to $targetFolderPath '
+        '(resolved: $resolvedPath)',
+      );
     }
+
+    return moved;
+  }
+
+  String _folderNameFromPath(String path) {
+    if (path.contains('/')) {
+      return path.substring(path.lastIndexOf('/') + 1);
+    }
+    return path;
   }
 
   Future<void> trashMedia(List<domain.MediaItem> items) async {

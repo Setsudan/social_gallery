@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/core/utils/media_hero.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
@@ -44,15 +45,9 @@ class MediaGrid extends ConsumerWidget {
 
     final inSelectionMode = selectedIds.isNotEmpty;
 
-    int columns = crossAxisCount;
-    if (crossAxisCount == 3) {
-      final width = MediaQuery.sizeOf(context).width;
-      if (width > 1200) {
-        columns = 6;
-      } else if (width > 800) {
-        columns = 4;
-      }
-    }
+    final columns = crossAxisCount == 3
+        ? gridCrossAxisCountForWidth(MediaQuery.sizeOf(context).width)
+        : crossAxisCount;
 
     return GridView.builder(
       controller: controller,
