@@ -19,6 +19,7 @@ void refreshFeedProvidersFromRef(Ref ref) {
 
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
+  ref.invalidate(homeAccountFoldersProvider);
 }
 
 void refreshFeedProviders(WidgetRef ref) {
@@ -32,6 +33,7 @@ void refreshFeedProviders(WidgetRef ref) {
 
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
+  ref.invalidate(homeAccountFoldersProvider);
 }
 
 const paginatedLoadMoreThresholdPx = 400.0;

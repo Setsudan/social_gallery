@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class DiscoverStubScreen extends StatelessWidget {
   const DiscoverStubScreen({
@@ -30,13 +29,26 @@ class DiscoverStubScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          OneUiPageHeader(title: title, subtitle: message),
           Expanded(
             child: Center(
-              child: Icon(
-                icon,
-                size: 64,
-                color: Theme.of(context).colorScheme.primary,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -206,6 +206,10 @@ class AssetMediaLoader {
   }
 
   /// Preserves source aspect ratio so [BoxFit.cover] can crop in the layout.
+  static int _maxThumbnailEdge(ThumbnailSize size) {
+    return size.width > size.height ? size.width : size.height;
+  }
+
   static ThumbnailSize thumbnailSizeForEntity(
     AssetEntity entity, {
     int maxEdge = 800,
@@ -251,7 +255,11 @@ class AssetMediaLoader {
     }
 
     if (kind == AssetMediaKind.image) {
-      return _FileThumbnail(entity: entity, fit: fit);
+      return _FileThumbnail(
+        entity: entity,
+        fit: fit,
+        cacheWidth: _maxThumbnailEdge(resolvedSize),
+      );
     }
 
     return UnsupportedMediaPlaceholder(
@@ -316,10 +324,15 @@ class AssetMediaLoader {
 }
 
 class _FileThumbnail extends StatelessWidget {
-  const _FileThumbnail({required this.entity, required this.fit});
+  const _FileThumbnail({
+    required this.entity,
+    required this.fit,
+    required this.cacheWidth,
+  });
 
   final AssetEntity entity;
   final BoxFit fit;
+  final int cacheWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -338,7 +351,7 @@ class _FileThumbnail extends StatelessWidget {
           child: Image.file(
             file,
             fit: fit,
-            cacheWidth: 480,
+            cacheWidth: cacheWidth,
             gaplessPlayback: true,
             errorBuilder: (context, error, stackTrace) =>
                 UnsupportedMediaPlaceholder(

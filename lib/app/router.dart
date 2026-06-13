@@ -12,7 +12,7 @@ import 'package:social_gallery/features/discover/duplicates_screen.dart';
 
 import 'package:social_gallery/features/discover/discover_stub_screen.dart';
 
-import 'package:social_gallery/features/explore/explore_screen.dart';
+import 'package:social_gallery/features/shell/explore_branch_screen.dart';
 
 import 'package:social_gallery/features/folder_management/folder_management_screen.dart';
 
@@ -100,7 +100,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/explore',
 
                 pageBuilder: (context, state) =>
-                    _page(context, ref, state, const ExploreScreen()),
+                    _page(context, ref, state, const ExploreBranchScreen()),
               ),
             ],
           ),

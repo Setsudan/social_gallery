@@ -36,6 +36,14 @@ List<ShellNavDestination> shellNavDestinations({required bool galleryViewMode}) 
       ),
       ShellNavDestination(
         navIndex: 1,
+        branchIndex: kShellTabExplore,
+        unselectedIcon: Icons.photo_album_outlined,
+        selectedIcon: Icons.photo_album,
+        label: 'Albums',
+        filledWhenSelected: true,
+      ),
+      ShellNavDestination(
+        navIndex: 2,
         branchIndex: kShellTabDiscover,
         unselectedIcon: Icons.search_outlined,
         selectedIcon: Icons.search,

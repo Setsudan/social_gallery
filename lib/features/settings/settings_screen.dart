@@ -10,7 +10,6 @@ import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_settings_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -471,7 +470,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: OneUiSpacing.xl),
         children: [
-          const OneUiPageHeader(title: 'Settings'),
           OneUiSettingsSection(
             title: 'Appearance',
             headerPadding: const EdgeInsets.fromLTRB(

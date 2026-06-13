@@ -6,7 +6,6 @@ import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
-import 'package:social_gallery/core/utils/media_hero.dart';
 import 'package:social_gallery/domain/models/gallery_grouping_period.dart';
 import 'package:social_gallery/shared/media/media_bulk_actions.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
@@ -217,7 +216,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   void _openSearch() {
-    context.go('/explore');
+    context.go('/discover');
   }
 
   void _openMedia(MediaItem item) {
@@ -487,7 +486,6 @@ class _GalleryTile extends ConsumerWidget {
           child: MediaThumbnail(
             assetId: item.uri,
             showVideoBadge: item.isVideo,
-            heroTag: mediaHeroTag(item.id),
           ),
         ),
       ),

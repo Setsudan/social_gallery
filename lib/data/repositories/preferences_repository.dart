@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:social_gallery/domain/models/recent_search.dart';
 
 class PreferencesRepository {
   PreferencesRepository(this._prefs);
@@ -16,6 +19,8 @@ class PreferencesRepository {
   static const _cacheSizeLimitMbKey = 'settings_cache_size_limit_mb';
   static const _autoClearCacheKey = 'settings_auto_clear_cache_on_close';
   static const _galleryViewModeKey = 'settings_gallery_view_mode';
+  static const _recentSearchesKey = 'explore_recent_searches';
+  static const _maxRecentSearches = 20;
 
   bool get hasCompletedInitialSetup =>
       _prefs.getBool(_initialSetupKey) ?? false;
@@ -82,6 +87,44 @@ class PreferencesRepository {
   bool get galleryViewMode => _prefs.getBool(_galleryViewModeKey) ?? false;
   Future<void> setGalleryViewMode(bool enabled) async {
     await _prefs.setBool(_galleryViewModeKey, enabled);
+  }
+
+  List<RecentSearch> get recentSearches {
+    final raw = _prefs.getString(_recentSearchesKey);
+    if (raw == null) return const [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return list
+          .map((e) => RecentSearch.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> addRecentSearch(RecentSearch entry) async {
+    final current = recentSearches
+        .where((s) => s.query.toLowerCase() != entry.query.toLowerCase())
+        .toList();
+    final next = [entry, ...current].take(_maxRecentSearches).toList();
+    await _prefs.setString(
+      _recentSearchesKey,
+      jsonEncode(next.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  Future<void> removeRecentSearch(String query) async {
+    final next = recentSearches
+        .where((s) => s.query.toLowerCase() != query.toLowerCase())
+        .toList();
+    await _prefs.setString(
+      _recentSearchesKey,
+      jsonEncode(next.map((e) => e.toJson()).toList()),
+    );
+  }
+
+  Future<void> clearRecentSearches() async {
+    await _prefs.remove(_recentSearchesKey);
   }
 }
 

@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
+import 'package:social_gallery/features/explore/explore_search_overlay.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
@@ -18,7 +21,6 @@ import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
@@ -29,7 +31,6 @@ class ExploreScreen extends ConsumerStatefulWidget {
 
 class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final _scrollController = ScrollController();
-  final _searchController = TextEditingController();
   List<FolderInfo> _folderSuggestions = [];
   String _searchQuery = '';
   final Set<int> _selectedIds = {};
@@ -76,7 +77,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         onDone: _clearSelectionAndRefresh,
       );
 
-  Future<void> _createAlbumAndMove() => createAlbumAndMove(
+  Future<void> _bulkCreateAlbumAndMove() => createAlbumAndMove(
         ref,
         context,
         _selectedIds,
@@ -93,7 +94,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_onSearchTextChanged);
     _scrollController.addListener(_onScroll);
   }
 
@@ -110,29 +110,53 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     );
   }
 
-  void _onSearchTextChanged() {
-    if (_searchController.text.trim().isEmpty) {
-      if (_searchQuery.isNotEmpty || _folderSuggestions.isNotEmpty) {
-        setState(() {
-          _searchQuery = '';
-          _folderSuggestions = [];
-        });
-      }
-    }
-  }
-
   void _resetSearch() {
-    FocusManager.instance.primaryFocus?.unfocus();
-    if (_searchQuery.isEmpty &&
-        _searchController.text.isEmpty &&
-        _folderSuggestions.isEmpty) {
+    if (_searchQuery.isEmpty && _folderSuggestions.isEmpty) {
       return;
     }
-    _searchController.clear();
     setState(() {
       _searchQuery = '';
       _folderSuggestions = [];
     });
+  }
+
+  Future<void> _openSearchOverlay() async {
+    AppHaptics.light();
+    final query = await ExploreSearchOverlay.show(
+      context,
+      initialQuery: _searchQuery,
+    );
+    if (!mounted || query == null) return;
+    await _applySearch(query);
+  }
+
+  Future<void> _applySearch(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      _resetSearch();
+      return;
+    }
+
+    final folders =
+        await ref.read(folderRepositoryProvider).searchFolders(trimmed);
+    if (!mounted) return;
+
+    setState(() {
+      _searchQuery = trimmed;
+      _folderSuggestions = folders;
+    });
+
+    await ref
+        .read(explorePaginatedProvider(trimmed).notifier)
+        .loadMore(refresh: true);
+    if (!mounted) return;
+
+    final items = ref.read(explorePaginatedProvider(trimmed)).items;
+    final thumbnailUri = items.isNotEmpty ? items.first.uri : null;
+    await ref.read(recentSearchesProvider.notifier).add(
+          trimmed,
+          thumbnailUri: thumbnailUri,
+        );
   }
 
   Future<void> _openFolderProfile(FolderInfo folder) async {
@@ -149,28 +173,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchController.removeListener(_onSearchTextChanged);
-    _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _onSearchChanged() async {
-    final query = _searchController.text.trim();
-    if (query.isNotEmpty) {
-      final folders = await ref
-          .read(folderRepositoryProvider)
-          .searchFolders(query);
-      if (!mounted) return;
-      setState(() {
-        _searchQuery = query;
-        _folderSuggestions = folders;
-      });
-    } else {
-      setState(() {
-        _searchQuery = '';
-        _folderSuggestions = [];
-      });
-    }
   }
 
   @override
@@ -201,32 +204,40 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         onUnfavorite: () => _bulkFavorite(false),
         onMove: _bulkMove,
         onTrash: _bulkTrash,
-        onCreateAlbum: _createAlbumAndMove,
+        onCreateAlbum: _bulkCreateAlbumAndMove,
       ),
-      body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (!inSelectionMode) ...[
-              const OneUiPageHeader(title: 'Explore'),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  OneUiSpacing.pageHorizontal,
-                  0,
-                  OneUiSpacing.pageHorizontal,
-                  OneUiSpacing.sm,
-                ),
-                child: SearchBar(
-                  controller: _searchController,
-                  hintText: 'Search photos and videos',
-                  leading: const Icon(Icons.search, size: 20),
-                  elevation: WidgetStateProperty.all(0),
-                  padding: const WidgetStatePropertyAll(
-                    EdgeInsets.symmetric(horizontal: 12),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!inSelectionMode && _searchQuery.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    OneUiSpacing.pageHorizontal,
+                    OneUiSpacing.sm,
+                    OneUiSpacing.pageHorizontal,
+                    OneUiSpacing.sm,
                   ),
-                  onChanged: (_) => _onSearchChanged(),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ActionChip(
+                          avatar: const Icon(Icons.search, size: 18),
+                          label: Text(_searchQuery),
+                          onPressed: _openSearchOverlay,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        tooltip: 'Clear search',
+                        onPressed: _resetSearch,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              if (_folderSuggestions.isNotEmpty)
+              if (!inSelectionMode && _folderSuggestions.isNotEmpty)
                 SizedBox(
                   height: 56,
                   child: ListView.separated(
@@ -243,7 +254,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           size: 28,
                           coverUri: folder.isLockedAccount
                               ? null
-                              : folder.coverImageUri,
+                              : folder.displayCoverUri,
                           locked: folder.isLockedAccount,
                         ),
                         label: Text(folder.name),
@@ -252,9 +263,29 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     },
                   ),
                 ),
+              Expanded(child: _buildGrid()),
             ],
-            Expanded(child: _buildGrid()),
-          ],
+          ),
+          if (!inSelectionMode)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: OneUiSpacing.sm,
+                    right: OneUiSpacing.pageHorizontal,
+                  ),
+                  child: FloatingActionButton.small(
+                    heroTag: 'explore_search',
+                    tooltip: 'Search',
+                    onPressed: _openSearchOverlay,
+                    child: const Icon(Icons.search),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

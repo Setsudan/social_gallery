@@ -52,13 +52,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       body: hubAsync.when(
         loading: () => const AsyncTabBody(
           isLoading: true,
-          header: OneUiPageHeader(title: 'Discover'),
           child: SizedBox.shrink(),
         ),
         error: (e, _) => AsyncTabBody(
           error: e,
           isLoading: false,
-          header: const OneUiPageHeader(title: 'Discover'),
           empty: EmptyState(
             title: 'Could not load discover',
             message: e.toString(),
@@ -75,11 +73,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               context,
             ).add(const EdgeInsets.all(16)),
             children: [
-              const OneUiPageHeader(
-                title: 'Discover',
-                subtitle:
-                    'Organize memories and clean up your library on device.',
-              ),
               const OneUiSectionHeader('Organize'),
               const SizedBox(height: OneUiSpacing.sm),
               StaggeredEntrance(

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:social_gallery/shared/widgets/async_tab_body.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
-/// Pushed screen: minimal top bar + large in-body title (One UI).
+/// Pushed screen: minimal top bar (One UI).
 class OneUiSubpageScaffold extends StatelessWidget {
   const OneUiSubpageScaffold({
     super.key,
-    required this.title,
+    this.title,
     required this.body,
     this.subtitle,
     this.actions,
@@ -22,7 +21,7 @@ class OneUiSubpageScaffold extends StatelessWidget {
     this.onRetry,
   });
 
-  final String title;
+  final String? title;
   final String? subtitle;
   final Widget body;
   final List<Widget>? actions;
@@ -39,8 +38,6 @@ class OneUiSubpageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final header = OneUiPageHeader(title: title, subtitle: subtitle);
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -60,7 +57,6 @@ class OneUiSubpageScaffold extends StatelessWidget {
           isEmpty: isEmpty,
           empty: empty,
           onRetry: onRetry,
-          header: header,
           child: Padding(
             padding: padding ?? EdgeInsets.zero,
             child: body,

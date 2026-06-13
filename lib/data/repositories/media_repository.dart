@@ -6,6 +6,7 @@ import 'package:social_gallery/data/mappers/entity_mappers.dart';
 import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
+import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
@@ -72,6 +73,7 @@ class MediaRepository {
     }).toList();
     await _db.replaceAllMedia(mergedMedia);
     await _db.updateFolderCounts();
+    await _db.updateFolderAutoCovers();
 
     onProgress?.call(
       const GallerySyncProgress(
@@ -79,10 +81,6 @@ class MediaRepository {
         detail: 'Finishing setup',
       ),
     );
-
-    if (!_preferences.hasCompletedInitialSetup) {
-      await _preferences.setInitialSetupComplete();
-    }
   }
 
   Future<List<FolderWithStories>> getFoldersWithStories() async {
@@ -148,6 +146,11 @@ class MediaRepository {
           ),
         )
         .toList();
+  }
+
+  Future<List<FolderInfo>> getHomeFeedLockedAccountFolders() async {
+    final rows = await _db.getHomeFeedLockedAccountFolders();
+    return rows.map(folderFromRow).toList();
   }
 
   Future<List<domain.MediaItem>> getExplorePage(int page) async {
@@ -234,6 +237,7 @@ class MediaRepository {
     if (deleted) {
       await _db.deleteMediaByIds(items.map((e) => e.id).toList());
       await _db.updateFolderCounts();
+      await _db.updateFolderAutoCovers();
     }
     return deleted;
   }
@@ -285,6 +289,7 @@ class MediaRepository {
         folderName,
       );
       await _db.updateFolderCounts();
+      await _db.updateFolderAutoCovers();
     } else {
       debugPrint(
         'moveMedia: 0/${items.length} moved to $targetFolderPath '
@@ -317,6 +322,7 @@ class MediaRepository {
 
     if (successIds.isNotEmpty) {
       await _db.trashMediaItems(successIds, now, origPaths);
+      await _db.updateFolderAutoCovers();
     }
   }
 
@@ -334,6 +340,7 @@ class MediaRepository {
     }
     if (successIds.isNotEmpty) {
       await _db.restoreMediaItems(successIds);
+      await _db.updateFolderAutoCovers();
     }
   }
 
@@ -347,6 +354,11 @@ class MediaRepository {
     }
     await _db.deleteMediaByIds(ids);
     await _db.updateFolderCounts();
+    await _db.updateFolderAutoCovers();
+  }
+
+  Future<void> refreshFolderAutoCovers() {
+    return _db.updateFolderAutoCovers();
   }
 
   Future<void> cleanupExpiredTrash(int retentionDays) async {

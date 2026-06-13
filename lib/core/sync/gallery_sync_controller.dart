@@ -94,21 +94,16 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
     if (state.isRunning && !force) return;
 
     _cancelRequested = false;
-    final prefs = _ref.read(preferencesRepositoryProvider);
-    final blocking = !prefs.hasCompletedInitialSetup;
 
     state = GallerySyncState(
       isRunning: true,
-      blocking: blocking,
+      blocking: false,
       phase: GallerySyncPhase.cleaningTrash,
-      detail: blocking
-          ? 'Removing expired trash items'
-          : 'Checking for new media',
+      detail: 'Checking for new media',
     );
 
-    if (!blocking) {
-      unawaited(_warmRecentThumbnails());
-    }
+    unawaited(_warmRecentThumbnails());
+    unawaited(_refreshFolderAutoCovers());
 
     try {
       final repo = _ref.read(mediaRepositoryProvider);
@@ -116,7 +111,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
 
       await repo.cleanupExpiredTrash(settings.trashRetentionDays);
       if (_cancelRequested) {
-        await _finishEarly(prefs);
+        await _finishEarly();
         return;
       }
 
@@ -143,7 +138,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       );
 
       if (_cancelRequested) {
-        await _finishEarly(prefs);
+        await _finishEarly();
         return;
       }
 
@@ -151,10 +146,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
         await registerTrashCleanupWork();
       } catch (_) {}
 
-      if (blocking) {
-        unawaited(_warmRecentThumbnails());
-      }
-      _refreshFeeds(background: !blocking);
+      _refreshFeeds(background: true);
       state = state.copyWith(
         isRunning: false,
         blocking: false,
@@ -173,10 +165,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
     }
   }
 
-  Future<void> _finishEarly(dynamic prefs) async {
-    if (!prefs.hasCompletedInitialSetup) {
-      await prefs.setInitialSetupComplete();
-    }
+  Future<void> _finishEarly() async {
     _refreshFeeds();
     state = state.copyWith(
       isRunning: false,
@@ -190,10 +179,6 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
     _cancelRequested = true;
     state = state.copyWith(dismissed: true, isRunning: false, blocking: false);
     _refreshFeeds();
-    final prefs = _ref.read(preferencesRepositoryProvider);
-    if (!prefs.hasCompletedInitialSetup) {
-      unawaited(prefs.setInitialSetupComplete());
-    }
   }
 
   Future<void> _warmRecentThumbnails() async {
@@ -201,6 +186,13 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       final items = await _ref.read(mediaRepositoryProvider).getGalleryMediaPage(0);
       final ids = items.map((item) => item.uri);
       await _ref.read(thumbnailWarmupServiceProvider).warmAssetIds(ids);
+    } catch (_) {}
+  }
+
+  Future<void> _refreshFolderAutoCovers() async {
+    try {
+      await _ref.read(mediaRepositoryProvider).refreshFolderAutoCovers();
+      _ref.invalidate(allFoldersProvider);
     } catch (_) {}
   }
 

@@ -32,9 +32,6 @@ class GradientLoadingScreen extends StatefulWidget {
 
 class _GradientLoadingScreenState extends State<GradientLoadingScreen>
     with TickerProviderStateMixin {
-  static const _beige = Color(0xFFF4EDE4);
-  static const _beigeDeep = Color(0xFFE8DDD0);
-
   static const _orbs = [
     _OrbSpec(color: Color(0xFFFF8FAB), size: 220, phase: 0.0, speed: 1.0),
     _OrbSpec(color: Color(0xFF8EC5FC), size: 260, phase: 1.4, speed: 0.85),
@@ -122,7 +119,9 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colors = _LoadingScreenColors.fromTheme(theme);
+    final textTheme = theme.textTheme;
     final hasProgress = widget.progress != null && widget.error == null;
     final progressValue = hasProgress ? _displayProgress : null;
 
@@ -133,7 +132,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
         final size = MediaQuery.sizeOf(context);
 
         return ColoredBox(
-          color: _beige,
+          color: colors.background,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -143,8 +142,8 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                     center: const Alignment(0, -0.2),
                     radius: 1.2,
                     colors: [
-                      _beige,
-                      _beigeDeep,
+                      colors.background,
+                      colors.backgroundDeep,
                     ],
                   ),
                 ),
@@ -154,13 +153,12 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                   color: orb.color,
                   size: orb.size,
                   offset: _orbOffset(size, orb, t),
+                  opacity: colors.orbOpacity,
                 ),
               ClipRect(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                  child: ColoredBox(
-                    color: Colors.white.withValues(alpha: 0.12),
-                  ),
+                  child: ColoredBox(color: colors.backdropTint),
                 ),
               ),
               child!,
@@ -179,14 +177,14 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(28),
-                    color: Colors.white.withValues(alpha: 0.38),
+                    color: colors.panelFill,
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.55),
+                      color: colors.panelBorder,
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF8B7355).withValues(alpha: 0.08),
+                        color: colors.panelShadow,
                         blurRadius: 32,
                         offset: const Offset(0, 12),
                       ),
@@ -206,7 +204,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             height: 36,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              color: const Color(0xFF5C4F45),
+                              color: colors.progressColor,
                               value: progressValue,
                             ),
                           ),
@@ -219,7 +217,6 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             minHold: const Duration(milliseconds: 1200),
                             fadeDuration: const Duration(milliseconds: 360),
                             style: textTheme.titleMedium?.copyWith(
-                              color: const Color(0xFF4A3F38),
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.2,
                             ),
@@ -233,7 +230,6 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             minHold: const Duration(milliseconds: 900),
                             fadeDuration: const Duration(milliseconds: 340),
                             style: textTheme.bodyMedium?.copyWith(
-                              color: const Color(0xFF6B5E54),
                               height: 1.35,
                             ),
                           ),
@@ -244,8 +240,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             text: _countLabel,
                             minHold: const Duration(milliseconds: 600),
                             fadeDuration: const Duration(milliseconds: 280),
-                            style: textTheme.labelLarge?.copyWith(
-                              color: const Color(0xFF8A7B6F),
+                            style: textTheme.labelMedium?.copyWith(
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
@@ -257,9 +252,8 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             child: LinearProgressIndicator(
                               minHeight: 4,
                               value: progressValue,
-                              backgroundColor: const Color(0xFF5C4F45)
-                                  .withValues(alpha: 0.12),
-                              color: const Color(0xFF5C4F45),
+                              backgroundColor: colors.progressTrack,
+                              color: colors.progressColor,
                             ),
                           ),
                         ],
@@ -270,7 +264,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             minHold: Duration.zero,
                             fadeDuration: const Duration(milliseconds: 360),
                             style: textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF9A4A42),
+                              color: colors.errorColor,
                             ),
                           ),
                         ],
@@ -283,7 +277,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                                   ? 'Continue anyway'
                                   : 'Skip and open gallery',
                               style: textTheme.labelLarge?.copyWith(
-                                color: const Color(0xFF5C4F45),
+                                color: colors.actionColor,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -298,6 +292,59 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LoadingScreenColors {
+  const _LoadingScreenColors({
+    required this.background,
+    required this.backgroundDeep,
+    required this.backdropTint,
+    required this.panelFill,
+    required this.panelBorder,
+    required this.panelShadow,
+    required this.progressColor,
+    required this.progressTrack,
+    required this.errorColor,
+    required this.actionColor,
+    required this.orbOpacity,
+  });
+
+  final Color background;
+  final Color backgroundDeep;
+  final Color backdropTint;
+  final Color panelFill;
+  final Color panelBorder;
+  final Color panelShadow;
+  final Color progressColor;
+  final Color progressTrack;
+  final Color errorColor;
+  final Color actionColor;
+  final double orbOpacity;
+
+  factory _LoadingScreenColors.fromTheme(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
+    final background = theme.scaffoldBackgroundColor;
+    final backgroundDeep = Color.lerp(
+      background,
+      scheme.surfaceContainerHighest,
+      isLight ? 0.55 : 0.35,
+    )!;
+
+    return _LoadingScreenColors(
+      background: background,
+      backgroundDeep: backgroundDeep,
+      backdropTint: scheme.onSurface.withValues(alpha: isLight ? 0.04 : 0.08),
+      panelFill: scheme.surface.withValues(alpha: isLight ? 0.72 : 0.58),
+      panelBorder: scheme.outline.withValues(alpha: isLight ? 0.45 : 0.35),
+      panelShadow: scheme.onSurface.withValues(alpha: isLight ? 0.08 : 0.24),
+      progressColor: scheme.primary,
+      progressTrack: scheme.primary.withValues(alpha: 0.14),
+      errorColor: scheme.error,
+      actionColor: scheme.primary,
+      orbOpacity: isLight ? 1.0 : 0.62,
     );
   }
 }
@@ -448,31 +495,36 @@ class _FloatingOrb extends StatelessWidget {
     required this.color,
     required this.size,
     required this.offset,
+    required this.opacity,
   });
 
   final Color color;
   final double size;
   final Offset offset;
+  final double opacity;
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
       left: offset.dx,
       top: offset.dy,
-      child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                color.withValues(alpha: 0.72),
-                color.withValues(alpha: 0.28),
-                color.withValues(alpha: 0.0),
-              ],
-              stops: const [0.0, 0.45, 1.0],
+      child: Opacity(
+        opacity: opacity,
+        child: ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  color.withValues(alpha: 0.72),
+                  color.withValues(alpha: 0.28),
+                  color.withValues(alpha: 0.0),
+                ],
+                stops: const [0.0, 0.45, 1.0],
+              ),
             ),
           ),
         ),

@@ -7,7 +7,6 @@ import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
 
 class DuplicatesScreen extends ConsumerStatefulWidget {
@@ -26,7 +25,6 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _selected == null ? null : const Text('Duplicate group'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -41,7 +39,6 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       body: groupsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => OneUiSubpageScaffold(
-          title: 'Duplicates',
           error: e,
           body: const SizedBox.shrink(),
         ),
@@ -55,7 +52,6 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
   Widget _buildGroupList(List<DuplicateGroup> groups) {
     if (groups.isEmpty) {
       return OneUiSubpageScaffold(
-        title: 'Duplicates',
         isEmpty: true,
         empty: const EmptyState(
           title: 'No duplicate groups found',
@@ -67,16 +63,10 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
     }
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: 16),
-      itemCount: groups.length + 1,
+      itemCount: groups.length,
       separatorBuilder: (_, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        if (index == 0) {
-          return const OneUiPageHeader(
-            title: 'Duplicates',
-            subtitle: 'Groups of similar photos by size and dimensions.',
-          );
-        }
-        final group = groups[index - 1];
+        final group = groups[index];
         final cover = group.items.first;
         return Card(
           clipBehavior: Clip.antiAlias,

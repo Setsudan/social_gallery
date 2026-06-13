@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
-import 'package:social_gallery/core/utils/media_hero.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
@@ -89,7 +88,6 @@ class MediaGrid extends ConsumerWidget {
               assetId: item.uri,
               showVideoBadge: item.isVideo,
               locked: locked,
-              heroTag: mediaHeroTag(item.id),
             ),
           ),
         );

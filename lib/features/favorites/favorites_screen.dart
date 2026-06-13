@@ -29,7 +29,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     return favoritesAsync.when(
       data: (items) => OneUiTabPageScaffold(
         extendBody: true,
-        title: 'Favorites',
         isEmpty: items.isEmpty,
         empty: const EmptyState(
           title: 'No favorites yet',
@@ -50,13 +49,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       ),
       loading: () => const OneUiTabPageScaffold(
         extendBody: true,
-        title: 'Favorites',
         isLoading: true,
         body: SizedBox.shrink(),
       ),
       error: (e, _) => OneUiTabPageScaffold(
         extendBody: true,
-        title: 'Favorites',
         error: e,
         body: const SizedBox.shrink(),
       ),

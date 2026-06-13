@@ -36,13 +36,24 @@ class FolderRepository {
     FollowStatus status, {
     bool? isBiometricLocked,
     String? biography,
-  }) {
-    return _db.updateFolderFollowStatus(
+  }) async {
+    var effectiveStatus = status;
+    final locking = isBiometricLocked == true;
+
+    if (locking && status == FollowStatus.homeFeed) {
+      effectiveStatus = FollowStatus.accountOnly;
+    }
+
+    await _db.updateFolderFollowStatus(
       path,
-      status.storageValue,
+      effectiveStatus.storageValue,
       isBiometricLocked: isBiometricLocked,
       biography: biography,
     );
+
+    if (locking) {
+      await _db.updateFolderStories(path, false);
+    }
   }
 
   Future<void> updateFolderStories(String path, bool showInStories) {
@@ -60,5 +71,9 @@ class FolderRepository {
   Future<List<FolderInfo>> searchFolders(String query) async {
     final rows = await _db.searchFolders(query);
     return rows.map(folderFromRow).toList();
+  }
+
+  Future<void> setCustomCover(String path, String? coverUri) {
+    return _db.setFolderCustomCover(path, coverUri);
   }
 }

@@ -253,9 +253,45 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> upsertFolders(List<FoldersCompanion> folderRows) async {
-    await batch((b) {
+    await transaction(() async {
       for (final row in folderRows) {
-        b.insert(folders, row, mode: InsertMode.insertOrReplace);
+        final existing = await getFolder(row.path.value);
+        await into(folders).insert(
+          FoldersCompanion(
+            path: row.path,
+            name: row.name,
+            mediaCount: row.mediaCount,
+            lastModified: row.lastModified,
+            // Auto covers come from updateFolderAutoCovers(), not photo_manager.
+            coverImageUri: const Value.absent(),
+            followStatus: row.followStatus,
+            customCoverUri: existing != null
+                ? Value(existing.customCoverUri)
+                : const Value.absent(),
+            showInStories: existing != null
+                ? Value(existing.showInStories)
+                : const Value.absent(),
+            isBiometricLocked: existing != null
+                ? Value(existing.isBiometricLocked)
+                : const Value.absent(),
+            biography: existing?.biography != null
+                ? Value(existing!.biography)
+                : const Value.absent(),
+            isHidden: existing != null
+                ? Value(existing.isHidden)
+                : const Value.absent(),
+            isPinned: existing != null
+                ? Value(existing.isPinned)
+                : const Value.absent(),
+            sortOrder: existing != null
+                ? Value(existing.sortOrder)
+                : const Value.absent(),
+            storyLastViewedTime: existing != null
+                ? Value(existing.storyLastViewedTime)
+                : const Value.absent(),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
       }
     });
   }
@@ -270,6 +306,43 @@ class AppDatabase extends _$AppDatabase {
     ''');
   }
 
+  Future<void> updateFolderAutoCovers() async {
+    await customStatement('''
+      UPDATE folders SET cover_image_uri = (
+        SELECT uri FROM media_items
+        WHERE media_items.folder_path = folders.path
+          AND media_items.is_trashed = 0
+        ORDER BY COALESCE(date_taken, date_modified, date_added) DESC
+        LIMIT 1
+      )
+    ''');
+  }
+
+  Future<void> updateFolderAutoCover(String path) {
+    return customStatement(
+      '''
+      UPDATE folders SET cover_image_uri = (
+        SELECT uri FROM media_items
+        WHERE media_items.folder_path = folders.path
+          AND media_items.is_trashed = 0
+        ORDER BY COALESCE(date_taken, date_modified, date_added) DESC
+        LIMIT 1
+      )
+      WHERE path = ?
+      ''',
+      [path],
+    );
+  }
+
+  Future<void> setFolderCustomCover(String path, String? coverUri) async {
+    await (update(folders)..where((f) => f.path.equals(path))).write(
+      FoldersCompanion(customCoverUri: Value(coverUri)),
+    );
+    if (coverUri == null) {
+      await updateFolderAutoCover(path);
+    }
+  }
+
   Future<List<Folder>> getStoriesEnabledFolders() {
     return (select(folders)
           ..where(
@@ -277,6 +350,17 @@ class AppDatabase extends _$AppDatabase {
                 f.showInStories.equals(true) &
                 f.isBiometricLocked.equals(false) &
                 f.followStatus.equals('HOME_FEED'),
+          )
+          ..orderBy([(f) => OrderingTerm.asc(f.name)]))
+        .get();
+  }
+
+  Future<List<Folder>> getHomeFeedLockedAccountFolders() {
+    return (select(folders)
+          ..where(
+            (f) =>
+                f.followStatus.equals('ACCOUNT_ONLY') &
+                f.isBiometricLocked.equals(true),
           )
           ..orderBy([(f) => OrderingTerm.asc(f.name)]))
         .get();

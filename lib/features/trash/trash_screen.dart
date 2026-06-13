@@ -9,7 +9,6 @@ import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_tab_page_scaffold.dart';
 
 class TrashScreen extends ConsumerStatefulWidget {
@@ -156,48 +155,25 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 : null,
           ),
           body: items.isEmpty
-              ? const Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    OneUiPageHeader(
-                      title: 'Trash',
-                      subtitle:
-                          'Deleted files stay here until retention expires.',
-                    ),
-                    Expanded(
-                      child: EmptyState(
-                        title: 'Trash is empty',
-                        message:
-                            'Deleted files will stay here for recovery until they expire.',
-                        icon: Icons.delete_outline,
-                      ),
-                    ),
-                  ],
+              ? const EmptyState(
+                  title: 'Trash is empty',
+                  message:
+                      'Deleted files will stay here for recovery until they expire.',
+                  icon: Icons.delete_outline,
                 )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (!inSelectionMode)
-                      const OneUiPageHeader(
-                        title: 'Trash',
-                        subtitle:
-                            'Deleted files stay here until retention expires.',
-                      ),
-                    Builder(
-                      builder: (context) {
-                        final columns = gridCrossAxisCountForWidth(
-                          MediaQuery.sizeOf(context).width,
-                        );
+              : Builder(
+                  builder: (context) {
+                    final columns = gridCrossAxisCountForWidth(
+                      MediaQuery.sizeOf(context).width,
+                    );
 
-                        return Expanded(
-                          child: GridView.builder(
-                            padding: const EdgeInsets.all(OneUiSpacing.sm),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: columns,
-                                  crossAxisSpacing: 4,
-                                  mainAxisSpacing: 4,
-                                ),
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(OneUiSpacing.sm),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        crossAxisSpacing: 4,
+                        mainAxisSpacing: 4,
+                      ),
                         itemCount: items.length,
                         itemBuilder: (context, index) {
                           final item = items[index];
@@ -394,18 +370,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                             ),
                           );
                         },
-                      ),
-                    );
+                      );
                   },
                 ),
-              ],
-            ),
         );
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => OneUiTabPageScaffold(
-        title: 'Trash',
         error: e,
         body: const SizedBox.shrink(),
       ),

@@ -15,7 +15,6 @@ import 'package:social_gallery/shared/media/media_bulk_actions.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -168,13 +167,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final activePath = ref.watch(activeProfileFolderProvider);
     final foldersAsync = ref.watch(allFoldersProvider);
     final inSelectionMode = _selectedIds.isNotEmpty;
-    final profileTitle = foldersAsync.maybeWhen(
-      data: (folders) => folders
-          .where((f) => f.path == activePath)
-          .map((f) => f.name)
-          .firstOrNull,
-      orElse: () => null,
-    );
 
     final PreferredSizeWidget appBar = inSelectionMode
         ? MediaSelectionAppBar(
@@ -230,18 +222,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       extendBody: true,
       appBar: appBar,
       body: activePath == null
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!inSelectionMode) const OneUiPageHeader(title: 'Profile'),
-                const Expanded(
-                  child: EmptyState(
+          ? const Expanded(
+              child: EmptyState(
                     title: 'No folder selected',
                     message: 'Sync your library or pick a folder.',
                   ),
-                ),
-              ],
-            )
+                )
           : foldersAsync.when(
               data: (folders) {
                 final folder = folders
@@ -257,56 +243,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       .when(
                         data: (items) {
                           if (items.isEmpty) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (!inSelectionMode)
-                                  OneUiPageHeader(
-                                    title: profileTitle ?? 'Profile',
-                                  ),
-                                const Expanded(
-                                  child: EmptyState(
-                                    title: 'No media in this folder',
-                                  ),
-                                ),
-                              ],
+                            return const EmptyState(
+                              title: 'No media in this folder',
                             );
                           }
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (!inSelectionMode)
-                                OneUiPageHeader(
-                                  title: profileTitle ?? 'Profile',
-                                ),
-                              Expanded(
-                                child: MediaGrid(
-                                  controller: _scrollController,
-                                  items: items,
-                                  selectedIds: _selectedIds,
-                                  onSelectToggle: _toggleSelect,
-                                  onLongPress: _startSelection,
-                                  onTap: (item) => context.push(
-                                    mediaViewerLocation(
-                                      item.uri,
-                                      mediaId: item.id,
-                                      favorite: item.isFavorite,
-                                    ),
-                                  ),
-                                ),
+                          return MediaGrid(
+                            controller: _scrollController,
+                            items: items,
+                            selectedIds: _selectedIds,
+                            onSelectToggle: _toggleSelect,
+                            onLongPress: _startSelection,
+                            onTap: (item) => context.push(
+                              mediaViewerLocation(
+                                item.uri,
+                                mediaId: item.id,
+                                favorite: item.isFavorite,
                               ),
-                            ],
+                            ),
                           );
                         },
-                        loading: () => Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (!inSelectionMode)
-                              OneUiPageHeader(title: profileTitle ?? 'Profile'),
-                            const Expanded(
-                              child: Center(child: CircularProgressIndicator()),
-                            ),
-                          ],
+                        loading: () => const Center(
+                          child: CircularProgressIndicator(),
                         ),
                         error: (e, _) => EmptyState(
                           title: 'Could not load folder',

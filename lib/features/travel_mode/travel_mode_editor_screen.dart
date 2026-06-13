@@ -5,7 +5,6 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class TravelModeEditorScreen extends ConsumerStatefulWidget {
   const TravelModeEditorScreen({super.key, this.travelModeId});
@@ -216,9 +215,6 @@ class _TravelModeEditorScreenState
           : ListView(
               padding: const EdgeInsets.only(bottom: OneUiSpacing.xl),
               children: [
-                OneUiPageHeader(
-                  title: widget.travelModeId == null ? 'New trip' : 'Edit trip',
-                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: OneUiSpacing.pageHorizontal,

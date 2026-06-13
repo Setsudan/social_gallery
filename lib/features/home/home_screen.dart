@@ -9,8 +9,10 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
+import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/features/home/home_providers.dart';
+import 'package:social_gallery/shared/widgets/account_folder_card.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/feed_post_card.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
@@ -18,7 +20,6 @@ import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 import 'package:social_gallery/shared/widgets/stories_row.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -63,6 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _refresh() async {
     await ref.read(homeFeedPaginatedProvider.notifier).loadMore(refresh: true);
     ref.invalidate(homeStoriesProvider);
+    ref.invalidate(homeAccountFoldersProvider);
   }
 
   Future<void> _toggleFavorite(FeedItem item) async {
@@ -98,6 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     final storiesAsync = ref.watch(homeStoriesProvider);
+    final accountFoldersAsync = ref.watch(homeAccountFoldersProvider);
     final motion = AppMotion.of(context, ref);
     listenForTabScrollToTop(
       ref,
@@ -110,12 +113,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       extendBody: true,
       body: RefreshIndicator(
         onRefresh: _refresh,
-        child: _buildBody(storiesAsync),
+        child: _buildBody(storiesAsync, accountFoldersAsync),
       ),
     );
   }
 
-  Widget _buildBody(AsyncValue<List<FolderWithStories>> storiesAsync) {
+  Widget _buildBody(
+    AsyncValue<List<FolderWithStories>> storiesAsync,
+    AsyncValue<List<FolderInfo>> accountFoldersAsync,
+  ) {
     final listPadding = FloatingNavInsets.scrollPadding(context);
 
     if (_paginated.error != null && _items.isEmpty) {
@@ -123,7 +129,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         controller: _scrollController,
         padding: listPadding,
         children: [
-          const OneUiPageHeader(title: 'Home'),
           SizedBox(
             height: MediaQuery.sizeOf(context).height * 0.4,
             child: EmptyState(
@@ -144,61 +149,76 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (folders) => folders,
       orElse: () => const <FolderWithStories>[],
     );
+    final accountFolders = accountFoldersAsync.maybeWhen(
+      data: (folders) => folders,
+      orElse: () => const <FolderInfo>[],
+    );
+
+    Widget storiesRow() {
+      return StoriesRow(
+        folders: stories,
+        onFolderTap: (path) {
+          AppHaptics.light();
+          context.push(storyViewerLocation(path));
+        },
+        onCameraTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Camera capture coming soon')),
+          );
+        },
+      );
+    }
 
     if (_items.isEmpty) {
       return ListView(
         controller: _scrollController,
         padding: listPadding,
         children: [
-          const OneUiPageHeader(title: 'Home'),
-          StoriesRow(
-            folders: stories,
-            onFolderTap: (path) {
-              AppHaptics.light();
-              context.push(storyViewerLocation(path));
-            },
-            onCameraTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Camera capture coming soon')),
-              );
-            },
-          ),
-          const SizedBox(
-            height: 360,
-            child: EmptyState(
-              title: 'No posts yet',
-              message: 'Add folders to Home Feed in Manage Content.',
+          storiesRow(),
+          for (final folder in accountFolders)
+            AccountFolderCard(
+              folder: folder,
+              onTap: () {
+                AppHaptics.light();
+                context.push(folderProfileLocation(folder.path));
+              },
             ),
-          ),
+          if (accountFolders.isEmpty)
+            const SizedBox(
+              height: 360,
+              child: EmptyState(
+                title: 'No posts yet',
+                message: 'Add folders to Home Feed in Manage Content.',
+              ),
+            ),
         ],
       );
     }
+
+    final headerCount = 1 + accountFolders.length;
 
     return ListView.builder(
       controller: _scrollController,
       padding: listPadding,
       cacheExtent: 600,
-      itemCount: _items.length + 2 + (_paginated.hasMore ? 1 : 0),
+      itemCount: headerCount + _items.length + (_paginated.hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == 0) {
-          return const OneUiPageHeader(title: 'Home');
+          return storiesRow();
         }
-        if (index == 1) {
-          return StoriesRow(
-            folders: stories,
-            onFolderTap: (path) {
+
+        if (index <= accountFolders.length) {
+          final folder = accountFolders[index - 1];
+          return AccountFolderCard(
+            folder: folder,
+            onTap: () {
               AppHaptics.light();
-              context.push(storyViewerLocation(path));
-            },
-            onCameraTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Camera capture coming soon')),
-              );
+              context.push(folderProfileLocation(folder.path));
             },
           );
         }
 
-        final feedIndex = index - 2;
+        final feedIndex = index - headerCount;
         if (feedIndex >= _items.length) {
           return const Padding(
             padding: EdgeInsets.all(24),

@@ -109,7 +109,7 @@ class _FolderPickerSheetBodyState
                     name: folder.name,
                     coverUri: folder.isLockedAccount
                         ? null
-                        : folder.coverImageUri,
+                        : folder.displayCoverUri,
                     locked: folder.isLockedAccount,
                   ),
                   title: Text(folder.name),

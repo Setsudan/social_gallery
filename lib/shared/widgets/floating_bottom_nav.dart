@@ -9,14 +9,16 @@ import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 
 /// Pill height + outer bottom margin from [FloatingBottomNav].
 const double kFloatingNavBarExtent = 64;
-const double kFloatingNavOuterBottomMargin = 16;
+const double kFloatingNavOuterBottomMargin = 14;
 
 /// Extra scroll padding so the last row clears the overlay.
 const double kFloatingNavScrollGap = 12;
 
-const double _navIconSlotWidth = 52;
-const double _navIconSize = 48;
-const double _settingsButtonWidth = 52;
+const double _navItemSlotWidth = 72;
+const double _navItemInnerWidth = 64;
+const double _navItemInnerHeight = 48;
+const double _navIconSize = 20;
+const double _settingsItemWidth = 64;
 
 class FloatingNavInsets extends InheritedWidget {
   const FloatingNavInsets({
@@ -76,7 +78,7 @@ class FloatingBottomNav extends ConsumerWidget {
     final selectedNavIndex =
         navIndexForBranch(selectedBranchIndex, galleryViewMode: galleryViewMode) ??
         0;
-    final pillWidth = destinations.length * _navIconSlotWidth;
+    final pillWidth = destinations.length * _navItemSlotWidth;
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -100,18 +102,20 @@ class FloatingBottomNav extends ConsumerWidget {
                     AnimatedPositioned(
                       duration: motion.fade,
                       curve: motion.enterCurve,
-                      left: _navIconSlotWidth * selectedNavIndex +
-                          (_navIconSlotWidth - _navIconSize) / 2,
-                      top: (kFloatingNavBarExtent - _navIconSize) / 2,
+                      left: _navItemSlotWidth * selectedNavIndex +
+                          (_navItemSlotWidth - _navItemInnerWidth) / 2,
+                      top: (kFloatingNavBarExtent - _navItemInnerHeight) / 2,
                       child: AnimatedContainer(
                         duration: motion.fade,
-                        width: _navIconSize,
-                        height: _navIconSize,
+                        width: _navItemInnerWidth,
+                        height: _navItemInnerHeight,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.14,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.08,
                           ),
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(
+                            _navItemInnerHeight / 2,
+                          ),
                         ),
                       ),
                     ),
@@ -119,13 +123,16 @@ class FloatingBottomNav extends ConsumerWidget {
                       children: [
                         for (final destination in destinations)
                           SizedBox(
-                            width: _navIconSlotWidth,
+                            width: _navItemSlotWidth,
                             child: Center(
-                              child: _NavIconButton(
-                                selected: selectedNavIndex == destination.navIndex,
+                              child: _NavItemButton(
+                                selected:
+                                    selectedNavIndex == destination.navIndex,
+                                label: destination.label,
                                 unselectedIcon: destination.unselectedIcon,
                                 selectedIcon: destination.selectedIcon,
-                                filledWhenSelected: destination.filledWhenSelected,
+                                filledWhenSelected:
+                                    destination.filledWhenSelected,
                                 onPressed: () => onBranchSelected(
                                   destination.branchIndex,
                                 ),
@@ -138,8 +145,9 @@ class FloatingBottomNav extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: OneUiSpacing.xs),
-              _NavIconButton(
+              _NavItemButton(
                 selected: false,
+                label: 'Settings',
                 unselectedIcon: Icons.menu,
                 selectedIcon: Icons.menu,
                 filledWhenSelected: false,
@@ -153,9 +161,10 @@ class FloatingBottomNav extends ConsumerWidget {
   }
 }
 
-class _NavIconButton extends ConsumerWidget {
-  const _NavIconButton({
+class _NavItemButton extends ConsumerWidget {
+  const _NavItemButton({
     required this.selected,
+    required this.label,
     required this.unselectedIcon,
     required this.selectedIcon,
     required this.onPressed,
@@ -163,6 +172,7 @@ class _NavIconButton extends ConsumerWidget {
   });
 
   final bool selected;
+  final String label;
   final IconData unselectedIcon;
   final IconData selectedIcon;
   final VoidCallback onPressed;
@@ -172,26 +182,48 @@ class _NavIconButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final motion = AppMotion.of(context, ref);
     final theme = Theme.of(context);
-    final color = selected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant;
+    final iconColor = selected
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45);
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
+      fontSize: 9,
+      height: 1.0,
+      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+      color: selected
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+    );
 
     return PressableScale(
       scale: 0.9,
       onTap: onPressed,
       child: SizedBox(
-        width: _settingsButtonWidth,
-        height: _navIconSize,
-        child: Center(
-          child: AnimatedScale(
-            scale: selected ? 1.05 : 1.0,
-            duration: motion.fadeFast,
-            curve: motion.enterCurve,
-            child: Icon(
-              selected && filledWhenSelected ? selectedIcon : unselectedIcon,
-              size: 26,
-              color: color,
-            ),
+        width: _settingsItemWidth,
+        height: _navItemInnerHeight,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedScale(
+                scale: selected ? 1.05 : 1.0,
+                duration: motion.fadeFast,
+                curve: motion.enterCurve,
+                child: Icon(
+                  selected && filledWhenSelected ? selectedIcon : unselectedIcon,
+                  size: _navIconSize,
+                  color: iconColor,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle,
+              ),
+            ],
           ),
         ),
       ),
@@ -234,4 +266,3 @@ class _OneUiNavShell extends StatelessWidget {
     );
   }
 }
-

@@ -97,6 +97,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
 
     final overlayHeight = floatingNavOverlayHeight(context);
+    final hideBottomNav = ref.watch(exploreSearchOverlayOpenProvider);
 
     return Scaffold(
       extendBody: true,
@@ -110,17 +111,18 @@ class _MainShellState extends ConsumerState<MainShell> {
               child: widget.navigationShell,
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: FloatingBottomNav(
-              selectedBranchIndex: widget.navigationShell.currentIndex,
-              galleryViewMode: galleryViewMode,
-              onBranchSelected: (index) => _onBranchSelected(ref, index),
-              onSettingsPressed: () => context.push('/settings'),
+          if (!hideBottomNav)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: FloatingBottomNav(
+                selectedBranchIndex: widget.navigationShell.currentIndex,
+                galleryViewMode: galleryViewMode,
+                onBranchSelected: (index) => _onBranchSelected(ref, index),
+                onSettingsPressed: () => context.push('/settings'),
+              ),
             ),
-          ),
           if (sync.showOverlay)
             Positioned.fill(
               child: _SyncOverlayFade(sync: sync, ref: ref),

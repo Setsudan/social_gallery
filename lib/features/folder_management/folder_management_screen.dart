@@ -13,7 +13,6 @@ import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class FolderManagementScreen extends ConsumerStatefulWidget {
   const FolderManagementScreen({super.key});
@@ -123,18 +122,11 @@ class _FolderManagementScreenState
 
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: OneUiSpacing.xl),
-            itemCount: folders.length + (_selectionMode ? 0 : 1),
+            itemCount: folders.length,
             itemBuilder: (context, index) {
-              if (!_selectionMode && index == 0) {
-                return const OneUiPageHeader(
-                  title: 'Manage Content',
-                  subtitle: 'Folders, home feed, and visibility',
-                );
-              }
-              final folderIndex = _selectionMode ? index : index - 1;
-              final folder = folders[folderIndex];
+              final folder = folders[index];
               return StaggeredEntrance(
-                index: folderIndex,
+                index: index,
                 playOnceKey: 'folder_${folder.path}',
                 child: _folderTile(folder, theme),
               );
@@ -188,7 +180,7 @@ class _FolderManagementScreenState
                   name: folder.name,
                   coverUri: folder.isLockedAccount
                       ? null
-                      : folder.coverImageUri,
+                      : folder.displayCoverUri,
                   locked: folder.isLockedAccount,
                 ),
                 title: Text(

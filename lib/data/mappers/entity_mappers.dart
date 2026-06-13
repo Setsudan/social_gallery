@@ -126,6 +126,7 @@ FolderInfo folderFromRow(Folder row) {
     name: row.name,
     mediaCount: row.mediaCount,
     coverImageUri: row.coverImageUri,
+    customCoverUri: row.customCoverUri,
     followStatus: FollowStatus.fromStorage(row.followStatus),
     showInStories: row.showInStories,
     isBiometricLocked: row.isBiometricLocked,

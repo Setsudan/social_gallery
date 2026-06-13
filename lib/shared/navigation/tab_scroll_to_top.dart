@@ -21,6 +21,9 @@ void notifyExploreSearchReset(WidgetRef ref) {
   ref.read(exploreSearchResetProvider.notifier).update((n) => n + 1);
 }
 
+/// True while the Explore full-screen search overlay is presented.
+final exploreSearchOverlayOpenProvider = StateProvider<bool>((ref) => false);
+
 Future<void> animateScrollControllerToTop(
   ScrollController controller,
   AppMotion motion,

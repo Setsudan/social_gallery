@@ -9,7 +9,6 @@ import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
 class TravelModeListScreen extends ConsumerWidget {
   const TravelModeListScreen({super.key});
@@ -39,39 +38,20 @@ class TravelModeListScreen extends ConsumerWidget {
       body: modesAsync.when(
         data: (modes) {
           if (modes.isEmpty) {
-            return const Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                OneUiPageHeader(
-                  title: 'Travel Mode',
-                  subtitle:
-                      'Auto-organize photos from a date range into a folder.',
-                ),
-                Expanded(
-                  child: EmptyState(
-                    title: 'No trips yet',
-                    message:
-                        'Create a travel mode to auto-organize photos from a date range.',
-                    icon: Icons.flight_outlined,
-                  ),
-                ),
-              ],
+            return const EmptyState(
+              title: 'No trips yet',
+              message:
+                  'Create a travel mode to auto-organize photos from a date range.',
+              icon: Icons.flight_outlined,
             );
           }
           return ListView.separated(
             padding: const EdgeInsets.only(bottom: OneUiSpacing.xl),
-            itemCount: modes.length + 1,
+            itemCount: modes.length,
             separatorBuilder: (_, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-              if (index == 0) {
-                return const OneUiPageHeader(
-                  title: 'Travel Mode',
-                  subtitle:
-                      'Auto-organize photos from a date range into a folder.',
-                );
-              }
-              final mode = modes[index - 1];
-              final listIndex = index - 1;
+              final mode = modes[index];
+              final listIndex = index;
               final status = travelModeStatus(mode);
               final statusLabel = switch (status) {
                 TravelModeStatus.active => 'Active',

@@ -1,7 +1,7 @@
 name: social_gallery
 description: Local-first social-style photo gallery.
 publish_to: 'none'
-version: 0.0.6+1
+version: 0.0.7+1
 
 environment:
   sdk: ^3.11.5
@@ -41,6 +41,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.23.1
   build_runner: ^2.4.15
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true

@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/auth/folder_access.dart';
 import 'package:social_gallery/core/auth/folder_unlock_store.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/follow_status.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+import 'package:social_gallery/shared/widgets/album_cover_picker_sheet.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/shared/widgets/folder_lock_gate.dart';
@@ -80,6 +82,71 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
         useHaptics: true,
       );
 
+  Future<void> _handleMenuAction(
+    FolderInfo folder,
+    _FolderProfileMenuAction action,
+  ) async {
+    AppHaptics.medium();
+
+    switch (action) {
+      case _FolderProfileMenuAction.changeCover:
+        final unlocked = await ensureFolderUnlocked(ref: ref, folder: folder);
+        if (!unlocked || !mounted) return;
+        await _changeAlbumCover(folder);
+      case _FolderProfileMenuAction.resetCover:
+        final unlocked = await ensureFolderUnlocked(ref: ref, folder: folder);
+        if (!unlocked || !mounted) return;
+        await _resetAlbumCover(folder);
+      case _FolderProfileMenuAction.visibility:
+        await _showFollowDialog(folder);
+    }
+  }
+
+  Future<void> _changeAlbumCover(FolderInfo folder) async {
+    final selectedUri = await showAlbumCoverPickerSheet(
+      context: context,
+      ref: ref,
+      folder: folder,
+    );
+    if (selectedUri == null || !mounted) return;
+
+    AppHaptics.success();
+    await ref
+        .read(folderRepositoryProvider)
+        .setCustomCover(folder.path, selectedUri);
+    ref.invalidate(folderProvider(folder.path));
+    ref.invalidate(allFoldersProvider);
+  }
+
+  Future<void> _resetAlbumCover(FolderInfo folder) async {
+    AppHaptics.success();
+    await ref.read(folderRepositoryProvider).setCustomCover(folder.path, null);
+    ref.invalidate(folderProvider(folder.path));
+    ref.invalidate(allFoldersProvider);
+  }
+
+  Future<void> _setAlbumCover() async {
+    if (_selectedIds.length != 1) return;
+    final items = await ref.read(folderMediaProvider(widget.folderPath).future);
+    final id = _selectedIds.first;
+    MediaItem? selected;
+    for (final item in items) {
+      if (item.id == id) {
+        selected = item;
+        break;
+      }
+    }
+    if (selected == null) return;
+
+    AppHaptics.success();
+    await ref
+        .read(folderRepositoryProvider)
+        .setCustomCover(widget.folderPath, selected.uri);
+    ref.invalidate(folderProvider(widget.folderPath));
+    ref.invalidate(allFoldersProvider);
+    _clearSelection();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -101,7 +168,7 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
       data: (folder) {
         if (folder == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Folder')),
+            appBar: AppBar(),
             body: const EmptyState(title: 'Folder not found'),
           );
         }
@@ -114,8 +181,52 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                 onUnfavorite: () => _bulkFavorite(false),
                 onMove: _bulkMove,
                 onTrash: _bulkDelete,
+                onSetAlbumCover:
+                    _selectedIds.length == 1 ? _setAlbumCover : null,
               )
-            : AppBar(title: const Text(''));
+            : AppBar(
+                actions: [
+                  PopupMenuButton<_FolderProfileMenuAction>(
+                    tooltip: 'Album options',
+                    onSelected: (action) => _handleMenuAction(folder, action),
+                    itemBuilder: (context) {
+                      final hasCustomCover =
+                          folder.customCoverUri?.trim().isNotEmpty == true;
+
+                      return [
+                        const PopupMenuItem(
+                          value: _FolderProfileMenuAction.changeCover,
+                          child: ListTile(
+                            leading: Icon(Icons.image_outlined),
+                            title: Text('Change cover'),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                        ),
+                        if (hasCustomCover)
+                          const PopupMenuItem(
+                            value: _FolderProfileMenuAction.resetCover,
+                            child: ListTile(
+                              leading: Icon(Icons.restore_outlined),
+                              title: Text('Use latest photo'),
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                            ),
+                          ),
+                        const PopupMenuItem(
+                          value: _FolderProfileMenuAction.visibility,
+                          child: ListTile(
+                            leading: Icon(Icons.visibility_outlined),
+                            title: Text('Folder visibility'),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                        ),
+                      ];
+                    },
+                  ),
+                ],
+              );
 
         return Scaffold(
           appBar: appBar,
@@ -177,7 +288,7 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
           FolderAvatar(
             name: folder.name,
             size: 72,
-            coverUri: folder.isLockedAccount ? null : folder.coverImageUri,
+            coverUri: folder.isLockedAccount ? null : folder.displayCoverUri,
             locked: folder.isLockedAccount,
           ),
           const SizedBox(width: 16),
@@ -204,10 +315,6 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                 ),
               ],
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () => _showFollowDialog(folder),
           ),
         ],
       ),
@@ -342,6 +449,12 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
         ? _FolderVisibilityOption.accountLocked
         : _FolderVisibilityOption.accountOnly;
   }
+}
+
+enum _FolderProfileMenuAction {
+  changeCover,
+  resetCover,
+  visibility,
 }
 
 enum _FolderVisibilityOption {

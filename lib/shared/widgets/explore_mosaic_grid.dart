@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:social_gallery/core/utils/media_hero.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
@@ -311,7 +310,6 @@ class _MosaicTile extends StatelessWidget {
             child: MediaThumbnail(
               assetId: item!.uri,
               showVideoBadge: item!.isVideo,
-              heroTag: mediaHeroTag(item!.id),
             ),
           ),
         ),

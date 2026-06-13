@@ -10,6 +10,7 @@ class MediaSelectionAppBar extends StatelessWidget implements PreferredSizeWidge
     required this.onMove,
     required this.onTrash,
     this.onCreateAlbum,
+    this.onSetAlbumCover,
   });
 
   final int selectedCount;
@@ -19,6 +20,7 @@ class MediaSelectionAppBar extends StatelessWidget implements PreferredSizeWidge
   final VoidCallback onMove;
   final VoidCallback onTrash;
   final VoidCallback? onCreateAlbum;
+  final VoidCallback? onSetAlbumCover;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -53,6 +55,12 @@ class MediaSelectionAppBar extends StatelessWidget implements PreferredSizeWidge
             icon: const Icon(Icons.create_new_folder_outlined),
             tooltip: 'Create album and move',
             onPressed: onCreateAlbum,
+          ),
+        if (onSetAlbumCover != null)
+          IconButton(
+            icon: const Icon(Icons.photo_album_outlined),
+            tooltip: 'Set as album cover',
+            onPressed: onSetAlbumCover,
           ),
         IconButton(
           icon: const Icon(Icons.delete_outline),

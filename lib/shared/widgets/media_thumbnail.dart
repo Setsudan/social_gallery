@@ -55,7 +55,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
       return 320;
     }
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    return (width * dpr).ceil().clamp(96, 480);
+    return (width * dpr).ceil().clamp(96, 1200);
   }
 
   @override
