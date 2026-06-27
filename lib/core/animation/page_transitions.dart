@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,11 +5,7 @@ import 'package:social_gallery/core/animation/app_motion.dart';
 
 enum AppPageTransitionKind { fade, slideHorizontal, slideVertical }
 
-const _shellPaths = {
-  '/home',
-  '/explore',
-  '/discover',
-};
+const _shellPaths = {'/home', '/explore', '/discover'};
 
 const _modalPaths = {'/story_viewer', '/media_viewer'};
 

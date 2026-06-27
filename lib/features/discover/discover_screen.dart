@@ -129,32 +129,16 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               const SizedBox(height: OneUiSpacing.sectionGap),
               const OneUiSectionHeader('Cleanup'),
               const SizedBox(height: OneUiSpacing.sm),
-              if (hub.duplicateGroupCount == 0)
-                StaggeredEntrance(
-                  index: 7,
-                  playOnceKey: 'discover_7',
-                  child: Card(
-                    child: ListTile(
-                      leading: Icon(Icons.check_circle_outline),
-                      title: Text('No duplicates found'),
-                      subtitle: Text(
-                        'Your library looks clean based on file size and dimensions.',
-                      ),
-                    ),
-                  ),
-                )
-              else
-                StaggeredEntrance(
-                  index: 7,
-                  playOnceKey: 'discover_7',
-                  child: DiscoverHubCard(
-                    leading: const Icon(Icons.copy_all),
-                    title: 'Duplicates',
-                    subtitle:
-                        '${hub.duplicateGroupCount} groups, ${hub.duplicateItemCount} items',
-                    onTap: () => context.push('/duplicates'),
-                  ),
+              StaggeredEntrance(
+                index: 7,
+                playOnceKey: 'discover_7',
+                child: DiscoverHubCard(
+                  leading: const Icon(Icons.copy_all),
+                  title: 'Duplicates',
+                  subtitle: 'Find near-identical photos',
+                  onTap: () => context.push('/duplicates'),
                 ),
+              ),
               const SizedBox(height: OneUiSpacing.sectionGap),
               const OneUiSectionHeader('Explore'),
               const SizedBox(height: OneUiSpacing.sm),

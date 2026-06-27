@@ -1,7 +1,7 @@
 name: social_gallery
 description: Local-first social-style photo gallery.
 publish_to: 'none'
-version: 0.0.7+1
+version: 0.0.8+1
 
 environment:
   sdk: ^3.11.5
@@ -34,6 +34,7 @@ dependencies:
   google_mlkit_face_detection: ^0.13.1
   exif: ^3.3.0
   intl: ^0.20.2
+  flutter_local_notifications: ^22.0.1
 
 dev_dependencies:
   flutter_test:

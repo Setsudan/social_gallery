@@ -1,8 +1,8 @@
+import 'package:social_gallery/core/analysis/perceptual_hash.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
 class FindSimilarGroups {
-  static const hammingThreshold = 7;
   static const timeWindowMs = 2 * 60 * 1000;
 
   List<SimilarPhotoGroup> call({
@@ -31,7 +31,7 @@ class FindSimilarGroups {
 
         final hashB = analysisById[b.id]?.dHash;
         if (hashB == null || hashB.isEmpty) continue;
-        if (_hammingDistance(hashA, hashB) <= hammingThreshold) {
+        if (hammingDistance(hashA, hashB) <= similarHammingThreshold) {
           group.add(b.id);
           used.add(b.id);
         }
@@ -51,14 +51,5 @@ class FindSimilarGroups {
         representativeId: rep,
       );
     }).toList();
-  }
-
-  int _hammingDistance(String a, String b) {
-    if (a.length != b.length) return 64;
-    var dist = 0;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) dist++;
-    }
-    return dist;
   }
 }

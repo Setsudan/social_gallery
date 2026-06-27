@@ -87,11 +87,22 @@ class GallerySyncState {
 class GallerySyncController extends StateNotifier<GallerySyncState> {
   GallerySyncController(this._ref) : super(const GallerySyncState());
 
+  static const _minSyncInterval = Duration(minutes: 5);
+  static const _backgroundStartDelay = Duration(seconds: 2);
+
   final Ref _ref;
   bool _cancelRequested = false;
 
   Future<void> run({bool force = false}) async {
     if (state.isRunning && !force) return;
+
+    if (!force) {
+      final lastSync = _ref.read(preferencesRepositoryProvider).lastGallerySyncAt;
+      if (lastSync != null &&
+          DateTime.now().difference(lastSync) < _minSyncInterval) {
+        return;
+      }
+    }
 
     _cancelRequested = false;
 
@@ -102,8 +113,11 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       detail: 'Checking for new media',
     );
 
-    unawaited(_warmRecentThumbnails());
-    unawaited(_refreshFolderAutoCovers());
+    await Future<void>.delayed(_backgroundStartDelay);
+    if (_cancelRequested) {
+      await _finishEarly();
+      return;
+    }
 
     try {
       final repo = _ref.read(mediaRepositoryProvider);
@@ -147,6 +161,10 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       } catch (_) {}
 
       _refreshFeeds(background: true);
+      await _ref
+          .read(preferencesRepositoryProvider)
+          .setLastGallerySyncAt(DateTime.now());
+      unawaited(_warmRecentThumbnails());
       state = state.copyWith(
         isRunning: false,
         blocking: false,
@@ -167,6 +185,9 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
 
   Future<void> _finishEarly() async {
     _refreshFeeds();
+    await _ref
+        .read(preferencesRepositoryProvider)
+        .setLastGallerySyncAt(DateTime.now());
     state = state.copyWith(
       isRunning: false,
       blocking: false,
@@ -186,13 +207,6 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       final items = await _ref.read(mediaRepositoryProvider).getGalleryMediaPage(0);
       final ids = items.map((item) => item.uri);
       await _ref.read(thumbnailWarmupServiceProvider).warmAssetIds(ids);
-    } catch (_) {}
-  }
-
-  Future<void> _refreshFolderAutoCovers() async {
-    try {
-      await _ref.read(mediaRepositoryProvider).refreshFolderAutoCovers();
-      _ref.invalidate(allFoldersProvider);
     } catch (_) {}
   }
 

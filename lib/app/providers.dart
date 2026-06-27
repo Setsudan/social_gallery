@@ -42,6 +42,7 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(db.close);
+  Future.microtask(() => db.repairFolderCovers());
   return db;
 });
 

@@ -242,13 +242,32 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> replaceAllMedia(List<MediaItemsCompanion> items) async {
+    await syncMediaItems(items, preserveIds: const {});
+  }
+
+  Future<void> syncMediaItems(
+    List<MediaItemsCompanion> items, {
+    required Set<int> preserveIds,
+  }) async {
     await transaction(() async {
-      await delete(mediaItems).go();
+      final scannedIds = items.map((row) => row.id.value).toSet();
+      final keepIds = {...scannedIds, ...preserveIds};
+
       if (items.isNotEmpty) {
         await batch((b) {
-          b.insertAll(mediaItems, items);
+          for (final row in items) {
+            b.insert(mediaItems, row, mode: InsertMode.insertOrReplace);
+          }
         });
       }
+
+      if (keepIds.isEmpty) {
+        await delete(mediaItems).go();
+        return;
+      }
+
+      await (delete(mediaItems)..where((m) => m.id.isNotIn(keepIds.toList())))
+          .go();
     });
   }
 
@@ -262,8 +281,10 @@ class AppDatabase extends _$AppDatabase {
             name: row.name,
             mediaCount: row.mediaCount,
             lastModified: row.lastModified,
-            // Auto covers come from updateFolderAutoCovers(), not photo_manager.
-            coverImageUri: const Value.absent(),
+            // Auto covers come from repairFolderCovers(), not photo_manager.
+            coverImageUri: existing != null
+                ? Value(existing.coverImageUri)
+                : const Value.absent(),
             followStatus: row.followStatus,
             customCoverUri: existing != null
                 ? Value(existing.customCoverUri)
@@ -304,6 +325,34 @@ class AppDatabase extends _$AppDatabase {
           AND media_items.is_trashed = 0
       )
     ''');
+  }
+
+  Future<void> repairFolderCovers() async {
+    if (!Platform.isWindows) {
+      await customStatement('''
+        UPDATE folders SET custom_cover_uri = NULL
+        WHERE custom_cover_uri IS NOT NULL
+          AND (custom_cover_uri LIKE '/%' OR custom_cover_uri LIKE 'file://%')
+      ''');
+      await customStatement('''
+        UPDATE folders SET cover_image_uri = NULL
+        WHERE cover_image_uri IS NOT NULL
+          AND (cover_image_uri LIKE '/%' OR cover_image_uri LIKE 'file://%')
+      ''');
+    }
+
+    await customStatement('''
+      UPDATE folders SET custom_cover_uri = NULL
+      WHERE custom_cover_uri IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM media_items
+          WHERE media_items.folder_path = folders.path
+            AND media_items.uri = folders.custom_cover_uri
+            AND media_items.is_trashed = 0
+        )
+    ''');
+
+    await updateFolderAutoCovers();
   }
 
   Future<void> updateFolderAutoCovers() async {

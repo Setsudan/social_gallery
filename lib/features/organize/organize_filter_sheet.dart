@@ -81,7 +81,7 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String?>(
-              value: _folderPath,
+              initialValue: _folderPath,
               decoration: const InputDecoration(labelText: 'Folder'),
               items: [
                 const DropdownMenuItem(value: null, child: Text('All folders')),

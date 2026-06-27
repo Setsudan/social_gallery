@@ -10,10 +10,13 @@ import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
+import 'package:social_gallery/shared/widgets/motion/animation_speed_preview.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_settings_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const _privacyPolicyUrl = 'https://example.com/privacy';
+
+const _animationSpeedSteps = [0.001, 0.5, 1.0, 2.0];
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -94,6 +97,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return 'Slow';
   }
 
+  int _animationSpeedIndex(double speed) {
+    var closestIndex = 0;
+    var closestDistance = double.infinity;
+    for (var i = 0; i < _animationSpeedSteps.length; i++) {
+      final distance = (speed - _animationSpeedSteps[i]).abs();
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = i;
+      }
+    }
+    return closestIndex;
+  }
+
+  double _animationSpeedFromIndex(int index) {
+    return _animationSpeedSteps[index.clamp(0, _animationSpeedSteps.length - 1)];
+  }
+
   Future<void> _pickTheme(AppThemeVariant current) async {
     final picked = await showOneUiSettingsPicker<AppThemeVariant>(
       context: context,
@@ -168,13 +188,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _pickFontSize(double initial) async {
+  Future<void> _pickFontSize() async {
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
-        var current = initial;
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final fontSizeFactor = ref.watch(
+              settingsProvider.select((s) => s.fontSizeFactor),
+            );
             final theme = Theme.of(context);
             return Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -203,17 +225,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       Expanded(
                         child: Slider(
-                          value: current,
+                          value: fontSizeFactor,
                           min: 0.8,
                           max: 1.4,
                           divisions: 3,
-                          label: _fontLabel(current),
+                          label: _fontLabel(fontSizeFactor),
                           onChanged: (value) {
                             AppHaptics.selection();
                             ref
                                 .read(settingsProvider.notifier)
                                 .setFontSizeFactor(value);
-                            setSheetState(() => current = value);
                           },
                         ),
                       ),
@@ -226,7 +247,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   Center(
                     child: Text(
-                      _fontLabel(current),
+                      _fontLabel(fontSizeFactor),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -241,26 +262,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _pickAnimationSpeed(double current) async {
-    final picked = await showOneUiSettingsPicker<double>(
+  Future<void> _pickAnimationSpeed() async {
+    await showOneUiSettingsSheet<void>(
       context: context,
-      title: 'Animation speed',
-      selected: current,
-      options: const [
-        OneUiPickerOption(
-          value: 0.001,
-          label: 'Instant',
-          subtitle: 'Disable motion',
-        ),
-        OneUiPickerOption(value: 0.5, label: 'Fast'),
-        OneUiPickerOption(value: 1.0, label: 'Normal'),
-        OneUiPickerOption(value: 2.0, label: 'Slow'),
-      ],
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final animationSpeed = ref.watch(
+              settingsProvider.select((s) => s.animationSpeed),
+            );
+            final theme = Theme.of(context);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.sm,
+                OneUiSpacing.pageHorizontal,
+                OneUiSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Animation speed', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: OneUiSpacing.sm),
+                  Text(
+                    'Preview how fast transitions feel across the app.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: OneUiSpacing.lg),
+                  AnimationSpeedPreview(speedFactor: animationSpeed),
+                  const SizedBox(height: OneUiSpacing.lg),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.speed_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: _animationSpeedIndex(animationSpeed).toDouble(),
+                          min: 0,
+                          max: (_animationSpeedSteps.length - 1).toDouble(),
+                          divisions: _animationSpeedSteps.length - 1,
+                          label: _animationLabel(animationSpeed),
+                          onChanged: (value) {
+                            AppHaptics.selection();
+                            ref
+                                .read(settingsProvider.notifier)
+                                .setAnimationSpeed(
+                                  _animationSpeedFromIndex(value.round()),
+                                );
+                          },
+                        ),
+                      ),
+                      Icon(
+                        Icons.motion_photos_auto_outlined,
+                        size: 22,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                  Center(
+                    child: Text(
+                      _animationLabel(animationSpeed),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
-    if (picked != null && picked != current) {
-      AppHaptics.medium();
-      ref.read(settingsProvider.notifier).setAnimationSpeed(picked);
-    }
   }
 
   Future<void> _pickTrashRetention(int initial) async {
@@ -497,14 +574,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: 'Font size',
                 value: _fontLabel(settings.fontSizeFactor),
                 showDivider: true,
-                onTap: () => _pickFontSize(settings.fontSizeFactor),
+                onTap: _pickFontSize,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.motion,
                 title: 'Animation speed',
                 value: _animationLabel(settings.animationSpeed),
                 showDivider: true,
-                onTap: () => _pickAnimationSpeed(settings.animationSpeed),
+                onTap: _pickAnimationSpeed,
               ),
             ],
           ),

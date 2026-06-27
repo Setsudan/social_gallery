@@ -24,6 +24,14 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
   Set<int>? _selectedIds;
   bool _deleting = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(duplicateScanControllerProvider.notifier).ensureStarted();
+    });
+  }
+
   DuplicateGroup? _findGroup(List<DuplicateGroup> groups) {
     return groups.where((g) => g.key == widget.groupKey).firstOrNull;
   }
@@ -58,7 +66,7 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
       ),
     );
     if (ok) {
-      ref.invalidate(duplicateGroupsProvider);
+      ref.invalidate(duplicateScanControllerProvider);
       ref.invalidate(discoverHubProvider);
       final router = GoRouter.of(context);
       router.pop();
@@ -70,19 +78,44 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final groupsAsync = ref.watch(duplicateGroupsProvider);
+    final scan = ref.watch(duplicateScanControllerProvider);
 
-    return groupsAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => OneUiSubpageScaffold(
+    if (scan.error != null) {
+      return OneUiSubpageScaffold(
         title: 'Review duplicates',
-        error: e,
+        error: scan.error,
         body: const SizedBox.shrink(),
-      ),
-      data: (groups) {
-        final group = _findGroup(groups);
+      );
+    }
+
+    if (!scan.isComplete) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (scan.total > 0)
+                  LinearProgressIndicator(value: scan.progress)
+                else
+                  const LinearProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  scan.total > 0
+                      ? 'Analyzing ${scan.scanned} / ${scan.total} photos...'
+                      : 'Preparing duplicate scan...',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final groups = scan.groups!;
+    final group = _findGroup(groups);
         if (group == null) {
           return OneUiSubpageScaffold(
             title: 'Review duplicates',
@@ -176,8 +209,6 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
               },
             ),
         );
-      },
-    );
   }
 }
 

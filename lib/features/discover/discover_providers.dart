@@ -1,9 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/features/discover/discover_hub_controller.dart';
-import 'package:social_gallery/domain/models/duplicate_group.dart';
+import 'package:social_gallery/features/discover/duplicate_scan_controller.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+
+export 'package:social_gallery/features/discover/duplicate_scan_controller.dart'
+    show duplicateScanControllerProvider,
+        duplicateScanNotificationServiceProvider,
+        DuplicateScanState;
 
 class AnalysisLibrarySnapshot {
   const AnalysisLibrarySnapshot({
@@ -19,7 +24,7 @@ typedef LowQualityEntry = ({MediaItem item, List<String> reasons});
 
 void _invalidateAnalysisTargets(void Function(ProviderOrFamily provider) invalidate) {
   invalidate(analysisLibrarySnapshotProvider);
-  invalidate(duplicateGroupsProvider);
+  invalidate(duplicateScanControllerProvider);
   invalidate(similarPhotoGroupsProvider);
   invalidate(lowQualityQueueProvider);
   invalidate(discoverHubProvider);
@@ -40,13 +45,6 @@ final analysisLibrarySnapshotProvider =
   final items = await mediaRepo.getAllHomeFeedMedia();
   final analysis = await analysisRepo.getAllCached();
   return AnalysisLibrarySnapshot(items: items, analysisById: analysis);
-});
-
-final duplicateGroupsProvider = FutureProvider<List<DuplicateGroup>>((ref) async {
-  final candidates = await ref
-      .read(mediaRepositoryProvider)
-      .getPotentialDuplicates();
-  return ref.read(findDuplicateGroupsProvider)(candidates);
 });
 
 final similarPhotoGroupsProvider =

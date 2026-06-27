@@ -87,7 +87,7 @@ Future<void> main() async {
 String _darkFilename(String lightFilename) {
   final dot = lightFilename.lastIndexOf('.');
   if (dot == -1) {
-    return '${lightFilename}-dark';
+    return '$lightFilename-dark';
   }
   return '${lightFilename.substring(0, dot)}-dark${lightFilename.substring(dot)}';
 }

@@ -15,9 +15,6 @@ class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
     final organizeRepo = ref.read(organizeRepositoryProvider);
     final buildQueue = ref.read(buildOrganizeQueueProvider);
 
-    final groups = await ref.watch(duplicateGroupsProvider.future);
-    final dupItems = groups.fold<int>(0, (sum, g) => sum + g.count);
-
     final pool = await mediaRepo.getOrganizeMediaPool();
     final unprocessed = buildQueue.countRemaining(
       pool: pool,
@@ -38,8 +35,6 @@ class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
     }
 
     return DiscoverHubData(
-      duplicateGroupCount: groups.length,
-      duplicateItemCount: dupItems,
       similarGroupCount: similarCount,
       lowQualityCount: lowQualityCount,
       unprocessedCount: unprocessed,

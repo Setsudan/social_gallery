@@ -29,9 +29,13 @@ class MediaRepository {
     final statusMap = {for (final f in existingFolders) f.path: f.followStatus};
 
     final favoriteIds = <int>{};
+    final trashedIds = <int>{};
+    final existingById = <int, MediaRow>{};
     final existingMedia = await _db.select(_db.mediaItems).get();
     for (final row in existingMedia) {
+      existingById[row.id] = row;
       if (row.isFavorite) favoriteIds.add(row.id);
+      if (row.isTrashed) trashedIds.add(row.id);
     }
 
     onProgress?.call(
@@ -66,14 +70,29 @@ class MediaRepository {
 
     final mergedMedia = mediaRows.map((row) {
       final id = row.id.value;
+      final existing = existingById[id];
+      var merged = row;
       if (favoriteIds.contains(id)) {
-        return row.copyWith(isFavorite: const Value(true));
+        merged = merged.copyWith(isFavorite: const Value(true));
       }
-      return row;
+      if (existing != null) {
+        if (existing.isTrashed) {
+          merged = merged.copyWith(
+            isTrashed: const Value(true),
+            trashedAt: Value(existing.trashedAt),
+            originalPath: Value(existing.originalPath),
+          );
+        }
+        merged = merged.copyWith(
+          backupState: Value(existing.backupState),
+          lastSyncTime: Value(existing.lastSyncTime),
+        );
+      }
+      return merged;
     }).toList();
-    await _db.replaceAllMedia(mergedMedia);
+    await _db.syncMediaItems(mergedMedia, preserveIds: trashedIds);
     await _db.updateFolderCounts();
-    await _db.updateFolderAutoCovers();
+    await _db.repairFolderCovers();
 
     onProgress?.call(
       const GallerySyncProgress(
@@ -237,7 +256,7 @@ class MediaRepository {
     if (deleted) {
       await _db.deleteMediaByIds(items.map((e) => e.id).toList());
       await _db.updateFolderCounts();
-      await _db.updateFolderAutoCovers();
+      await _db.repairFolderCovers();
     }
     return deleted;
   }
@@ -289,7 +308,7 @@ class MediaRepository {
         folderName,
       );
       await _db.updateFolderCounts();
-      await _db.updateFolderAutoCovers();
+      await _db.repairFolderCovers();
     } else {
       debugPrint(
         'moveMedia: 0/${items.length} moved to $targetFolderPath '
@@ -322,7 +341,7 @@ class MediaRepository {
 
     if (successIds.isNotEmpty) {
       await _db.trashMediaItems(successIds, now, origPaths);
-      await _db.updateFolderAutoCovers();
+      await _db.repairFolderCovers();
     }
   }
 
@@ -340,7 +359,7 @@ class MediaRepository {
     }
     if (successIds.isNotEmpty) {
       await _db.restoreMediaItems(successIds);
-      await _db.updateFolderAutoCovers();
+      await _db.repairFolderCovers();
     }
   }
 
@@ -354,11 +373,15 @@ class MediaRepository {
     }
     await _db.deleteMediaByIds(ids);
     await _db.updateFolderCounts();
-    await _db.updateFolderAutoCovers();
+    await _db.repairFolderCovers();
+  }
+
+  Future<void> repairFolderCovers() {
+    return _db.repairFolderCovers();
   }
 
   Future<void> refreshFolderAutoCovers() {
-    return _db.updateFolderAutoCovers();
+    return _db.repairFolderCovers();
   }
 
   Future<void> cleanupExpiredTrash(int retentionDays) async {

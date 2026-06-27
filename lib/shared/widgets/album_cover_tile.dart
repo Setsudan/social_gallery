@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -63,6 +64,19 @@ class AlbumCoverTile extends StatelessWidget {
   Widget _buildCover(BuildContext context) {
     final cover = coverUri?.trim();
     if (cover != null && cover.isNotEmpty && !locked) {
+      final file = File(cover);
+      if (file.existsSync()) {
+        return SizedBox.expand(
+          child: Image.file(
+            file,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) =>
+                MediaThumbnail(assetId: cover),
+          ),
+        );
+      }
+
       return MediaThumbnail(assetId: cover);
     }
 

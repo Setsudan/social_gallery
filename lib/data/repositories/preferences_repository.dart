@@ -19,6 +19,7 @@ class PreferencesRepository {
   static const _cacheSizeLimitMbKey = 'settings_cache_size_limit_mb';
   static const _autoClearCacheKey = 'settings_auto_clear_cache_on_close';
   static const _galleryViewModeKey = 'settings_gallery_view_mode';
+  static const _lastGallerySyncAtKey = 'last_gallery_sync_at_ms';
   static const _recentSearchesKey = 'explore_recent_searches';
   static const _maxRecentSearches = 20;
 
@@ -87,6 +88,16 @@ class PreferencesRepository {
   bool get galleryViewMode => _prefs.getBool(_galleryViewModeKey) ?? false;
   Future<void> setGalleryViewMode(bool enabled) async {
     await _prefs.setBool(_galleryViewModeKey, enabled);
+  }
+
+  DateTime? get lastGallerySyncAt {
+    final ms = _prefs.getInt(_lastGallerySyncAtKey);
+    if (ms == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  Future<void> setLastGallerySyncAt(DateTime time) async {
+    await _prefs.setInt(_lastGallerySyncAtKey, time.millisecondsSinceEpoch);
   }
 
   List<RecentSearch> get recentSearches {

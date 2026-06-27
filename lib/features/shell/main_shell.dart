@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,20 +18,6 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureGallerySync());
-  }
-
-  void _ensureGallerySync() {
-    if (!mounted) return;
-    final sync = ref.read(gallerySyncProvider);
-    if (!sync.isRunning && sync.phase == GallerySyncPhase.idle) {
-      unawaited(ref.read(gallerySyncProvider.notifier).run());
-    }
-  }
-
   void _onBranchSelected(WidgetRef ref, int branchIndex) {
     final isReselect = branchIndex == widget.navigationShell.currentIndex;
     if (isReselect) {

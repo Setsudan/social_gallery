@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/app/theme.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
@@ -29,6 +30,10 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    ref.read(duplicateScanNotificationServiceProvider).setAppInForeground(
+          state == AppLifecycleState.resumed,
+        );
+
     if (state == AppLifecycleState.detached ||
         state == AppLifecycleState.paused) {
       final settings = ref.read(settingsProvider);

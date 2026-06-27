@@ -37,6 +37,8 @@ class MediaAnalysisService {
     if (bytes == null || bytes.isEmpty) return null;
 
     final dHash = computeDHash(bytes);
+    if (dHash.isEmpty) return null;
+
     final blurScore = computeBlurScore(bytes);
     final exposureScore = computeExposureScore(bytes);
     final isSolidColor = computeIsSolidColor(bytes);
@@ -54,7 +56,7 @@ class MediaAnalysisService {
 
     return MediaAnalysisResult(
       mediaId: item.id,
-      dHash: dHash.isEmpty ? null : dHash,
+      dHash: dHash,
       blurScore: blurScore,
       exposureScore: exposureScore,
       isSolidColor: isSolidColor,
@@ -63,6 +65,54 @@ class MediaAnalysisService {
       labels: labels,
       scannedAt: DateTime.now().millisecondsSinceEpoch,
     );
+  }
+
+  Future<String?> computeDHashForItem(
+    MediaItem item, {
+    Uint8List? thumbnailBytes,
+  }) async {
+    if (item.isVideo) return null;
+
+    final bytes = thumbnailBytes ?? await _loadThumbnailBytes(item);
+    if (bytes == null || bytes.isEmpty) return null;
+
+    final hash = computeDHash(bytes);
+    return hash.isEmpty ? null : hash;
+  }
+
+  Future<Map<int, String>> ensureDHashesForItems({
+    required List<MediaItem> items,
+    required Map<int, String?> cachedHashes,
+    void Function(int scanned, int total)? onProgress,
+  }) async {
+    final hashes = <int, String>{};
+    for (final entry in cachedHashes.entries) {
+      final hash = entry.value;
+      if (hash != null && hash.isNotEmpty) {
+        hashes[entry.key] = hash;
+      }
+    }
+
+    final photos = items.where((i) => !i.isVideo).toList();
+    final total = photos.length;
+    var scanned = 0;
+
+    for (final item in photos) {
+      if (hashes.containsKey(item.id)) {
+        scanned++;
+        onProgress?.call(scanned, total);
+        continue;
+      }
+
+      final hash = await computeDHashForItem(item);
+      if (hash != null) {
+        hashes[item.id] = hash;
+      }
+      scanned++;
+      onProgress?.call(scanned, total);
+    }
+
+    return hashes;
   }
 
   Stream<MediaAnalysisProgress> scanLibrary({

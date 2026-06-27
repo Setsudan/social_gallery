@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
+import 'package:social_gallery/core/notifications/duplicate_scan_notification_service.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
@@ -18,10 +19,27 @@ class DuplicatesScreen extends ConsumerStatefulWidget {
 
 class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
   DuplicateGroup? _selected;
+  DuplicateScanNotificationService? _notifications;
+
+  @override
+  void initState() {
+    super.initState();
+    _notifications = ref.read(duplicateScanNotificationServiceProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notifications?.setDuplicatesScreenVisible(true);
+      ref.read(duplicateScanControllerProvider.notifier).ensureStarted();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifications?.setDuplicatesScreenVisible(false);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final groupsAsync = ref.watch(duplicateGroupsProvider);
+    final scan = ref.watch(duplicateScanControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -36,17 +54,46 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           },
         ),
       ),
-      body: groupsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => OneUiSubpageScaffold(
-          error: e,
-          body: const SizedBox.shrink(),
-        ),
-        data: (groups) => _selected == null
-            ? _buildGroupList(groups)
-            : _buildGroupDetail(),
-      ),
+      body: _buildBody(scan),
     );
+  }
+
+  Widget _buildBody(DuplicateScanState scan) {
+    if (scan.error != null) {
+      return OneUiSubpageScaffold(
+        error: scan.error,
+        body: const SizedBox.shrink(),
+      );
+    }
+
+    if (!scan.isComplete) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (scan.total > 0)
+                LinearProgressIndicator(value: scan.progress)
+              else
+                const LinearProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                scan.total > 0
+                    ? 'Analyzing ${scan.scanned} / ${scan.total} photos...'
+                    : 'Preparing duplicate scan...',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final groups = scan.groups!;
+    return _selected == null
+        ? _buildGroupList(groups)
+        : _buildGroupDetail();
   }
 
   Widget _buildGroupList(List<DuplicateGroup> groups) {
@@ -55,7 +102,8 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
         isEmpty: true,
         empty: const EmptyState(
           title: 'No duplicate groups found',
-          message: 'Your library looks clean based on file size and dimensions.',
+          message:
+              'No near-identical photos found. Duplicates are matched by visual similarity, not just file size.',
           icon: Icons.check_circle_outline,
         ),
         body: const SizedBox.shrink(),
@@ -81,7 +129,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(12),
-                  child: Text('${group.count} similar items'),
+                  child: Text('${group.count} duplicate items'),
                 ),
               ],
             ),

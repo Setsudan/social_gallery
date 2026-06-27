@@ -270,7 +270,7 @@ class PhotoManagerDatasource {
       final cover = count > 0
           ? (await album.getAssetListRange(start: 0, end: 1)).firstOrNull
           : null;
-      final coverPath = cover != null ? (await cover.file)?.path : null;
+      final coverUri = cover?.id;
       final existing = existingFollowStatus[path];
       final followStatus =
           existing ?? (initialSetupComplete ? 'UNFOLLOWED' : 'HOME_FEED');
@@ -281,7 +281,7 @@ class PhotoManagerDatasource {
           name: album.name,
           mediaCount: Value(count),
           lastModified: Value(DateTime.now().millisecondsSinceEpoch),
-          coverImageUri: Value(coverPath),
+          coverImageUri: Value(coverUri),
           followStatus: Value(followStatus),
         ),
       );
