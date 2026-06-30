@@ -7,8 +7,12 @@ import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/gallery_grouping_period.dart';
-import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
+import 'package:social_gallery/domain/models/folder_info.dart';
+import 'package:social_gallery/features/explore/explore_active_search_bar.dart';
 import 'package:social_gallery/features/explore/explore_search_overlay.dart';
+import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
+import 'package:social_gallery/core/auth/folder_access.dart';
+import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/shared/media/media_bulk_actions.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
@@ -17,6 +21,8 @@ import 'package:social_gallery/domain/usecases/group_media_by_period.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
@@ -40,6 +46,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   final Set<int> _selectedIds = {};
   final Map<int, GlobalKey> _tileKeys = {};
   String _searchQuery = '';
+  List<FolderInfo> _folderSuggestions = [];
   int? _activeDragPointer;
   Offset? _dragStartPosition;
   bool _dragSelecting = false;
@@ -232,7 +239,12 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       context,
       initialQuery: _searchQuery,
     );
-    if (!mounted || query == null) return;
+    if (!mounted) return;
+    if (query == null) return;
+    if (query.isEmpty) {
+      _resetSearch();
+      return;
+    }
     await _applySearch(query);
   }
 
@@ -243,7 +255,15 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       return;
     }
 
-    setState(() => _searchQuery = trimmed);
+    final folders =
+        await ref.read(folderRepositoryProvider).searchFolders(trimmed);
+    if (!mounted) return;
+
+    setState(() {
+      _searchQuery = trimmed;
+      _folderSuggestions = folders;
+    });
+
     await ref
         .read(explorePaginatedProvider(trimmed).notifier)
         .loadMore(refresh: true);
@@ -258,8 +278,24 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   void _resetSearch() {
-    if (_searchQuery.isEmpty) return;
-    setState(() => _searchQuery = '');
+    if (_searchQuery.isEmpty && _folderSuggestions.isEmpty) return;
+    setState(() {
+      _searchQuery = '';
+      _folderSuggestions = [];
+    });
+  }
+
+  void _handleSearchBack() {
+    AppHaptics.light();
+    _resetSearch();
+  }
+
+  Future<void> _openFolderProfile(FolderInfo folder) async {
+    final ok = await ensureFolderUnlocked(ref: ref, folder: folder);
+    if (!ok || !mounted) return;
+
+    _resetSearch();
+    await context.push(folderProfileLocation(folder.path));
   }
 
   void _openMedia(MediaItem item) {
@@ -328,11 +364,31 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       motion: motion,
     );
 
-    return PopScope(
-      canPop: !inSelectionMode,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && inSelectionMode) {
+    ref.listen<int>(exploreSearchResetProvider, (previous, next) {
+      if (previous != null && previous != next) {
+        _resetSearch();
+      }
+    });
+
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        if (_inSelectionMode) {
           _exitSelectionMode();
+          return true;
+        }
+        if (_isSearching) {
+          _handleSearchBack();
+          return true;
+        }
+        return false;
+      },
+      child: PopScope(
+      canPop: !_inSelectionMode && !_isSearching,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _inSelectionMode) {
+          _exitSelectionMode();
+        } else if (!didPop && _isSearching) {
+          _handleSearchBack();
         }
       },
       child: Scaffold(
@@ -355,29 +411,37 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (!inSelectionMode && _searchQuery.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      OneUiSpacing.pageHorizontal,
-                      OneUiSpacing.sm,
-                      OneUiSpacing.pageHorizontal,
-                      OneUiSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ActionChip(
-                            avatar: const Icon(Icons.search, size: 18),
-                            label: Text(_searchQuery),
-                            onPressed: _openSearch,
+                if (!inSelectionMode && _isSearching)
+                  ExploreActiveSearchBar(
+                    query: _searchQuery,
+                    onBack: _handleSearchBack,
+                    onClear: _handleSearchBack,
+                    onTapQuery: _openSearch,
+                  ),
+                if (!inSelectionMode && _folderSuggestions.isNotEmpty)
+                  SizedBox(
+                    height: 56,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: _folderSuggestions.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final folder = _folderSuggestions[index];
+                        return ActionChip(
+                          avatar: FolderAvatar(
+                            name: folder.name,
+                            size: 28,
+                            coverUri: folder.isLockedAccount
+                                ? null
+                                : folder.displayCoverUri,
+                            locked: folder.isLockedAccount,
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          tooltip: 'Clear search',
-                          onPressed: _resetSearch,
-                        ),
-                      ],
+                          label: Text(folder.name),
+                          onPressed: () => _openFolderProfile(folder),
+                        );
+                      },
                     ),
                   ),
                 Expanded(
@@ -390,7 +454,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                 ),
               ],
             ),
-            if (!inSelectionMode)
+            if (!inSelectionMode && !_isSearching)
               Positioned(
                 top: 0,
                 right: 0,
@@ -412,6 +476,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -433,7 +498,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
         icon: Icons.photo_library_outlined,
         title: _isSearching ? 'No media found' : 'No media yet',
         message: _isSearching
-            ? 'Try a different search or add folders to Home Feed.'
+            ? 'Try another photo name, album, or folder path.'
             : 'Sync your library to see photos and videos here.',
       );
     }
@@ -568,7 +633,14 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   int _columnCount(BuildContext context) {
-    return _period.crossAxisCountForWidth(MediaQuery.sizeOf(context).width);
+    final base = _period.crossAxisCountForWidth(MediaQuery.sizeOf(context).width);
+    if (!usesFilesystemGallery) {
+      return base;
+    }
+    final gridSize = ref.watch(
+      settingsProvider.select((s) => s.desktopGalleryGridSize),
+    );
+    return gridSize.adjustColumnCount(base);
   }
 
   List<Widget> _groupSlivers({
@@ -648,6 +720,10 @@ class _GalleryTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final syncingMediaId = usesFilesystemGallery
+        ? null
+        : ref.watch(desktopBackupProvider.select((s) => s.syncingMediaId));
+
     return RepaintBoundary(
       child: PressableScale(
         enabled: onTap != null || onLongPress != null,
@@ -659,6 +735,10 @@ class _GalleryTile extends ConsumerWidget {
           child: MediaThumbnail(
             assetId: item.uri,
             showVideoBadge: item.isVideo,
+            backupState: visibleBackupState(
+              item,
+              syncingMediaId: syncingMediaId,
+            ),
           ),
         ),
       ),

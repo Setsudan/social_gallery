@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
+import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 
 /// Pinterest-style explore grid: groups of 3 with alternating big-left / 3-up / big-right.
-class ExploreMosaicGrid extends StatelessWidget {
+class ExploreMosaicGrid extends ConsumerWidget {
   const ExploreMosaicGrid({
     super.key,
     required this.items,
@@ -30,10 +34,14 @@ class ExploreMosaicGrid extends StatelessWidget {
   final bool showLoadingFooter;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (items.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final syncingMediaId = usesFilesystemGallery
+        ? null
+        : ref.watch(desktopBackupProvider.select((s) => s.syncingMediaId));
 
     final padding = FloatingNavInsets.scrollPadding(
       context,
@@ -88,6 +96,7 @@ class ExploreMosaicGrid extends StatelessWidget {
                       selectedIds: selectedIds,
                       onLongPress: onLongPress,
                       onSelectToggle: onSelectToggle,
+                      syncingMediaId: syncingMediaId,
                     );
                   case 3:
                     return _MosaicBigBlock(
@@ -102,6 +111,7 @@ class ExploreMosaicGrid extends StatelessWidget {
                       selectedIds: selectedIds,
                       onLongPress: onLongPress,
                       onSelectToggle: onSelectToggle,
+                      syncingMediaId: syncingMediaId,
                     );
                   default:
                     return _MosaicSmallRow(
@@ -114,6 +124,7 @@ class ExploreMosaicGrid extends StatelessWidget {
                       selectedIds: selectedIds,
                       onLongPress: onLongPress,
                       onSelectToggle: onSelectToggle,
+                      syncingMediaId: syncingMediaId,
                     );
                 }
               },
@@ -138,6 +149,7 @@ class _MosaicBigBlock extends StatelessWidget {
     required this.selectedIds,
     this.onLongPress,
     this.onSelectToggle,
+    this.syncingMediaId,
   });
 
   final bool bigOnLeft;
@@ -151,6 +163,7 @@ class _MosaicBigBlock extends StatelessWidget {
   final Set<int> selectedIds;
   final void Function(MediaItem item)? onLongPress;
   final void Function(MediaItem item)? onSelectToggle;
+  final int? syncingMediaId;
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +174,7 @@ class _MosaicBigBlock extends StatelessWidget {
       selectedIds: selectedIds,
       onLongPress: onLongPress,
       onSelectToggle: onSelectToggle,
+      syncingMediaId: syncingMediaId,
     );
     final column = Column(
       mainAxisSize: MainAxisSize.min,
@@ -172,6 +186,7 @@ class _MosaicBigBlock extends StatelessWidget {
           selectedIds: selectedIds,
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
+          syncingMediaId: syncingMediaId,
         ),
         SizedBox(height: spacing),
         _MosaicTile(
@@ -181,6 +196,7 @@ class _MosaicBigBlock extends StatelessWidget {
           selectedIds: selectedIds,
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
+          syncingMediaId: syncingMediaId,
         ),
       ],
     );
@@ -213,6 +229,7 @@ class _MosaicSmallRow extends StatelessWidget {
     required this.selectedIds,
     this.onLongPress,
     this.onSelectToggle,
+    this.syncingMediaId,
   });
 
   final double spacing;
@@ -224,6 +241,7 @@ class _MosaicSmallRow extends StatelessWidget {
   final Set<int> selectedIds;
   final void Function(MediaItem item)? onLongPress;
   final void Function(MediaItem item)? onSelectToggle;
+  final int? syncingMediaId;
 
   @override
   Widget build(BuildContext context) {
@@ -237,6 +255,7 @@ class _MosaicSmallRow extends StatelessWidget {
           selectedIds: selectedIds,
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
+          syncingMediaId: syncingMediaId,
         ),
         SizedBox(width: spacing),
         _MosaicTile(
@@ -246,6 +265,7 @@ class _MosaicSmallRow extends StatelessWidget {
           selectedIds: selectedIds,
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
+          syncingMediaId: syncingMediaId,
         ),
         SizedBox(width: spacing),
         _MosaicTile(
@@ -255,6 +275,7 @@ class _MosaicSmallRow extends StatelessWidget {
           selectedIds: selectedIds,
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
+          syncingMediaId: syncingMediaId,
         ),
       ],
     );
@@ -269,6 +290,7 @@ class _MosaicTile extends StatelessWidget {
     required this.selectedIds,
     this.onLongPress,
     this.onSelectToggle,
+    this.syncingMediaId,
   });
 
   final double size;
@@ -277,6 +299,7 @@ class _MosaicTile extends StatelessWidget {
   final Set<int> selectedIds;
   final void Function(MediaItem item)? onLongPress;
   final void Function(MediaItem item)? onSelectToggle;
+  final int? syncingMediaId;
 
   @override
   Widget build(BuildContext context) {
@@ -310,6 +333,10 @@ class _MosaicTile extends StatelessWidget {
             child: MediaThumbnail(
               assetId: item!.uri,
               showVideoBadge: item!.isVideo,
+              backupState: visibleBackupState(
+                item!,
+                syncingMediaId: syncingMediaId,
+              ),
             ),
           ),
         ),

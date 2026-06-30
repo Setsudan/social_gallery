@@ -51,6 +51,27 @@
 	<string>Social Gallery needs access to your photos and videos to build your local library.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Unlock private folders with Face ID or Touch ID.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Social Gallery uses the local network to back up photos to your desktop on the same Wi-Fi.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_socialgallery._tcp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan the desktop pairing QR code to set up backup.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>one.launay.social_gallery</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>socialgallery</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

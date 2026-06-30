@@ -48,3 +48,30 @@ void listenForTabScrollToTop(
     }
   });
 }
+
+/// Last reported vertical scroll offset per shell branch (for nav label collapse).
+final tabScrollOffsetProvider = StateProvider.family<double, int>(
+  (ref, tabIndex) => 0,
+);
+
+/// Scroll past this offset to hide nav labels (with hysteresis).
+const double kShellNavLabelHideScrollOffset = 48;
+
+/// Scroll below this offset to show nav labels again.
+const double kShellNavLabelShowScrollOffset = 12;
+
+bool shellNavLabelsExpandedForOffset(
+  double offset, {
+  required bool currentlyExpanded,
+}) {
+  if (offset <= kShellNavLabelShowScrollOffset) return true;
+  if (offset >= kShellNavLabelHideScrollOffset) return false;
+  return currentlyExpanded;
+}
+
+bool shellNavLabelsExpandedFromStoredOffset(double offset) {
+  return offset < kShellNavLabelHideScrollOffset;
+}
+
+/// Whether shell nav labels are expanded (icons + text). Updated on scroll.
+final shellNavLabelsExpandedProvider = StateProvider<bool>((ref) => true);

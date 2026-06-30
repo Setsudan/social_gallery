@@ -25,11 +25,47 @@ class _MainShellState extends ConsumerState<MainShell> {
     final isReselect = branchIndex == widget.navigationShell.currentIndex;
     if (isReselect) {
       notifyTabScrollToTop(ref, branchIndex);
+      ref.read(tabScrollOffsetProvider(branchIndex).notifier).state = 0;
+      ref.read(shellNavLabelsExpandedProvider.notifier).state = true;
     }
     widget.navigationShell.goBranch(branchIndex, initialLocation: isReselect);
     if (branchIndex == kShellTabExplore) {
       notifyExploreSearchReset(ref);
     }
+    final offset = ref.read(tabScrollOffsetProvider(branchIndex));
+    ref.read(shellNavLabelsExpandedProvider.notifier).state =
+        shellNavLabelsExpandedFromStoredOffset(offset);
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+    if (notification is! ScrollUpdateNotification &&
+        notification is! ScrollEndNotification) {
+      return false;
+    }
+    // Ignore small nested scrollables (chips, strips) so only main content drives collapse.
+    if (notification.metrics.maxScrollExtent < 96) return false;
+
+    final branchIndex = widget.navigationShell.currentIndex;
+    final offset = notification.metrics.pixels;
+    ref.read(tabScrollOffsetProvider(branchIndex).notifier).state = offset;
+
+    final currentlyExpanded = ref.read(shellNavLabelsExpandedProvider);
+    final expanded = shellNavLabelsExpandedForOffset(
+      offset,
+      currentlyExpanded: currentlyExpanded,
+    );
+    if (expanded != currentlyExpanded) {
+      ref.read(shellNavLabelsExpandedProvider.notifier).state = expanded;
+    }
+    return false;
+  }
+
+  Widget _wrapShellContent(Widget child) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
+      child: child,
+    );
   }
 
   @override
@@ -63,6 +99,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                   selectedBranchIndex: widget.navigationShell.currentIndex,
                   onBranchSelected: (index) => _onBranchSelected(ref, index),
                   onSettingsPressed: () => context.push('/settings'),
+                  onLockedAlbumsPressed: galleryViewMode
+                      ? () {
+                          AppHaptics.light();
+                          context.push(lockedAlbumsLocation);
+                        }
+                      : null,
                 ),
                 Expanded(
                   child: SafeArea(
@@ -95,7 +137,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             bottom: false,
             child: FloatingNavInsets(
               overlayHeight: overlayHeight,
-              child: widget.navigationShell,
+              child: _wrapShellContent(widget.navigationShell),
             ),
           ),
           if (!hideBottomNav)
@@ -103,17 +145,22 @@ class _MainShellState extends ConsumerState<MainShell> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: FloatingBottomNav(
-                selectedBranchIndex: widget.navigationShell.currentIndex,
-                galleryViewMode: galleryViewMode,
-                onBranchSelected: (index) => _onBranchSelected(ref, index),
-                onSettingsPressed: () => context.push('/settings'),
-                onAlbumsLongPress: galleryViewMode
-                    ? () {
-                        AppHaptics.medium();
-                        context.push(lockedAlbumsLocation);
-                      }
-                    : null,
+              child: Consumer(
+                builder: (context, ref, _) {
+                  return FloatingBottomNav(
+                    labelsExpanded: ref.watch(shellNavLabelsExpandedProvider),
+                    selectedBranchIndex: widget.navigationShell.currentIndex,
+                    galleryViewMode: galleryViewMode,
+                    onBranchSelected: (index) => _onBranchSelected(ref, index),
+                    onSettingsPressed: () => context.push('/settings'),
+                    onAlbumsLongPress: galleryViewMode
+                        ? () {
+                            AppHaptics.medium();
+                            context.push(lockedAlbumsLocation);
+                          }
+                        : null,
+                  );
+                },
               ),
             ),
           if (sync.showOverlay)
@@ -160,61 +207,75 @@ class _DesktopSidebar extends StatelessWidget {
     required this.selectedBranchIndex,
     required this.onBranchSelected,
     required this.onSettingsPressed,
+    this.onLockedAlbumsPressed,
   });
+
+  static const double width = 240;
 
   final bool galleryViewMode;
   final int selectedBranchIndex;
   final ValueChanged<int> onBranchSelected;
   final VoidCallback onSettingsPressed;
+  final VoidCallback? onLockedAlbumsPressed;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final destinations = shellNavDestinations(galleryViewMode: galleryViewMode);
 
-    return Container(
-      width: 240,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        border: Border(
-          right: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.15),
-            width: 1,
+    return SizedBox(
+      width: width,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          border: Border(
+            right: BorderSide(
+              color: theme.colorScheme.outline.withValues(alpha: 0.15),
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              'Social Gallery',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-                letterSpacing: 0.5,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Social Gallery',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 32),
-          for (final destination in destinations)
+            const SizedBox(height: 32),
+            for (final destination in destinations)
+              _SidebarItem(
+                icon: destination.unselectedIcon,
+                selectedIcon: destination.selectedIcon,
+                label: destination.label,
+                selected: selectedBranchIndex == destination.branchIndex,
+                onTap: () => onBranchSelected(destination.branchIndex),
+              ),
+            if (onLockedAlbumsPressed != null)
+              _SidebarItem(
+                icon: Icons.lock_outline,
+                selectedIcon: Icons.lock,
+                label: 'Locked albums',
+                selected: false,
+                onTap: onLockedAlbumsPressed!,
+              ),
             _SidebarItem(
-              icon: destination.unselectedIcon,
-              selectedIcon: destination.selectedIcon,
-              label: destination.label,
-              selected: selectedBranchIndex == destination.branchIndex,
-              onTap: () => onBranchSelected(destination.branchIndex),
+              icon: Icons.menu,
+              selectedIcon: Icons.menu,
+              label: 'Settings',
+              selected: false,
+              onTap: onSettingsPressed,
             ),
-          _SidebarItem(
-            icon: Icons.menu,
-            selectedIcon: Icons.menu,
-            label: 'Settings',
-            selected: false,
-            onTap: onSettingsPressed,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -238,6 +299,7 @@ class _SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(

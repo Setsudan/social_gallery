@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/domain/models/folder_info.dart';
+import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/recent_search.dart';
@@ -64,16 +66,27 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
     super.initState();
     _controller = TextEditingController(text: widget.initialQuery);
     _focusNode = FocusNode();
+    _controller.addListener(_onQueryChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
   }
 
+  void _onQueryChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    _controller.removeListener(_onQueryChanged);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _dismiss({required bool clearActiveSearch}) {
+    AppHaptics.light();
+    Navigator.of(context).pop(clearActiveSearch ? '' : null);
   }
 
   void _submit(String query) {
@@ -83,26 +96,48 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
     Navigator.of(context).pop(trimmed);
   }
 
+  List<String> _folderSuggestions(AsyncValue<List<FolderInfo>> foldersAsync) {
+    final folders = foldersAsync.valueOrNull ?? const <FolderInfo>[];
+    final names = folders
+        .where((folder) => folder.mediaCount > 0)
+        .map((folder) => folder.name)
+        .toSet()
+        .toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+    final typed = _controller.text.trim().toLowerCase();
+    final filtered = typed.isEmpty
+        ? names
+        : names
+            .where((name) => name.toLowerCase().contains(typed))
+            .toList();
+    return filtered.take(12).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final recentSearches = ref.watch(recentSearchesProvider);
+    final foldersAsync = ref.watch(allFoldersProvider);
+    final folderSuggestions = _folderSuggestions(foldersAsync);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: colorScheme.surface.withValues(alpha: 0.97),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () {
-            AppHaptics.light();
-            Navigator.of(context).pop();
-          },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _dismiss(clearActiveSearch: true);
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        backgroundColor: colorScheme.surface.withValues(alpha: 0.97),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onPressed: () => _dismiss(clearActiveSearch: true),
+          ),
         ),
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -116,27 +151,40 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
               ),
               children: [
                 Text(
-                  'You might be looking for',
+                  'Albums and folders',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: OneUiSpacing.md),
-                Wrap(
-                  spacing: OneUiSpacing.sm,
-                  runSpacing: OneUiSpacing.sm,
-                  children: kExploreSearchSuggestions.map((label) {
-                    return ActionChip(
-                      label: Text(label),
-                      onPressed: () => _submit(label),
-                      backgroundColor: colorScheme.surfaceContainer,
-                      side: BorderSide.none,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(OneUiRadii.chip),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                if (foldersAsync.isLoading && folderSuggestions.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: OneUiSpacing.md),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (folderSuggestions.isEmpty)
+                  Text(
+                    'No matching albums. Try a photo or folder name.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: OneUiSpacing.sm,
+                    runSpacing: OneUiSpacing.sm,
+                    children: folderSuggestions.map((label) {
+                      return ActionChip(
+                        label: Text(label),
+                        onPressed: () => _submit(label),
+                        backgroundColor: colorScheme.surfaceContainer,
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(OneUiRadii.chip),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 if (recentSearches.isNotEmpty) ...[
                   const SizedBox(height: OneUiSpacing.xl),
                   Row(
@@ -201,10 +249,19 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
               controller: _controller,
               focusNode: _focusNode,
               onSubmitted: _submit,
+              onClear: () {
+                if (_controller.text.isEmpty) {
+                  _dismiss(clearActiveSearch: true);
+                  return;
+                }
+                _controller.clear();
+                _focusNode.requestFocus();
+              },
             ),
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -283,11 +340,13 @@ class _GradientSearchBar extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.onSubmitted,
+    required this.onClear,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onSubmitted;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -329,7 +388,7 @@ class _GradientSearchBar extends StatelessWidget {
                     textInputAction: TextInputAction.search,
                     onSubmitted: onSubmitted,
                     decoration: InputDecoration(
-                      hintText: 'What are you looking for?',
+                      hintText: 'Search photos, videos, or albums',
                       hintStyle: TextStyle(
                         color: colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.7,
@@ -342,6 +401,23 @@ class _GradientSearchBar extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
+                ListenableBuilder(
+                  listenable: controller,
+                  builder: (context, _) {
+                    if (controller.text.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      tooltip: 'Clear',
+                      onPressed: onClear,
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(36, 36),
+                        padding: EdgeInsets.zero,
+                      ),
+                    );
+                  },
                 ),
                 Icon(
                   Icons.mic_none_rounded,

@@ -31,13 +31,3 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
     state = const [];
   }
 }
-
-const kExploreSearchSuggestions = [
-  'Screenshots',
-  'Videos',
-  'Selfies',
-  'Food',
-  'Travel',
-  'Nature',
-  'Pets',
-];

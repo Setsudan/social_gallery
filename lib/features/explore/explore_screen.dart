@@ -7,6 +7,7 @@ import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+import 'package:social_gallery/features/explore/explore_active_search_bar.dart';
 import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
 import 'package:social_gallery/features/explore/explore_search_overlay.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
@@ -33,6 +34,13 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   List<FolderInfo> _folderSuggestions = [];
   String _searchQuery = '';
   final Set<int> _selectedIds = {};
+
+  bool get _isSearching => _searchQuery.isNotEmpty;
+
+  void _handleSearchBack() {
+    AppHaptics.light();
+    _resetSearch();
+  }
 
   PaginatedListState<MediaItem> get _paginated =>
       ref.watch(explorePaginatedProvider(_searchQuery));
@@ -125,7 +133,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       context,
       initialQuery: _searchQuery,
     );
-    if (!mounted || query == null) return;
+    if (!mounted) return;
+    if (query == null) return;
+    if (query.isEmpty) {
+      _resetSearch();
+      return;
+    }
     await _applySearch(query);
   }
 
@@ -191,7 +204,28 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       }
     });
 
-    return Scaffold(
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        if (inSelectionMode) {
+          setState(_selectedIds.clear);
+          return true;
+        }
+        if (_isSearching) {
+          _handleSearchBack();
+          return true;
+        }
+        return false;
+      },
+      child: PopScope(
+      canPop: !inSelectionMode && !_isSearching,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && inSelectionMode) {
+          setState(_selectedIds.clear);
+        } else if (!didPop && _isSearching) {
+          _handleSearchBack();
+        }
+      },
+      child: Scaffold(
       extendBody: true,
       appBar: AnimatedMediaSelectionAppBar(
         visible: inSelectionMode,
@@ -211,30 +245,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (!inSelectionMode && _searchQuery.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    OneUiSpacing.pageHorizontal,
-                    OneUiSpacing.sm,
-                    OneUiSpacing.pageHorizontal,
-                    OneUiSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ActionChip(
-                          avatar: const Icon(Icons.search, size: 18),
-                          label: Text(_searchQuery),
-                          onPressed: _openSearchOverlay,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        tooltip: 'Clear search',
-                        onPressed: _resetSearch,
-                      ),
-                    ],
-                  ),
+              if (!inSelectionMode && _isSearching)
+                ExploreActiveSearchBar(
+                  query: _searchQuery,
+                  onBack: _handleSearchBack,
+                  onClear: _handleSearchBack,
+                  onTapQuery: _openSearchOverlay,
                 ),
               if (!inSelectionMode && _folderSuggestions.isNotEmpty)
                 SizedBox(
@@ -265,7 +281,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               Expanded(child: _buildGrid()),
             ],
           ),
-          if (!inSelectionMode)
+          if (!inSelectionMode && !_isSearching)
             Positioned(
               top: 0,
               right: 0,
@@ -286,6 +302,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             ),
         ],
       ),
+    ),
+    ),
     );
   }
 
@@ -301,9 +319,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       );
     }
     if (_items.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         title: 'No media found',
-        message: 'Try a different search or add folders to Home Feed.',
+        message: _isSearching
+            ? 'Try another photo name, album, or folder path.'
+            : 'Try a different search or add folders to Home Feed.',
       );
     }
     final loadingMore = _paginated.isLoading && _items.isNotEmpty;

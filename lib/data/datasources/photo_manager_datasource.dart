@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/exif/exif_reader.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/media/filesystem_image_loader.dart';
 import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
@@ -46,14 +47,29 @@ class PhotoManagerDatasource {
     return files;
   }
 
-  Future<List<MediaItemsCompanion>> _loadAllMediaWindows() async {
+  Future<List<MediaItemsCompanion>> _loadAllMediaWindows({
+    bool Function()? shouldCancel,
+    GallerySyncProgressCallback? onProgress,
+  }) async {
     final root = _preferences.desktopGalleryRootPath;
     if (root == null || root.isEmpty) return [];
 
     final files = _scanMediaFiles(root);
     final companions = <MediaItemsCompanion>[];
+    final total = files.length;
 
+    onProgress?.call(
+      GallerySyncProgress(
+        phase: 'scanning',
+        detail: 'Scanning $total files',
+        processed: 0,
+        total: total,
+      ),
+    );
+
+    var processed = 0;
     for (final file in files) {
+      if (shouldCancel?.call() == true) break;
       final filePath = file.path;
       final fileName = p.basename(filePath);
       final folderPath = p.dirname(filePath);
@@ -72,11 +88,36 @@ class PhotoManagerDatasource {
         final id = filePath.hashCode & 0x7FFFFFFF;
         int? width;
         int? height;
+        int? dateTaken;
+        double? latitude;
+        double? longitude;
+        String? cameraMake;
+        String? cameraModel;
+        int? iso;
+        String? shutterSpeed;
+        double? focalLength;
+        String? aperture;
+
         if (!isVideo) {
           final dimensions = await readFilesystemImageDimensions(filePath);
           width = dimensions?.width;
           height = dimensions?.height;
+
+          dateTaken = await readExifDateTakenMsFromPath(filePath);
+          final exifData = await readExifFromPath(filePath);
+          if (exifData != null) {
+            latitude = exifData.latitude;
+            longitude = exifData.longitude;
+            cameraMake = exifData.cameraMake;
+            cameraModel = exifData.cameraModel;
+            iso = exifData.iso;
+            shutterSpeed = exifData.shutterSpeed;
+            focalLength = exifData.focalLength;
+            aperture = exifData.aperture;
+          }
         }
+
+        dateTaken ??= dateModified;
 
         companions.add(
           MediaItemsCompanion.insert(
@@ -87,15 +128,38 @@ class PhotoManagerDatasource {
             folderPath: folderPath,
             dateAdded: dateAdded,
             dateModified: dateModified,
-            dateTaken: Value(dateModified),
+            dateTaken: Value(dateTaken),
             size: size,
             mimeType: mimeType,
             width: Value(width),
             height: Value(height),
+            latitude: latitude != null ? Value(latitude) : const Value(null),
+            longitude: longitude != null ? Value(longitude) : const Value(null),
+            cameraMake:
+                cameraMake != null ? Value(cameraMake) : const Value(null),
+            cameraModel:
+                cameraModel != null ? Value(cameraModel) : const Value(null),
+            iso: iso != null ? Value(iso) : const Value(null),
+            shutterSpeed:
+                shutterSpeed != null ? Value(shutterSpeed) : const Value(null),
+            focalLength:
+                focalLength != null ? Value(focalLength) : const Value(null),
+            aperture: aperture != null ? Value(aperture) : const Value(null),
             videoDuration: const Value(null),
           ),
         );
       } catch (_) {}
+      processed++;
+      if (processed % 25 == 0 || processed == total) {
+        onProgress?.call(
+          GallerySyncProgress(
+            phase: 'scanning',
+            detail: 'Scanning files on disk',
+            processed: processed,
+            total: total,
+          ),
+        );
+      }
     }
 
     return companions;
@@ -163,7 +227,10 @@ class PhotoManagerDatasource {
     GallerySyncProgressCallback? onProgress,
   }) async {
     if (usesFilesystemGallery) {
-      return _loadAllMediaWindows();
+      return _loadAllMediaWindows(
+        shouldCancel: shouldCancel,
+        onProgress: onProgress,
+      );
     }
 
     final albums = await listAlbums();

@@ -51,13 +51,13 @@ class GallerySyncState {
 
   String get headline {
     return switch (phase) {
-      GallerySyncPhase.cleaningTrash => 'Preparing your gallery',
+      GallerySyncPhase.cleaningTrash => 'Preparing your library',
       GallerySyncPhase.loadingFolders => 'Reading albums',
       GallerySyncPhase.scanningMedia => 'Scanning photos and videos',
-      GallerySyncPhase.savingMedia => 'Saving library',
+      GallerySyncPhase.savingMedia => 'Saving library index',
       GallerySyncPhase.finishing => 'Almost ready',
-      GallerySyncPhase.done => 'Gallery ready',
-      GallerySyncPhase.error => 'Sync interrupted',
+      GallerySyncPhase.done => 'Library index ready',
+      GallerySyncPhase.error => 'Library sync interrupted',
       GallerySyncPhase.idle => 'Starting up',
     };
   }
@@ -109,9 +109,12 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
 
     _cancelRequested = false;
 
+    final isFirstLibrarySync =
+        _ref.read(preferencesRepositoryProvider).lastGallerySyncAt == null;
+
     state = GallerySyncState(
       isRunning: true,
-      blocking: false,
+      blocking: isFirstLibrarySync,
       phase: GallerySyncPhase.cleaningTrash,
       detail: 'Checking for new media',
     );

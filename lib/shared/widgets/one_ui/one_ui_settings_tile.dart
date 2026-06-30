@@ -97,6 +97,24 @@ class OneUiSettingsIcon {
     background: Color(0xFFF1F8E9),
     foreground: Color(0xFF689F38),
   );
+
+  static const cloud = OneUiSettingsIcon(
+    icon: Icons.cloud_upload_outlined,
+    background: Color(0xFFE3F2FD),
+    foreground: Color(0xFF1565C0),
+  );
+
+  static const device = OneUiSettingsIcon(
+    icon: Icons.smartphone_outlined,
+    background: Color(0xFFEDE7F6),
+    foreground: Color(0xFF5E35B1),
+  );
+
+  static const sync = OneUiSettingsIcon(
+    icon: Icons.sync_rounded,
+    background: Color(0xFFE0F2F1),
+    foreground: Color(0xFF00695C),
+  );
 }
 
 /// Single tappable row inside a [OneUiSettingsGroup].

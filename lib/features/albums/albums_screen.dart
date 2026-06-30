@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
+import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/album_cover_tile.dart';
@@ -31,6 +33,23 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
 
   void _openAlbum(FolderInfo folder) {
     context.push(folderProfileLocation(folder.path));
+  }
+
+  void _openLockedAlbums() {
+    AppHaptics.light();
+    context.push(lockedAlbumsLocation);
+  }
+
+  Widget? _lockedAlbumsHeaderAction(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktopLayout = width > 800 || usesFilesystemGallery;
+    if (!isDesktopLayout) return null;
+
+    return IconButton(
+      icon: const Icon(Icons.lock_outline),
+      tooltip: 'Locked albums',
+      onPressed: _openLockedAlbums,
+    );
   }
 
   @override
@@ -73,7 +92,12 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
             return CustomScrollView(
               controller: _scrollController,
               slivers: [
-                const SliverToBoxAdapter(child: OneUiPageHeader(title: 'Albums')),
+                SliverToBoxAdapter(
+                  child: OneUiPageHeader(
+                    title: 'Albums',
+                    trailing: _lockedAlbumsHeaderAction(context),
+                  ),
+                ),
                 SliverFillRemaining(
                   child: EmptyState(
                     icon: Icons.photo_album_outlined,
@@ -99,7 +123,12 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
             controller: _scrollController,
             cacheExtent: 600,
             slivers: [
-              const SliverToBoxAdapter(child: OneUiPageHeader(title: 'Albums')),
+              SliverToBoxAdapter(
+                child: OneUiPageHeader(
+                  title: 'Albums',
+                  trailing: _lockedAlbumsHeaderAction(context),
+                ),
+              ),
               SliverPadding(
                 padding: padding,
                 sliver: SliverGrid(

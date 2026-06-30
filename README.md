@@ -2,7 +2,7 @@
 
 A local-first, social-style photo gallery for Android and iOS. Browse your device library through a feed, stories, and albums — all indexed and stored on-device. No cloud account required.
 
-**Version:** 0.0.8+1
+**Version:** 0.0.9+1
 
 ## Highlights
 
@@ -53,16 +53,19 @@ Settings opens from the menu button in the bottom nav (or sidebar on wide screen
 Enable **Gallery view mode** in Settings to swap Home/Explore for Gallery/Albums.
 
 **Gallery**
+
 - All photos and videos in a scrollable grid
 - Pinch to change grouping: **Years → Months → Days**
 - Multi-select bulk actions
 - Tap a photo for post detail (metadata, share, trash, folder)
 
 **Albums**
+
 - Grid of device albums/folders (excluding locked account folders)
 - Tap to open folder profile
 
 **Locked albums**
+
 - In Gallery view mode, **long-press the Albums tab** in the bottom nav to open locked albums
 - Albums marked **Account only (locked)** require biometrics to view
 
@@ -98,6 +101,7 @@ Configure batch size and queue order (random / chronological) in Settings.
 ### Discover and cleanup
 
 **Deep organize** (on-device scan, Android/iOS):
+
 - Perceptual hashing, blur/exposure analysis
 - ML Kit face detection and image labeling
 - **Similar photos** — review groups, keep best, delete rest
@@ -128,6 +132,7 @@ Settings → **Deleted items** to restore or permanently delete.
 
 - **Appearance:** theme (System / Light / Solar / Dark / Dark OLED), accent color, font size, animation speed
 - **Gallery view mode:** switch Home/Explore to Gallery/Albums layout
+- **Desktop backup:** pair phone with desktop on same Wi-Fi; automatic backup when desktop app is running (mobile). On desktop, enable **Receive backups** and use the pairing PIN/QR.
 - **Organize:** batch size, queue order, release kept photos back to queue
 - **Storage:** trash retention, cache size/limit, auto-clear on close
 - **About:** version, privacy policy, open-source licenses, share app
@@ -191,6 +196,16 @@ flutter build ios --release
 
 Open `ios/Runner.xcworkspace` in Xcode to archive and sign.
 
+### Build Windows MSI installer
+
+Requires [WiX Toolset](https://wixtoolset.org/) v3.11+ (see `installer/windows/README.md`).
+
+```powershell
+.\installer\windows\build_msi.ps1
+```
+
+Output: `build/windows/installer/SocialGallery-<version>.msi`
+
 ## Platform notes
 
 | Feature | Android | iOS | Windows |
@@ -201,6 +216,7 @@ Open `ios/Runner.xcworkspace` in Xcode to archive and sign.
 | ML deep organize scan | Yes | Yes | Limited |
 | Image compression | Yes | Yes | Not supported |
 | Duplicate scan notifications | Yes | Yes | No |
+| LAN backup to desktop | Yes | Yes | Receive only |
 | Background trash cleanup | Workmanager | Limited | No |
 
 ## Developer documentation
@@ -214,6 +230,14 @@ Architecture, data flow, routing, and conventions are documented with Dart doc c
 - **Routing:** go_router (shell routes + full-screen modals)
 - **Database:** Drift (SQLite) for folders, media index, travel modes, analysis cache
 - **Media access:** photo_manager (mobile), filesystem scan (Windows)
+
+### Desktop backup (LAN)
+
+Mobile and desktop must be on the same Wi-Fi. On desktop: Settings → **Receive backups** → show pairing code. On mobile: Settings → **Desktop backup** → pair with PIN, then enable automatic backup. Backup only starts after a successful health check (desktop running and reachable). Cellular networks are never used for backup.
+
+**Windows:** allow the app through the firewall when prompted on first backup receive.
+
+**iOS:** local network permission is required for discovery and backup.
 
 ## License
 

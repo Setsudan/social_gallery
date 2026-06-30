@@ -161,17 +161,23 @@ class AppDatabase extends _$AppDatabase {
       '''
       SELECT m.* FROM media_items m
       INNER JOIN folders f ON m.folder_path = f.path
-      WHERE f.follow_status = 'HOME_FEED'
+      WHERE f.follow_status != 'UNFOLLOWED'
         AND f.is_biometric_locked = 0
         AND m.is_trashed = 0
         AND (
           LOWER(m.display_name) LIKE ?
           OR LOWER(m.folder_name) LIKE ?
+          OR LOWER(f.name) LIKE ?
+          OR LOWER(m.folder_path) LIKE ?
+          OR LOWER(m.mime_type) LIKE ?
         )
       ORDER BY m.date_modified DESC
       LIMIT ? OFFSET ?
       ''',
       variables: [
+        Variable.withString(pattern),
+        Variable.withString(pattern),
+        Variable.withString(pattern),
         Variable.withString(pattern),
         Variable.withString(pattern),
         Variable.withInt(limit),
@@ -478,11 +484,15 @@ class AppDatabase extends _$AppDatabase {
     return (select(folders)
           ..where(
             (f) =>
-                f.name.lower().like(pattern) &
-                f.followStatus.equals('UNFOLLOWED').not(),
+                f.followStatus.equals('UNFOLLOWED').not() &
+                f.mediaCount.isBiggerThanValue(0) &
+                (f.name.lower().like(pattern) | f.path.lower().like(pattern)),
           )
-          ..orderBy([(f) => OrderingTerm.asc(f.name)])
-          ..limit(8))
+          ..orderBy([
+            (f) => OrderingTerm.desc(f.mediaCount),
+            (f) => OrderingTerm.asc(f.name),
+          ])
+          ..limit(12))
         .get();
   }
 
@@ -688,5 +698,102 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteTravelMode(String id) {
     return (delete(travelModes)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<List<MediaRow>> getMediaPendingBackup({int limit = 100}) async {
+    final rows = await customSelect(
+      '''
+      SELECT * FROM media_items
+      WHERE is_trashed = 0
+        AND backup_state IN (0, 3)
+      ORDER BY date_added ASC
+      LIMIT ?
+      ''',
+      variables: [Variable<int>(limit)],
+      readsFrom: {mediaItems},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<int> countMediaPendingBackup() async {
+    final row = await customSelect(
+      '''
+      SELECT COUNT(*) AS pending_count FROM media_items
+      WHERE is_trashed = 0
+        AND backup_state IN (0, 3)
+      ''',
+      readsFrom: {mediaItems},
+    ).getSingle();
+    return row.read<int>('pending_count');
+  }
+
+  Future<void> updateMediaBackupState(int id, int backupState) async {
+    await (update(mediaItems)..where((m) => m.id.equals(id))).write(
+      MediaItemsCompanion(backupState: Value(backupState)),
+    );
+  }
+
+  Future<void> markMediaBackedUp(int id, int syncedAtMs) async {
+    await (update(mediaItems)..where((m) => m.id.equals(id))).write(
+      MediaItemsCompanion(
+        backupState: const Value(1),
+        lastSyncTime: Value(syncedAtMs),
+      ),
+    );
+  }
+
+  Future<void> resetStaleBackupInProgress() async {
+    await (update(mediaItems)..where((m) => m.backupState.equals(2))).write(
+      const MediaItemsCompanion(backupState: Value(3)),
+    );
+  }
+
+  Future<List<MediaRow>> getBackedUpMediaSample({
+    required int offset,
+    required int limit,
+  }) async {
+    final rows = await customSelect(
+      '''
+      SELECT * FROM media_items
+      WHERE is_trashed = 0
+        AND backup_state = 1
+      ORDER BY last_sync_time ASC, id ASC
+      LIMIT ? OFFSET ?
+      ''',
+      variables: [Variable<int>(limit), Variable<int>(offset)],
+      readsFrom: {mediaItems},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<int> countBackedUpMedia() async {
+    final row = await customSelect(
+      '''
+      SELECT COUNT(*) AS backed_up_count FROM media_items
+      WHERE is_trashed = 0
+        AND backup_state = 1
+      ''',
+      readsFrom: {mediaItems},
+    ).getSingle();
+    return row.read<int>('backed_up_count');
+  }
+
+  Future<void> markMediaIdsBackedUp(Iterable<int> ids, int syncedAtMs) async {
+    final idList = ids.toList();
+    if (idList.isEmpty) return;
+    await (update(mediaItems)..where((m) => m.id.isIn(idList))).write(
+      MediaItemsCompanion(
+        backupState: const Value(1),
+        lastSyncTime: Value(syncedAtMs),
+      ),
+    );
+  }
+
+  Future<void> markMediaIdsPending(Iterable<int> ids) async {
+    final idList = ids.toList();
+    if (idList.isEmpty) return;
+    await (update(mediaItems)..where((m) => m.id.isIn(idList))).write(
+      const MediaItemsCompanion(backupState: Value(0)),
+    );
   }
 }

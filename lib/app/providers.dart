@@ -18,6 +18,7 @@ import 'package:social_gallery/data/repositories/preferences_repository.dart';
 import 'package:social_gallery/data/repositories/travel_mode_repository.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+import 'package:social_gallery/domain/models/desktop_gallery_grid_size.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart' as domain;
 import 'package:social_gallery/core/analysis/media_analysis_service.dart';
 import 'package:social_gallery/data/repositories/media_analysis_repository.dart';
@@ -31,6 +32,14 @@ import 'package:social_gallery/domain/usecases/score_low_quality.dart';
 import 'package:social_gallery/domain/usecases/suggest_keep_best.dart';
 import 'package:social_gallery/domain/usecases/travel_mode_use_case.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
+import 'package:social_gallery/core/backup/backup_deep_link.dart';
+import 'package:social_gallery/core/backup/desktop_availability_service.dart';
+import 'package:social_gallery/core/backup/desktop_backup_controller.dart';
+import 'package:social_gallery/core/backup/desktop_discovery_service.dart';
+import 'package:social_gallery/core/notifications/desktop_backup_notification_service.dart';
+import 'package:social_gallery/core/backup/pairing_service.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 /// Application-wide Riverpod providers: database, repositories, settings, and use cases.
 export 'package:social_gallery/features/discover/discover_providers.dart'
@@ -226,6 +235,7 @@ class AppSettings {
   final int cacheSizeLimitMb;
   final bool autoClearCacheOnClose;
   final bool galleryViewMode;
+  final DesktopGalleryGridSize desktopGalleryGridSize;
 
   const AppSettings({
     required this.appTheme,
@@ -236,6 +246,7 @@ class AppSettings {
     required this.cacheSizeLimitMb,
     required this.autoClearCacheOnClose,
     required this.galleryViewMode,
+    required this.desktopGalleryGridSize,
   });
 
   AppSettings copyWith({
@@ -247,6 +258,7 @@ class AppSettings {
     int? cacheSizeLimitMb,
     bool? autoClearCacheOnClose,
     bool? galleryViewMode,
+    DesktopGalleryGridSize? desktopGalleryGridSize,
   }) {
     return AppSettings(
       appTheme: appTheme ?? this.appTheme,
@@ -258,6 +270,8 @@ class AppSettings {
       autoClearCacheOnClose:
           autoClearCacheOnClose ?? this.autoClearCacheOnClose,
       galleryViewMode: galleryViewMode ?? this.galleryViewMode,
+      desktopGalleryGridSize:
+          desktopGalleryGridSize ?? this.desktopGalleryGridSize,
     );
   }
 }
@@ -278,6 +292,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       cacheSizeLimitMb: prefs.cacheSizeLimitMb,
       autoClearCacheOnClose: prefs.autoClearCacheOnClose,
       galleryViewMode: prefs.galleryViewMode,
+      desktopGalleryGridSize: prefs.desktopGalleryGridSize,
     );
   }
 
@@ -321,6 +336,11 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     state = state.copyWith(galleryViewMode: enabled);
     await _prefs.setGalleryViewMode(enabled);
   }
+
+  Future<void> setDesktopGalleryGridSize(DesktopGalleryGridSize size) async {
+    state = state.copyWith(desktopGalleryGridSize: size);
+    await _prefs.setDesktopGalleryGridSize(size);
+  }
 }
 
 /// All travel modes ordered by start date.
@@ -339,4 +359,55 @@ final settingsProvider = StateNotifierProvider<SettingsNotifier, AppSettings>((
 /// Soft-deleted media awaiting restore or permanent deletion.
 final trashedMediaProvider = StreamProvider<List<MediaItem>>((ref) {
   return ref.watch(mediaRepositoryProvider).watchTrashedMedia();
+});
+
+final pairingServiceProvider = Provider((ref) {
+  return PairingService(ref.watch(preferencesRepositoryProvider));
+});
+
+final pendingBackupPairProvider =
+    StateProvider<BackupPairingParams?>((ref) => null);
+
+final desktopDiscoveryServiceProvider = Provider((ref) {
+  return DesktopDiscoveryService();
+});
+
+final desktopAvailabilityServiceProvider = Provider((ref) {
+  return DesktopAvailabilityService(
+    ref.watch(preferencesRepositoryProvider),
+    ref.watch(desktopDiscoveryServiceProvider),
+  );
+});
+
+final desktopBackupProvider =
+    StateNotifierProvider<DesktopBackupController, DesktopBackupState>((ref) {
+  final controller = DesktopBackupController(
+    ref.watch(preferencesRepositoryProvider),
+    ref.watch(mediaRepositoryProvider),
+    ref.watch(desktopAvailabilityServiceProvider),
+    ref.watch(pairingServiceProvider),
+    ref.watch(desktopDiscoveryServiceProvider),
+    notifications: usesFilesystemGallery
+        ? null
+        : ref.watch(desktopBackupNotificationServiceProvider),
+    onLibraryRefresh: () async {
+      if (usesFilesystemGallery) {
+        await ref.read(gallerySyncProvider.notifier).run(force: true);
+      }
+    },
+    onBackupFinished: () {
+      if (!usesFilesystemGallery) {
+        refreshFeedProvidersFromRef(ref);
+      }
+    },
+    isGallerySyncRunning: () => ref.read(gallerySyncProvider).isRunning,
+    waitForGallerySync: () async {
+      while (ref.read(gallerySyncProvider).isRunning) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      }
+    },
+  );
+  controller.startHeartbeat();
+  ref.onDispose(controller.dispose);
+  return controller;
 });

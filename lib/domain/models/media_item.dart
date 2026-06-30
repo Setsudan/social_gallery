@@ -1,3 +1,5 @@
+import 'package:social_gallery/domain/models/backup_state.dart';
+
 /// Indexed photo or video row mirrored from the device library.
 class MediaItem {
   const MediaItem({
@@ -26,6 +28,8 @@ class MediaItem {
     this.isTrashed = false,
     this.trashedAt,
     this.originalPath,
+    this.backupState = MediaBackupState.pending,
+    this.lastSyncTime,
   });
 
   final int id;
@@ -53,6 +57,8 @@ class MediaItem {
   final bool isTrashed;
   final int? trashedAt;
   final String? originalPath;
+  final MediaBackupState backupState;
+  final int? lastSyncTime;
 
   bool get isVideo => mimeType.startsWith('video/');
 
@@ -73,6 +79,8 @@ class MediaItem {
     String? originalPath,
     String? folderName,
     String? folderPath,
+    MediaBackupState? backupState,
+    int? lastSyncTime,
   }) {
     return MediaItem(
       id: id,
@@ -100,6 +108,8 @@ class MediaItem {
       isTrashed: isTrashed ?? this.isTrashed,
       trashedAt: trashedAt ?? this.trashedAt,
       originalPath: originalPath ?? this.originalPath,
+      backupState: backupState ?? this.backupState,
+      lastSyncTime: lastSyncTime ?? this.lastSyncTime,
     );
   }
 }

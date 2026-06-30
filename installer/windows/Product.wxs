@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product
+    Id="*"
+    Name="Social Gallery"
+    Language="1033"
+    Version="$(var.ProductVersion)"
+    Manufacturer="one.launay"
+    UpgradeCode="8f3c2a1b-4d5e-6f70-8a9b-0c1d2e3f4a5b">
+    <Package
+      InstallerVersion="500"
+      Compressed="yes"
+      InstallScope="perMachine"
+      Platform="x64" />
+
+    <MajorUpgrade
+      AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="A newer version of Social Gallery is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <UIRef Id="WixUI_Minimal" />
+
+    <Icon Id="AppIcon" SourceFile="$(var.RepoRoot)\windows\runner\resources\app_icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+
+    <Feature Id="MainFeature" Title="Social Gallery" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Social Gallery" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Social Gallery" />
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <Component
+      Id="StartMenuShortcut"
+      Directory="ApplicationProgramsFolder"
+      Guid="9a4b3c2d-5e6f-7a80-9b0c-1d2e3f4a5b6c">
+      <Shortcut
+        Id="ApplicationStartMenuShortcut"
+        Name="Social Gallery"
+        Description="Local-first social-style photo gallery"
+        Target="[INSTALLFOLDER]social_gallery.exe"
+        WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue
+        Root="HKCU"
+        Key="Software\one.launay\SocialGallery"
+        Name="installed"
+        Type="integer"
+        Value="1"
+        KeyPath="yes" />
+    </Component>
+  </Fragment>
+</Wix>

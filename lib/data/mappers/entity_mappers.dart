@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/follow_status.dart';
+import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
 domain.MediaItem _mediaItemFromFields({
@@ -30,6 +31,8 @@ domain.MediaItem _mediaItemFromFields({
   required bool isTrashed,
   required int? trashedAt,
   required String? originalPath,
+  MediaBackupState backupState = MediaBackupState.pending,
+  int? lastSyncTime,
 }) {
   return domain.MediaItem(
     id: id,
@@ -57,6 +60,8 @@ domain.MediaItem _mediaItemFromFields({
     isTrashed: isTrashed,
     trashedAt: trashedAt,
     originalPath: originalPath,
+    backupState: backupState,
+    lastSyncTime: lastSyncTime,
   );
 }
 
@@ -88,6 +93,8 @@ domain.MediaItem mediaItemFromRow(MediaRow row) {
     isTrashed: row.isTrashed,
     trashedAt: row.trashedAt,
     originalPath: row.originalPath,
+    backupState: MediaBackupState.fromValue(row.backupState),
+    lastSyncTime: row.lastSyncTime,
   );
 }
 
@@ -119,6 +126,8 @@ domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
     isTrashed: row.read<bool>('is_trashed'),
     trashedAt: row.readNullable<int>('trashed_at'),
     originalPath: row.readNullable<String>('original_path'),
+    backupState: MediaBackupState.fromValue(row.read<int>('backup_state')),
+    lastSyncTime: row.readNullable<int>('last_sync_time'),
   );
 }
 

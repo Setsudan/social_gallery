@@ -15,7 +15,9 @@ import 'package:social_gallery/core/theme/accent_presets.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
+import 'package:social_gallery/domain/models/desktop_gallery_grid_size.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
+import 'package:social_gallery/features/settings/backup_settings_section.dart';
 import 'package:social_gallery/shared/widgets/motion/animation_speed_preview.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_settings_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -192,6 +194,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _pickDesktopGalleryGridSize(
+    DesktopGalleryGridSize current,
+  ) async {
+    final picked = await showOneUiSettingsPicker<DesktopGalleryGridSize>(
+      context: context,
+      title: 'Gallery grid size',
+      selected: current,
+      options: [
+        for (final size in DesktopGalleryGridSize.values)
+          OneUiPickerOption(
+            value: size,
+            label: size.label,
+            subtitle: size.subtitle,
+          ),
+      ],
+    );
+    if (picked != null && picked != current) {
+      AppHaptics.medium();
+      ref.read(settingsProvider.notifier).setDesktopGalleryGridSize(picked);
+    }
   }
 
   Future<void> _pickFontSize() async {
@@ -646,6 +670,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: galleryRootDisplayValue(galleryRootPath),
                   onTap: _pickGalleryRoot,
                 ),
+              if (usesFilesystemGallery)
+                OneUiSettingsTile(
+                  icon: OneUiSettingsIcon.gallery,
+                  title: 'Gallery grid size',
+                  subtitle: settings.desktopGalleryGridSize.subtitle,
+                  value: settings.desktopGalleryGridSize.label,
+                  showDivider: true,
+                  onTap: () => _pickDesktopGalleryGridSize(
+                    settings.desktopGalleryGridSize,
+                  ),
+                ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.gallery,
                 title: 'Gallery view mode',
@@ -662,6 +697,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: OneUiSpacing.sectionGap),
+          const BackupSettingsSection(),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiSettingsSection(
             title: 'Content',

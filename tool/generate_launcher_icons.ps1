@@ -9,4 +9,7 @@ powershell -ExecutionPolicy Bypass -File "$root\tool\setup_dark_launcher_icons.p
 Write-Host "Generating iOS dark appearance icons..."
 dart run tool/generate_ios_dark_icons.dart
 
+Write-Host "Generating Windows and macOS launcher icons..."
+dart run flutter_launcher_icons -f flutter_launcher_icons.yaml
+
 Write-Host "Launcher icon generation complete."

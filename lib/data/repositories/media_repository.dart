@@ -7,6 +7,7 @@ import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/data/mappers/entity_mappers.dart';
 import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
+import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
@@ -420,5 +421,53 @@ class MediaRepository {
     return _db.watchTrashedMedia().map(
       (rows) => rows.map(mediaItemFromRow).toList(),
     );
+  }
+
+  Future<List<domain.MediaItem>> getMediaPendingBackup({int limit = 100}) async {
+    final rows = await _db.getMediaPendingBackup(limit: limit);
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<int> countMediaPendingBackup() {
+    return _db.countMediaPendingBackup();
+  }
+
+  Future<void> updateBackupState(int id, MediaBackupState state) {
+    return _db.updateMediaBackupState(id, state.value);
+  }
+
+  Future<void> markMediaBackedUp(int id) {
+    return _db.markMediaBackedUp(id, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  Future<void> resetStaleBackupInProgress() {
+    return _db.resetStaleBackupInProgress();
+  }
+
+  Future<List<domain.MediaItem>> getBackedUpMediaSample({
+    required int offset,
+    required int limit,
+  }) async {
+    final rows = await _db.getBackedUpMediaSample(offset: offset, limit: limit);
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<int> countBackedUpMedia() {
+    return _db.countBackedUpMedia();
+  }
+
+  Future<void> reconcileBackupStates({
+    required Iterable<int> presentIds,
+    required Iterable<int> mismatchIds,
+    required Iterable<int> missingIds,
+  }) async {
+    final syncedAt = DateTime.now().millisecondsSinceEpoch;
+    await _db.markMediaIdsBackedUp(presentIds, syncedAt);
+    final resetIds = [...mismatchIds, ...missingIds];
+    await _db.markMediaIdsPending(resetIds);
+  }
+
+  Future<void> markVerifiedMissingAsPending(Iterable<int> ids) {
+    return _db.markMediaIdsPending(ids);
   }
 }

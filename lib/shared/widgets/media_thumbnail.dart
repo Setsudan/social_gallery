@@ -5,6 +5,8 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_entity_cache.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/domain/models/backup_state.dart';
+import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
 
 class MediaThumbnail extends StatefulWidget {
   const MediaThumbnail({
@@ -15,6 +17,7 @@ class MediaThumbnail extends StatefulWidget {
     this.locked = false,
     this.heroTag,
     this.maxThumbnailEdge,
+    this.backupState,
   });
 
   final String assetId;
@@ -22,9 +25,8 @@ class MediaThumbnail extends StatefulWidget {
   final bool showVideoBadge;
   final bool locked;
   final String? heroTag;
-
-  /// Optional decode cap; when omitted, derived from layout width.
   final int? maxThumbnailEdge;
+  final MediaBackupState? backupState;
 
   @override
   State<MediaThumbnail> createState() => _MediaThumbnailState();
@@ -45,6 +47,19 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
     if (oldWidget.assetId != widget.assetId) {
       _entityFuture = AssetEntityCache.resolve(widget.assetId);
     }
+  }
+
+  List<Widget> _overlayBadges({required bool isVideo}) {
+    return [
+      if (!usesFilesystemGallery && widget.backupState != null)
+        MediaBackupBadge(state: widget.backupState!),
+      if (isVideo)
+        const Positioned(
+          right: 4,
+          bottom: 4,
+          child: Icon(Icons.videocam, color: Colors.white, size: 18),
+        ),
+    ];
   }
 
   int _resolveMaxEdge(BoxConstraints constraints) {
@@ -105,12 +120,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
                 widget.heroTag != null
                     ? Hero(tag: widget.heroTag!, child: thumbnail)
                     : thumbnail,
-                if (isVideo)
-                  const Positioned(
-                    right: 4,
-                    bottom: 4,
-                    child: Icon(Icons.videocam, color: Colors.white, size: 18),
-                  ),
+                ..._overlayBadges(isVideo: isVideo),
               ],
             );
           },
@@ -149,12 +159,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
             widget.heroTag != null
                 ? Hero(tag: widget.heroTag!, child: thumbnail)
                 : thumbnail,
-            if (isVideo)
-              const Positioned(
-                right: 4,
-                bottom: 4,
-                child: Icon(Icons.videocam, color: Colors.white, size: 18),
-              ),
+            ..._overlayBadges(isVideo: isVideo),
           ],
         );
       },

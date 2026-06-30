@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
+import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
@@ -44,6 +47,9 @@ class MediaGrid extends ConsumerWidget {
     ).add(const EdgeInsets.all(2));
 
     final inSelectionMode = selectedIds.isNotEmpty;
+    final syncingMediaId = usesFilesystemGallery
+        ? null
+        : ref.watch(desktopBackupProvider.select((s) => s.syncingMediaId));
 
     final columns = crossAxisCount == 3
         ? gridCrossAxisCountForWidth(MediaQuery.sizeOf(context).width)
@@ -89,6 +95,10 @@ class MediaGrid extends ConsumerWidget {
               assetId: item.uri,
               showVideoBadge: item.isVideo,
               locked: locked,
+              backupState: visibleBackupState(
+                item,
+                syncingMediaId: syncingMediaId,
+              ),
             ),
           ),
         );

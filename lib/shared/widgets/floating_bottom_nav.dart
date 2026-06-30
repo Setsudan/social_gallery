@@ -9,16 +9,24 @@ import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 
 /// Pill height + outer bottom margin from [FloatingBottomNav].
 const double kFloatingNavBarExtent = 64;
+const double kFloatingNavBarCompactExtent = 52;
 const double kFloatingNavOuterBottomMargin = 14;
 
 /// Extra scroll padding so the last row clears the overlay.
 const double kFloatingNavScrollGap = 12;
 
 const double _navItemSlotWidth = 72;
+const double _navItemSlotCompactWidth = 56;
 const double _navItemInnerWidth = 64;
+const double _navItemInnerCompactWidth = 48;
 const double _navItemInnerHeight = 48;
+const double _navItemInnerCompactHeight = 40;
 const double _navIconSize = 20;
 const double _settingsItemWidth = 64;
+
+double _lerp(double compact, double expanded, double t) {
+  return compact + (expanded - compact) * t;
+}
 
 class FloatingNavInsets extends InheritedWidget {
   const FloatingNavInsets({
@@ -56,9 +64,10 @@ double floatingNavOverlayHeight(BuildContext context) {
       MediaQuery.viewPaddingOf(context).bottom;
 }
 
-class FloatingBottomNav extends ConsumerWidget {
+class FloatingBottomNav extends ConsumerStatefulWidget {
   const FloatingBottomNav({
     super.key,
+    required this.labelsExpanded,
     required this.selectedBranchIndex,
     required this.galleryViewMode,
     required this.onBranchSelected,
@@ -66,6 +75,7 @@ class FloatingBottomNav extends ConsumerWidget {
     this.onAlbumsLongPress,
   });
 
+  final bool labelsExpanded;
   final int selectedBranchIndex;
   final bool galleryViewMode;
   final ValueChanged<int> onBranchSelected;
@@ -73,14 +83,58 @@ class FloatingBottomNav extends ConsumerWidget {
   final VoidCallback? onAlbumsLongPress;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FloatingBottomNav> createState() => _FloatingBottomNavState();
+}
+
+class _FloatingBottomNavState extends ConsumerState<FloatingBottomNav>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _expand;
+  late Animation<double> _expandCurve;
+
+  @override
+  void initState() {
+    super.initState();
+    _expand = AnimationController(
+      vsync: this,
+      value: widget.labelsExpanded ? 1.0 : 0.0,
+    );
+    _expandCurve = CurvedAnimation(
+      parent: _expand,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+  }
+
+  @override
+  void didUpdateWidget(FloatingBottomNav oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.labelsExpanded == oldWidget.labelsExpanded) return;
+    if (widget.labelsExpanded) {
+      _expand.forward();
+    } else {
+      _expand.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _expand.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final motion = AppMotion.of(context, ref);
+    _expand.duration = motion.fade;
+
     final theme = Theme.of(context);
-    final destinations = shellNavDestinations(galleryViewMode: galleryViewMode);
+    final destinations = shellNavDestinations(galleryViewMode: widget.galleryViewMode);
     final selectedNavIndex =
-        navIndexForBranch(selectedBranchIndex, galleryViewMode: galleryViewMode) ??
+        navIndexForBranch(
+          widget.selectedBranchIndex,
+          galleryViewMode: widget.galleryViewMode,
+        ) ??
         0;
-    final pillWidth = destinations.length * _navItemSlotWidth;
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -92,85 +146,106 @@ class FloatingBottomNav extends ConsumerWidget {
           kFloatingNavOuterBottomMargin +
               MediaQuery.viewPaddingOf(context).bottom,
         ),
-        child: _OneUiNavShell(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: pillWidth,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    AnimatedPositioned(
-                      duration: motion.fade,
-                      curve: motion.enterCurve,
-                      left: _navItemSlotWidth * selectedNavIndex +
-                          (_navItemSlotWidth - _navItemInnerWidth) / 2,
-                      top: (kFloatingNavBarExtent - _navItemInnerHeight) / 2,
-                      child: AnimatedContainer(
-                        duration: motion.fade,
-                        width: _navItemInnerWidth,
-                        height: _navItemInnerHeight,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.08,
-                          ),
-                          borderRadius: BorderRadius.circular(
-                            _navItemInnerHeight / 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        for (final destination in destinations)
-                          SizedBox(
-                            width: _navItemSlotWidth,
-                            child: Center(
-                              child: _NavItemButton(
-                                selected:
-                                    selectedNavIndex == destination.navIndex,
-                                label: destination.label,
-                                unselectedIcon: destination.unselectedIcon,
-                                selectedIcon: destination.selectedIcon,
-                                filledWhenSelected:
-                                    destination.filledWhenSelected,
-                                onPressed: () => onBranchSelected(
-                                  destination.branchIndex,
+        child: AnimatedBuilder(
+          animation: _expandCurve,
+          builder: (context, _) {
+            final t = _expandCurve.value;
+            final slotWidth = _lerp(_navItemSlotCompactWidth, _navItemSlotWidth, t);
+            final innerWidth =
+                _lerp(_navItemInnerCompactWidth, _navItemInnerWidth, t);
+            final innerHeight =
+                _lerp(_navItemInnerCompactHeight, _navItemInnerHeight, t);
+            final barExtent =
+                _lerp(kFloatingNavBarCompactExtent, kFloatingNavBarExtent, t);
+            final pillWidth = destinations.length * slotWidth;
+            final indicatorLeft = slotWidth * selectedNavIndex +
+                (slotWidth - innerWidth) / 2;
+            final indicatorTop = (barExtent - innerHeight) / 2;
+
+            return _OneUiNavShell(
+              barExtent: barExtent,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRect(
+                    child: SizedBox(
+                      width: pillWidth,
+                      height: barExtent,
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        children: [
+                          Positioned(
+                            left: indicatorLeft,
+                            top: indicatorTop,
+                            child: Container(
+                              width: innerWidth,
+                              height: innerHeight,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.08,
                                 ),
-                                onLongPress:
-                                    galleryViewMode &&
-                                        destination.branchIndex ==
-                                            kShellTabExplore
-                                    ? onAlbumsLongPress
-                                    : null,
+                                borderRadius: BorderRadius.circular(
+                                  innerHeight / 2,
+                                ),
                               ),
                             ),
                           ),
-                      ],
+                          Row(
+                            children: [
+                              for (final destination in destinations)
+                                SizedBox(
+                                  width: slotWidth,
+                                  height: barExtent,
+                                  child: Center(
+                                    child: _NavItemButton(
+                                      expandT: t,
+                                      selected: selectedNavIndex ==
+                                          destination.navIndex,
+                                      label: destination.label,
+                                      unselectedIcon: destination.unselectedIcon,
+                                      selectedIcon: destination.selectedIcon,
+                                      filledWhenSelected:
+                                          destination.filledWhenSelected,
+                                      onPressed: () => widget.onBranchSelected(
+                                        destination.branchIndex,
+                                      ),
+                                      onLongPress: widget.galleryViewMode &&
+                                              destination.branchIndex ==
+                                                  kShellTabExplore
+                                          ? widget.onAlbumsLongPress
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: OneUiSpacing.xs),
+                  _NavItemButton(
+                    expandT: t,
+                    selected: false,
+                    label: 'Settings',
+                    unselectedIcon: Icons.menu,
+                    selectedIcon: Icons.menu,
+                    filledWhenSelected: false,
+                    onPressed: widget.onSettingsPressed,
+                  ),
+                ],
               ),
-              const SizedBox(width: OneUiSpacing.xs),
-              _NavItemButton(
-                selected: false,
-                label: 'Settings',
-                unselectedIcon: Icons.menu,
-                selectedIcon: Icons.menu,
-                filledWhenSelected: false,
-                onPressed: onSettingsPressed,
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _NavItemButton extends ConsumerWidget {
+class _NavItemButton extends StatelessWidget {
   const _NavItemButton({
+    required this.expandT,
     required this.selected,
     required this.label,
     required this.unselectedIcon,
@@ -180,6 +255,7 @@ class _NavItemButton extends ConsumerWidget {
     this.onLongPress,
   });
 
+  final double expandT;
   final bool selected;
   final String label;
   final IconData unselectedIcon;
@@ -189,9 +265,11 @@ class _NavItemButton extends ConsumerWidget {
   final VoidCallback? onLongPress;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final motion = AppMotion.of(context, ref);
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final itemWidth = _lerp(_navItemInnerCompactWidth, _settingsItemWidth, expandT);
+    final itemHeight =
+        _lerp(_navItemInnerCompactHeight, _navItemInnerHeight, expandT);
     final iconColor = selected
         ? theme.colorScheme.onSurface
         : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45);
@@ -209,33 +287,36 @@ class _NavItemButton extends ConsumerWidget {
       onTap: onPressed,
       onLongPress: onLongPress,
       child: SizedBox(
-        width: _settingsItemWidth,
-        height: _navItemInnerHeight,
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedScale(
-                scale: selected ? 1.05 : 1.0,
-                duration: motion.fadeFast,
-                curve: motion.enterCurve,
-                child: Icon(
-                  selected && filledWhenSelected ? selectedIcon : unselectedIcon,
-                  size: _navIconSize,
-                  color: iconColor,
+        width: itemWidth,
+        height: itemHeight,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              selected && filledWhenSelected ? selectedIcon : unselectedIcon,
+              size: _navIconSize,
+              color: iconColor,
+            ),
+            ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: expandT.clamp(0.001, 1.0),
+                child: Opacity(
+                  opacity: expandT,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: labelStyle,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 1),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: labelStyle,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -244,14 +325,18 @@ class _NavItemButton extends ConsumerWidget {
 
 /// Floating capsule nav bar with frosted fill and circular outline.
 class _OneUiNavShell extends StatelessWidget {
-  const _OneUiNavShell({required this.child});
+  const _OneUiNavShell({
+    required this.barExtent,
+    required this.child,
+  });
 
+  final double barExtent;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final radius = BorderRadius.circular(kFloatingNavBarExtent / 2);
+    final radius = BorderRadius.circular(barExtent / 2);
 
     return ClipRRect(
       borderRadius: radius,
@@ -266,7 +351,7 @@ class _OneUiNavShell extends StatelessWidget {
             ),
           ),
           child: SizedBox(
-            height: kFloatingNavBarExtent,
+            height: barExtent,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.sm),
               child: child,

@@ -35,6 +35,59 @@ Future<ExifData?> readExifFromPath(String? filePath) async {
   return null;
 }
 
+/// Reads EXIF capture time as epoch milliseconds, if present.
+Future<int?> readExifDateTakenMsFromPath(String? filePath) async {
+  if (filePath == null || filePath.isEmpty) return null;
+  try {
+    final file = File(filePath);
+    if (!file.existsSync()) return null;
+    final bytes = await file.readAsBytes();
+    return readExifDateTakenMsFromBytes(bytes);
+  } catch (_) {}
+  return null;
+}
+
+Future<int?> readExifDateTakenMsFromBytes(List<int> bytes) async {
+  try {
+    final tags = await exif.readExifFromBytes(bytes);
+    if (tags.isEmpty) return null;
+
+    final original = tags['EXIF DateTimeOriginal']?.printable;
+    final digitized = tags['EXIF DateTimeDigitized']?.printable;
+    final imageDate = tags['Image DateTime']?.printable;
+    final parsed = _parseExifDateTime(original) ??
+        _parseExifDateTime(digitized) ??
+        _parseExifDateTime(imageDate);
+    return parsed?.millisecondsSinceEpoch;
+  } catch (_) {
+    return null;
+  }
+}
+
+DateTime? _parseExifDateTime(String? value) {
+  if (value == null || value.isEmpty) return null;
+  final parts = value.trim().split(' ');
+  if (parts.length != 2) return null;
+
+  final dateParts = parts[0].split(':');
+  if (dateParts.length != 3) return null;
+
+  final year = int.tryParse(dateParts[0]);
+  final month = int.tryParse(dateParts[1]);
+  final day = int.tryParse(dateParts[2]);
+  if (year == null || month == null || day == null) return null;
+
+  final timeParts = parts[1].split(':');
+  if (timeParts.length != 3) return null;
+
+  final hour = int.tryParse(timeParts[0]);
+  final minute = int.tryParse(timeParts[1]);
+  final second = int.tryParse(timeParts[2]);
+  if (hour == null || minute == null || second == null) return null;
+
+  return DateTime(year, month, day, hour, minute, second);
+}
+
 Future<ExifData?> parseExifData(List<int> bytes) async {
   try {
     final tags = await exif.readExifFromBytes(bytes);
