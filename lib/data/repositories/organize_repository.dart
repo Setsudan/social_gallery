@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 
+/// Persists organize session state in SharedPreferences (processed IDs, filters, stats).
 class OrganizeRepository {
   OrganizeRepository(this._prefs);
 
@@ -17,6 +18,8 @@ class OrganizeRepository {
   static const _filterTypeKey = 'organize_filter_type';
   static const _filterMonthKey = 'organize_filter_month';
   static const _hapticsKey = 'organize_haptics_enabled';
+  static const _recentFoldersKey = 'organize_recent_folders';
+  static const _maxRecentFolders = 30;
 
   Set<int> get processedIds => _readIntSet(_processedKey);
   Set<int> get pendingTrashIds => _readIntSet(_pendingTrashKey);
@@ -54,6 +57,15 @@ class OrganizeRepository {
   );
 
   bool get hapticsEnabled => _prefs.getBool(_hapticsKey) ?? true;
+
+  List<String> get recentFolderPaths =>
+      _prefs.getStringList(_recentFoldersKey) ?? const [];
+
+  Future<void> recordRecentFolder(String path) async {
+    final current = recentFolderPaths.where((p) => p != path).toList();
+    final next = [path, ...current].take(_maxRecentFolders).toList();
+    await _prefs.setStringList(_recentFoldersKey, next);
+  }
 
   Future<void> addProcessed(int id) async {
     final set = processedIds..add(id);

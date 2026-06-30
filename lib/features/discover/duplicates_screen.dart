@@ -109,30 +109,58 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
         body: const SizedBox.shrink(),
       );
     }
-    return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 16),
+
+    final columns = gridCrossAxisCountForWidth(
+      MediaQuery.sizeOf(context).width,
+    );
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(8),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
       itemCount: groups.length,
-      separatorBuilder: (_, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final group = groups[index];
         final cover = group.items.first;
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () => setState(() => _selected = group),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: MediaThumbnail(assetId: cover.uri),
+        return GestureDetector(
+          onTap: () => setState(() => _selected = group),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: MediaThumbnail(assetId: cover.uri),
+              ),
+              Positioned(
+                left: 6,
+                right: 6,
+                bottom: 6,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      '${group.count} duplicates',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text('${group.count} duplicate items'),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },

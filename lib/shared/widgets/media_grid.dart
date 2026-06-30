@@ -8,6 +8,7 @@ import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 
+/// Responsive thumbnail grid with optional selection mode and staggered entrance.
 class MediaGrid extends ConsumerWidget {
   const MediaGrid({
     super.key,

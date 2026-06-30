@@ -63,12 +63,14 @@ class FloatingBottomNav extends ConsumerWidget {
     required this.galleryViewMode,
     required this.onBranchSelected,
     required this.onSettingsPressed,
+    this.onAlbumsLongPress,
   });
 
   final int selectedBranchIndex;
   final bool galleryViewMode;
   final ValueChanged<int> onBranchSelected;
   final VoidCallback onSettingsPressed;
+  final VoidCallback? onAlbumsLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -136,6 +138,12 @@ class FloatingBottomNav extends ConsumerWidget {
                                 onPressed: () => onBranchSelected(
                                   destination.branchIndex,
                                 ),
+                                onLongPress:
+                                    galleryViewMode &&
+                                        destination.branchIndex ==
+                                            kShellTabExplore
+                                    ? onAlbumsLongPress
+                                    : null,
                               ),
                             ),
                           ),
@@ -169,6 +177,7 @@ class _NavItemButton extends ConsumerWidget {
     required this.selectedIcon,
     required this.onPressed,
     this.filledWhenSelected = false,
+    this.onLongPress,
   });
 
   final bool selected;
@@ -177,6 +186,7 @@ class _NavItemButton extends ConsumerWidget {
   final IconData selectedIcon;
   final VoidCallback onPressed;
   final bool filledWhenSelected;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -197,6 +207,7 @@ class _NavItemButton extends ConsumerWidget {
     return PressableScale(
       scale: 0.9,
       onTap: onPressed,
+      onLongPress: onLongPress,
       child: SizedBox(
         width: _settingsItemWidth,
         height: _navItemInnerHeight,

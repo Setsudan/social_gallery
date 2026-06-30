@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social_gallery/domain/models/recent_search.dart';
 
+/// App settings and onboarding flags stored in SharedPreferences.
 class PreferencesRepository {
   PreferencesRepository(this._prefs);
 
@@ -43,6 +44,11 @@ class PreferencesRepository {
   Future<void> setWindowsGalleryRootPath(String path) async {
     await _prefs.setString(_windowsGalleryRootKey, path);
   }
+
+  String? get desktopGalleryRootPath => windowsGalleryRootPath;
+
+  Future<void> setDesktopGalleryRootPath(String path) =>
+      setWindowsGalleryRootPath(path);
 
   String get themeMode => _prefs.getString(_themeModeKey) ?? 'system';
   Future<void> setThemeMode(String theme) async {

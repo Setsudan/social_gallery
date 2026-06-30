@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
@@ -310,7 +309,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final loadingMore = _paginated.isLoading && _items.isNotEmpty;
 
     final width = MediaQuery.sizeOf(context).width;
-    final isDesktop = width > 800 || Platform.isWindows;
+    final isDesktop = width > 800 || usesFilesystemGallery;
 
     final Widget grid = isDesktop
         ? MediaGrid(

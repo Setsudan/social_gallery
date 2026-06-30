@@ -1,5 +1,6 @@
 import 'media_item.dart';
 
+/// Album with recent media for the home stories row (24h window).
 class FolderWithStories {
   const FolderWithStories({
     required this.folderName,

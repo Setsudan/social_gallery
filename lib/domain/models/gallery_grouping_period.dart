@@ -1,3 +1,4 @@
+/// Timeline zoom level for the gallery grid (pinch changes period).
 enum GalleryGroupingPeriod {
   day,
   month,

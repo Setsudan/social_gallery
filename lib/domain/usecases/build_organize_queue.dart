@@ -3,7 +3,12 @@ import 'dart:math';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 
+/// Builds the next organize swipe batch from the full media pool.
+///
+/// Excludes already-processed and pending-trash items so the queue stays
+/// consistent with [OrganizeRepository] persistence in SharedPreferences.
 class BuildOrganizeQueue {
+  /// Returns up to [batchSize] items matching [filter], ordered per [order].
   List<MediaItem> call({
     required List<MediaItem> pool,
     required Set<int> processedIds,
@@ -42,6 +47,7 @@ class BuildOrganizeQueue {
     return filtered.take(batchSize).toList();
   }
 
+  /// Count of items still eligible for organize under the current filter.
   int countRemaining({
     required List<MediaItem> pool,
     required Set<int> processedIds,

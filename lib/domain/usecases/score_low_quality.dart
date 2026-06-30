@@ -1,6 +1,7 @@
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
+/// Flags images that fail resolution, size, blur, or exposure thresholds from analysis cache.
 class ScoreLowQuality {
   static const blurThreshold = 80.0;
   static const darkThreshold = 40.0;

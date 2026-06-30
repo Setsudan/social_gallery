@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/notifications/duplicate_scan_notification_service.dart';
+import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 
+/// Progress and results of the background duplicate-photo scan.
 class DuplicateScanState {
   const DuplicateScanState({
     this.isScanning = false,
@@ -26,16 +28,21 @@ class DuplicateScanState {
   bool get isComplete => groups != null && !isScanning;
 }
 
+/// Scans home-feed images for duplicates and notifies when complete.
 class DuplicateScanController extends StateNotifier<DuplicateScanState> {
   DuplicateScanController(this._ref) : super(const DuplicateScanState());
 
   final Ref _ref;
-  var _started = false;
 
   void ensureStarted() {
-    if (_started || state.isScanning || state.groups != null) return;
-    _started = true;
+    if (state.isScanning || state.isComplete) return;
     unawaited(startScan());
+  }
+
+  Future<void> _waitForGallerySync() async {
+    while (_ref.read(gallerySyncProvider).isRunning) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
   }
 
   Future<void> startScan() async {
@@ -53,6 +60,8 @@ class DuplicateScanController extends StateNotifier<DuplicateScanState> {
     await notifications.onScanStarted();
 
     try {
+      await _waitForGallerySync();
+
       final mediaRepo = _ref.read(mediaRepositoryProvider);
       final analysisRepo = _ref.read(mediaAnalysisRepositoryProvider);
       final service = _ref.read(mediaAnalysisServiceProvider);

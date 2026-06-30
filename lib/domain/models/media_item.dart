@@ -1,3 +1,4 @@
+/// Indexed photo or video row mirrored from the device library.
 class MediaItem {
   const MediaItem({
     required this.id,

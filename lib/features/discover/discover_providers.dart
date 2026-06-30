@@ -10,6 +10,7 @@ export 'package:social_gallery/features/discover/duplicate_scan_controller.dart'
         duplicateScanNotificationServiceProvider,
         DuplicateScanState;
 
+/// Home-feed media plus cached analysis rows for deep-organize features.
 class AnalysisLibrarySnapshot {
   const AnalysisLibrarySnapshot({
     required this.items,
@@ -22,6 +23,7 @@ class AnalysisLibrarySnapshot {
 
 typedef LowQualityEntry = ({MediaItem item, List<String> reasons});
 
+/// Invalidates analysis-dependent providers after a new scan or sync.
 void _invalidateAnalysisTargets(void Function(ProviderOrFamily provider) invalidate) {
   invalidate(analysisLibrarySnapshotProvider);
   invalidate(duplicateScanControllerProvider);
@@ -30,14 +32,17 @@ void _invalidateAnalysisTargets(void Function(ProviderOrFamily provider) invalid
   invalidate(discoverHubProvider);
 }
 
+/// Call from widgets after analysis data changes.
 void invalidateAnalysisProviders(WidgetRef ref) {
   _invalidateAnalysisTargets(ref.invalidate);
 }
 
+/// Call from providers/notifiers after analysis data changes.
 void invalidateAnalysisProvidersFromRef(Ref ref) {
   _invalidateAnalysisTargets(ref.invalidate);
 }
 
+/// Home-feed media plus all cached analysis rows (basis for deep-organize providers).
 final analysisLibrarySnapshotProvider =
     FutureProvider<AnalysisLibrarySnapshot>((ref) async {
   final mediaRepo = ref.watch(mediaRepositoryProvider);
@@ -47,6 +52,7 @@ final analysisLibrarySnapshotProvider =
   return AnalysisLibrarySnapshot(items: items, analysisById: analysis);
 });
 
+/// Burst-like photo groups from cached dHash analysis.
 final similarPhotoGroupsProvider =
     FutureProvider<List<List<MediaItem>>>((ref) async {
   final snapshot = await ref.watch(analysisLibrarySnapshotProvider.future);
@@ -69,6 +75,7 @@ final similarPhotoGroupsProvider =
       .toList();
 });
 
+/// Images flagged as low quality by [ScoreLowQuality].
 final lowQualityQueueProvider = FutureProvider<List<LowQualityEntry>>((ref) async {
   final snapshot = await ref.watch(analysisLibrarySnapshotProvider.future);
   if (snapshot.analysisById.isEmpty) return [];
@@ -85,6 +92,7 @@ final lowQualityQueueProvider = FutureProvider<List<LowQualityEntry>>((ref) asyn
       .toList();
 });
 
+/// Monthly shooting stats for the deep-organize stats screen.
 final shootingStatsProvider =
     FutureProvider.family<ShootingStats, DateTime>((ref, month) async {
   final snapshot = await ref.watch(analysisLibrarySnapshotProvider.future);
@@ -94,11 +102,13 @@ final shootingStatsProvider =
   );
 });
 
+/// Discover hub badge counts (organize backlog, analysis results).
 final discoverHubProvider =
     AsyncNotifierProvider<DiscoverHubController, DiscoverHubData>(
   DiscoverHubController.new,
 );
 
+/// Large JPEG candidates (3 MB+) for the compression tool.
 final compressionCandidatesProvider = FutureProvider<List<MediaItem>>((ref) async {
   const thresholdBytes = 3 * 1024 * 1024;
   final snapshot = await ref.watch(analysisLibrarySnapshotProvider.future);

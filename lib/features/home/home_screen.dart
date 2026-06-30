@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:share_plus/share_plus.dart';
@@ -77,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _shareMedia(FeedItem item) async {
     final media = item.media;
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       final file = File(media.uri);
       if (file.existsSync()) {
         await Share.shareXFiles([XFile(file.path)], text: media.displayName);

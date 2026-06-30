@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/asset_video_player.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
@@ -12,10 +11,12 @@ class OrganizeCard extends StatelessWidget {
     super.key,
     required this.item,
     this.overlayColor,
+    this.playbackActive = false,
   });
 
   final MediaItem item;
   final Color? overlayColor;
+  final bool playbackActive;
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +31,14 @@ class OrganizeCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (item.isVideo)
+          if (item.isVideo && playbackActive)
             _VideoContent(item: item)
           else
             MediaThumbnail(
               assetId: item.uri,
               fit: BoxFit.cover,
               maxThumbnailEdge: 720,
+              showVideoBadge: item.isVideo,
             ),
           if (overlayColor != null)
             ColoredBox(color: overlayColor!),
@@ -119,14 +121,14 @@ class _VideoContentState extends State<_VideoContent> {
   }
 
   Future<void> _load() async {
-    if (Platform.isWindows) return;
+    if (usesFilesystemGallery) return;
     final entity = await AssetEntity.fromId(widget.item.uri);
     if (mounted) setState(() => _entity = entity);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       return AssetVideoPlayer(assetPath: widget.item.uri, fit: BoxFit.cover);
     }
     if (_entity == null) {

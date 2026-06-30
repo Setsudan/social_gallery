@@ -4,6 +4,7 @@ import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 
+/// Aggregates organize and analysis counts for the Discover hub screen.
 class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
   @override
   Future<DiscoverHubData> build() async {

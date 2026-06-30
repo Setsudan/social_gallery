@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_entity_cache.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 /// Pre-decodes recent thumbnails so the gallery feels instant on reopen.
 class ThumbnailWarmupService {
@@ -17,7 +18,7 @@ class ThumbnailWarmupService {
     final ids = assetIds.take(limit).toList(growable: false);
     if (ids.isEmpty) return;
 
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       await _warmWindowsFiles(ids);
       return;
     }

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +8,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/cache/cache_service.dart';
+import 'package:social_gallery/core/gallery/desktop_gallery_root_picker.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/theme/accent_presets.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
@@ -340,13 +346,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _pickTrashRetention(int initial) async {
+  Future<void> _pickTrashRetention() async {
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
-        var current = initial;
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final days = ref.watch(
+              settingsProvider.select((s) => s.trashRetentionDays),
+            );
             final theme = Theme.of(context);
             return Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -367,23 +375,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
                   Slider(
-                    value: current.toDouble(),
+                    value: days.toDouble(),
                     min: 1,
                     max: 90,
                     divisions: 89,
-                    label: '$current days',
+                    label: '$days days',
                     onChanged: (value) {
                       AppHaptics.selection();
-                      final days = value.round();
                       ref
                           .read(settingsProvider.notifier)
-                          .setTrashRetentionDays(days);
-                      setSheetState(() => current = days);
+                          .setTrashRetentionDays(value.round());
                     },
                   ),
                   Center(
                     child: Text(
-                      '$current days',
+                      '$days days',
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -398,13 +404,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _pickCacheLimit(int initial) async {
+  Future<void> _pickCacheLimit() async {
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
-        var current = initial;
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final limitMb = ref.watch(
+              settingsProvider.select((s) => s.cacheSizeLimitMb),
+            );
             final theme = Theme.of(context);
             return Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -425,22 +433,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
                   Slider(
-                    value: current.toDouble(),
+                    value: limitMb.toDouble(),
                     min: 100,
                     max: 2000,
                     divisions: 19,
-                    label: '$current MB',
+                    label: '$limitMb MB',
                     onChanged: (value) {
-                      final mb = value.round();
                       ref
                           .read(settingsProvider.notifier)
-                          .setCacheSizeLimitMb(mb);
-                      setSheetState(() => current = mb);
+                          .setCacheSizeLimitMb(value.round());
                     },
                   ),
                   Center(
                     child: Text(
-                      '$current MB',
+                      '$limitMb MB',
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -455,15 +461,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _pickOrganizeBatchSize(int initial) async {
+  Future<void> _pickOrganizeBatchSize() async {
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
-        var current = initial;
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final batchSize = ref.watch(organizeBatchSizeProvider);
             final theme = Theme.of(context);
-            final repo = ref.read(organizeRepositoryProvider);
             return Padding(
               padding: const EdgeInsets.fromLTRB(
                 OneUiSpacing.pageHorizontal,
@@ -483,20 +488,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
                   Slider(
-                    value: current.toDouble(),
+                    value: batchSize.toDouble(),
                     min: 10,
                     max: 30,
                     divisions: 20,
-                    label: '$current',
+                    label: '$batchSize',
                     onChanged: (value) {
+                      AppHaptics.selection();
                       final size = value.round();
-                      repo.setBatchSize(size);
-                      setSheetState(() => current = size);
+                      ref.read(organizeBatchSizeProvider.notifier).state = size;
+                      ref.read(organizeRepositoryProvider).setBatchSize(size);
                     },
                   ),
                   Center(
                     child: Text(
-                      '$current photos',
+                      '$batchSize photos',
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -509,6 +515,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _pickGalleryRoot() async {
+    final prefs = ref.read(preferencesRepositoryProvider);
+    final currentPath = prefs.desktopGalleryRootPath;
+
+    try {
+      final path = await pickDesktopGalleryRootFolder();
+      if (path == null || path.isEmpty) return;
+
+      if (path == currentPath) return;
+
+      final saved = await saveDesktopGalleryRootPath(prefs, path);
+      if (!mounted) return;
+
+      if (!saved) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not use that folder')),
+        );
+        return;
+      }
+
+      setState(() {});
+      unawaited(ref.read(gallerySyncProvider.notifier).run(force: true));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gallery root updated. Rescanning library.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to select folder: $e')),
+      );
+    }
   }
 
   Future<void> _pickQueueOrder(OrganizeQueueOrder current) async {
@@ -533,6 +572,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final repo = ref.watch(organizeRepositoryProvider);
+    final batchSize = ref.watch(organizeBatchSizeProvider);
+    final galleryRootPath = usesFilesystemGallery
+        ? ref.watch(preferencesRepositoryProvider).desktopGalleryRootPath
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -547,6 +590,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: OneUiSpacing.xl),
         children: [
+          if (kDebugMode) ...[
+            const _DebugBuildWarningCard(),
+            const SizedBox(height: OneUiSpacing.sectionGap),
+          ],
           OneUiSettingsSection(
             title: 'Appearance',
             headerPadding: const EdgeInsets.fromLTRB(
@@ -589,10 +636,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           OneUiSettingsSection(
             title: 'Gallery',
             children: [
+              if (usesFilesystemGallery)
+                OneUiSettingsTile(
+                  icon: OneUiSettingsIcon.folder,
+                  title: 'Gallery root folder',
+                  subtitle: galleryRootPath?.isNotEmpty == true
+                      ? galleryRootPath
+                      : 'Choose a folder to scan for photos and videos',
+                  value: galleryRootDisplayValue(galleryRootPath),
+                  onTap: _pickGalleryRoot,
+                ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.gallery,
                 title: 'Gallery view mode',
                 subtitle: 'Pinch-zoom gallery tab instead of Home and Explore',
+                showDivider: usesFilesystemGallery,
                 trailing: Switch.adaptive(
                   value: settings.galleryViewMode,
                   onChanged: (value) {
@@ -636,8 +694,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,
                 title: 'Batch size',
-                value: '${repo.batchSize}',
-                onTap: () => _pickOrganizeBatchSize(repo.batchSize),
+                value: '$batchSize',
+                onTap: _pickOrganizeBatchSize,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,
@@ -673,7 +731,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: OneUiSettingsIcon.trash,
                 title: 'Trash retention',
                 value: '${settings.trashRetentionDays} days',
-                onTap: () => _pickTrashRetention(settings.trashRetentionDays),
+                onTap: _pickTrashRetention,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.trash,
@@ -698,7 +756,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: 'Cache size limit',
                 value: '${settings.cacheSizeLimitMb} MB',
                 showDivider: true,
-                onTap: () => _pickCacheLimit(settings.cacheSizeLimitMb),
+                onTap: _pickCacheLimit,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.storage,
@@ -753,6 +811,68 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DebugBuildWarningCard extends StatelessWidget {
+  const _DebugBuildWarningCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final warningColor = isDark
+        ? const Color(0xFFF9A825)
+        : const Color(0xFFE65100);
+    final backgroundColor = isDark
+        ? warningColor.withValues(alpha: 0.18)
+        : const Color(0xFFFFF8E1);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        OneUiSpacing.pageHorizontal,
+        OneUiSpacing.md,
+        OneUiSpacing.pageHorizontal,
+        0,
+      ),
+      child: Card(
+        color: backgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.all(OneUiSpacing.md),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                size: 22,
+                color: warningColor,
+              ),
+              const SizedBox(width: OneUiSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Debug build',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: OneUiSpacing.xs),
+                    Text(
+                      'This is not a production build and may contain errors.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

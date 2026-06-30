@@ -1,5 +1,6 @@
 import 'media_item.dart';
 
+/// One home-feed row: media plus its source folder for the post header.
 class FeedItem {
   const FeedItem({
     required this.folderName,

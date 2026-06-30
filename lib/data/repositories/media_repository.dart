@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:social_gallery/core/media/filesystem_image_loader.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/data/datasources/photo_manager_datasource.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/data/mappers/entity_mappers.dart';
@@ -10,6 +12,7 @@ import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
+/// Single entry point for indexed media: sync, queries, favorites, trash, and device I/O.
 class MediaRepository {
   MediaRepository(this._db, this._photoManager, this._preferences);
 
@@ -17,9 +20,11 @@ class MediaRepository {
   final PhotoManagerDatasource _photoManager;
   final PreferencesRepository _preferences;
 
+  /// Page size for home feed, gallery, and explore pagination.
   static const pageSize = 60;
   static const storyWindowHours = 24;
 
+  /// Reads folders and media from the device, merges favorites/trash, writes to Drift.
   Future<void> syncFromDevice({
     bool fastScan = false,
     bool Function()? shouldCancel,
@@ -216,8 +221,24 @@ class MediaRepository {
   }
 
   Future<List<domain.MediaItem>> getPotentialDuplicates() async {
+    await backfillFilesystemImageDimensions();
     final rows = await _db.getPotentialDuplicateMedia();
     return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<void> backfillFilesystemImageDimensions() async {
+    if (!usesFilesystemGallery) return;
+
+    final rows = await _db.getHomeFeedImagesMissingDimensions();
+    for (final row in rows) {
+      final dimensions = await readFilesystemImageDimensions(row.uri);
+      if (dimensions == null) continue;
+      await _db.updateMediaDimensions(
+        row.id,
+        dimensions.width,
+        dimensions.height,
+      );
+    }
   }
 
   Future<List<domain.MediaItem>> getOrganizeMediaPool() async {

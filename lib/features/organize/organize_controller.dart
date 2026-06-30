@@ -3,12 +3,15 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/domain/usecases/build_organize_queue.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 
+/// Riverpod state for the organize swipe session (queue, undo, trash review).
 final organizeControllerProvider =
     StateNotifierProvider<OrganizeController, OrganizeState>((ref) {
   return OrganizeController(ref);
 });
 
+/// Loads organize batches, handles swipes, undo, and trash review commits.
 class OrganizeController extends StateNotifier<OrganizeState> {
   OrganizeController(this._ref) : super(const OrganizeState()) {
     _init();
@@ -109,7 +112,6 @@ class OrganizeController extends StateNotifier<OrganizeState> {
           ),
         );
       case OrganizeSwipeDirection.down:
-        state = state.copyWith(showFolderDrop: true);
         return;
     }
 
@@ -124,6 +126,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
     final organizeRepo = _ref.read(organizeRepositoryProvider);
 
     await mediaRepo.moveMedia([current], targetFolderPath);
+    await organizeRepo.recordRecentFolder(targetFolderPath);
     await organizeRepo.addProcessed(current.id);
     _undoStack.add(
       OrganizeUndoAction(
@@ -137,12 +140,8 @@ class OrganizeController extends StateNotifier<OrganizeState> {
       processedCount: organizeRepo.stats.processedCount + 1,
     );
     await organizeRepo.updateStats(newStats);
-    state = state.copyWith(showFolderDrop: false);
     _advanceCard();
-  }
-
-  void dismissFolderDrop() {
-    state = state.copyWith(showFolderDrop: false);
+    refreshFeedProvidersFromRef(_ref);
   }
 
   void _advanceCard() {
@@ -221,6 +220,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
       pendingTrashCount: organizeRepo.pendingTrashIds.length,
       stats: organizeRepo.stats,
     );
+    refreshFeedProvidersFromRef(_ref);
   }
 
   Future<void> setFilter(OrganizeFilter filter) async {

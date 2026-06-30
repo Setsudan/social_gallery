@@ -1,5 +1,6 @@
 import 'follow_status.dart';
 
+/// Device album metadata as stored in Drift and shown in the UI.
 class FolderInfo {
   const FolderInfo({
     required this.path,
@@ -23,6 +24,7 @@ class FolderInfo {
   final bool isBiometricLocked;
   final String? biography;
 
+  /// True when folder is account-only and requires biometrics to view.
   bool get isLockedAccount =>
       followStatus == FollowStatus.accountOnly && isBiometricLocked;
 

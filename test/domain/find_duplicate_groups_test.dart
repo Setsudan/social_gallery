@@ -49,7 +49,19 @@ void main() {
     expect(groups, isEmpty);
   });
 
-  test('does not compare items from different size buckets', () {
+  test('does not compare near-duplicates from different size buckets', () {
+    final useCase = FindDuplicateGroups();
+    final candidates = [_item(1, size: 5000), _item(2, size: 9000)];
+    final hashesById = {
+      1: '0000000000000000000000000000000000000000000000000000000000000000',
+      2: '0000000000000000000000000000000000000000000000000000000000000001',
+    };
+
+    final groups = useCase(candidates: candidates, hashesById: hashesById);
+    expect(groups, isEmpty);
+  });
+
+  test('groups perfect duplicates with identical dHash across size buckets', () {
     final useCase = FindDuplicateGroups();
     final candidates = [_item(1, size: 5000), _item(2, size: 9000)];
     final hashesById = {
@@ -58,6 +70,8 @@ void main() {
     };
 
     final groups = useCase(candidates: candidates, hashesById: hashesById);
-    expect(groups, isEmpty);
+    expect(groups.length, 1);
+    expect(groups.first.count, 2);
+    expect(groups.first.items.map((item) => item.id).toSet(), {1, 2});
   });
 }

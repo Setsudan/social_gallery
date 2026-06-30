@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/permissions/media_permission_service.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/features/onboarding/onboarding_carousel.dart';
 
 class StartupScreen extends ConsumerStatefulWidget {
@@ -59,8 +59,8 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
       return;
     }
 
-    if (Platform.isWindows) {
-      final rootPath = ref.read(preferencesRepositoryProvider).windowsGalleryRootPath;
+    if (usesFilesystemGallery) {
+      final rootPath = ref.read(preferencesRepositoryProvider).desktopGalleryRootPath;
       if (rootPath == null || rootPath.isEmpty) {
         setState(() {
           _checking = false;

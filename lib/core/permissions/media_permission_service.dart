@@ -2,12 +2,13 @@ import 'dart:io';
 
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 enum MediaPermissionState { checking, granted, denied, limited }
 
 class MediaPermissionService {
   Future<MediaPermissionState> check() async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       return MediaPermissionState.granted;
     }
     if (!Platform.isAndroid && !Platform.isIOS) {
@@ -18,7 +19,7 @@ class MediaPermissionService {
   }
 
   Future<MediaPermissionState> request() async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       return MediaPermissionState.granted;
     }
     if (Platform.isAndroid) {

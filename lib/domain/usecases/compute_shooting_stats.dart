@@ -1,6 +1,7 @@
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
+/// Aggregates photo/video counts, favorites, folders, and daily activity for a month.
 class ComputeShootingStats {
   ShootingStats call({
     required List<MediaItem> items,

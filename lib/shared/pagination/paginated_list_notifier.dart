@@ -5,9 +5,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
+import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/home/home_providers.dart';
 
+const _feedRefreshDebounce = Duration(milliseconds: 300);
+
+/// Stable signature of folder visibility fields that affect feed eligibility.
+String folderFeedEligibilitySignature(List<FolderInfo> folders) {
+  final sorted = [...folders]..sort((a, b) => a.path.compareTo(b.path));
+  return sorted
+      .map(
+        (folder) =>
+            '${folder.path}:${folder.followStatus.storageValue}:${folder.isBiometricLocked}:${folder.showInStories}',
+      )
+      .join('|');
+}
+
+/// Debounced listener that refreshes feeds when folder visibility changes.
+final feedRefreshCoordinatorProvider = Provider<void>((ref) {
+  Timer? debounce;
+
+  ref.onDispose(() => debounce?.cancel());
+
+  ref.listen<AsyncValue<List<FolderInfo>>>(allFoldersProvider, (
+    previous,
+    next,
+  ) {
+    final previousFolders = previous?.valueOrNull;
+    final nextFolders = next.valueOrNull;
+    if (previousFolders == null || nextFolders == null) return;
+
+    if (folderFeedEligibilitySignature(previousFolders) ==
+        folderFeedEligibilitySignature(nextFolders)) {
+      return;
+    }
+
+    debounce?.cancel();
+    debounce = Timer(_feedRefreshDebounce, () {
+      refreshFeedProvidersFromRef(ref);
+    });
+  });
+});
+
+/// Refreshes home feed, gallery, explore, stories, and account folder providers.
 void refreshFeedProvidersFromRef(Ref ref) {
   if (ref.exists(homeFeedPaginatedProvider)) {
     unawaited(
@@ -17,11 +58,20 @@ void refreshFeedProvidersFromRef(Ref ref) {
     ref.invalidate(homeFeedPaginatedProvider);
   }
 
+  if (ref.exists(galleryPaginatedProvider)) {
+    unawaited(
+      ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true),
+    );
+  } else {
+    ref.invalidate(galleryPaginatedProvider);
+  }
+
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
   ref.invalidate(homeAccountFoldersProvider);
 }
 
+/// Widget-side alias for [refreshFeedProvidersFromRef].
 void refreshFeedProviders(WidgetRef ref) {
   if (ref.exists(homeFeedPaginatedProvider)) {
     unawaited(
@@ -31,6 +81,14 @@ void refreshFeedProviders(WidgetRef ref) {
     ref.invalidate(homeFeedPaginatedProvider);
   }
 
+  if (ref.exists(galleryPaginatedProvider)) {
+    unawaited(
+      ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true),
+    );
+  } else {
+    ref.invalidate(galleryPaginatedProvider);
+  }
+
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
   ref.invalidate(homeAccountFoldersProvider);
@@ -38,6 +96,7 @@ void refreshFeedProviders(WidgetRef ref) {
 
 const paginatedLoadMoreThresholdPx = 400.0;
 
+/// Shared state for infinite-scroll lists (home feed, gallery, explore).
 class PaginatedListState<T> {
   const PaginatedListState({
     this.items = const [],
@@ -71,6 +130,7 @@ class PaginatedListState<T> {
   }
 }
 
+/// Triggers [loadMore] when the scroll position nears the bottom.
 void handlePaginatedScroll(
   ScrollPosition position, {
   required bool isLoading,
@@ -86,6 +146,7 @@ void handlePaginatedScroll(
   }
 }
 
+/// Paginated home feed backed by [MediaRepository.getHomeFeedPage].
 class HomeFeedPaginatedNotifier
     extends AutoDisposeNotifier<PaginatedListState<FeedItem>> {
   @override
@@ -95,12 +156,13 @@ class HomeFeedPaginatedNotifier
   }
 
   Future<void> loadMore({bool refresh = false}) async {
-    if (state.isLoading) return;
+    if (state.isLoading && !refresh) return;
     state = state.copyWith(
       isLoading: true,
       clearError: true,
       page: refresh ? 0 : null,
       hasMore: refresh ? true : null,
+      items: refresh ? const [] : null,
     );
 
     try {
@@ -130,6 +192,7 @@ final homeFeedPaginatedProvider = NotifierProvider.autoDispose<
   HomeFeedPaginatedNotifier.new,
 );
 
+/// Paginated all-media grid (gallery view mode).
 class GalleryPaginatedNotifier
     extends AutoDisposeNotifier<PaginatedListState<MediaItem>> {
   @override
@@ -139,12 +202,13 @@ class GalleryPaginatedNotifier
   }
 
   Future<void> loadMore({bool refresh = false}) async {
-    if (state.isLoading) return;
+    if (state.isLoading && !refresh) return;
     state = state.copyWith(
       isLoading: true,
       clearError: true,
       page: refresh ? 0 : null,
       hasMore: refresh ? true : null,
+      items: refresh ? const [] : null,
     );
 
     try {
@@ -174,6 +238,7 @@ final galleryPaginatedProvider = NotifierProvider.autoDispose<
   GalleryPaginatedNotifier.new,
 );
 
+/// Paginated explore/search results; [arg] is the search query string.
 class ExplorePaginatedNotifier
     extends AutoDisposeFamilyNotifier<PaginatedListState<MediaItem>, String> {
   @override

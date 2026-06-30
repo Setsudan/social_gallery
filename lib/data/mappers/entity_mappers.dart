@@ -60,6 +60,7 @@ domain.MediaItem _mediaItemFromFields({
   );
 }
 
+/// Maps a [MediaRow] Drift row to the domain [MediaItem] model.
 domain.MediaItem mediaItemFromRow(MediaRow row) {
   return _mediaItemFromFields(
     id: row.id,
@@ -90,6 +91,7 @@ domain.MediaItem mediaItemFromRow(MediaRow row) {
   );
 }
 
+/// Maps a custom SQL [QueryRow] (snake_case columns) to [MediaItem].
 domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
   return _mediaItemFromFields(
     id: row.read<int>('id'),
@@ -120,6 +122,7 @@ domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
   );
 }
 
+/// Maps a [Folder] Drift row to the domain [FolderInfo] model.
 FolderInfo folderFromRow(Folder row) {
   return FolderInfo(
     path: row.path,

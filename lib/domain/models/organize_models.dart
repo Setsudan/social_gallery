@@ -1,9 +1,12 @@
 import 'package:social_gallery/domain/models/media_item.dart';
 
+/// Random or chronological ordering for organize swipe batches.
 enum OrganizeQueueOrder { random, chronological }
 
+/// Swipe direction mapped to trash, favorite, keep, or move actions.
 enum OrganizeSwipeDirection { left, right, up, down }
 
+/// Restrict organize pool to all media, images only, or videos only.
 enum OrganizeMediaType { all, image, video }
 
 extension OrganizeMediaTypeStorage on OrganizeMediaType {
@@ -30,6 +33,7 @@ OrganizeMediaType organizeMediaTypeFromStorage(String value) {
   }
 }
 
+/// Filter applied when building the organize swipe queue.
 class OrganizeFilter {
   const OrganizeFilter({
     this.folderPath,
@@ -59,6 +63,7 @@ class OrganizeFilter {
   }
 }
 
+/// Running totals for the organize session (persisted via [OrganizeRepository]).
 class OrganizeStats {
   const OrganizeStats({
     this.processedCount = 0,
@@ -87,8 +92,10 @@ class OrganizeStats {
   }
 }
 
+/// Action type recorded on the organize undo stack.
 enum OrganizeUndoType { trash, like, keep, move }
 
+/// One reversible organize action (swipe left/right/up/down).
 class OrganizeUndoAction {
   const OrganizeUndoAction({
     required this.type,
@@ -105,6 +112,7 @@ class OrganizeUndoAction {
   final bool wasFavorite;
 }
 
+/// In-memory organize session state managed by [OrganizeController].
 class OrganizeState {
   const OrganizeState({
     this.queue = const [],
@@ -115,7 +123,6 @@ class OrganizeState {
     this.stats = const OrganizeStats(),
     this.filter = const OrganizeFilter(),
     this.batchSize = 16,
-    this.showFolderDrop = false,
     this.error,
   });
 
@@ -127,7 +134,6 @@ class OrganizeState {
   final OrganizeStats stats;
   final OrganizeFilter filter;
   final int batchSize;
-  final bool showFolderDrop;
   final String? error;
 
   MediaItem? get currentCard => queue.isNotEmpty ? queue.first : null;
@@ -143,7 +149,6 @@ class OrganizeState {
     OrganizeStats? stats,
     OrganizeFilter? filter,
     int? batchSize,
-    bool? showFolderDrop,
     String? error,
     bool clearError = false,
   }) {
@@ -156,7 +161,6 @@ class OrganizeState {
       stats: stats ?? this.stats,
       filter: filter ?? this.filter,
       batchSize: batchSize ?? this.batchSize,
-      showFolderDrop: showFolderDrop ?? this.showFolderDrop,
       error: clearError ? null : (error ?? this.error),
     );
   }

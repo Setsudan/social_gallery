@@ -2,34 +2,56 @@ import 'package:social_gallery/core/analysis/perceptual_hash.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
+/// Groups near-identical photos by size/dimensions bucket, then Hamming distance on dHash.
 class FindDuplicateGroups {
   List<DuplicateGroup> call({
     required List<MediaItem> candidates,
     required Map<int, String> hashesById,
   }) {
-    final buckets = <String, List<MediaItem>>{};
+    final groups = <DuplicateGroup>[];
+    final groupedIds = <int>{};
+    var groupIndex = 0;
+
+    void addGroup(List<MediaItem> cluster) {
+      if (cluster.length < 2) return;
+      final sorted = [...cluster]
+        ..sort((a, b) => a.sortDate.compareTo(b.sortDate));
+      groups.add(
+        DuplicateGroup(
+          id: 'dup_${groupIndex++}_${sorted.first.id}',
+          items: sorted,
+        ),
+      );
+      groupedIds.addAll(sorted.map((item) => item.id));
+    }
+
+    final byExactHash = <String, List<MediaItem>>{};
     for (final item in candidates) {
       if (item.isVideo) continue;
+      final hash = hashesById[item.id];
+      if (hash == null) continue;
+      byExactHash.putIfAbsent(hash, () => []).add(item);
+    }
+    for (final cluster in byExactHash.values) {
+      addGroup(cluster);
+    }
+
+    final buckets = <String, List<MediaItem>>{};
+    for (final item in candidates) {
+      if (item.isVideo || groupedIds.contains(item.id)) continue;
       if (!hashesById.containsKey(item.id)) continue;
 
       final key = '${item.size}_${item.width ?? -1}_${item.height ?? -1}';
       buckets.putIfAbsent(key, () => []).add(item);
     }
 
-    final groups = <DuplicateGroup>[];
-    var groupIndex = 0;
-
     for (final bucket in buckets.values) {
       if (bucket.length < 2) continue;
 
       for (final cluster in _clusterBucket(bucket, hashesById)) {
-        groups.add(
-          DuplicateGroup(
-            id: 'dup_${groupIndex++}_${cluster.first.id}',
-            items: cluster
-              ..sort((a, b) => a.sortDate.compareTo(b.sortDate)),
-          ),
-        );
+        final unseen =
+            cluster.where((item) => !groupedIds.contains(item.id)).toList();
+        addGroup(unseen);
       }
     }
 

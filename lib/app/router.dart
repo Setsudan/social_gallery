@@ -12,6 +12,7 @@ import 'package:social_gallery/features/discover/duplicates_screen.dart';
 
 import 'package:social_gallery/features/discover/discover_stub_screen.dart';
 
+import 'package:social_gallery/features/albums/locked_albums_screen.dart';
 import 'package:social_gallery/features/shell/explore_branch_screen.dart';
 
 import 'package:social_gallery/features/folder_management/folder_management_screen.dart';
@@ -49,6 +50,7 @@ import 'package:social_gallery/features/travel_mode/travel_mode_list_screen.dart
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Builds a page with app-wide transition animation from settings.
 CustomTransitionPage<void> _page(
   BuildContext context,
   Ref ref,
@@ -63,6 +65,7 @@ CustomTransitionPage<void> _page(
   );
 }
 
+/// go_router setup: startup gate, three-tab shell, and full-screen modal routes.
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -117,6 +120,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
 
         ],
+      ),
+
+      GoRoute(
+        path: '/locked_albums',
+
+        parentNavigatorKey: _rootNavigatorKey,
+
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const LockedAlbumsScreen()),
       ),
 
       GoRoute(
@@ -400,12 +412,17 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
+const lockedAlbumsLocation = '/locked_albums';
+
+/// Typed route to a folder profile screen.
 String folderProfileLocation(String path) =>
     '/folder_profile?path=${Uri.encodeComponent(path)}';
 
+/// Typed route to review one duplicate group by [groupKey].
 String duplicateReviewLocation(String groupKey) =>
     '/duplicate_review?key=${Uri.encodeComponent(groupKey)}';
 
+/// Typed route to post detail (feed tap). [favorite] seeds the heart state.
 String postDetailLocation(
   String assetId, {
 
@@ -415,6 +432,7 @@ String postDetailLocation(
 }) =>
     '/post_detail?assetId=${Uri.encodeComponent(assetId)}&mediaId=$mediaId&favorite=${favorite ? 1 : 0}';
 
+/// Alias for [postDetailLocation]; used by fullscreen media viewer entry points.
 String mediaViewerLocation(
   String assetId, {
 
@@ -423,9 +441,11 @@ String mediaViewerLocation(
   bool favorite = false,
 }) => postDetailLocation(assetId, mediaId: mediaId, favorite: favorite);
 
+/// Typed route to story viewer for one folder.
 String storyViewerLocation(String path) =>
     '/story_viewer?path=${Uri.encodeComponent(path)}';
 
+/// Typed route to create or edit a travel mode ([id] null for new).
 String travelModeEditorLocation({String? id}) {
   if (id == null || id.isEmpty) return '/travel_mode/edit';
 

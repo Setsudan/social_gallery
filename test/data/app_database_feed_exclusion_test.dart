@@ -160,4 +160,39 @@ void main() {
     final dupes = await db.getPotentialDuplicateMedia();
     expect(dupes.map((r) => r.id).toSet(), {1, 2});
   });
+
+  test('duplicate detection matches same dimensions with different sizes', () async {
+    await seedFoldersAndMedia();
+    await db.replaceAllMedia([
+      MediaItemsCompanion.insert(
+        id: const Value(1),
+        uri: 'a1',
+        displayName: 'a1.jpg',
+        folderName: 'Open',
+        folderPath: '/open',
+        dateAdded: 1,
+        dateModified: 1,
+        size: 500,
+        mimeType: 'image/jpeg',
+        width: const Value(1920),
+        height: const Value(1080),
+      ),
+      MediaItemsCompanion.insert(
+        id: const Value(2),
+        uri: 'a2',
+        displayName: 'a2.jpg',
+        folderName: 'Open',
+        folderPath: '/open',
+        dateAdded: 2,
+        dateModified: 2,
+        size: 900,
+        mimeType: 'image/jpeg',
+        width: const Value(1920),
+        height: const Value(1080),
+      ),
+    ]);
+
+    final dupes = await db.getPotentialDuplicateMedia();
+    expect(dupes.map((r) => r.id).toSet(), {1, 2});
+  });
 }

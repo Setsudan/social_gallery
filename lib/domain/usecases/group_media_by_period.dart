@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:social_gallery/domain/models/gallery_grouping_period.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
+/// One labeled section in the gallery timeline (day, month, or year).
 class MediaPeriodGroup {
   const MediaPeriodGroup({
     required this.key,
@@ -14,6 +15,7 @@ class MediaPeriodGroup {
   final List<MediaItem> items;
 }
 
+/// Groups gallery media into day/month/year sections for pinch-to-zoom timeline UI.
 class GroupMediaByPeriod {
   List<MediaPeriodGroup> call({
     required List<MediaItem> items,

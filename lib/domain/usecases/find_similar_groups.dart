@@ -2,6 +2,7 @@ import 'package:social_gallery/core/analysis/perceptual_hash.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
+/// Finds burst-like clusters: photos taken within [timeWindowMs] with similar dHash.
 class FindSimilarGroups {
   static const timeWindowMs = 2 * 60 * 1000;
 

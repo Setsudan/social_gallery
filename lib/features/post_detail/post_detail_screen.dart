@@ -8,11 +8,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/cache/cache_service.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/animation/modal_sheet.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/utils/media_hero.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/fullscreen_media_content.dart';
 import 'package:social_gallery/shared/widgets/post_metadata_sheet.dart';
 
@@ -65,7 +67,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Future<void> _share() async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       final file = File(widget.assetId);
       if (file.existsSync()) {
         await Share.shareXFiles([XFile(file.path)], text: _media?.displayName);
@@ -105,6 +107,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     if (confirmed != true || !mounted) return;
     await ref.read(mediaRepositoryProvider).trashMedia([media]);
+    refreshFeedProviders(ref);
     if (mounted) {
       AppHaptics.success();
       context.pop();
@@ -251,7 +254,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   Widget _buildBody() {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       return FullscreenMediaContent(
         entity: null,
         assetPath: widget.assetId,

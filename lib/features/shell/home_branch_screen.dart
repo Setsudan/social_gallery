@@ -4,6 +4,7 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/features/gallery/gallery_screen.dart';
 import 'package:social_gallery/features/home/home_screen.dart';
 
+/// Shell branch 0: [HomeScreen] or [GalleryScreen] per gallery view mode setting.
 class HomeBranchScreen extends ConsumerWidget {
   const HomeBranchScreen({super.key});
 

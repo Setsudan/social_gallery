@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+/// Drift table for active and past travel-mode trip definitions.
 class TravelModes extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();

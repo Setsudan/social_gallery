@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+/// Drift table for cached ML and perceptual-hash analysis per media ID.
 @DataClassName('MediaAnalysisRow')
 class MediaAnalysisCache extends Table {
   IntColumn get mediaId => integer()();

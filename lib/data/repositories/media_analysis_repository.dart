@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 
+/// Read/write cache for ML and perceptual-hash analysis results.
 class MediaAnalysisRepository {
   MediaAnalysisRepository(this._db);
 

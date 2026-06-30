@@ -7,6 +7,7 @@ import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 
+/// Instagram-style feed card: folder header, media, and action row.
 class FeedPostCard extends ConsumerWidget {
   const FeedPostCard({
     super.key,

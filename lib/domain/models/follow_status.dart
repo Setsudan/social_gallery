@@ -1,6 +1,12 @@
+/// Controls where a folder appears in feed, explore, and account cards.
 enum FollowStatus {
+  /// Visible in home feed, stories (when enabled), and explore.
   homeFeed,
+
+  /// Shown as account cards on Home; excluded from the main feed.
   accountOnly,
+
+  /// Hidden from feed and explore.
   unfollowed;
 
   String get storageValue {

@@ -5,6 +5,7 @@ import 'package:social_gallery/app/app.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/workers/trash_cleanup_worker.dart';
 
+/// Application entry: SharedPreferences override, background workers, ProviderScope.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();

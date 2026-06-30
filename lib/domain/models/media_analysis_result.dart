@@ -1,3 +1,4 @@
+/// Cached on-device analysis for one image (dHash, blur, exposure, faces).
 class MediaAnalysisResult {
   const MediaAnalysisResult({
     required this.mediaId,
@@ -22,6 +23,7 @@ class MediaAnalysisResult {
   final int scannedAt;
 }
 
+/// Burst-like cluster from [FindSimilarGroups]; [representativeId] is the suggested keeper.
 class SimilarPhotoGroup {
   const SimilarPhotoGroup({
     required this.id,
@@ -36,6 +38,7 @@ class SimilarPhotoGroup {
   int get count => mediaIds.length;
 }
 
+/// One image flagged by [ScoreLowQuality] with human-readable [reasons].
 class LowQualityItem {
   const LowQualityItem({
     required this.mediaId,
@@ -46,6 +49,7 @@ class LowQualityItem {
   final List<String> reasons;
 }
 
+/// Monthly or all-time shooting summary from [ComputeShootingStats].
 class ShootingStats {
   const ShootingStats({
     this.photoCount = 0,
@@ -70,6 +74,7 @@ class ShootingStats {
   final int mostActiveDayCount;
 }
 
+/// Aggregate counts shown on the Discover hub (organize, duplicates, analysis).
 class DiscoverHubData {
   const DiscoverHubData({
     this.duplicateGroupCount = 0,

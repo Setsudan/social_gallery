@@ -6,11 +6,14 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/media/filesystem_image_loader.dart';
 import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 
+/// Reads device albums and media via photo_manager (mobile) or filesystem (desktop).
 class PhotoManagerDatasource {
   final PreferencesRepository _preferences;
   PhotoManagerDatasource(this._preferences);
@@ -44,7 +47,7 @@ class PhotoManagerDatasource {
   }
 
   Future<List<MediaItemsCompanion>> _loadAllMediaWindows() async {
-    final root = _preferences.windowsGalleryRootPath;
+    final root = _preferences.desktopGalleryRootPath;
     if (root == null || root.isEmpty) return [];
 
     final files = _scanMediaFiles(root);
@@ -67,6 +70,13 @@ class PhotoManagerDatasource {
         final mimeType = isVideo ? 'video/mp4' : 'image/jpeg';
 
         final id = filePath.hashCode & 0x7FFFFFFF;
+        int? width;
+        int? height;
+        if (!isVideo) {
+          final dimensions = await readFilesystemImageDimensions(filePath);
+          width = dimensions?.width;
+          height = dimensions?.height;
+        }
 
         companions.add(
           MediaItemsCompanion.insert(
@@ -80,8 +90,8 @@ class PhotoManagerDatasource {
             dateTaken: Value(dateModified),
             size: size,
             mimeType: mimeType,
-            width: const Value(null),
-            height: const Value(null),
+            width: Value(width),
+            height: Value(height),
             videoDuration: const Value(null),
           ),
         );
@@ -95,7 +105,7 @@ class PhotoManagerDatasource {
     Map<String, String> existingFollowStatus,
     bool initialSetupComplete,
   ) async {
-    final root = _preferences.windowsGalleryRootPath;
+    final root = _preferences.desktopGalleryRootPath;
     if (root == null || root.isEmpty) return [];
 
     final files = _scanMediaFiles(root);
@@ -119,8 +129,10 @@ class PhotoManagerDatasource {
       );
 
       final existing = existingFollowStatus[path];
-      final followStatus =
-          existing ?? (initialSetupComplete ? 'UNFOLLOWED' : 'HOME_FEED');
+      final followStatus = existing ??
+          (usesFilesystemGallery
+              ? 'HOME_FEED'
+              : (initialSetupComplete ? 'UNFOLLOWED' : 'HOME_FEED'));
 
       folderRows.add(
         FoldersCompanion.insert(
@@ -138,7 +150,7 @@ class PhotoManagerDatasource {
   }
 
   Future<List<AssetPathEntity>> listAlbums() async {
-    if (Platform.isWindows) return [];
+    if (usesFilesystemGallery) return [];
     return PhotoManager.getAssetPathList(
       type: RequestType.common,
       hasAll: true,
@@ -150,7 +162,7 @@ class PhotoManagerDatasource {
     bool Function()? shouldCancel,
     GallerySyncProgressCallback? onProgress,
   }) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       return _loadAllMediaWindows();
     }
 
@@ -257,7 +269,7 @@ class PhotoManagerDatasource {
     Map<String, String> existingFollowStatus,
     bool initialSetupComplete,
   ) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       return _loadFoldersWindows(existingFollowStatus, initialSetupComplete);
     }
     final albums = await listAlbums();
@@ -291,7 +303,7 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> deleteAssets(List<String> assetIds) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       for (final id in assetIds) {
         try {
           final file = File(id);
@@ -331,9 +343,9 @@ class PhotoManagerDatasource {
   // --- NEW WORK: Disk File Operations ---
 
   Future<String?> createAlbumFolder(String folderName) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       try {
-        final root = _preferences.windowsGalleryRootPath;
+        final root = _preferences.desktopGalleryRootPath;
         if (root == null || root.isEmpty) return null;
         final newFolder = Directory(p.join(root, folderName));
         if (!newFolder.existsSync()) {
@@ -369,7 +381,7 @@ class PhotoManagerDatasource {
   }
 
   Future<String?> resolveTargetAlbumId(String targetFolderPath) async {
-    if (Platform.isWindows) return targetFolderPath;
+    if (usesFilesystemGallery) return targetFolderPath;
 
     final albums = await listAlbums();
     final byId = albums.where((album) => album.id == targetFolderPath).firstOrNull;
@@ -397,7 +409,7 @@ class PhotoManagerDatasource {
   ) async {
     if (assetIds.isEmpty) return 0;
 
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       var moved = 0;
       for (final assetId in assetIds) {
         if (await moveAssetOnDisk(assetId, targetFolderPath)) {
@@ -486,7 +498,7 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> moveAssetOnDisk(String assetId, String targetFolderPath) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       try {
         final file = File(assetId);
         if (file.existsSync()) {
@@ -551,7 +563,7 @@ class PhotoManagerDatasource {
   String _albumNameToRelativePath(String albumName) => 'Pictures/$albumName';
 
   Future<String?> trashAssetOnDisk(String assetId) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       try {
         final file = File(assetId);
         if (file.existsSync()) {
@@ -588,7 +600,7 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> restoreAssetOnDisk(String originalPath) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       try {
         final dir = p.dirname(originalPath);
         final name = p.basename(originalPath);
@@ -617,7 +629,7 @@ class PhotoManagerDatasource {
   }
 
   Future<bool> deleteTrashedFile(String originalPath) async {
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       try {
         final dir = p.dirname(originalPath);
         final name = p.basename(originalPath);

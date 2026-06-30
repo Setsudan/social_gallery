@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/fullscreen_media_content.dart';
@@ -225,7 +225,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
             children: [
               // Media Viewer
               Positioned.fill(
-                child: Platform.isWindows
+                child: usesFilesystemGallery
                     ? FullscreenMediaContent(
                         entity: null,
                         assetPath: currentMedia.uri,

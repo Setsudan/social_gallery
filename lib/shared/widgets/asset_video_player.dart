@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:video_player/video_player.dart';
 
 class AssetVideoPlayer extends StatefulWidget {
@@ -39,7 +40,7 @@ class _AssetVideoPlayerState extends State<AssetVideoPlayer> {
   Future<void> _initialize() async {
     try {
       File? file;
-      if (Platform.isWindows && widget.assetPath != null) {
+      if (usesFilesystemGallery && widget.assetPath != null) {
         file = File(widget.assetPath!);
       } else if (widget.entity != null) {
         file = await AssetMediaLoader.resolveDisplayFile(widget.entity!);

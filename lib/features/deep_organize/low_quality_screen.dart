@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
@@ -19,6 +20,7 @@ class _LowQualityScreenState extends ConsumerState<LowQualityScreen> {
   Future<void> _deleteCurrent(LowQualityEntry entry) async {
     await ref.read(mediaRepositoryProvider).deleteFromDevice([entry.item]);
     invalidateAnalysisProviders(ref);
+    refreshFeedProviders(ref);
     setState(() => _index = 0);
   }
 

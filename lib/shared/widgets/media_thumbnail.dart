@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_entity_cache.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 class MediaThumbnail extends StatefulWidget {
   const MediaThumbnail({
@@ -67,7 +68,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
       );
     }
 
-    if (Platform.isWindows) {
+    if (usesFilesystemGallery) {
       return _buildWindowsThumbnail(context);
     }
 

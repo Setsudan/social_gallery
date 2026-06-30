@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 import 'tables/folders_table.dart';
 import 'tables/media_analysis_cache_table.dart';
@@ -12,6 +13,7 @@ import 'tables/travel_modes_table.dart';
 
 part 'app_database.g.dart';
 
+/// Local SQLite store for folders, media index, travel modes, and analysis cache.
 @DriftDatabase(tables: [Folders, MediaItems, TravelModes, MediaAnalysisCache])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -223,22 +225,65 @@ class AppDatabase extends _$AppDatabase {
       WHERE f.follow_status = 'HOME_FEED'
         AND f.is_biometric_locked = 0
         AND m.is_trashed = 0
-        AND (m.size, COALESCE(m.width, -1), COALESCE(m.height, -1)) IN (
-        SELECT size, COALESCE(width, -1), COALESCE(height, -1)
-        FROM media_items m2
-        INNER JOIN folders f2 ON m2.folder_path = f2.path
-        WHERE f2.follow_status = 'HOME_FEED'
-        AND f2.is_biometric_locked = 0
-        AND m2.is_trashed = 0
-        GROUP BY size, COALESCE(width, -1), COALESCE(height, -1)
-        HAVING COUNT(*) > 1
-      )
+        AND (
+          (m.size, COALESCE(m.width, -1), COALESCE(m.height, -1)) IN (
+            SELECT size, COALESCE(width, -1), COALESCE(height, -1)
+            FROM media_items m2
+            INNER JOIN folders f2 ON m2.folder_path = f2.path
+            WHERE f2.follow_status = 'HOME_FEED'
+              AND f2.is_biometric_locked = 0
+              AND m2.is_trashed = 0
+            GROUP BY size, COALESCE(width, -1), COALESCE(height, -1)
+            HAVING COUNT(*) > 1
+          )
+          OR (
+            m.width IS NOT NULL
+            AND m.height IS NOT NULL
+            AND (COALESCE(m.width, -1), COALESCE(m.height, -1)) IN (
+              SELECT COALESCE(width, -1), COALESCE(height, -1)
+              FROM media_items m3
+              INNER JOIN folders f3 ON m3.folder_path = f3.path
+              WHERE f3.follow_status = 'HOME_FEED'
+                AND f3.is_biometric_locked = 0
+                AND m3.is_trashed = 0
+                AND m3.width IS NOT NULL
+                AND m3.height IS NOT NULL
+              GROUP BY COALESCE(width, -1), COALESCE(height, -1)
+              HAVING COUNT(*) > 1
+            )
+          )
+        )
       ORDER BY m.size DESC, COALESCE(m.width, -1) DESC, COALESCE(m.height, -1) DESC,
         m.date_modified DESC
       ''',
       readsFrom: {mediaItems, folders},
     ).get();
     return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<List<MediaRow>> getHomeFeedImagesMissingDimensions() async {
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE f.follow_status = 'HOME_FEED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+        AND m.mime_type LIKE 'image/%'
+        AND (m.width IS NULL OR m.height IS NULL)
+      ''',
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<void> updateMediaDimensions(int id, int width, int height) {
+    return (update(mediaItems)..where((m) => m.id.equals(id))).write(
+      MediaItemsCompanion(
+        width: Value(width),
+        height: Value(height),
+      ),
+    );
   }
 
   Future<void> replaceAllMedia(List<MediaItemsCompanion> items) async {
@@ -328,7 +373,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> repairFolderCovers() async {
-    if (!Platform.isWindows) {
+    if (!usesFilesystemGallery) {
       await customStatement('''
         UPDATE folders SET custom_cover_uri = NULL
         WHERE custom_cover_uri IS NOT NULL

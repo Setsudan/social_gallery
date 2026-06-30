@@ -6,6 +6,7 @@ import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/shared/dialogs/storage_access_dialog.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
@@ -66,13 +67,10 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
       ),
     );
     if (ok) {
+      refreshFeedProviders(ref);
       ref.invalidate(duplicateScanControllerProvider);
       ref.invalidate(discoverHubProvider);
-      final router = GoRouter.of(context);
-      router.pop();
-      if (router.canPop()) {
-        router.pop();
-      }
+      context.pop();
     }
   }
 

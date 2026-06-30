@@ -7,8 +7,9 @@ import 'package:social_gallery/core/workers/trash_cleanup_worker.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart'
     show invalidateAnalysisProvidersFromRef;
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart'
-    show galleryPaginatedProvider, refreshFeedProvidersFromRef;
+    show refreshFeedProvidersFromRef;
 
+/// Phase of an in-progress device-to-database gallery sync.
 enum GallerySyncPhase {
   idle,
   cleaningTrash,
@@ -20,6 +21,7 @@ enum GallerySyncPhase {
   error,
 }
 
+/// Observable sync progress for overlays and startup blocking UI.
 class GallerySyncState {
   const GallerySyncState({
     this.isRunning = false,
@@ -84,6 +86,7 @@ class GallerySyncState {
   }
 }
 
+/// Orchestrates device-to-DB sync with throttling and feed refresh on completion.
 class GallerySyncController extends StateNotifier<GallerySyncState> {
   GallerySyncController(this._ref) : super(const GallerySyncState());
 
@@ -161,6 +164,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       } catch (_) {}
 
       _refreshFeeds(background: true);
+      invalidateAnalysisProvidersFromRef(_ref);
       await _ref
           .read(preferencesRepositoryProvider)
           .setLastGallerySyncAt(DateTime.now());
@@ -211,21 +215,14 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
   }
 
   void _refreshFeeds({bool background = false}) {
-    if (background) {
-      refreshFeedProvidersFromRef(_ref);
-      if (_ref.exists(galleryPaginatedProvider)) {
-        unawaited(
-          _ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true),
-        );
-      }
-      return;
-    }
     refreshFeedProvidersFromRef(_ref);
-    _ref.invalidate(galleryPaginatedProvider);
-    invalidateAnalysisProvidersFromRef(_ref);
+    if (!background) {
+      invalidateAnalysisProvidersFromRef(_ref);
+    }
   }
 }
 
+/// Riverpod provider for [GallerySyncController] sync state and actions.
 final gallerySyncProvider =
     StateNotifierProvider<GallerySyncController, GallerySyncState>(
   (ref) => GallerySyncController(ref),

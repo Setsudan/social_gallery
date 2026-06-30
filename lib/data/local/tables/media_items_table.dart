@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+/// Drift table for indexed photos and videos mirrored from the device library.
 @DataClassName('MediaRow')
 class MediaItems extends Table {
   IntColumn get id => integer()();

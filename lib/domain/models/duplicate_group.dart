@@ -1,5 +1,6 @@
 import 'media_item.dart';
 
+/// Near-identical photos clustered by [FindDuplicateGroups] for review UI.
 class DuplicateGroup {
   const DuplicateGroup({
     required this.id,

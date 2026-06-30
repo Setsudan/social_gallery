@@ -6,6 +6,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/shared/widgets/asset_video_player.dart';
 import 'package:social_gallery/shared/widgets/unsupported_media_placeholder.dart';
 
@@ -32,7 +33,7 @@ class FullscreenMediaContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final size = MediaQuery.sizeOf(context);
 
-    if (Platform.isWindows && assetPath != null) {
+    if (usesFilesystemGallery && assetPath != null) {
       final isWinVideo = assetPath!.toLowerCase().endsWith('.mp4') ||
           assetPath!.toLowerCase().endsWith('.mov') ||
           assetPath!.toLowerCase().endsWith('.mkv') ||

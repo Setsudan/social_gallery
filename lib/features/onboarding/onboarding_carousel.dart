@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/gallery/desktop_gallery_root_picker.dart';
 import 'package:social_gallery/core/permissions/media_permission_service.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/theme/accent_presets.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
@@ -36,7 +37,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
 
   MediaPermissionState _permissionState = MediaPermissionState.checking;
   bool _showStoragePrompt = false;
-  bool _showWindowsRootPrompt = false;
+  bool _showDesktopRootPrompt = false;
   String? _permissionError;
 
   @override
@@ -81,10 +82,10 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
       }
     }
 
-    if (Platform.isWindows) {
-      final rootPath = ref.read(preferencesRepositoryProvider).windowsGalleryRootPath;
+    if (usesFilesystemGallery) {
+      final rootPath = ref.read(preferencesRepositoryProvider).desktopGalleryRootPath;
       if (rootPath == null || rootPath.isEmpty) {
-        setState(() => _showWindowsRootPrompt = true);
+        setState(() => _showDesktopRootPrompt = true);
         return;
       }
     }
@@ -116,14 +117,19 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
     await _checkPermissions();
   }
 
-  Future<void> _pickWindowsRootFolder() async {
+  Future<void> _pickDesktopGalleryRoot() async {
     try {
-      final path = await FilePicker.platform.getDirectoryPath(
-        dialogTitle: 'Select Root Gallery Folder',
-      );
+      final path = await pickDesktopGalleryRootFolder();
       if (path != null && path.isNotEmpty) {
-        await ref.read(preferencesRepositoryProvider).setWindowsGalleryRootPath(path);
-        setState(() => _showWindowsRootPrompt = false);
+        final saved = await saveDesktopGalleryRootPath(
+          ref.read(preferencesRepositoryProvider),
+          path,
+        );
+        if (!saved) {
+          setState(() => _permissionError = 'Could not use that folder');
+          return;
+        }
+        setState(() => _showDesktopRootPrompt = false);
         await _checkPermissions();
       }
     } catch (e) {
@@ -167,7 +173,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
         _permissionState == MediaPermissionState.checking) {
       return false;
     }
-    if (_showStoragePrompt || _showWindowsRootPrompt) return false;
+    if (_showStoragePrompt || _showDesktopRootPrompt) return false;
     return true;
   }
 
@@ -187,7 +193,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
         _PermissionsPage(
           permissionState: _permissionState,
           showStoragePrompt: _showStoragePrompt,
-          showWindowsRootPrompt: _showWindowsRootPrompt,
+          showDesktopRootPrompt: _showDesktopRootPrompt,
           error: _permissionError,
           canContinue: _canAdvanceFromPermissions,
           onRequestPermission: _requestPermission,
@@ -196,7 +202,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
             setState(() => _showStoragePrompt = false);
             await _startBackgroundSync();
           },
-          onPickWindowsRoot: _pickWindowsRootFolder,
+          onPickDesktopRoot: _pickDesktopGalleryRoot,
           onBack: _previousPage,
           onNext: _nextPage,
         ),
@@ -274,26 +280,26 @@ class _PermissionsPage extends StatelessWidget {
   const _PermissionsPage({
     required this.permissionState,
     required this.showStoragePrompt,
-    required this.showWindowsRootPrompt,
+    required this.showDesktopRootPrompt,
     required this.error,
     required this.canContinue,
     required this.onRequestPermission,
     required this.onRequestAllFilesAccess,
     required this.onSkipStorage,
-    required this.onPickWindowsRoot,
+    required this.onPickDesktopRoot,
     required this.onBack,
     required this.onNext,
   });
 
   final MediaPermissionState permissionState;
   final bool showStoragePrompt;
-  final bool showWindowsRootPrompt;
+  final bool showDesktopRootPrompt;
   final String? error;
   final bool canContinue;
   final Future<void> Function() onRequestPermission;
   final Future<void> Function() onRequestAllFilesAccess;
   final Future<void> Function() onSkipStorage;
-  final Future<void> Function() onPickWindowsRoot;
+  final Future<void> Function() onPickDesktopRoot;
   final VoidCallback onBack;
   final VoidCallback onNext;
 
@@ -302,7 +308,7 @@ class _PermissionsPage extends StatelessWidget {
     final theme = Theme.of(context);
 
     Widget body;
-    if (showWindowsRootPrompt) {
+    if (showDesktopRootPrompt) {
       body = _PermissionCard(
         icon: Icons.folder_open_outlined,
         title: 'Select gallery folder',
@@ -311,7 +317,7 @@ class _PermissionsPage extends StatelessWidget {
         error: error,
         actions: [
           FilledButton.icon(
-            onPressed: onPickWindowsRoot,
+            onPressed: onPickDesktopRoot,
             icon: const Icon(Icons.folder),
             label: const Text('Choose folder'),
           ),

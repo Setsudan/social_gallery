@@ -7,6 +7,8 @@ import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/gallery_grouping_period.dart';
+import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
+import 'package:social_gallery/features/explore/explore_search_overlay.dart';
 import 'package:social_gallery/shared/media/media_bulk_actions.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
@@ -37,21 +39,30 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   final Set<int> _selectedIds = {};
   final Map<int, GlobalKey> _tileKeys = {};
+  String _searchQuery = '';
   int? _activeDragPointer;
   Offset? _dragStartPosition;
   bool _dragSelecting = false;
   bool? _dragSelectAdding;
   final Set<int> _dragVisitedIds = {};
   bool get _inSelectionMode => _selectedIds.isNotEmpty;
+  bool get _isSearching => _searchQuery.isNotEmpty;
 
-  PaginatedListState<MediaItem> get _paginated =>
-      ref.watch(galleryPaginatedProvider);
+  PaginatedListState<MediaItem> get _paginated => _isSearching
+      ? ref.watch(explorePaginatedProvider(_searchQuery))
+      : ref.watch(galleryPaginatedProvider);
 
   List<MediaItem> get _items => _paginated.items;
 
   void _clearSelectionAndRefresh() {
     setState(_selectedIds.clear);
-    ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true);
+    if (_isSearching) {
+      ref
+          .read(explorePaginatedProvider(_searchQuery).notifier)
+          .loadMore(refresh: true);
+    } else {
+      ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true);
+    }
   }
 
   void _toggleSelect(MediaItem item) {
@@ -215,8 +226,40 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     return true;
   }
 
-  void _openSearch() {
-    context.go('/discover');
+  void _openSearch() async {
+    AppHaptics.light();
+    final query = await ExploreSearchOverlay.show(
+      context,
+      initialQuery: _searchQuery,
+    );
+    if (!mounted || query == null) return;
+    await _applySearch(query);
+  }
+
+  Future<void> _applySearch(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      _resetSearch();
+      return;
+    }
+
+    setState(() => _searchQuery = trimmed);
+    await ref
+        .read(explorePaginatedProvider(trimmed).notifier)
+        .loadMore(refresh: true);
+    if (!mounted) return;
+
+    final items = ref.read(explorePaginatedProvider(trimmed)).items;
+    final thumbnailUri = items.isNotEmpty ? items.first.uri : null;
+    await ref.read(recentSearchesProvider.notifier).add(
+          trimmed,
+          thumbnailUri: thumbnailUri,
+        );
+  }
+
+  void _resetSearch() {
+    if (_searchQuery.isEmpty) return;
+    setState(() => _searchQuery = '');
   }
 
   void _openMedia(MediaItem item) {
@@ -240,13 +283,22 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    final paginated = ref.read(galleryPaginatedProvider);
+    final paginated = _isSearching
+        ? ref.read(explorePaginatedProvider(_searchQuery))
+        : ref.read(galleryPaginatedProvider);
     handlePaginatedScroll(
       _scrollController.position,
       isLoading: paginated.isLoading,
       hasMore: paginated.hasMore,
-      loadMore: () =>
-          ref.read(galleryPaginatedProvider.notifier).loadMore(),
+      loadMore: () {
+        if (_isSearching) {
+          ref
+              .read(explorePaginatedProvider(_searchQuery).notifier)
+              .loadMore();
+        } else {
+          ref.read(galleryPaginatedProvider.notifier).loadMore();
+        }
+      },
     );
   }
 
@@ -255,7 +307,13 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     ref.listen<bool>(syncStateProvider, (previous, current) {
       if (previous == true && current == false) {
         setState(_tileKeys.clear);
-        ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true);
+        if (_isSearching) {
+          ref
+              .read(explorePaginatedProvider(_searchQuery).notifier)
+              .loadMore(refresh: true);
+        } else {
+          ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true);
+        }
       }
     });
 
@@ -294,11 +352,43 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
         body: Stack(
           fit: StackFit.expand,
           children: [
-            _GalleryPinchPeriodListener(
-              enabled: !inSelectionMode,
-              onPinchZoomIn: _handlePinchZoomIn,
-              onPinchZoomOut: _handlePinchZoomOut,
-              child: _buildBody(theme, motion),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!inSelectionMode && _searchQuery.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      OneUiSpacing.pageHorizontal,
+                      OneUiSpacing.sm,
+                      OneUiSpacing.pageHorizontal,
+                      OneUiSpacing.sm,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ActionChip(
+                            avatar: const Icon(Icons.search, size: 18),
+                            label: Text(_searchQuery),
+                            onPressed: _openSearch,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          tooltip: 'Clear search',
+                          onPressed: _resetSearch,
+                        ),
+                      ],
+                    ),
+                  ),
+                Expanded(
+                  child: _GalleryPinchPeriodListener(
+                    enabled: !inSelectionMode && !_isSearching,
+                    onPinchZoomIn: _handlePinchZoomIn,
+                    onPinchZoomOut: _handlePinchZoomOut,
+                    child: _buildBody(theme, motion),
+                  ),
+                ),
+              ],
             ),
             if (!inSelectionMode)
               Positioned(
@@ -339,18 +429,30 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     }
 
     if (_items.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.photo_library_outlined,
-        title: 'No media yet',
-        message: 'Sync your library to see photos and videos here.',
+        title: _isSearching ? 'No media found' : 'No media yet',
+        message: _isSearching
+            ? 'Try a different search or add folders to Home Feed.'
+            : 'Sync your library to see photos and videos here.',
       );
     }
 
-    final groups = _groupMedia(items: _items, period: _period);
     final navPadding = FloatingNavInsets.scrollPadding(context);
     final columns = _columnCount(context);
     final loadingMore = _paginated.isLoading && _paginated.hasMore;
     final inSelectionMode = _inSelectionMode;
+
+    if (_isSearching) {
+      return _buildSearchGrid(
+        navPadding: navPadding,
+        columns: columns,
+        loadingMore: loadingMore,
+        inSelectionMode: inSelectionMode,
+      );
+    }
+
+    final groups = _groupMedia(items: _items, period: _period);
 
     Widget scrollContent = CustomScrollView(
       controller: _scrollController,
@@ -367,6 +469,77 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
             navPadding: navPadding,
             inSelectionMode: inSelectionMode,
           ),
+        if (loadingMore)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        SliverPadding(
+          padding: EdgeInsets.only(bottom: navPadding.bottom),
+        ),
+      ],
+    );
+
+    if (inSelectionMode) {
+      scrollContent = Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: _handleSelectionPointerDown,
+        onPointerMove: _handleSelectionPointerMove,
+        onPointerUp: _handleSelectionPointerUp,
+        onPointerCancel: _handleSelectionPointerUp,
+        child: scrollContent,
+      );
+    }
+
+    return scrollContent;
+  }
+
+  Widget _buildSearchGrid({
+    required EdgeInsets navPadding,
+    required int columns,
+    required bool loadingMore,
+    required bool inSelectionMode,
+  }) {
+    Widget scrollContent = CustomScrollView(
+      controller: _scrollController,
+      cacheExtent: 800,
+      physics: _dragSelecting
+          ? const NeverScrollableScrollPhysics()
+          : const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            navPadding.left + 2,
+            OneUiSpacing.sm,
+            navPadding.right + 2,
+            OneUiSpacing.sm,
+          ),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: 2,
+              mainAxisSpacing: 2,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final item = _items[index];
+                return _GalleryTile(
+                  key: _tileKeyFor(item.id),
+                  item: item,
+                  selected: _selectedIds.contains(item.id),
+                  inSelectionMode: inSelectionMode,
+                  onTap: inSelectionMode ? null : () => _openMedia(item),
+                  onLongPress:
+                      inSelectionMode ? null : () => _startSelection(item),
+                );
+              },
+              childCount: _items.length,
+              addRepaintBoundaries: true,
+            ),
+          ),
+        ),
         if (loadingMore)
           const SliverToBoxAdapter(
             child: Padding(

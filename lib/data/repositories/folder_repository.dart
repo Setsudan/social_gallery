@@ -3,6 +3,7 @@ import 'package:social_gallery/data/mappers/entity_mappers.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/follow_status.dart';
 
+/// Folder visibility, covers, and stories flags backed by Drift.
 class FolderRepository {
   FolderRepository(this._db);
 
@@ -31,6 +32,8 @@ class FolderRepository {
         .map((row) => row == null ? null : folderFromRow(row));
   }
 
+  /// Updates feed visibility. Locking demotes home-feed folders to account-only
+  /// and disables stories for that folder.
   Future<void> updateFollowStatus(
     String path,
     FollowStatus status, {

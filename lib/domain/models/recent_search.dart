@@ -1,3 +1,4 @@
+/// One explore search entry persisted in SharedPreferences.
 class RecentSearch {
   const RecentSearch({
     required this.query,

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart' as domain;
 
+/// CRUD for trip rules stored in the [TravelModes] Drift table.
 class TravelModeRepository {
   TravelModeRepository(this._db);
 

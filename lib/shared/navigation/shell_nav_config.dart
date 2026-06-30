@@ -5,6 +5,7 @@ const int kShellTabHome = 0;
 const int kShellTabExplore = 1;
 const int kShellTabDiscover = 2;
 
+/// One bottom-nav or sidebar item mapped to a shell branch index.
 class ShellNavDestination {
   const ShellNavDestination({
     required this.navIndex,

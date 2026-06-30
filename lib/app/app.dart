@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
+
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/app/theme.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 
+/// Root widget: theme, lifecycle sync, and feed refresh coordination.
 class SocialGalleryApp extends ConsumerStatefulWidget {
   const SocialGalleryApp({super.key});
 
@@ -34,6 +39,11 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
           state == AppLifecycleState.resumed,
         );
 
+    if (state == AppLifecycleState.resumed) {
+      refreshFeedProviders(ref);
+      unawaited(ref.read(gallerySyncProvider.notifier).run());
+    }
+
     if (state == AppLifecycleState.detached ||
         state == AppLifecycleState.paused) {
       final settings = ref.read(settingsProvider);
@@ -45,6 +55,8 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(feedRefreshCoordinatorProvider);
+
     final router = ref.watch(routerProvider);
     final settings = ref.watch(settingsProvider);
 

@@ -4,6 +4,7 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 
 Future<bool> confirmBulkTrashDialog(BuildContext context, int count) async {
   final confirmed = await showDialog<bool>(
@@ -54,6 +55,7 @@ Future<void> bulkTrash(
     SnackBar(content: Text('Moved ${items.length} item(s) to trash')),
   );
   if (useHaptics) AppHaptics.success();
+  refreshFeedProviders(ref);
   onDone?.call();
 }
 
@@ -96,6 +98,7 @@ Future<void> bulkMove(
     ),
   );
   if (useHaptics) AppHaptics.success();
+  refreshFeedProviders(ref);
   onDone?.call();
 }
 
@@ -169,5 +172,6 @@ Future<void> createAlbumAndMove(
       ),
     ),
   );
+  refreshFeedProviders(ref);
   onDone?.call();
 }

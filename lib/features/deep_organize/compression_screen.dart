@@ -6,6 +6,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
@@ -23,7 +24,7 @@ class _CompressionScreenState extends ConsumerState<CompressionScreen> {
   String? _result;
 
   Future<String?> _resolvePath(MediaItem item) async {
-    if (Platform.isWindows) return item.uri;
+    if (usesFilesystemGallery) return item.uri;
     final entity = await AssetEntity.fromId(item.uri);
     final file = await entity?.file;
     return file?.path;

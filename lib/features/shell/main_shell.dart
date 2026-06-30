@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/shared/navigation/shell_nav_config.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/gradient_loading_screen.dart';
 
+/// Root scaffold for the three-tab shell: bottom nav on mobile, sidebar on desktop.
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key, required this.navigationShell});
 
@@ -105,6 +108,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                 galleryViewMode: galleryViewMode,
                 onBranchSelected: (index) => _onBranchSelected(ref, index),
                 onSettingsPressed: () => context.push('/settings'),
+                onAlbumsLongPress: galleryViewMode
+                    ? () {
+                        AppHaptics.medium();
+                        context.push(lockedAlbumsLocation);
+                      }
+                    : null,
               ),
             ),
           if (sync.showOverlay)

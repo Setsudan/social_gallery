@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/shared/widgets/fullscreen_media_content.dart';
 
 class MediaViewerScreen extends ConsumerStatefulWidget {
@@ -56,7 +55,7 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
           ),
         ],
       ),
-      body: Platform.isWindows
+      body: usesFilesystemGallery
           ? FullscreenMediaContent(
               entity: null,
               assetPath: widget.assetId,

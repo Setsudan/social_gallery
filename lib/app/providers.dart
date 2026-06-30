@@ -32,6 +32,7 @@ import 'package:social_gallery/domain/usecases/suggest_keep_best.dart';
 import 'package:social_gallery/domain/usecases/travel_mode_use_case.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 
+/// Application-wide Riverpod providers: database, repositories, settings, and use cases.
 export 'package:social_gallery/features/discover/discover_providers.dart'
     show discoverHubProvider;
 
@@ -104,6 +105,11 @@ final organizeRepositoryProvider = Provider((ref) {
   return OrganizeRepository(ref.watch(sharedPreferencesProvider));
 });
 
+/// Reactive organize batch size for settings UI (backed by [OrganizeRepository]).
+final organizeBatchSizeProvider = StateProvider<int>((ref) {
+  return ref.read(organizeRepositoryProvider).batchSize;
+});
+
 final mediaAnalysisRepositoryProvider = Provider((ref) {
   return MediaAnalysisRepository(ref.watch(databaseProvider));
 });
@@ -120,6 +126,7 @@ final scoreLowQualityProvider = Provider((ref) => ScoreLowQuality());
 
 final computeShootingStatsProvider = Provider((ref) => ComputeShootingStats());
 
+/// Progress while [MediaAnalysisController] scans home-feed images.
 class MediaAnalysisScanState {
   const MediaAnalysisScanState({
     this.isScanning = false,
@@ -136,6 +143,7 @@ class MediaAnalysisScanState {
   double get progress => total == 0 ? 0 : scanned / total;
 }
 
+/// Runs on-device deep organize scan and writes results to [MediaAnalysisRepository].
 class MediaAnalysisController extends StateNotifier<MediaAnalysisScanState> {
   MediaAnalysisController(this._ref) : super(const MediaAnalysisScanState());
 
@@ -195,10 +203,12 @@ final syncStateProvider = Provider<bool>((ref) {
 
 final activeProfileFolderProvider = StateProvider<String?>((ref) => null);
 
+/// Reactive stream of all folders ordered by name.
 final allFoldersProvider = StreamProvider<List<FolderInfo>>((ref) {
   return ref.watch(folderRepositoryProvider).watchAll();
 });
 
+/// Reactive media list for one album; [path] is the folder path key.
 final folderMediaProvider = StreamProvider.family<List<MediaItem>, String>((
   ref,
   path,
@@ -206,6 +216,7 @@ final folderMediaProvider = StreamProvider.family<List<MediaItem>, String>((
   return ref.watch(mediaRepositoryProvider).watchFolderMedia(path);
 });
 
+/// User preferences mirrored from [PreferencesRepository] for UI binding.
 class AppSettings {
   final AppThemeVariant appTheme;
   final Color accentColor;
@@ -251,6 +262,7 @@ class AppSettings {
   }
 }
 
+/// Persists [AppSettings] changes to SharedPreferences.
 class SettingsNotifier extends StateNotifier<AppSettings> {
   SettingsNotifier(this._prefs) : super(_loadInitial(_prefs));
 
@@ -311,10 +323,12 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 }
 
+/// All travel modes ordered by start date.
 final travelModesProvider = StreamProvider<List<domain.TravelMode>>((ref) {
   return ref.watch(travelModeRepositoryProvider).watchAll();
 });
 
+/// Global settings: theme, gallery view mode, trash retention, cache limits.
 final settingsProvider = StateNotifierProvider<SettingsNotifier, AppSettings>((
   ref,
 ) {
@@ -322,6 +336,7 @@ final settingsProvider = StateNotifierProvider<SettingsNotifier, AppSettings>((
   return SettingsNotifier(prefs);
 });
 
+/// Soft-deleted media awaiting restore or permanent deletion.
 final trashedMediaProvider = StreamProvider<List<MediaItem>>((ref) {
   return ref.watch(mediaRepositoryProvider).watchTrashedMedia();
 });

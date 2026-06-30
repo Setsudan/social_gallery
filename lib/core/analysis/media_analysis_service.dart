@@ -5,6 +5,8 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/analysis/image_metrics.dart';
+import 'package:social_gallery/core/media/filesystem_image_loader.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
@@ -150,12 +152,8 @@ class MediaAnalysisService {
 
   Future<Uint8List?> _loadThumbnailBytes(MediaItem item) async {
     try {
-      if (Platform.isWindows) {
-        final file = File(item.uri);
-        if (file.existsSync()) {
-          return file.readAsBytes();
-        }
-        return null;
+      if (usesFilesystemGallery) {
+        return readFilesystemThumbnailBytes(item.uri);
       }
       final entity = await AssetEntity.fromId(item.uri);
       if (entity == null) return null;

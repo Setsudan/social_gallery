@@ -1,6 +1,7 @@
 import 'package:social_gallery/data/repositories/travel_mode_repository.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart';
 
+/// CRUD and active-trip lookup for auto-sorting new media into trip folders.
 class TravelModeUseCase {
   TravelModeUseCase(this._repository);
 

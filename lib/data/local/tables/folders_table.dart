@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+/// Drift table for device albums: visibility, covers, stories, and lock flags.
 class Folders extends Table {
   TextColumn get path => text()();
   TextColumn get name => text()();

@@ -1,3 +1,4 @@
+/// Date-bounded trip rule that auto-moves new media into [folderPath].
 class TravelMode {
   const TravelMode({
     required this.id,
@@ -101,8 +102,10 @@ class TravelMode {
   }
 }
 
+/// Lifecycle of a [TravelMode] relative to the current time.
 enum TravelModeStatus { active, upcoming, completed }
 
+/// Returns whether [mode] is upcoming, active, or completed at [nowMs].
 TravelModeStatus travelModeStatus(TravelMode mode, [int? nowMs]) {
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
   if (now < mode.getStartDateTime()) return TravelModeStatus.upcoming;
