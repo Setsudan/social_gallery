@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
@@ -33,26 +34,27 @@ class _LowQualityScreenState extends ConsumerState<LowQualityScreen> {
   @override
   Widget build(BuildContext context) {
     final queueAsync = ref.watch(lowQualityQueueProvider);
+    final l10n = context.l10n;
 
     return queueAsync.when(
       loading: () => OneUiSubpageScaffold(
-        title: 'Low quality',
+        title: l10n.deepOrganizeLowQuality,
         isLoading: true,
         body: const SizedBox.shrink(),
       ),
       error: (e, _) => OneUiSubpageScaffold(
-        title: 'Low quality',
+        title: l10n.deepOrganizeLowQuality,
         error: e,
         body: const SizedBox.shrink(),
       ),
       data: (queue) {
         if (queue.isEmpty) {
           return OneUiSubpageScaffold(
-            title: 'Low quality',
-            subtitle: 'Run a scan from Deep organize first.',
+            title: l10n.deepOrganizeLowQuality,
+            subtitle: l10n.deepOrganizeRunScanFirst,
             isEmpty: true,
-            empty: const EmptyState(
-              title: 'No low-quality items',
+            empty: EmptyState(
+              title: l10n.lowQualityEmptyTitle,
               icon: Icons.blur_off,
             ),
             body: const SizedBox.shrink(),
@@ -61,9 +63,9 @@ class _LowQualityScreenState extends ConsumerState<LowQualityScreen> {
 
         final current = queue[_index.clamp(0, queue.length - 1)];
         return OneUiSubpageScaffold(
-          title: 'Low quality review',
-          subtitle: 'Review flagged shots and delete what you do not need.',
-          appBarTitle: '${_index + 1} / ${queue.length}',
+          title: l10n.lowQualityReviewTitle,
+          subtitle: l10n.lowQualityReviewSubtitle,
+          appBarTitle: l10n.lowQualityProgress(_index + 1, queue.length),
           body: Column(
             children: [
               Expanded(
@@ -94,14 +96,14 @@ class _LowQualityScreenState extends ConsumerState<LowQualityScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () => _skip(queue.length),
-                            child: const Text('Keep'),
+                            child: Text(l10n.actionKeep),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: FilledButton(
                             onPressed: () => _deleteCurrent(current),
-                            child: const Text('Delete'),
+                            child: Text(l10n.actionDelete),
                           ),
                         ),
                       ],

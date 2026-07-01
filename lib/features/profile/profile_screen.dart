@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/shared/navigation/media_viewer_session.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
@@ -112,6 +114,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       ref: ref,
       builder: (context) {
+        final l10n = context.l10n;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -120,14 +123,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'All files access',
+                  l10n.storageAllFilesAccessTitle,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   granted
-                      ? 'Granted. You can move and delete items across albums.'
-                      : 'Required on Android 11+ to move or delete items between albums.',
+                      ? l10n.storageAllFilesAccessGranted
+                      : l10n.storageAllFilesAccessRequired,
                 ),
                 const SizedBox(height: 16),
                 if (!granted)
@@ -136,7 +139,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       await storage.requestAllFilesAccess();
                       if (context.mounted) Navigator.pop(context);
                     },
-                    child: const Text('Grant in settings'),
+                    child: Text(l10n.storageGrantInSettings),
                   ),
               ],
             ),
@@ -151,7 +154,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       ref: ref,
       folders: folders,
-      title: 'Select folder',
+      title: context.l10n.profileSelectFolder,
     );
 
     if (selected != null) {
@@ -164,6 +167,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final activePath = ref.watch(activeProfileFolderProvider);
     final foldersAsync = ref.watch(allFoldersProvider);
     final inSelectionMode = _selectedIds.isNotEmpty;
@@ -182,7 +186,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 if (Platform.isAndroid)
                   IconButton(
                     icon: const Icon(Icons.folder_shared_outlined),
-                    tooltip: 'File access',
+                    tooltip: l10n.tooltipFileAccess,
                     onPressed: _showStorageSettings,
                   ),
                 IconButton(
@@ -201,7 +205,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.folder_open_outlined),
-                  tooltip: 'Manage content',
+                  tooltip: l10n.tooltipManageContent,
                   onPressed: () {
                     AppHaptics.light();
                     context.push('/folder_management');
@@ -209,7 +213,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
-                  tooltip: 'Settings',
+                  tooltip: l10n.tooltipSettings,
                   onPressed: () {
                     AppHaptics.light();
                     context.push('/settings');
@@ -222,10 +226,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       extendBody: true,
       appBar: appBar,
       body: activePath == null
-          ? const Expanded(
+          ? Expanded(
               child: EmptyState(
-                    title: 'No folder selected',
-                    message: 'Sync your library or pick a folder.',
+                    title: l10n.profileNoFolderSelected,
+                    message: l10n.profileNoFolderSelectedMessage,
                   ),
                 )
           : foldersAsync.when(
@@ -234,7 +238,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     .where((f) => f.path == activePath)
                     .firstOrNull;
                 if (folder == null) {
-                  return const EmptyState(title: 'Folder not found');
+                  return EmptyState(title: l10n.errorFolderNotFound);
                 }
                 return FolderLockGate(
                   folder: folder,
@@ -243,8 +247,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       .when(
                         data: (items) {
                           if (items.isEmpty) {
-                            return const EmptyState(
-                              title: 'No media in this folder',
+                            return EmptyState(
+                              title: l10n.profileNoMediaInFolder,
                             );
                           }
                           return MediaGrid(
@@ -253,12 +257,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             selectedIds: _selectedIds,
                             onSelectToggle: _toggleSelect,
                             onLongPress: _startSelection,
-                            onTap: (item) => context.push(
-                              mediaViewerLocation(
-                                item.uri,
-                                mediaId: item.id,
-                                favorite: item.isFavorite,
-                              ),
+                            onTap: (item) => openMediaViewer(
+                              context,
+                              ref,
+                              items: items,
+                              item: item,
                             ),
                           );
                         },
@@ -266,7 +269,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: CircularProgressIndicator(),
                         ),
                         error: (e, _) => EmptyState(
-                          title: 'Could not load folder',
+                          title: l10n.profileErrorLoadFolder,
                           message: e.toString(),
                         ),
                       ),
@@ -274,7 +277,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => EmptyState(
-                title: 'Could not load folders',
+                title: l10n.profileErrorLoadFolders,
                 message: e.toString(),
               ),
             ),

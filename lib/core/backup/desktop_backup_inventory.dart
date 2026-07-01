@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:social_gallery/core/backup/backup_protocol.dart';
 
 /// One backed-up file tracked on the desktop receiver.
 class BackupInventoryEntry {
@@ -14,6 +15,10 @@ class BackupInventoryEntry {
     required this.folderName,
     required this.fileName,
     this.syncedAtMs,
+    this.storageKind = BackupStorageKind.plain,
+    this.size,
+    this.mime,
+    this.dateTaken,
   });
 
   final int? mediaId;
@@ -22,6 +27,12 @@ class BackupInventoryEntry {
   final String folderName;
   final String fileName;
   final int? syncedAtMs;
+  final BackupStorageKind storageKind;
+  final int? size;
+  final String? mime;
+  final int? dateTaken;
+
+  bool get isVault => storageKind == BackupStorageKind.vault;
 
   factory BackupInventoryEntry.fromJson(Map<String, dynamic> json) {
     return BackupInventoryEntry(
@@ -31,6 +42,10 @@ class BackupInventoryEntry {
       folderName: json['folderName'] as String? ?? '',
       fileName: json['fileName'] as String? ?? '',
       syncedAtMs: json['syncedAtMs'] as int?,
+      storageKind: BackupStorageKind.fromJson(json['storageKind'] as String?),
+      size: json['size'] as int?,
+      mime: json['mime'] as String?,
+      dateTaken: json['dateTaken'] as int?,
     );
   }
 
@@ -41,6 +56,11 @@ class BackupInventoryEntry {
     'folderName': folderName,
     'fileName': fileName,
     if (syncedAtMs != null) 'syncedAtMs': syncedAtMs,
+    if (storageKind != BackupStorageKind.plain)
+      'storageKind': storageKind.jsonValue,
+    if (size != null) 'size': size,
+    if (mime != null) 'mime': mime,
+    if (dateTaken != null) 'dateTaken': dateTaken,
   };
 
   BackupInventoryEntry copyWith({
@@ -50,6 +70,10 @@ class BackupInventoryEntry {
     String? folderName,
     String? fileName,
     int? syncedAtMs,
+    BackupStorageKind? storageKind,
+    int? size,
+    String? mime,
+    int? dateTaken,
   }) {
     return BackupInventoryEntry(
       mediaId: mediaId ?? this.mediaId,
@@ -58,6 +82,10 @@ class BackupInventoryEntry {
       folderName: folderName ?? this.folderName,
       fileName: fileName ?? this.fileName,
       syncedAtMs: syncedAtMs ?? this.syncedAtMs,
+      storageKind: storageKind ?? this.storageKind,
+      size: size ?? this.size,
+      mime: mime ?? this.mime,
+      dateTaken: dateTaken ?? this.dateTaken,
     );
   }
 }
@@ -68,7 +96,7 @@ class DesktopBackupInventory {
 
   final String backupRoot;
 
-  static const _inventoryVersion = 1;
+  static const _inventoryVersion = 2;
   static const _hiddenDir = '.social_gallery';
   static const _inventoryFile = 'inventory.json';
 
@@ -109,6 +137,18 @@ class DesktopBackupInventory {
 
   static String folderChecksumKey(String folderName, String checksum) {
     return '${sanitizeFolderName(folderName)}:$checksum';
+  }
+
+  List<BackupInventoryEntry> get allEntries {
+    final seen = <String>{};
+    final entries = <BackupInventoryEntry>[];
+    for (final entry in _byMediaId.values) {
+      if (seen.add(entry.relativePath)) entries.add(entry);
+    }
+    for (final entry in _byCanonicalPath.values) {
+      if (seen.add(entry.relativePath)) entries.add(entry);
+    }
+    return entries;
   }
 
   Future<void> load() async {
@@ -225,11 +265,13 @@ class DesktopBackupInventory {
         continue;
       }
 
+      final fileSize = await entity.length();
       final entry = BackupInventoryEntry(
         checksum: checksum,
         relativePath: relative.replaceAll('\\', '/'),
         folderName: folderName,
         fileName: fileName,
+        size: fileSize,
       );
       _indexEntry(entry);
     }

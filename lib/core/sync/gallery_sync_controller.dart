@@ -6,6 +6,10 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/workers/trash_cleanup_worker.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart'
     show invalidateAnalysisProvidersFromRef;
+import 'package:social_gallery/features/discover/locations_providers.dart'
+    show invalidateLocationProvidersFromRef;
+import 'package:social_gallery/features/discover/location_index_controller.dart'
+    show locationIndexControllerProvider;
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart'
     show refreshFeedProvidersFromRef;
 
@@ -168,6 +172,8 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
 
       _refreshFeeds(background: true);
       invalidateAnalysisProvidersFromRef(_ref);
+      invalidateLocationProvidersFromRef(_ref);
+      _ref.read(locationIndexControllerProvider.notifier).scheduleAfterLibrarySync();
       await _ref
           .read(preferencesRepositoryProvider)
           .setLastGallerySyncAt(DateTime.now());

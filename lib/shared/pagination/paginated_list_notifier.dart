@@ -48,7 +48,7 @@ final feedRefreshCoordinatorProvider = Provider<void>((ref) {
   });
 });
 
-/// Refreshes home feed, gallery, explore, stories, and account folder providers.
+/// Refreshes home feed, gallery, explore, and stories providers.
 void refreshFeedProvidersFromRef(Ref ref) {
   if (ref.exists(homeFeedPaginatedProvider)) {
     unawaited(
@@ -68,7 +68,6 @@ void refreshFeedProvidersFromRef(Ref ref) {
 
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
-  ref.invalidate(homeAccountFoldersProvider);
 }
 
 /// Widget-side alias for [refreshFeedProvidersFromRef].
@@ -91,7 +90,6 @@ void refreshFeedProviders(WidgetRef ref) {
 
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
-  ref.invalidate(homeAccountFoldersProvider);
 }
 
 const paginatedLoadMoreThresholdPx = 400.0;

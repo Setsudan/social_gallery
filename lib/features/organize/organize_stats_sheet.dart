@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 
 class OrganizeStatsSheet extends StatelessWidget {
@@ -24,6 +25,7 @@ class OrganizeStatsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -32,15 +34,15 @@ class OrganizeStatsSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Organize stats',
+              l10n.organizeStatsTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            _StatRow(label: 'Processed', value: '${stats.processedCount}'),
-            _StatRow(label: 'Deleted', value: '${stats.deletedCount}'),
-            _StatRow(label: 'Liked', value: '${stats.likedCount}'),
+            _StatRow(label: l10n.organizeStatProcessed, value: '${stats.processedCount}'),
+            _StatRow(label: l10n.organizeStatDeleted, value: '${stats.deletedCount}'),
+            _StatRow(label: l10n.organizeStatLiked, value: '${stats.likedCount}'),
             _StatRow(
-              label: 'Space saved',
+              label: l10n.organizeStatSpaceSaved,
               value: _formatBytes(stats.savedBytes),
             ),
             const SizedBox(height: 24),
@@ -49,7 +51,7 @@ class OrganizeStatsSheet extends StatelessWidget {
                 Navigator.pop(context);
                 context.push('/discover/shooting-stats');
               },
-              child: const Text('Shooting stats'),
+              child: Text(l10n.discoverShootingStats),
             ),
             const SizedBox(height: 8),
             FilledButton.tonal(
@@ -57,7 +59,7 @@ class OrganizeStatsSheet extends StatelessWidget {
                 Navigator.pop(context);
                 context.push('/discover/deep-organize');
               },
-              child: const Text('Deep organize'),
+              child: Text(l10n.discoverDeepOrganize),
             ),
             const SizedBox(height: 8),
             FilledButton.tonal(
@@ -65,7 +67,7 @@ class OrganizeStatsSheet extends StatelessWidget {
                 Navigator.pop(context);
                 context.push('/discover/likes-review');
               },
-              child: const Text('Likes review'),
+              child: Text(l10n.discoverLikesReview),
             ),
           ],
         ),

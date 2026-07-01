@@ -144,16 +144,27 @@ class _FocalZoomViewerState extends State<_FocalZoomViewer>
   final TransformationController _controller = TransformationController();
   late final AnimationController _animController;
   Animation<Matrix4>? _matrixAnimation;
+  bool _panEnabled = false;
 
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_onTransformChanged);
     _animController = AnimationController(vsync: this)
       ..addStatusListener(_onAnimStatus);
+    _onTransformChanged();
+  }
+
+  void _onTransformChanged() {
+    final zoomed = _controller.value.getMaxScaleOnAxis() > _zoomedThreshold;
+    if (zoomed != _panEnabled) {
+      setState(() => _panEnabled = zoomed);
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onTransformChanged);
     _matrixAnimation?.removeListener(_onMatrixTick);
     _animController.dispose();
     _controller.dispose();
@@ -214,6 +225,7 @@ class _FocalZoomViewerState extends State<_FocalZoomViewer>
         onDoubleTapDown: _onDoubleTapDown,
         child: InteractiveViewer(
           transformationController: _controller,
+          panEnabled: _panEnabled,
           minScale: 1,
           maxScale: 4,
           clipBehavior: Clip.none,

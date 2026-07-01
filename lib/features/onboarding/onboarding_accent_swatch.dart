@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/core/l10n/l10n_labels.dart';
 import 'package:social_gallery/core/theme/accent_presets.dart';
 
 class OnboardingAccentSwatch extends StatelessWidget {
@@ -16,10 +18,11 @@ class OnboardingAccentSwatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Semantics(
       button: true,
       selected: selected,
-      label: preset.label,
+      label: accentPresetLabel(l10n, preset.color),
       child: GestureDetector(
         onTap: onTap,
         child: Container(

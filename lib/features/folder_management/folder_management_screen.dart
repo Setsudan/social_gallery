@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/follow_status.dart';
@@ -13,6 +14,7 @@ import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
+import 'package:social_gallery/l10n/app_localizations.dart';
 
 class FolderManagementScreen extends ConsumerStatefulWidget {
   const FolderManagementScreen({super.key});
@@ -64,12 +66,15 @@ class _FolderManagementScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final foldersAsync = ref.watch(allFoldersProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: _selectionMode ? Text('${_selected.length} selected') : null,
+        title: _selectionMode
+            ? Text(l10n.selectionCount(_selected.length))
+            : null,
         leading: IconButton(
           icon: Icon(_selectionMode ? Icons.close : Icons.arrow_back),
           onPressed: () {
@@ -92,21 +97,21 @@ class _FolderManagementScreenState
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _bulkSet(FollowStatus.homeFeed),
-                    child: const Text('Home Feed'),
+                    child: Text(l10n.folderVisibilityHomeFeed),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _bulkSet(FollowStatus.accountOnly),
-                    child: const Text('Account'),
+                    child: Text(l10n.folderVisibilityAccount),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _bulkSet(FollowStatus.unfollowed),
-                    child: const Text('Hidden'),
+                    child: Text(l10n.folderVisibilityHidden),
                   ),
                 ),
               ],
@@ -117,7 +122,7 @@ class _FolderManagementScreenState
       body: foldersAsync.when(
         data: (folders) {
           if (folders.isEmpty) {
-            return const Center(child: Text('No folders found.'));
+            return Center(child: Text(l10n.folderManagementNoFolders));
           }
 
           return ListView.builder(
@@ -128,14 +133,14 @@ class _FolderManagementScreenState
               return StaggeredEntrance(
                 index: index,
                 playOnceKey: 'folder_${folder.path}',
-                child: _folderTile(folder, theme),
+                child: _folderTile(folder, theme, l10n),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
-          title: 'Could not load folders',
+          title: l10n.profileErrorLoadFolders,
           message: e.toString(),
           icon: Icons.error_outline,
         ),
@@ -143,7 +148,7 @@ class _FolderManagementScreenState
     );
   }
 
-  Widget _folderTile(FolderInfo folder, ThemeData theme) {
+  Widget _folderTile(FolderInfo folder, ThemeData theme, AppLocalizations l10n) {
     final isSelected = _selected.contains(folder.path);
     final motion = AppMotion.of(context, ref);
 
@@ -187,13 +192,13 @@ class _FolderManagementScreenState
                   folder.name,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text('${folder.mediaCount} items'),
+                subtitle: Text(l10n.folderItemCount(folder.mediaCount)),
                 trailing: PopupMenuButton<_FolderVisibilityOption>(
                   initialValue: _visibilityChoice(
                     folder.followStatus,
                     folder.isBiometricLocked,
                   ),
-                  child: _statusChip(folder, theme),
+                  child: _statusChip(folder, theme, l10n),
                   onSelected: (option) async {
                     AppHaptics.medium();
                     await ref
@@ -213,7 +218,7 @@ class _FolderManagementScreenState
                       .map(
                         (opt) => PopupMenuItem<_FolderVisibilityOption>(
                           value: opt,
-                          child: Text(opt.label),
+                          child: Text(opt.menuLabel(l10n)),
                         ),
                       )
                       .toList(),
@@ -233,10 +238,10 @@ class _FolderManagementScreenState
                 children: [
                   const Icon(Icons.history_toggle_off, size: 16),
                   const SizedBox(width: 6),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Show in Stories',
-                      style: TextStyle(fontSize: 12),
+                      l10n.folderShowInStories,
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                   Switch.adaptive(
@@ -264,8 +269,11 @@ class _FolderManagementScreenState
                         : theme.colorScheme.outline,
                   ),
                   const SizedBox(width: 6),
-                  const Expanded(
-                    child: Text('Secure Lock', style: TextStyle(fontSize: 12)),
+                  Expanded(
+                    child: Text(
+                      l10n.folderSecureLock,
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
                   Switch.adaptive(
                     value: folder.isBiometricLocked,
@@ -295,22 +303,27 @@ class _FolderManagementScreenState
     );
   }
 
-  Widget _statusChip(FolderInfo folder, ThemeData theme) {
-    late String label;
+  Widget _statusChip(
+    FolderInfo folder,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    final option = _visibilityChoice(
+      folder.followStatus,
+      folder.isBiometricLocked,
+    );
+    final label = option.chipLabel(l10n);
     late Color bg;
     late Color fg;
 
     switch (folder.followStatus) {
       case FollowStatus.homeFeed:
-        label = 'Home Feed';
         bg = theme.colorScheme.primaryContainer;
         fg = theme.colorScheme.onPrimaryContainer;
       case FollowStatus.accountOnly:
-        label = folder.isBiometricLocked ? 'Locked' : 'Account';
         bg = theme.colorScheme.secondaryContainer;
         fg = theme.colorScheme.onSecondaryContainer;
       case FollowStatus.unfollowed:
-        label = 'Hidden';
         bg = theme.colorScheme.errorContainer;
         fg = theme.colorScheme.onErrorContainer;
     }
@@ -339,14 +352,27 @@ class _FolderManagementScreenState
 }
 
 enum _FolderVisibilityOption {
-  homeFeed('Home Feed', FollowStatus.homeFeed, false),
-  accountOnly('Account only', FollowStatus.accountOnly, false),
-  accountLocked('Account only (locked)', FollowStatus.accountOnly, true),
-  hidden('Hidden', FollowStatus.unfollowed, false);
+  homeFeed(FollowStatus.homeFeed, false),
+  accountOnly(FollowStatus.accountOnly, false),
+  accountLocked(FollowStatus.accountOnly, true),
+  hidden(FollowStatus.unfollowed, false);
 
-  const _FolderVisibilityOption(this.label, this.status, this.locked);
+  const _FolderVisibilityOption(this.status, this.locked);
 
-  final String label;
   final FollowStatus status;
   final bool locked;
+
+  String menuLabel(AppLocalizations l10n) => switch (this) {
+        homeFeed => l10n.folderVisibilityHomeFeed,
+        accountOnly => l10n.folderVisibilityAccountOnly,
+        accountLocked => l10n.folderVisibilityAccountLocked,
+        hidden => l10n.folderVisibilityHidden,
+      };
+
+  String chipLabel(AppLocalizations l10n) => switch (this) {
+        homeFeed => l10n.folderVisibilityHomeFeed,
+        accountOnly => l10n.folderVisibilityAccount,
+        accountLocked => l10n.folderVisibilityLock,
+        hidden => l10n.folderVisibilityHidden,
+      };
 }

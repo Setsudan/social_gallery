@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 
 Future<bool> confirmBulkTrashDialog(BuildContext context, int count) async {
+  final l10n = context.l10n;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Move to trash'),
-      content: Text(
-        'Move $count items to trash? You can restore them from Settings.',
-      ),
+      title: Text(l10n.bulkMoveToTrashTitle),
+      content: Text(l10n.bulkMoveToTrashMessage(count)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(l10n.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Move to trash'),
+          child: Text(l10n.postMoveToTrash),
         ),
       ],
     ),
@@ -52,7 +52,7 @@ Future<void> bulkTrash(
   await ref.read(mediaRepositoryProvider).trashMedia(items);
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Moved ${items.length} item(s) to trash')),
+    SnackBar(content: Text(context.l10n.snackbarMovedToTrash(items.length))),
   );
   if (useHaptics) AppHaptics.success();
   refreshFeedProviders(ref);
@@ -85,15 +85,16 @@ Future<void> bulkMove(
   final moved =
       await ref.read(mediaRepositoryProvider).moveMedia(items, targetPath);
   if (!context.mounted) return;
+
+  final l10n = context.l10n;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
         moved == items.length
-            ? 'Moved $moved item(s)'
+            ? l10n.snackbarMovedItems(moved)
             : moved == 0
-                ? 'Could not move items. Approve the system prompt if shown, '
-                    'or check storage access in Settings.'
-                : 'Moved $moved of ${items.length} item(s)',
+                ? l10n.snackbarMoveFailed
+                : l10n.snackbarMovedPartial(moved, items.length),
       ),
     ),
   );
@@ -127,30 +128,31 @@ Future<void> createAlbumAndMove(
 }) async {
   if (selectedIds.isEmpty) return;
 
+  final l10n = context.l10n;
   final nameController = TextEditingController();
   final albumName = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Create album'),
+      title: Text(l10n.bulkCreateAlbumTitle),
       content: TextField(
         controller: nameController,
-        decoration: const InputDecoration(
-          labelText: 'Album name',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: l10n.bulkAlbumNameLabel,
+          border: const OutlineInputBorder(),
         ),
         autofocus: true,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.actionCancel),
         ),
         FilledButton(
           onPressed: () {
             final name = nameController.text.trim();
             if (name.isNotEmpty) Navigator.pop(context, name);
           },
-          child: const Text('Create and move'),
+          child: Text(l10n.bulkCreateAndMove),
         ),
       ],
     ),
@@ -167,8 +169,8 @@ Future<void> createAlbumAndMove(
     SnackBar(
       content: Text(
         ok
-            ? 'Created "$albumName" and moved ${items.length} item(s)'
-            : 'Could not create album. Check storage access.',
+            ? l10n.snackbarAlbumCreatedAndMoved(albumName, items.length)
+            : l10n.snackbarAlbumCreateFailed,
       ),
     ),
   );

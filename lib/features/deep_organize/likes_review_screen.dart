@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/favorites/favorites_providers.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
@@ -34,15 +35,16 @@ class _LikesReviewScreenState extends ConsumerState<LikesReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final favoritesAsync = ref.watch(favoritesStreamProvider);
+    final l10n = context.l10n;
 
     return favoritesAsync.when(
       loading: () => OneUiSubpageScaffold(
-        title: 'Likes review',
+        title: l10n.discoverLikesReview,
         isLoading: true,
         body: const SizedBox.shrink(),
       ),
       error: (e, _) => OneUiSubpageScaffold(
-        title: 'Likes review',
+        title: l10n.discoverLikesReview,
         error: e,
         body: const SizedBox.shrink(),
       ),
@@ -53,11 +55,11 @@ class _LikesReviewScreenState extends ConsumerState<LikesReviewScreen> {
 
         if (items.isEmpty) {
           return OneUiSubpageScaffold(
-            title: 'Likes review',
-            subtitle: 'Swipe right in Organize to favorite photos.',
+            title: l10n.discoverLikesReview,
+            subtitle: l10n.likesReviewEmptySubtitle,
             isEmpty: true,
-            empty: const EmptyState(
-              title: 'No liked items yet',
+            empty: EmptyState(
+              title: l10n.likesReviewEmptyTitle,
               icon: Icons.favorite_border,
             ),
             body: const SizedBox.shrink(),
@@ -65,8 +67,8 @@ class _LikesReviewScreenState extends ConsumerState<LikesReviewScreen> {
         }
 
         return OneUiSubpageScaffold(
-          title: 'Likes review',
-          subtitle: 'Scroll through your favorites.',
+          title: l10n.discoverLikesReview,
+          subtitle: l10n.likesReviewSubtitle,
           actions: [
             IconButton(
               icon: const Icon(Icons.share_outlined),
@@ -75,7 +77,9 @@ class _LikesReviewScreenState extends ConsumerState<LikesReviewScreen> {
                     ? (_pageController.page ?? 0).round()
                     : 0;
                 if (index < _shuffled.length) {
-                  Share.share('Sharing ${_shuffled[index].displayName}');
+                  Share.share(
+                    l10n.likesReviewSharing(_shuffled[index].displayName),
+                  );
                 }
               },
             ),

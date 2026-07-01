@@ -9,6 +9,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/cache/cache_service.dart';
 import 'package:social_gallery/core/gallery/desktop_gallery_root_picker.dart';
+import 'package:social_gallery/core/l10n/app_locale_preference.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/core/l10n/l10n_labels.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/theme/accent_presets.dart';
@@ -57,21 +60,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _clearCache() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear cache'),
-        content: Text(
-          'Clear ${CacheService.formatBytes(_cacheBytes)} of cached thumbnails and temp files?',
-        ),
+        title: Text(l10n.dialogClearCacheTitle),
+        content: Text(l10n.dialogClearCacheMessage(_cacheBytes)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Clear'),
+            child: Text(l10n.actionClear),
           ),
         ],
       ),
@@ -80,29 +82,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await ref.read(cacheServiceProvider).clearCache();
       await _loadCacheSize();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Cache cleared')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.snackbarCacheCleared)),
+        );
       }
     }
-  }
-
-  String _themeLabel(AppThemeVariant variant) {
-    return appThemeVariantLabel(variant);
-  }
-
-  String _fontLabel(double factor) {
-    if (factor < 0.9) return 'Small';
-    if (factor < 1.1) return 'Normal';
-    if (factor < 1.3) return 'Large';
-    return 'Extra large';
-  }
-
-  String _animationLabel(double speed) {
-    if (speed <= 0.01) return 'Instant';
-    if (speed < 0.75) return 'Fast';
-    if (speed < 1.5) return 'Normal';
-    return 'Slow';
   }
 
   int _animationSpeedIndex(double speed) {
@@ -122,22 +106,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return _animationSpeedSteps[index.clamp(0, _animationSpeedSteps.length - 1)];
   }
 
+  Future<void> _pickLanguage(AppLocalePreference current) async {
+    final l10n = context.l10n;
+    final picked = await showOneUiSettingsPicker<AppLocalePreference>(
+      context: context,
+      title: l10n.settingsLanguage,
+      selected: current,
+      options: [
+        for (final preference in AppLocalePreference.values)
+          OneUiPickerOption(
+            value: preference,
+            label: appLocalePreferenceLabel(l10n, preference),
+          ),
+      ],
+    );
+    if (picked != null && picked != current) {
+      AppHaptics.medium();
+      ref.read(settingsProvider.notifier).setLocalePreference(picked);
+    }
+  }
+
   Future<void> _pickTheme(AppThemeVariant current) async {
+    final l10n = context.l10n;
     final picked = await showOneUiSettingsPicker<AppThemeVariant>(
       context: context,
-      title: 'Theme',
+      title: l10n.settingsTheme,
       selected: current,
-      options: const [
+      options: [
         OneUiPickerOption(
           value: AppThemeVariant.system,
-          label: 'System default',
+          label: appThemeVariantLabel(l10n, AppThemeVariant.system),
         ),
-        OneUiPickerOption(value: AppThemeVariant.light, label: 'Light'),
-        OneUiPickerOption(value: AppThemeVariant.solar, label: 'Solar'),
-        OneUiPickerOption(value: AppThemeVariant.dark, label: 'Dark'),
+        OneUiPickerOption(
+          value: AppThemeVariant.light,
+          label: appThemeVariantLabel(l10n, AppThemeVariant.light),
+        ),
+        OneUiPickerOption(
+          value: AppThemeVariant.solar,
+          label: appThemeVariantLabel(l10n, AppThemeVariant.solar),
+        ),
+        OneUiPickerOption(
+          value: AppThemeVariant.dark,
+          label: appThemeVariantLabel(l10n, AppThemeVariant.dark),
+        ),
         OneUiPickerOption(
           value: AppThemeVariant.darkOled,
-          label: 'Dark OLED',
+          label: appThemeVariantLabel(l10n, AppThemeVariant.darkOled),
         ),
       ],
     );
@@ -148,6 +162,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickAccentColor(Color current) async {
+    final l10n = context.l10n;
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
@@ -163,10 +178,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Accent color', style: theme.textTheme.titleLarge),
+              Text(l10n.settingsAccentColor, style: theme.textTheme.titleLarge),
               const SizedBox(height: OneUiSpacing.sm),
               Text(
-                'Choose the accent used for buttons, links, and highlights.',
+                l10n.settingsAccentColorDescription,
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: OneUiSpacing.lg),
@@ -199,16 +214,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _pickDesktopGalleryGridSize(
     DesktopGalleryGridSize current,
   ) async {
+    final l10n = context.l10n;
     final picked = await showOneUiSettingsPicker<DesktopGalleryGridSize>(
       context: context,
-      title: 'Gallery grid size',
+      title: l10n.settingsGalleryGridSize,
       selected: current,
       options: [
         for (final size in DesktopGalleryGridSize.values)
           OneUiPickerOption(
             value: size,
-            label: size.label,
-            subtitle: size.subtitle,
+            label: desktopGalleryGridSizeLabel(l10n, size),
+            subtitle: desktopGalleryGridSizeSubtitle(l10n, size),
           ),
       ],
     );
@@ -219,6 +235,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickFontSize() async {
+    final l10n = context.l10n;
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
@@ -239,10 +256,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Font size', style: theme.textTheme.titleLarge),
+                  Text(l10n.settingsFontSize, style: theme.textTheme.titleLarge),
                   const SizedBox(height: OneUiSpacing.sm),
                   Text(
-                    'Scale text across the app.',
+                    l10n.settingsFontSizeDescription,
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
@@ -259,7 +276,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           min: 0.8,
                           max: 1.4,
                           divisions: 3,
-                          label: _fontLabel(fontSizeFactor),
+                          label: fontSizeLabel(l10n, fontSizeFactor),
                           onChanged: (value) {
                             AppHaptics.selection();
                             ref
@@ -277,7 +294,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   Center(
                     child: Text(
-                      _fontLabel(fontSizeFactor),
+                      fontSizeLabel(l10n, fontSizeFactor),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -293,6 +310,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickAnimationSpeed() async {
+    final l10n = context.l10n;
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
@@ -313,10 +331,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Animation speed', style: theme.textTheme.titleLarge),
+                  Text(
+                    l10n.settingsAnimationSpeed,
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: OneUiSpacing.sm),
                   Text(
-                    'Preview how fast transitions feel across the app.',
+                    l10n.settingsAnimationSpeedDescription,
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
@@ -335,7 +356,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           min: 0,
                           max: (_animationSpeedSteps.length - 1).toDouble(),
                           divisions: _animationSpeedSteps.length - 1,
-                          label: _animationLabel(animationSpeed),
+                          label: animationSpeedLabel(l10n, animationSpeed),
                           onChanged: (value) {
                             AppHaptics.selection();
                             ref
@@ -355,7 +376,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   Center(
                     child: Text(
-                      _animationLabel(animationSpeed),
+                      animationSpeedLabel(l10n, animationSpeed),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -371,6 +392,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickTrashRetention() async {
+    final l10n = context.l10n;
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
@@ -391,10 +413,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Trash retention', style: theme.textTheme.titleLarge),
+                  Text(
+                    l10n.settingsTrashRetention,
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: OneUiSpacing.sm),
                   Text(
-                    'Items in trash are permanently removed after this period.',
+                    l10n.settingsTrashRetentionDescription,
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
@@ -403,7 +428,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     min: 1,
                     max: 90,
                     divisions: 89,
-                    label: '$days days',
+                    label: l10n.settingsTrashRetentionDays(days),
                     onChanged: (value) {
                       AppHaptics.selection();
                       ref
@@ -413,7 +438,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   Center(
                     child: Text(
-                      '$days days',
+                      l10n.settingsTrashRetentionDays(days),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -429,6 +454,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickCacheLimit() async {
+    final l10n = context.l10n;
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
@@ -449,10 +475,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Cache size limit', style: theme.textTheme.titleLarge),
+                  Text(
+                    l10n.settingsCacheSizeLimit,
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: OneUiSpacing.sm),
                   Text(
-                    'Maximum storage used by thumbnails and temp files.',
+                    l10n.settingsCacheSizeLimitDescription,
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
@@ -461,7 +490,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     min: 100,
                     max: 2000,
                     divisions: 19,
-                    label: '$limitMb MB',
+                    label: l10n.settingsCacheSizeLimitValue(limitMb),
                     onChanged: (value) {
                       ref
                           .read(settingsProvider.notifier)
@@ -470,7 +499,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   Center(
                     child: Text(
-                      '$limitMb MB',
+                      l10n.settingsCacheSizeLimitValue(limitMb),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -486,6 +515,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickOrganizeBatchSize() async {
+    final l10n = context.l10n;
     await showOneUiSettingsSheet<void>(
       context: context,
       builder: (context) {
@@ -504,10 +534,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Batch size', style: theme.textTheme.titleLarge),
+                  Text(l10n.settingsBatchSize, style: theme.textTheme.titleLarge),
                   const SizedBox(height: OneUiSpacing.sm),
                   Text(
-                    'Number of photos per organize session.',
+                    l10n.settingsBatchSizeDescription,
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: OneUiSpacing.lg),
@@ -526,7 +556,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   Center(
                     child: Text(
-                      '$batchSize photos',
+                      l10n.settingsBatchSizeValue(batchSize),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -542,11 +572,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _pickGalleryRoot() async {
+    final l10n = context.l10n;
     final prefs = ref.read(preferencesRepositoryProvider);
     final currentPath = prefs.desktopGalleryRootPath;
 
     try {
-      final path = await pickDesktopGalleryRootFolder();
+      final path = await pickDesktopGalleryRootFolder(l10n);
       if (path == null || path.isEmpty) return;
 
       if (path == currentPath) return;
@@ -556,7 +587,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       if (!saved) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not use that folder')),
+          SnackBar(content: Text(l10n.errorCouldNotUseFolder)),
         );
         return;
       }
@@ -564,26 +595,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       setState(() {});
       unawaited(ref.read(gallerySyncProvider.notifier).run(force: true));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gallery root updated. Rescanning library.')),
+        SnackBar(content: Text(l10n.snackbarGalleryRootUpdated)),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to select folder: $e')),
+        SnackBar(content: Text(l10n.errorFailedToSelectFolder('$e'))),
       );
     }
   }
 
   Future<void> _pickQueueOrder(OrganizeQueueOrder current) async {
+    final l10n = context.l10n;
     final picked = await showOneUiSettingsPicker<OrganizeQueueOrder>(
       context: context,
-      title: 'Queue order',
+      title: l10n.settingsQueueOrder,
       selected: current,
-      options: const [
-        OneUiPickerOption(value: OrganizeQueueOrder.random, label: 'Random'),
+      options: [
+        OneUiPickerOption(
+          value: OrganizeQueueOrder.random,
+          label: l10n.queueOrderRandom,
+        ),
         OneUiPickerOption(
           value: OrganizeQueueOrder.chronological,
-          label: 'Chronological',
+          label: l10n.queueOrderChronological,
         ),
       ],
     );
@@ -594,6 +629,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final repo = ref.watch(organizeRepositoryProvider);
     final batchSize = ref.watch(organizeBatchSizeProvider);
@@ -619,7 +655,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: OneUiSpacing.sectionGap),
           ],
           OneUiSettingsSection(
-            title: 'Appearance',
+            title: l10n.settingsSectionAppearance,
             headerPadding: const EdgeInsets.fromLTRB(
               OneUiSpacing.pageHorizontal,
               OneUiSpacing.md,
@@ -628,29 +664,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             children: [
               OneUiSettingsTile(
+                icon: OneUiSettingsIcon.language,
+                title: l10n.settingsLanguage,
+                value: appLocalePreferenceLabel(l10n, settings.localePreference),
+                onTap: () => _pickLanguage(settings.localePreference),
+              ),
+              OneUiSettingsTile(
                 icon: OneUiSettingsIcon.display,
-                title: 'Theme',
-                value: _themeLabel(settings.appTheme),
+                title: l10n.settingsTheme,
+                value: appThemeVariantLabel(l10n, settings.appTheme),
+                showDivider: true,
                 onTap: () => _pickTheme(settings.appTheme),
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.palette,
-                title: 'Accent color',
-                value: AccentPresets.labelFor(settings.accentColor),
+                title: l10n.settingsAccentColor,
+                value: accentPresetLabel(l10n, settings.accentColor),
                 showDivider: true,
                 onTap: () => _pickAccentColor(settings.accentColor),
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.text,
-                title: 'Font size',
-                value: _fontLabel(settings.fontSizeFactor),
+                title: l10n.settingsFontSize,
+                value: fontSizeLabel(l10n, settings.fontSizeFactor),
                 showDivider: true,
                 onTap: _pickFontSize,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.motion,
-                title: 'Animation speed',
-                value: _animationLabel(settings.animationSpeed),
+                title: l10n.settingsAnimationSpeed,
+                value: animationSpeedLabel(l10n, settings.animationSpeed),
                 showDivider: true,
                 onTap: _pickAnimationSpeed,
               ),
@@ -658,24 +701,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiSettingsSection(
-            title: 'Gallery',
+            title: l10n.settingsSectionGallery,
             children: [
               if (usesFilesystemGallery)
                 OneUiSettingsTile(
                   icon: OneUiSettingsIcon.folder,
-                  title: 'Gallery root folder',
+                  title: l10n.settingsGalleryRootFolder,
                   subtitle: galleryRootPath?.isNotEmpty == true
                       ? galleryRootPath
-                      : 'Choose a folder to scan for photos and videos',
-                  value: galleryRootDisplayValue(galleryRootPath),
+                      : l10n.settingsGalleryRootFolderEmptySubtitle,
+                  value: galleryRootDisplayValue(galleryRootPath, l10n),
                   onTap: _pickGalleryRoot,
                 ),
               if (usesFilesystemGallery)
                 OneUiSettingsTile(
                   icon: OneUiSettingsIcon.gallery,
-                  title: 'Gallery grid size',
-                  subtitle: settings.desktopGalleryGridSize.subtitle,
-                  value: settings.desktopGalleryGridSize.label,
+                  title: l10n.settingsGalleryGridSize,
+                  subtitle: desktopGalleryGridSizeSubtitle(
+                    l10n,
+                    settings.desktopGalleryGridSize,
+                  ),
+                  value: desktopGalleryGridSizeLabel(
+                    l10n,
+                    settings.desktopGalleryGridSize,
+                  ),
                   showDivider: true,
                   onTap: () => _pickDesktopGalleryGridSize(
                     settings.desktopGalleryGridSize,
@@ -683,8 +732,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.gallery,
-                title: 'Gallery view mode',
-                subtitle: 'Pinch-zoom gallery tab instead of Home and Explore',
+                title: l10n.settingsGalleryViewMode,
+                subtitle: l10n.settingsGalleryViewModeSubtitle,
                 showDivider: usesFilesystemGallery,
                 trailing: Switch.adaptive(
                   value: settings.galleryViewMode,
@@ -701,12 +750,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const BackupSettingsSection(),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiSettingsSection(
-            title: 'Content',
+            title: l10n.settingsSectionContent,
             children: [
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.folder,
-                title: 'Manage content',
-                subtitle: 'Folders, home feed, and visibility',
+                title: l10n.settingsManageContent,
+                subtitle: l10n.settingsManageContentSubtitle,
                 onTap: () {
                   AppHaptics.light();
                   context.push('/folder_management');
@@ -714,8 +763,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.travel,
-                title: 'Travel mode',
-                subtitle: 'Trips and date-range organization',
+                title: l10n.settingsTravelMode,
+                subtitle: l10n.settingsTravelModeSubtitle,
                 showDivider: true,
                 onTap: () {
                   AppHaptics.light();
@@ -726,34 +775,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiSettingsSection(
-            title: 'Organize',
+            title: l10n.settingsSectionOrganize,
             children: [
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,
-                title: 'Batch size',
+                title: l10n.settingsBatchSize,
                 value: '$batchSize',
                 onTap: _pickOrganizeBatchSize,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,
-                title: 'Queue order',
+                title: l10n.settingsQueueOrder,
                 value: repo.queueOrder == OrganizeQueueOrder.random
-                    ? 'Random'
-                    : 'Chronological',
+                    ? l10n.queueOrderRandom
+                    : l10n.queueOrderChronological,
                 showDivider: true,
                 onTap: () => _pickQueueOrder(repo.queueOrder),
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,
-                title: 'Release kept photos',
-                subtitle: 'Return processed photos to the organize queue',
+                title: l10n.settingsReleaseKeptPhotos,
+                subtitle: l10n.settingsReleaseKeptPhotosSubtitle,
                 showDivider: true,
                 onTap: () async {
                   AppHaptics.light();
                   await repo.clearProcessed();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Released kept photos')),
+                      SnackBar(content: Text(l10n.snackbarReleasedKeptPhotos)),
                     );
                   }
                 },
@@ -762,18 +811,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiSettingsSection(
-            title: 'Storage',
+            title: l10n.settingsSectionStorage,
             children: [
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.trash,
-                title: 'Trash retention',
-                value: '${settings.trashRetentionDays} days',
+                title: l10n.settingsTrashRetention,
+                value: l10n.settingsTrashRetentionDays(settings.trashRetentionDays),
                 onTap: _pickTrashRetention,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.trash,
-                title: 'Deleted items',
-                subtitle: 'View, restore, or empty trash',
+                title: l10n.settingsDeletedItems,
+                subtitle: l10n.settingsDeletedItemsSubtitle,
                 showDivider: true,
                 onTap: () {
                   AppHaptics.light();
@@ -782,7 +831,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.storage,
-                title: 'Cache',
+                title: l10n.settingsCache,
                 value: CacheService.formatBytes(_cacheBytes),
                 showDivider: true,
                 onTap: _cacheBytes > 0 ? _clearCache : null,
@@ -790,15 +839,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.storage,
-                title: 'Cache size limit',
-                value: '${settings.cacheSizeLimitMb} MB',
+                title: l10n.settingsCacheSizeLimit,
+                value: l10n.settingsCacheSizeLimitValue(settings.cacheSizeLimitMb),
                 showDivider: true,
                 onTap: _pickCacheLimit,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.storage,
-                title: 'Auto-clear on close',
-                subtitle: 'Clear cache when the app is closed',
+                title: l10n.settingsAutoClearOnClose,
+                subtitle: l10n.settingsAutoClearOnCloseSubtitle,
                 showDivider: true,
                 trailing: Switch.adaptive(
                   value: settings.autoClearCacheOnClose,
@@ -814,17 +863,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiSettingsSection(
-            title: 'About',
+            title: l10n.settingsSectionAbout,
             children: [
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.info,
-                title: 'Version',
+                title: l10n.settingsVersion,
                 value: _appVersion.isEmpty ? '...' : _appVersion,
                 showChevron: false,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.privacy,
-                title: 'Privacy policy',
+                title: l10n.settingsPrivacyPolicy,
                 showDivider: true,
                 onTap: () => launchUrl(
                   Uri.parse(_privacyPolicyUrl),
@@ -833,17 +882,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.license,
-                title: 'Open-source licenses',
+                title: l10n.settingsOpenSourceLicenses,
                 showDivider: true,
                 onTap: () => showLicensePage(context: context),
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.share,
-                title: 'Share app',
+                title: l10n.settingsShareApp,
                 showDivider: true,
-                onTap: () => Share.share(
-                  'Check out Social Gallery - a local-first photo gallery.',
-                ),
+                onTap: () => Share.share(l10n.settingsShareAppMessage),
               ),
             ],
           ),
@@ -859,6 +906,7 @@ class _DebugBuildWarningCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final isDark = theme.brightness == Brightness.dark;
     final warningColor = isDark
         ? const Color(0xFFF9A825)
@@ -892,14 +940,14 @@ class _DebugBuildWarningCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Debug build',
+                      l10n.debugBuildTitle,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: OneUiSpacing.xs),
                     Text(
-                      'This is not a production build and may contain errors.',
+                      l10n.debugBuildMessage,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -929,10 +977,11 @@ class _AccentSwatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Semantics(
       button: true,
       selected: selected,
-      label: preset.label,
+      label: accentPresetLabel(l10n, preset.color),
       child: GestureDetector(
         onTap: onTap,
         child: Container(

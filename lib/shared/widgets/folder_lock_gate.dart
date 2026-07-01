@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/auth/biometric_service.dart';
 import 'package:social_gallery/core/auth/folder_unlock_store.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 
 typedef FolderUnlockedBuilder = Widget Function(BuildContext context);
@@ -80,6 +81,8 @@ class _FolderLockGateState extends ConsumerState<FolderLockGate> {
     final biometric = _biometric;
     if (store == null || biometric == null) return;
 
+    final l10n = context.l10n;
+
     setState(() {
       _authenticating = true;
       _error = null;
@@ -90,14 +93,13 @@ class _FolderLockGateState extends ConsumerState<FolderLockGate> {
     if (!canUse) {
       setState(() {
         _authenticating = false;
-        _error =
-            'Biometrics are not available. Enroll fingerprint or face unlock in device settings.';
+        _error = l10n.folderBiometricsUnavailable;
       });
       return;
     }
 
     final ok = await biometric.authenticate(
-      reason: 'Unlock ${widget.folder.name}',
+      reason: l10n.folderUnlockReason(widget.folder.name),
     );
     if (!mounted) return;
 
@@ -108,13 +110,14 @@ class _FolderLockGateState extends ConsumerState<FolderLockGate> {
     setState(() {
       _authenticating = false;
       if (!ok) {
-        _error = 'Authentication failed or was cancelled.';
+        _error = l10n.folderAuthFailed;
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final store = ref.watch(folderUnlockStoreProvider);
     if (_isUnlocked(store)) {
       return widget.builder(context);
@@ -128,13 +131,13 @@ class _FolderLockGateState extends ConsumerState<FolderLockGate> {
           children: [
             const Icon(Icons.lock_outline, size: 48),
             const SizedBox(height: 16),
-            const Text(
-              'This folder is locked',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            Text(
+              l10n.folderLockedTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             Text(
-              'Use biometrics to view ${widget.folder.name}.',
+              l10n.folderLockedMessage(widget.folder.name),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -155,7 +158,7 @@ class _FolderLockGateState extends ConsumerState<FolderLockGate> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Unlock'),
+                  : Text(l10n.actionUnlock),
             ),
           ],
         ),

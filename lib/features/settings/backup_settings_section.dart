@@ -6,11 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:go_router/go_router.dart';
 import 'package:social_gallery/core/backup/backup_deep_link.dart';
 import 'package:social_gallery/core/backup/desktop_backup_controller.dart';
+import 'package:social_gallery/core/l10n/backup_detail_l10n.dart';
+import 'package:social_gallery/features/settings/vault_password_dialog.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
+import 'package:social_gallery/l10n/app_localizations.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_settings_tile.dart';
 
 /// Mobile flow to discover a desktop and pair with a PIN.
@@ -37,6 +42,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
   }
 
   Future<void> _discover() async {
+    final l10n = context.l10n;
     setState(() {
       _busy = true;
       _error = null;
@@ -47,17 +53,18 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
       _hostController.text = found.host;
       _portController.text = found.port.toString();
     } else {
-      _error = 'No desktop found. Enter the address shown on your computer.';
+      _error = l10n.backupErrorNoDesktopFound;
     }
     setState(() => _busy = false);
   }
 
   Future<void> _pair() async {
+    final l10n = context.l10n;
     final host = _hostController.text.trim();
     final port = int.tryParse(_portController.text.trim());
     final pin = _pinController.text.trim();
     if (host.isEmpty || port == null || pin.length != 6) {
-      setState(() => _error = 'Enter host, port, and 6-digit PIN from desktop.');
+      setState(() => _error = l10n.backupErrorEnterHostPortPin);
       return;
     }
 
@@ -81,7 +88,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
     }
     setState(() {
       _busy = false;
-      _error = 'Pairing failed. Check the PIN and try again.';
+      _error = l10n.backupErrorPairingFailed;
     });
   }
 
@@ -93,6 +100,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
   }
 
   Future<void> _scanQr() async {
+    final l10n = context.l10n;
     final payload = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (context) => const _BackupQrScannerScreen()),
@@ -100,7 +108,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
     if (!mounted || payload == null) return;
     final params = BackupDeepLink.parsePayload(payload);
     if (params == null) {
-      setState(() => _error = 'QR code is not a valid backup pairing link.');
+      setState(() => _error = l10n.backupErrorInvalidQr);
       return;
     }
     await _pairFromParams(params);
@@ -109,6 +117,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Padding(
       padding: EdgeInsets.only(
         left: OneUiSpacing.pageHorizontal,
@@ -120,10 +129,10 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Pair with desktop', style: theme.textTheme.titleLarge),
+          Text(l10n.backupPairSheetTitle, style: theme.textTheme.titleLarge),
           const SizedBox(height: OneUiSpacing.sm),
           Text(
-            'On your computer, enable Receive backups in Settings and enter the PIN shown there.',
+            l10n.backupPairSheetDescription,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -131,8 +140,8 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
           const SizedBox(height: OneUiSpacing.md),
           TextField(
             controller: _hostController,
-            decoration: const InputDecoration(
-              labelText: 'Desktop address',
+            decoration: InputDecoration(
+              labelText: l10n.backupDesktopAddress,
               hintText: '192.168.1.10',
             ),
             keyboardType: TextInputType.url,
@@ -140,13 +149,13 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
           const SizedBox(height: OneUiSpacing.sm),
           TextField(
             controller: _portController,
-            decoration: const InputDecoration(labelText: 'Port'),
+            decoration: InputDecoration(labelText: l10n.backupPort),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: OneUiSpacing.sm),
           TextField(
             controller: _pinController,
-            decoration: const InputDecoration(labelText: '6-digit PIN'),
+            decoration: InputDecoration(labelText: l10n.backupPinLabel),
             keyboardType: TextInputType.number,
             maxLength: 6,
           ),
@@ -158,7 +167,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
           FilledButton.tonalIcon(
             onPressed: _busy ? null : _scanQr,
             icon: const Icon(Icons.qr_code_scanner),
-            label: const Text('Scan pairing QR code'),
+            label: Text(l10n.backupScanPairingQr),
           ),
           const SizedBox(height: OneUiSpacing.sm),
           Row(
@@ -166,7 +175,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: _busy ? null : _discover,
-                  child: const Text('Find on network'),
+                  child: Text(l10n.backupFindOnNetwork),
                 ),
               ),
               const SizedBox(width: OneUiSpacing.sm),
@@ -179,7 +188,7 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Pair'),
+                      : Text(l10n.backupPair),
                 ),
               ),
             ],
@@ -190,38 +199,40 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
   }
 }
 
-String backupStatusLabel(DesktopBackupState state, DateTime? lastBackupAt) {
+String backupStatusLabel(
+  AppLocalizations l10n,
+  DesktopBackupState state,
+  DateTime? lastBackupAt,
+) {
   if (state.showsProgressUi) {
     if (state.total > 0) {
-      return 'Backing up ${state.processed}/${state.total}';
+      return l10n.backupStatusBackingUp(state.processed, state.total);
     }
-    return state.detail;
+    return localizeBackupDetail(l10n, state.detail);
   }
   if (state.isRunning) {
-    return state.detail;
+    return localizeBackupDetail(l10n, state.detail);
   }
   return switch (state.phase) {
-    DesktopBackupPhase.disabled => 'Off',
-    DesktopBackupPhase.waitingForDesktop => 'Waiting for desktop',
-    DesktopBackupPhase.desktopReady => 'Desktop ready',
-    DesktopBackupPhase.indexing => state.detail,
-    DesktopBackupPhase.reconciling => state.detail,
-    DesktopBackupPhase.verifying => state.detail,
-    DesktopBackupPhase.syncing => state.detail,
+    DesktopBackupPhase.disabled => l10n.backupStatusOff,
+    DesktopBackupPhase.waitingForDesktop => l10n.backupStatusWaitingForDesktop,
+    DesktopBackupPhase.desktopReady => l10n.backupStatusDesktopReady,
+    DesktopBackupPhase.indexing => localizeBackupDetail(l10n, state.detail),
+    DesktopBackupPhase.reconciling => localizeBackupDetail(l10n, state.detail),
+    DesktopBackupPhase.verifying => localizeBackupDetail(l10n, state.detail),
+    DesktopBackupPhase.syncing => localizeBackupDetail(l10n, state.detail),
     DesktopBackupPhase.done => lastBackupAt != null
-        ? 'Last backup ${_formatRelative(lastBackupAt)}'
-        : 'Up to date',
-    DesktopBackupPhase.error => 'Error - ${state.detail}',
-    _ => state.detail.isNotEmpty ? state.detail : 'Idle',
+        ? l10n.backupStatusLastBackup(
+            localizeBackupRelativeTime(l10n, lastBackupAt),
+          )
+        : l10n.backupStatusUpToDate,
+    DesktopBackupPhase.error => l10n.backupStatusError(
+      localizeBackupDetail(l10n, state.detail),
+    ),
+    _ => state.detail.isNotEmpty
+        ? localizeBackupDetail(l10n, state.detail)
+        : l10n.backupStatusIdle,
   };
-}
-
-String _formatRelative(DateTime time) {
-  final diff = DateTime.now().difference(time);
-  if (diff.inMinutes < 1) return 'just now';
-  if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-  if (diff.inDays < 1) return '${diff.inHours}h ago';
-  return '${diff.inDays}d ago';
 }
 
 Future<void> showBackupPairingSheet(BuildContext context) {
@@ -239,16 +250,14 @@ Future<void> showPairingSuccessDialog(
   return showDialog<void>(
     context: context,
     builder: (context) {
+      final l10n = context.l10n;
       return AlertDialog(
-        title: const Text('Pairing successful'),
-        content: Text(
-          '$deviceName is now paired with this computer. '
-          'Backups will start automatically when both devices are on the same Wi-Fi.',
-        ),
+        title: Text(l10n.backupPairingSuccessTitle),
+        content: Text(l10n.backupPairingSuccessMessage(deviceName)),
         actions: [
           FilledButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l10n.actionOk),
           ),
         ],
       );
@@ -310,14 +319,15 @@ class _DesktopBackupQrSheetState extends ConsumerState<_DesktopBackupQrSheet> {
     );
 
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(OneUiSpacing.pageHorizontal),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Pair your phone', style: theme.textTheme.titleLarge),
+          Text(l10n.backupPairYourPhoneTitle, style: theme.textTheme.titleLarge),
           const SizedBox(height: OneUiSpacing.sm),
-          Text('PIN: ${widget.pin}', style: theme.textTheme.headlineSmall),
+          Text(l10n.backupPinDisplay(widget.pin), style: theme.textTheme.headlineSmall),
           Text('${widget.host}:${widget.port}', style: theme.textTheme.bodyMedium),
           const SizedBox(height: OneUiSpacing.md),
           QrImageView(
@@ -333,7 +343,7 @@ class _DesktopBackupQrSheetState extends ConsumerState<_DesktopBackupQrSheet> {
           ),
           const SizedBox(height: OneUiSpacing.md),
           Text(
-            'Scan with your phone camera or use Scan pairing QR in Settings > Desktop backup.',
+            l10n.backupQrInstructions,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall,
           ),
@@ -356,8 +366,9 @@ class _BackupQrScannerScreenState extends State<_BackupQrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan pairing QR')),
+      appBar: AppBar(title: Text(l10n.backupScanPairingQrTitle)),
       body: MobileScanner(
         onDetect: (capture) {
           if (_handled) return;
@@ -384,9 +395,26 @@ class BackupSettingsSection extends ConsumerStatefulWidget {
 class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final prefs = ref.watch(preferencesRepositoryProvider);
     final backupState = ref.watch(desktopBackupProvider);
     final notifier = ref.read(desktopBackupProvider.notifier);
+
+    if (!usesFilesystemGallery) {
+      ref.listen(
+        desktopBackupProvider.select((s) => s.needsVaultPassword),
+        (previous, next) async {
+          if (next != true || !mounted) return;
+          final password = await showVaultPasswordDialog(
+            context,
+            isNewPassword: true,
+          );
+          if (password != null && mounted) {
+            await notifier.registerVaultPassword(password);
+          }
+        },
+      );
+    }
 
     if (usesFilesystemGallery) {
       ref.listen(
@@ -402,12 +430,12 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
           prefs.pairedMobileDeviceName != null;
 
       return OneUiSettingsSection(
-        title: 'Desktop backup',
+        title: l10n.backupSectionTitle,
         children: [
           OneUiSettingsTile(
             icon: OneUiSettingsIcon.cloud,
-            title: 'Receive backups',
-            subtitle: 'Allow this computer to receive photos from your phone',
+            title: l10n.backupReceiveBackups,
+            subtitle: l10n.backupReceiveBackupsSubtitle,
             trailing: Switch.adaptive(
               value: prefs.desktopReceiveBackups,
               onChanged: (value) => notifier.setDesktopReceiveEnabled(value),
@@ -419,41 +447,48 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
                 backupState.isRunning)
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.sync,
-                title: 'Indexing backups',
-                subtitle: backupState.detail,
+                title: l10n.backupIndexingBackups,
+                subtitle: localizeBackupDetail(l10n, backupState.detail),
                 showChevron: false,
               ),
             if (!isDesktopPaired)
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.folder,
-                title: 'Show pairing code',
+                title: l10n.backupShowPairingCode,
                 subtitle: backupState.localIp != null &&
                         backupState.localServerPort != null
                     ? '${backupState.localIp}:${backupState.localServerPort}'
-                    : 'Start receiving to show code',
+                    : l10n.backupStartReceivingToShowCode,
                 onTap: () => showDesktopBackupQrSheet(context, ref),
               ),
             if (isDesktopPaired) ...[
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.device,
-                title: 'Paired device',
+                title: l10n.backupPairedDevice,
                 value: prefs.pairedMobileDeviceName,
                 showChevron: false,
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.trash,
-                title: 'Unpair device',
-                subtitle: 'Stop accepting backups from this phone',
+                title: l10n.backupUnpairDevice,
+                subtitle: l10n.backupUnpairDeviceSubtitle,
                 onTap: () => notifier.unpairDesktopReceiver(),
               ),
             ],
             OneUiSettingsTile(
               icon: OneUiSettingsIcon.sync,
-              title: 'Refresh library',
-              subtitle: 'Rescan folders after new backups arrive',
+              title: l10n.backupRefreshLibrary,
+              subtitle: l10n.backupRefreshLibrarySubtitle,
               onTap: () =>
                   ref.read(gallerySyncProvider.notifier).run(force: true),
             ),
+            if (_serverVaultCount(backupState) > 0)
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.privacy,
+                title: l10n.backupVaultStorageTitle,
+                subtitle: l10n.backupVaultStorageCount(_serverVaultCount(backupState)),
+                showChevron: false,
+              ),
           ],
         ],
       );
@@ -461,12 +496,12 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
 
     final isPaired = prefs.backupAuthToken != null;
     return OneUiSettingsSection(
-      title: 'Desktop backup',
+      title: l10n.backupSectionTitle,
       children: [
         OneUiSettingsTile(
           icon: OneUiSettingsIcon.cloud,
-          title: 'Back up to desktop',
-          subtitle: 'Automatic backup on same Wi-Fi when desktop is running',
+          title: l10n.backupBackUpToDesktop,
+          subtitle: l10n.backupBackUpToDesktopSubtitle,
           trailing: Switch.adaptive(
             value: prefs.backupEnabled,
             onChanged: (value) => notifier.setBackupEnabled(value),
@@ -476,9 +511,9 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
         if (prefs.backupEnabled) ...[
           OneUiSettingsTile(
             icon: OneUiSettingsIcon.device,
-            title: isPaired ? 'Paired desktop' : 'Pair with desktop',
+            title: isPaired ? l10n.backupPairedDesktop : l10n.backupPairWithDesktop,
             value: isPaired ? prefs.pairedDesktopName : null,
-            subtitle: backupStatusLabel(backupState, prefs.lastBackupAt),
+            subtitle: backupStatusLabel(l10n, backupState, prefs.lastBackupAt),
             onTap: isPaired
                 ? null
                 : () => showBackupPairingSheet(context),
@@ -486,9 +521,31 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
           ),
           if (isPaired)
             OneUiSettingsTile(
+              icon: OneUiSettingsIcon.folder,
+              title: l10n.desktopArchiveBrowseTitle,
+              subtitle: l10n.desktopArchiveBrowseSubtitle,
+              onTap: () => context.push('/desktop-archive'),
+            ),
+          if (isPaired)
+            OneUiSettingsTile(
+              icon: OneUiSettingsIcon.privacy,
+              title: l10n.vaultPasswordChangeTitle,
+              subtitle: l10n.vaultPasswordChangeSubtitle,
+              onTap: () async {
+                final password = await showVaultPasswordDialog(
+                  context,
+                  isNewPassword: true,
+                );
+                if (password != null) {
+                  await notifier.registerVaultPassword(password);
+                }
+              },
+            ),
+          if (isPaired)
+            OneUiSettingsTile(
               icon: OneUiSettingsIcon.sync,
-              title: 'Back up now',
-              subtitle: 'Only runs when desktop is available',
+              title: l10n.backupBackUpNow,
+              subtitle: l10n.backupBackUpNowSubtitle,
               onTap: backupState.isRunning
                   ? null
                   : () => notifier.checkAndMaybeRun(force: true),
@@ -496,7 +553,7 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
           if (isPaired)
             OneUiSettingsTile(
               icon: OneUiSettingsIcon.trash,
-              title: 'Unpair desktop',
+              title: l10n.backupUnpairDesktop,
               onTap: () => notifier.unpair(),
             ),
         ],
@@ -504,3 +561,5 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
     );
   }
 }
+
+int _serverVaultCount(DesktopBackupState state) => state.vaultEncryptedCount;

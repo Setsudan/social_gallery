@@ -25,6 +25,7 @@ class DiscoverStubScreen extends StatelessWidget {
             context.pop();
           },
         ),
+        title: Text(title),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

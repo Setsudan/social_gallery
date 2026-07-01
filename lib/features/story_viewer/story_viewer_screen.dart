@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
@@ -24,6 +25,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   List<MediaItem> _mediaList = [];
   int _currentIndex = 0;
   bool _loading = true;
+  bool _noStories = false;
   String? _error;
 
   Timer? _timer;
@@ -44,10 +46,8 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     try {
       final repo = ref.read(mediaRepositoryProvider);
 
-      // 1. Mark as viewed immediately so that home screen bubble updates
       await repo.markStoryAsViewed(widget.folderPath);
 
-      // 2. Load folders with stories to get the items for this folder
       final folders = await repo.getFoldersWithStories();
       final currentFolder = folders
           .where((f) => f.folderPath == widget.folderPath)
@@ -55,7 +55,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
       if (currentFolder == null || currentFolder.latestMedia.isEmpty) {
         setState(() {
-          _error = 'No recent stories found in this folder.';
+          _noStories = true;
           _loading = false;
         });
         return;
@@ -122,7 +122,6 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       AppHaptics.selection();
       _startStoryTimer();
     } else {
-      // Completed last story, dismiss
       context.pop();
     }
   }
@@ -136,7 +135,6 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       AppHaptics.selection();
       _startStoryTimer();
     } else {
-      // At first story, restart it
       setState(() {
         _progress = 0.0;
       });
@@ -152,6 +150,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
 
     if (_loading) {
@@ -161,7 +160,9 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       );
     }
 
-    if (_error != null) {
+    if (_noStories || _error != null) {
+      final message =
+          _noStories ? l10n.storyNoStoriesFound : _error!;
       return Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -177,14 +178,14 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  _error!,
+                  message,
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => context.pop(),
-                  child: const Text('Go Back'),
+                  child: Text(l10n.actionGoBack),
                 ),
               ],
             ),
@@ -223,7 +224,6 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Media Viewer
               Positioned.fill(
                 child: usesFilesystemGallery
                     ? FullscreenMediaContent(
@@ -238,16 +238,18 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                         builder: (context, snapshot) {
                           if (snapshot.connectionState != ConnectionState.done) {
                             return const Center(
-                              child: CircularProgressIndicator(color: Colors.white),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
                             );
                           }
 
                           final entity = snapshot.data;
                           if (entity == null) {
-                            return const Center(
+                            return Center(
                               child: Text(
-                                'Media not found',
-                                style: TextStyle(color: Colors.white),
+                                l10n.errorMediaNotFound,
+                                style: const TextStyle(color: Colors.white),
                               ),
                             );
                           }
@@ -261,7 +263,6 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                         },
                       ),
               ),
-
               Positioned(
                 top: 48,
                 left: 12,

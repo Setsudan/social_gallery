@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/asset_video_player.dart';
@@ -22,7 +23,9 @@ class OrganizeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final date = DateTime.fromMillisecondsSinceEpoch(item.sortDate);
-    final dateStr = DateFormat.yMMMd().add_jm().format(date);
+    final dateStr = DateFormat.yMMMd(
+      Localizations.localeOf(context).toString(),
+    ).add_jm().format(date);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -79,7 +82,10 @@ class OrganizeCard extends StatelessWidget {
                     ),
                     if (item.width != null && item.height != null)
                       Text(
-                        '${item.width} x ${item.height}',
+                        context.l10n.metadataDimensionsValue(
+                          item.width!,
+                          item.height!,
+                        ),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.white60,
                         ),

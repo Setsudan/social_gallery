@@ -23,7 +23,11 @@ class MediaPermissionService {
       return MediaPermissionState.granted;
     }
     if (Platform.isAndroid) {
-      await [Permission.photos, Permission.videos].request();
+      await [
+        Permission.photos,
+        Permission.videos,
+        Permission.accessMediaLocation,
+      ].request();
     }
     final state = await PhotoManager.requestPermissionExtend();
     return _mapState(state);

@@ -25,6 +25,7 @@ class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
     );
 
     final favorites = await mediaRepo.getFavoriteMediaList();
+    final geotagged = await mediaRepo.getMediaWithLocation();
 
     var similarCount = 0;
     var lowQualityCount = 0;
@@ -42,6 +43,7 @@ class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
       pendingTrashCount: organizeRepo.pendingTrashIds.length,
       likedCount: favorites.length,
       processedCount: organizeRepo.stats.processedCount,
+      geotaggedCount: geotagged.length,
       isLoading: false,
     );
   }

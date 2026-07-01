@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -10,15 +11,14 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
-import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/features/home/home_providers.dart';
-import 'package:social_gallery/shared/widgets/account_folder_card.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/feed_post_card.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/shared/navigation/media_viewer_session.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/stories_row.dart';
@@ -65,7 +65,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _refresh() async {
     await ref.read(homeFeedPaginatedProvider.notifier).loadMore(refresh: true);
     ref.invalidate(homeStoriesProvider);
-    ref.invalidate(homeAccountFoldersProvider);
   }
 
   Future<void> _toggleFavorite(FeedItem item) async {
@@ -101,7 +100,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     final storiesAsync = ref.watch(homeStoriesProvider);
-    final accountFoldersAsync = ref.watch(homeAccountFoldersProvider);
     final motion = AppMotion.of(context, ref);
     listenForTabScrollToTop(
       ref,
@@ -114,15 +112,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       extendBody: true,
       body: RefreshIndicator(
         onRefresh: _refresh,
-        child: _buildBody(storiesAsync, accountFoldersAsync),
+        child: _buildBody(storiesAsync),
       ),
     );
   }
 
-  Widget _buildBody(
-    AsyncValue<List<FolderWithStories>> storiesAsync,
-    AsyncValue<List<FolderInfo>> accountFoldersAsync,
-  ) {
+  Widget _buildBody(AsyncValue<List<FolderWithStories>> storiesAsync) {
+    final l10n = context.l10n;
     final listPadding = FloatingNavInsets.scrollPadding(context);
 
     if (_paginated.error != null && _items.isEmpty) {
@@ -133,7 +129,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SizedBox(
             height: MediaQuery.sizeOf(context).height * 0.4,
             child: EmptyState(
-              title: 'Could not load feed',
+              title: l10n.homeErrorLoadFeed,
               message: _paginated.error,
               icon: Icons.error_outline,
             ),
@@ -150,11 +146,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (folders) => folders,
       orElse: () => const <FolderWithStories>[],
     );
-    final accountFolders = accountFoldersAsync.maybeWhen(
-      data: (folders) => folders,
-      orElse: () => const <FolderInfo>[],
-    );
-
     Widget storiesRow() {
       return StoriesRow(
         folders: stories,
@@ -164,7 +155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         onCameraTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Camera capture coming soon')),
+            SnackBar(content: Text(context.l10n.snackbarCameraCaptureComingSoon)),
           );
         },
       );
@@ -176,27 +167,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: listPadding,
         children: [
           storiesRow(),
-          for (final folder in accountFolders)
-            AccountFolderCard(
-              folder: folder,
-              onTap: () {
-                AppHaptics.light();
-                context.push(folderProfileLocation(folder.path));
-              },
+          SizedBox(
+            height: 360,
+            child: EmptyState(
+              title: l10n.homeEmptyTitle,
+              message: l10n.homeEmptyMessage,
             ),
-          if (accountFolders.isEmpty)
-            const SizedBox(
-              height: 360,
-              child: EmptyState(
-                title: 'No posts yet',
-                message: 'Add folders to Home Feed in Manage Content.',
-              ),
-            ),
+          ),
         ],
       );
     }
 
-    final headerCount = 1 + accountFolders.length;
+    const headerCount = 1;
 
     return ListView.builder(
       controller: _scrollController,
@@ -206,17 +188,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       itemBuilder: (context, index) {
         if (index == 0) {
           return storiesRow();
-        }
-
-        if (index <= accountFolders.length) {
-          final folder = accountFolders[index - 1];
-          return AccountFolderCard(
-            folder: folder,
-            onTap: () {
-              AppHaptics.light();
-              context.push(folderProfileLocation(folder.path));
-            },
-          );
         }
 
         final feedIndex = index - headerCount;
@@ -235,12 +206,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             item: item,
             onFolderTap: () =>
                 context.push(folderProfileLocation(item.folderPath)),
-            onMediaTap: () => context.push(
-              mediaViewerLocation(
-                item.media.uri,
-                mediaId: item.media.id,
-                favorite: item.media.isFavorite,
-              ),
+            onMediaTap: () => openMediaViewer(
+              context,
+              ref,
+              items: _items.map((entry) => entry.media).toList(),
+              item: item.media,
             ),
             onFavoriteTap: () => _toggleFavorite(item),
             onShareTap: () => _shareMedia(item),

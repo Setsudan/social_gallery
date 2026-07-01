@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/recent_search.dart';
@@ -116,6 +117,7 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final recentSearches = ref.watch(recentSearchesProvider);
@@ -151,7 +153,7 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
               ),
               children: [
                 Text(
-                  'Albums and folders',
+                  l10n.searchAlbumsAndFolders,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -164,7 +166,7 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
                   )
                 else if (folderSuggestions.isEmpty)
                   Text(
-                    'No matching albums. Try a photo or folder name.',
+                    l10n.searchNoMatchingAlbums,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -190,7 +192,7 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
                   Row(
                     children: [
                       Text(
-                        'Recent searches',
+                        l10n.searchRecentSearches,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -201,7 +203,7 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
                           AppHaptics.light();
                           ref.read(recentSearchesProvider.notifier).clearAll();
                         },
-                        child: const Text('Clear all'),
+                        child: Text(l10n.searchClearAll),
                       ),
                     ],
                   ),
@@ -350,6 +352,7 @@ class _GradientSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
     final accent = colorScheme.primary;
 
@@ -388,7 +391,7 @@ class _GradientSearchBar extends StatelessWidget {
                     textInputAction: TextInputAction.search,
                     onSubmitted: onSubmitted,
                     decoration: InputDecoration(
-                      hintText: 'Search photos, videos, or albums',
+                      hintText: l10n.searchHint,
                       hintStyle: TextStyle(
                         color: colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.7,
@@ -410,7 +413,7 @@ class _GradientSearchBar extends StatelessWidget {
                     }
                     return IconButton(
                       icon: const Icon(Icons.close, size: 20),
-                      tooltip: 'Clear',
+                      tooltip: l10n.tooltipClear,
                       onPressed: onClear,
                       style: IconButton.styleFrom(
                         minimumSize: const Size(36, 36),

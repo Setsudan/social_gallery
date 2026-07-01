@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/shared/navigation/media_viewer_session.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/core/notifications/duplicate_scan_notification_service.dart';
@@ -59,6 +61,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
   }
 
   Widget _buildBody(DuplicateScanState scan) {
+    final l10n = context.l10n;
     if (scan.error != null) {
       return OneUiSubpageScaffold(
         error: scan.error,
@@ -80,8 +83,8 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
               const SizedBox(height: 16),
               Text(
                 scan.total > 0
-                    ? 'Analyzing ${scan.scanned} / ${scan.total} photos...'
-                    : 'Preparing duplicate scan...',
+                    ? l10n.duplicateScanProgress(scan.scanned, scan.total)
+                    : l10n.duplicateScanPreparing,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -97,13 +100,13 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
   }
 
   Widget _buildGroupList(List<DuplicateGroup> groups) {
+    final l10n = context.l10n;
     if (groups.isEmpty) {
       return OneUiSubpageScaffold(
         isEmpty: true,
-        empty: const EmptyState(
-          title: 'No duplicate groups found',
-          message:
-              'No near-identical photos found. Duplicates are matched by visual similarity, not just file size.',
+        empty: EmptyState(
+          title: l10n.duplicatesEmptyTitle,
+          message: l10n.duplicatesEmptyMessage,
           icon: Icons.check_circle_outline,
         ),
         body: const SizedBox.shrink(),
@@ -149,7 +152,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                       vertical: 4,
                     ),
                     child: Text(
-                      '${group.count} duplicates',
+                      l10n.duplicatesGroupBadge(group.count),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white,
@@ -169,6 +172,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
 
   Widget _buildGroupDetail() {
     final group = _selected!;
+    final l10n = context.l10n;
     return Column(
       children: [
         Padding(
@@ -176,7 +180,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           child: FilledButton.icon(
             onPressed: () => context.push(duplicateReviewLocation(group.key)),
             icon: const Icon(Icons.auto_fix_high),
-            label: const Text('Keep best and review'),
+            label: Text(l10n.duplicatesKeepBestAndReview),
           ),
         ),
         Builder(
@@ -197,12 +201,11 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                 itemBuilder: (context, index) {
                   final media = group.items[index];
                   return GestureDetector(
-                    onTap: () => context.push(
-                      mediaViewerLocation(
-                        media.uri,
-                        mediaId: media.id,
-                        favorite: media.isFavorite,
-                      ),
+                    onTap: () => openMediaViewer(
+                      context,
+                      ref,
+                      items: group.items,
+                      item: media,
                     ),
                     child: MediaThumbnail(
                       assetId: media.uri,

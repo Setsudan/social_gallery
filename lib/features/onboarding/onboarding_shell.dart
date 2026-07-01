@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 
 class OnboardingShell extends StatelessWidget {
@@ -9,7 +10,7 @@ class OnboardingShell extends StatelessWidget {
     required this.child,
     this.onBack,
     required this.onNext,
-    this.nextLabel = 'Next',
+    this.nextLabel,
     this.nextEnabled = true,
     this.showBack = true,
     this.showSkip = false,
@@ -22,7 +23,7 @@ class OnboardingShell extends StatelessWidget {
   final Widget child;
   final VoidCallback? onBack;
   final VoidCallback? onNext;
-  final String nextLabel;
+  final String? nextLabel;
   final bool nextEnabled;
   final bool showBack;
   final bool showSkip;
@@ -59,7 +60,10 @@ class OnboardingShell extends StatelessWidget {
                     ),
                   ),
                   if (showSkip && onSkip != null)
-                    TextButton(onPressed: onSkip, child: const Text('Skip'))
+                    TextButton(
+                      onPressed: onSkip,
+                      child: Text(context.l10n.onboardingSkip),
+                    )
                   else
                     const SizedBox(width: 48),
                 ],
@@ -76,7 +80,7 @@ class OnboardingShell extends StatelessWidget {
               ),
               child: FilledButton(
                 onPressed: nextEnabled ? onNext : null,
-                child: Text(nextLabel),
+                child: Text(nextLabel ?? context.l10n.onboardingNext),
               ),
             ),
           ],

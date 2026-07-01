@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/l10n/app_locale_preference.dart';
 import 'package:social_gallery/core/theme/accent_presets.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +38,8 @@ import 'package:social_gallery/core/backup/backup_deep_link.dart';
 import 'package:social_gallery/core/backup/desktop_availability_service.dart';
 import 'package:social_gallery/core/backup/desktop_backup_controller.dart';
 import 'package:social_gallery/core/backup/desktop_discovery_service.dart';
+import 'package:social_gallery/core/backup/desktop_library_controller.dart';
+import 'package:social_gallery/core/backup/vault_password_store.dart';
 import 'package:social_gallery/core/notifications/desktop_backup_notification_service.dart';
 import 'package:social_gallery/core/backup/pairing_service.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
@@ -236,6 +239,7 @@ class AppSettings {
   final bool autoClearCacheOnClose;
   final bool galleryViewMode;
   final DesktopGalleryGridSize desktopGalleryGridSize;
+  final AppLocalePreference localePreference;
 
   const AppSettings({
     required this.appTheme,
@@ -247,6 +251,7 @@ class AppSettings {
     required this.autoClearCacheOnClose,
     required this.galleryViewMode,
     required this.desktopGalleryGridSize,
+    required this.localePreference,
   });
 
   AppSettings copyWith({
@@ -259,6 +264,7 @@ class AppSettings {
     bool? autoClearCacheOnClose,
     bool? galleryViewMode,
     DesktopGalleryGridSize? desktopGalleryGridSize,
+    AppLocalePreference? localePreference,
   }) {
     return AppSettings(
       appTheme: appTheme ?? this.appTheme,
@@ -272,6 +278,7 @@ class AppSettings {
       galleryViewMode: galleryViewMode ?? this.galleryViewMode,
       desktopGalleryGridSize:
           desktopGalleryGridSize ?? this.desktopGalleryGridSize,
+      localePreference: localePreference ?? this.localePreference,
     );
   }
 }
@@ -293,6 +300,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       autoClearCacheOnClose: prefs.autoClearCacheOnClose,
       galleryViewMode: prefs.galleryViewMode,
       desktopGalleryGridSize: prefs.desktopGalleryGridSize,
+      localePreference: prefs.localePreference,
     );
   }
 
@@ -341,6 +349,11 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
     state = state.copyWith(desktopGalleryGridSize: size);
     await _prefs.setDesktopGalleryGridSize(size);
   }
+
+  Future<void> setLocalePreference(AppLocalePreference preference) async {
+    state = state.copyWith(localePreference: preference);
+    await _prefs.setLocalePreference(preference);
+  }
 }
 
 /// All travel modes ordered by start date.
@@ -372,6 +385,10 @@ final desktopDiscoveryServiceProvider = Provider((ref) {
   return DesktopDiscoveryService();
 });
 
+final vaultPasswordStoreProvider = Provider((ref) {
+  return VaultPasswordStore();
+});
+
 final desktopAvailabilityServiceProvider = Provider((ref) {
   return DesktopAvailabilityService(
     ref.watch(preferencesRepositoryProvider),
@@ -387,6 +404,7 @@ final desktopBackupProvider =
     ref.watch(desktopAvailabilityServiceProvider),
     ref.watch(pairingServiceProvider),
     ref.watch(desktopDiscoveryServiceProvider),
+    ref.watch(vaultPasswordStoreProvider),
     notifications: usesFilesystemGallery
         ? null
         : ref.watch(desktopBackupNotificationServiceProvider),
@@ -408,6 +426,17 @@ final desktopBackupProvider =
     },
   );
   controller.startHeartbeat();
+  ref.onDispose(controller.dispose);
+  return controller;
+});
+
+final desktopLibraryProvider =
+    StateNotifierProvider<DesktopLibraryController, DesktopLibraryState>((ref) {
+  final controller = DesktopLibraryController(
+    ref.watch(preferencesRepositoryProvider),
+    ref.watch(desktopAvailabilityServiceProvider),
+    ref.watch(vaultPasswordStoreProvider),
+  );
   ref.onDispose(controller.dispose);
   return controller;
 });

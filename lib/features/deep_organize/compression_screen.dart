@@ -6,6 +6,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
@@ -64,10 +65,13 @@ class _CompressionScreenState extends ConsumerState<CompressionScreen> {
       } catch (_) {}
     }
 
+    if (!mounted) return;
     setState(() {
       _compressing = false;
-      _result =
-          'Compressed $done images, saved ${(saved / (1024 * 1024)).toStringAsFixed(1)} MB';
+      _result = context.l10n.compressionResult(
+        done,
+        (saved / (1024 * 1024)).round(),
+      );
       _selected.clear();
     });
     ref.invalidate(compressionCandidatesProvider);
@@ -77,32 +81,31 @@ class _CompressionScreenState extends ConsumerState<CompressionScreen> {
   Widget build(BuildContext context) {
     final mobileOnly = kIsWeb || !(Platform.isAndroid || Platform.isIOS);
     final candidatesAsync = ref.watch(compressionCandidatesProvider);
+    final l10n = context.l10n;
 
     return candidatesAsync.when(
       loading: () => OneUiSubpageScaffold(
-        title: 'Image compression',
+        title: l10n.compressionTitle,
         isLoading: true,
         body: const SizedBox.shrink(),
       ),
       error: (e, _) => OneUiSubpageScaffold(
-        title: 'Image compression',
+        title: l10n.compressionTitle,
         error: e,
         body: const SizedBox.shrink(),
       ),
       data: (candidates) => OneUiSubpageScaffold(
-        title: 'Image compression',
-        subtitle: 'Compress large photos without leaving the device.',
+        title: l10n.compressionTitle,
+        subtitle: l10n.compressionSubtitle,
         padding: const EdgeInsets.all(16),
         body: ListView(
           children: [
             if (mobileOnly)
-              const Card(
+              Card(
                 child: ListTile(
-                  leading: Icon(Icons.info_outline),
-                  title: Text('Best on mobile'),
-                  subtitle: Text(
-                    'Compression works on Android and iOS. Desktop support is limited.',
-                  ),
+                  leading: const Icon(Icons.info_outline),
+                  title: Text(l10n.compressionBestOnMobile),
+                  subtitle: Text(l10n.compressionBestOnMobileSubtitle),
                 ),
               ),
             if (_result != null) ...[
@@ -110,7 +113,7 @@ class _CompressionScreenState extends ConsumerState<CompressionScreen> {
               Text(_result!),
             ],
             const SizedBox(height: 16),
-            Text('${candidates.length} images over 3 MB'),
+            Text(l10n.compressionCandidatesCount(candidates.length)),
             const SizedBox(height: 8),
             ...candidates.take(50).map((item) {
               final selected = _selected.contains(item.id);
@@ -140,8 +143,8 @@ class _CompressionScreenState extends ConsumerState<CompressionScreen> {
                   : () => _compressSelected(candidates),
               child: Text(
                 _compressing
-                    ? 'Compressing...'
-                    : 'Compress ${_selected.length} selected',
+                    ? l10n.compressionCompressing
+                    : l10n.compressionCompressSelected(_selected.length),
               ),
             ),
           ],

@@ -20,6 +20,12 @@ class OneUiSettingsIcon {
     foreground: Color(0xFF7B61A8),
   );
 
+  static const language = OneUiSettingsIcon(
+    icon: Icons.translate_rounded,
+    background: Color(0xFFE8F5E9),
+    foreground: Color(0xFF2E7D32),
+  );
+
   static const text = OneUiSettingsIcon(
     icon: Icons.format_size_rounded,
     background: Color(0xFFDCE9FF),

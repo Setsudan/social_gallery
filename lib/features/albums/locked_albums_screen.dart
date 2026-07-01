@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
@@ -20,6 +21,7 @@ class LockedAlbumsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final foldersAsync = ref.watch(allFoldersProvider);
 
     ref.listen<bool>(syncStateProvider, (previous, current) {
@@ -43,7 +45,7 @@ class LockedAlbumsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => EmptyState(
           icon: Icons.error_outline,
-          title: 'Could not load albums',
+          title: l10n.albumsErrorLoad,
           message: error.toString(),
         ),
         data: (folders) {
@@ -58,15 +60,14 @@ class LockedAlbumsScreen extends ConsumerWidget {
           if (albums.isEmpty) {
             return CustomScrollView(
               slivers: [
-                const SliverToBoxAdapter(
-                  child: OneUiPageHeader(title: 'Locked albums'),
+                SliverToBoxAdapter(
+                  child: OneUiPageHeader(title: l10n.lockedAlbumsTitle),
                 ),
                 SliverFillRemaining(
                   child: EmptyState(
                     icon: Icons.lock_outline,
-                    title: 'No locked albums',
-                    message:
-                        'Albums protected with biometrics will appear here.',
+                    title: l10n.lockedAlbumsEmptyTitle,
+                    message: l10n.lockedAlbumsEmptyMessage,
                   ),
                 ),
               ],
@@ -84,8 +85,8 @@ class LockedAlbumsScreen extends ConsumerWidget {
           return CustomScrollView(
             cacheExtent: 600,
             slivers: [
-              const SliverToBoxAdapter(
-                child: OneUiPageHeader(title: 'Locked albums'),
+              SliverToBoxAdapter(
+                child: OneUiPageHeader(title: l10n.lockedAlbumsTitle),
               ),
               SliverPadding(
                 padding: padding,

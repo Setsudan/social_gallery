@@ -31,13 +31,3 @@ String appThemeVariantToString(AppThemeVariant variant) {
     AppThemeVariant.darkOled => 'dark_oled',
   };
 }
-
-String appThemeVariantLabel(AppThemeVariant variant) {
-  return switch (variant) {
-    AppThemeVariant.system => 'System default',
-    AppThemeVariant.light => 'Light',
-    AppThemeVariant.solar => 'Solar',
-    AppThemeVariant.dark => 'Dark',
-    AppThemeVariant.darkOled => 'Dark OLED',
-  };
-}

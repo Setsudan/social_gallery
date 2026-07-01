@@ -150,6 +150,8 @@ class DesktopAvailabilityService {
           .timeout(const Duration(seconds: 5));
       if (response.statusCode != 200) return null;
       return HealthResponse.fromJson(BackupProtocol.decodeJson(response.body));
+    } on TimeoutException {
+      return null;
     } catch (e, stack) {
       debugPrint('Health check failed: $e\n$stack');
       return null;

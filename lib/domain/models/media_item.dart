@@ -30,6 +30,7 @@ class MediaItem {
     this.originalPath,
     this.backupState = MediaBackupState.pending,
     this.lastSyncTime,
+    this.isVault = false,
   });
 
   final int id;
@@ -59,6 +60,7 @@ class MediaItem {
   final String? originalPath;
   final MediaBackupState backupState;
   final int? lastSyncTime;
+  final bool isVault;
 
   bool get isVideo => mimeType.startsWith('video/');
 
@@ -81,6 +83,7 @@ class MediaItem {
     String? folderPath,
     MediaBackupState? backupState,
     int? lastSyncTime,
+    bool? isVault,
   }) {
     return MediaItem(
       id: id,
@@ -110,6 +113,7 @@ class MediaItem {
       originalPath: originalPath ?? this.originalPath,
       backupState: backupState ?? this.backupState,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      isVault: isVault ?? this.isVault,
     );
   }
 }

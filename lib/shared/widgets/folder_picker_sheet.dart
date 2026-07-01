@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/core/animation/modal_sheet.dart';
 import 'package:social_gallery/core/auth/folder_access.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
@@ -11,7 +12,7 @@ Future<String?> showFolderPickerSheet({
   required BuildContext context,
   required WidgetRef ref,
   required List<FolderInfo> folders,
-  String title = 'Move items to...',
+  String? title,
   Iterable<String> excludePaths = const [],
 }) {
   final excluded = excludePaths.toSet();
@@ -21,7 +22,10 @@ Future<String?> showFolderPickerSheet({
     context: context,
     ref: ref,
     builder: (sheetContext) {
-      return _FolderPickerSheetBody(title: title, folders: choices);
+      return _FolderPickerSheetBody(
+        title: title ?? sheetContext.l10n.folderPickerDefaultTitle,
+        folders: choices,
+      );
     },
   );
 }
@@ -63,6 +67,7 @@ class _FolderPickerSheetBodyState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final filtered = _filtered;
 
     final maxListHeight = MediaQuery.sizeOf(context).height * 0.5;
@@ -92,7 +97,7 @@ class _FolderPickerSheetBodyState
             ),
             child: SearchBar(
               controller: _queryController,
-              hintText: 'Search folders',
+              hintText: l10n.folderPickerSearchHint,
               leading: const Icon(Icons.search, size: 20),
               onChanged: (_) => setState(() {}),
             ),
@@ -113,7 +118,7 @@ class _FolderPickerSheetBodyState
                     locked: folder.isLockedAccount,
                   ),
                   title: Text(folder.name),
-                  subtitle: Text('${folder.mediaCount} items'),
+                  subtitle: Text(l10n.folderItemCount(folder.mediaCount)),
                   onTap: () => _selectFolder(folder),
                 );
               },

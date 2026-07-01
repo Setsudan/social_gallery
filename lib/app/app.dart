@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/app_locale_preference.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/l10n/app_localizations.dart';
 import 'package:social_gallery/core/backup/backup_deep_link.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/notifications/desktop_backup_notification_service.dart';
@@ -133,9 +137,23 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
       data: theme,
       duration: const Duration(milliseconds: 200),
       child: MaterialApp.router(
-        title: 'Social Gallery (beta)',
+        onGenerateTitle: (context) => context.l10n.appTitle,
         theme: theme,
         routerConfig: router,
+        locale: settings.localePreference.toLocale(),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalePreference.supportedLocales,
+        localeResolutionCallback: (deviceLocale, supportedLocales) {
+          return AppLocalePreference.resolveLocale(
+            preference: settings.localePreference,
+            deviceLocale: deviceLocale,
+          );
+        },
         builder: (context, child) {
           final motion = AppMotion.fromSettings(
             settings,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
 class PostMetadataSheet extends StatelessWidget {
@@ -9,6 +10,7 @@ class PostMetadataSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final taken = media.dateTaken ?? media.dateModified;
     final takenLabel = _formatDate(taken);
     final addedLabel = _formatDate(media.dateAdded);
@@ -31,16 +33,21 @@ class PostMetadataSheet extends StatelessWidget {
                 ),
               ),
             ),
-            Text('Details', style: Theme.of(context).textTheme.titleLarge),
+            Text(l10n.metadataTitle, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            _row(context, 'Filename', media.displayName),
+            _row(context, l10n.metadataFilename, media.displayName),
             if (media.width != null && media.height != null)
-              _row(context, 'Dimensions', '${media.width} x ${media.height}'),
-            _row(context, 'Type', media.mimeType),
-            if (fileSizeLabel != null) _row(context, 'Size', fileSizeLabel!),
-            _row(context, 'Date taken', takenLabel),
-            _row(context, 'Date added', addedLabel),
-            _row(context, 'Folder', media.folderName),
+              _row(
+                context,
+                l10n.metadataDimensions,
+                l10n.metadataDimensionsValue(media.width!, media.height!),
+              ),
+            _row(context, l10n.metadataType, media.mimeType),
+            if (fileSizeLabel != null)
+              _row(context, l10n.metadataSize, fileSizeLabel!),
+            _row(context, l10n.metadataDateTaken, takenLabel),
+            _row(context, l10n.metadataDateAdded, addedLabel),
+            _row(context, l10n.metadataFolder, media.folderName),
           ],
         ),
       ),

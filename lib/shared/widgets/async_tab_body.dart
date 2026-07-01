@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 
 class AsyncTabBody extends StatelessWidget {
@@ -36,20 +37,22 @@ class AsyncTabBody extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context) {
+    final l10n = context.l10n;
+
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (error != null) {
       return EmptyState(
-        title: 'Could not load',
+        title: l10n.errorCouldNotLoad,
         message: error.toString(),
         icon: Icons.error_outline,
       );
     }
     if (isEmpty) {
       return empty ??
-          const EmptyState(
-            title: 'Nothing here',
+          EmptyState(
+            title: l10n.emptyNothingHere,
             icon: Icons.inbox_outlined,
           );
     }

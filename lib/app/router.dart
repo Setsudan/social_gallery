@@ -5,12 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:social_gallery/core/animation/page_transitions.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 
 import 'package:social_gallery/features/discover/duplicate_review_screen.dart';
 
 import 'package:social_gallery/features/discover/duplicates_screen.dart';
 
 import 'package:social_gallery/features/discover/discover_stub_screen.dart';
+import 'package:social_gallery/features/discover/locations_screen.dart';
+import 'package:social_gallery/features/discover/place_media_screen.dart';
 
 import 'package:social_gallery/features/albums/locked_albums_screen.dart';
 import 'package:social_gallery/features/shell/explore_branch_screen.dart';
@@ -38,6 +41,7 @@ import 'package:social_gallery/features/shell/main_shell.dart';
 
 import 'package:social_gallery/features/startup/startup_screen.dart';
 
+import 'package:social_gallery/features/archive/desktop_archive_screen.dart';
 import 'package:social_gallery/features/settings/settings_screen.dart';
 
 import 'package:social_gallery/features/trash/trash_screen.dart';
@@ -192,12 +196,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           context,
           ref,
           state,
-          const DiscoverStubScreen(
-            title: 'Bursts',
-
-            message:
-                'Burst detection is not available yet. This screen will group rapid-fire shots.',
-
+          DiscoverStubScreen(
+            title: context.l10n.discoverBurstsTitle,
+            message: context.l10n.discoverBurstsMessage,
             icon: Icons.burst_mode,
           ),
         ),
@@ -212,12 +213,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           context,
           ref,
           state,
-          const DiscoverStubScreen(
-            title: 'Smart suggestions',
-
-            message:
-                'Suggestions will highlight albums and clean-up ideas based on your library.',
-
+          DiscoverStubScreen(
+            title: context.l10n.discoverSuggestionsTitle,
+            message: context.l10n.discoverSuggestionsMessage,
             icon: Icons.auto_awesome_outlined,
           ),
         ),
@@ -232,15 +230,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           context,
           ref,
           state,
-          const DiscoverStubScreen(
-            title: 'Locations',
-
-            message:
-                'Location clustering requires heavier indexing and will be added in a future update.',
-
-            icon: Icons.place_outlined,
-          ),
+          const LocationsScreen(),
         ),
+      ),
+
+      GoRoute(
+        path: '/discover/locations/place',
+
+        parentNavigatorKey: _rootNavigatorKey,
+
+        pageBuilder: (context, state) {
+          final country = state.uri.queryParameters['country'] ?? '';
+          final locality = state.uri.queryParameters['locality'] ?? '';
+          return _page(
+            context,
+            ref,
+            state,
+            PlaceMediaScreen(
+              countryName: country,
+              locality: locality,
+            ),
+          );
+        },
       ),
 
       GoRoute(
@@ -349,6 +360,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
+        path: '/desktop-archive',
+
+        parentNavigatorKey: _rootNavigatorKey,
+
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const DesktopArchiveScreen()),
+      ),
+
+      GoRoute(
         path: '/settings',
 
         parentNavigatorKey: _rootNavigatorKey,
@@ -451,3 +471,7 @@ String travelModeEditorLocation({String? id}) {
 
   return '/travel_mode/edit?id=${Uri.encodeComponent(id)}';
 }
+
+/// Typed route to geotagged media for a country and city/locality.
+String placeMediaLocation(String country, String locality) =>
+    '/discover/locations/place?country=${Uri.encodeComponent(country)}&locality=${Uri.encodeComponent(locality)}';

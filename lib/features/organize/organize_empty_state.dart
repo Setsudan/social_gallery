@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 
 class OrganizeEmptyState extends StatelessWidget {
   const OrganizeEmptyState({
@@ -20,6 +21,7 @@ class OrganizeEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -34,39 +36,39 @@ class OrganizeEmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               remainingCount > 0
-                  ? 'Batch complete'
-                  : 'All caught up',
+                  ? l10n.organizeBatchComplete
+                  : l10n.organizeAllCaughtUp,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
               remainingCount > 0
-                  ? '$remainingCount items still match your filters.'
-                  : 'No more items match the current filters.',
+                  ? l10n.organizeRemainingItems(remainingCount)
+                  : l10n.organizeNoMoreItems,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             if (remainingCount > 0)
               FilledButton(
                 onPressed: onNextBatch,
-                child: const Text('Load next batch'),
+                child: Text(l10n.organizeLoadNextBatch),
               ),
             if (pendingTrashCount > 0) ...[
               const SizedBox(height: 8),
               FilledButton.tonal(
                 onPressed: onViewTrash,
-                child: Text('Review trash ($pendingTrashCount)'),
+                child: Text(l10n.organizeReviewTrash(pendingTrashCount)),
               ),
             ],
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: onChangeFilter,
-              child: const Text('Change filter'),
+              child: Text(l10n.organizeChangeFilter),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: onReleaseKept,
-              child: const Text('Release kept photos'),
+              child: Text(l10n.organizeReleaseKeptPhotos),
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/l10n/app_localizations.dart';
 
 /// Bottom shell branch indices (see [StatefulShellRoute] in router.dart).
 const int kShellTabHome = 0;
@@ -24,15 +25,18 @@ class ShellNavDestination {
   final bool filledWhenSelected;
 }
 
-List<ShellNavDestination> shellNavDestinations({required bool galleryViewMode}) {
+List<ShellNavDestination> shellNavDestinations({
+  required bool galleryViewMode,
+  required AppLocalizations l10n,
+}) {
   if (galleryViewMode) {
-    return const [
+    return [
       ShellNavDestination(
         navIndex: 0,
         branchIndex: kShellTabHome,
         unselectedIcon: Icons.photo_library_outlined,
         selectedIcon: Icons.photo_library,
-        label: 'Gallery',
+        label: l10n.navGallery,
         filledWhenSelected: true,
       ),
       ShellNavDestination(
@@ -40,7 +44,7 @@ List<ShellNavDestination> shellNavDestinations({required bool galleryViewMode}) 
         branchIndex: kShellTabExplore,
         unselectedIcon: Icons.photo_album_outlined,
         selectedIcon: Icons.photo_album,
-        label: 'Albums',
+        label: l10n.navAlbums,
         filledWhenSelected: true,
       ),
       ShellNavDestination(
@@ -48,18 +52,18 @@ List<ShellNavDestination> shellNavDestinations({required bool galleryViewMode}) 
         branchIndex: kShellTabDiscover,
         unselectedIcon: Icons.search_outlined,
         selectedIcon: Icons.search,
-        label: 'Discover',
+        label: l10n.navDiscover,
       ),
     ];
   }
 
-  return const [
+  return [
     ShellNavDestination(
       navIndex: 0,
       branchIndex: kShellTabHome,
       unselectedIcon: Icons.home_outlined,
       selectedIcon: Icons.home,
-      label: 'Home',
+      label: l10n.navHome,
       filledWhenSelected: true,
     ),
     ShellNavDestination(
@@ -67,7 +71,7 @@ List<ShellNavDestination> shellNavDestinations({required bool galleryViewMode}) 
       branchIndex: kShellTabExplore,
       unselectedIcon: Icons.explore_outlined,
       selectedIcon: Icons.explore,
-      label: 'Explore',
+      label: l10n.navExplore,
       filledWhenSelected: true,
     ),
     ShellNavDestination(
@@ -75,20 +79,31 @@ List<ShellNavDestination> shellNavDestinations({required bool galleryViewMode}) 
       branchIndex: kShellTabDiscover,
       unselectedIcon: Icons.search_outlined,
       selectedIcon: Icons.search,
-      label: 'Discover',
+      label: l10n.navDiscover,
     ),
   ];
 }
 
-int? navIndexForBranch(int branchIndex, {required bool galleryViewMode}) {
-  for (final dest in shellNavDestinations(galleryViewMode: galleryViewMode)) {
+int? navIndexForBranch(
+  int branchIndex, {
+  required bool galleryViewMode,
+  required AppLocalizations l10n,
+}) {
+  for (final dest in shellNavDestinations(
+    galleryViewMode: galleryViewMode,
+    l10n: l10n,
+  )) {
     if (dest.branchIndex == branchIndex) return dest.navIndex;
   }
   return null;
 }
 
-int branchIndexForNav(int navIndex, {required bool galleryViewMode}) {
-  return shellNavDestinations(galleryViewMode: galleryViewMode)
+int branchIndexForNav(
+  int navIndex, {
+  required bool galleryViewMode,
+  required AppLocalizations l10n,
+}) {
+  return shellNavDestinations(galleryViewMode: galleryViewMode, l10n: l10n)
       .firstWhere((dest) => dest.navIndex == navIndex)
       .branchIndex;
 }

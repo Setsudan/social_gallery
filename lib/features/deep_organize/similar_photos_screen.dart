@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
@@ -16,6 +17,7 @@ class SimilarPhotosScreen extends ConsumerWidget {
     BuildContext context,
     List<MediaItem> group,
   ) async {
+    final l10n = context.l10n;
     final keepBest = ref.read(suggestKeepBestProvider);
     final keeper = keepBest(group);
     final toDelete = group.where((i) => i.id != keeper.id).toList();
@@ -24,18 +26,18 @@ class SimilarPhotosScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete similar photos'),
+        title: Text(l10n.similarPhotosDeleteTitle),
         content: Text(
-          'Keep "${keeper.displayName}" and delete ${toDelete.length} similar items?',
+          l10n.similarPhotosDeleteMessage(keeper.displayName, toDelete.length),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l10n.actionDelete),
           ),
         ],
       ),
@@ -51,26 +53,27 @@ class SimilarPhotosScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final groupsAsync = ref.watch(similarPhotoGroupsProvider);
+    final l10n = context.l10n;
 
     return groupsAsync.when(
       loading: () => OneUiSubpageScaffold(
-        title: 'Similar photos',
+        title: l10n.deepOrganizeSimilarPhotos,
         isLoading: true,
         body: const SizedBox.shrink(),
       ),
       error: (e, _) => OneUiSubpageScaffold(
-        title: 'Similar photos',
+        title: l10n.deepOrganizeSimilarPhotos,
         error: e,
         body: const SizedBox.shrink(),
       ),
       data: (groups) {
         if (groups.isEmpty) {
           return OneUiSubpageScaffold(
-            title: 'Similar photos',
-            subtitle: 'Run a scan from Deep organize first.',
+            title: l10n.deepOrganizeSimilarPhotos,
+            subtitle: l10n.deepOrganizeRunScanFirst,
             isEmpty: true,
-            empty: const EmptyState(
-              title: 'No similar groups found',
+            empty: EmptyState(
+              title: l10n.similarPhotosEmptyTitle,
               icon: Icons.compare,
             ),
             body: const SizedBox.shrink(),
@@ -78,8 +81,8 @@ class SimilarPhotosScreen extends ConsumerWidget {
         }
 
         return OneUiSubpageScaffold(
-          title: 'Similar photos',
-          subtitle: 'Pick the best shot and remove near-duplicates.',
+          title: l10n.deepOrganizeSimilarPhotos,
+          subtitle: l10n.similarPhotosSubtitle,
           padding: const EdgeInsets.all(16),
           body: ListView.separated(
             itemCount: groups.length,
@@ -92,7 +95,7 @@ class SimilarPhotosScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('${group.length} similar items'),
+                      Text(l10n.similarPhotosGroupCount(group.length)),
                       const SizedBox(height: 8),
                       SizedBox(
                         height: 100,
@@ -115,7 +118,7 @@ class SimilarPhotosScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       FilledButton.tonal(
                         onPressed: () => _deleteOthers(ref, context, group),
-                        child: const Text('Keep best, delete others'),
+                        child: Text(l10n.similarPhotosKeepBestDeleteOthers),
                       ),
                     ],
                   ),

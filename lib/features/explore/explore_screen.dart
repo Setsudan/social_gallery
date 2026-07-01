@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
@@ -13,6 +14,7 @@ import 'package:social_gallery/features/explore/explore_search_overlay.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/shared/navigation/media_viewer_session.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/core/auth/folder_access.dart';
 import 'package:social_gallery/shared/widgets/explore_mosaic_grid.dart';
@@ -190,6 +192,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final inSelectionMode = _selectedIds.isNotEmpty;
     final motion = AppMotion.of(context, ref);
     listenForTabScrollToTop(
@@ -293,7 +296,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   ),
                   child: FloatingActionButton.small(
                     heroTag: 'explore_search',
-                    tooltip: 'Search',
+                    tooltip: l10n.tooltipSearch,
                     onPressed: _openSearchOverlay,
                     child: const Icon(Icons.search),
                   ),
@@ -308,22 +311,23 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   }
 
   Widget _buildGrid() {
+    final l10n = context.l10n;
     if (_paginated.isLoading && _items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_paginated.error != null && _items.isEmpty) {
       return EmptyState(
-        title: 'Could not load library',
+        title: l10n.exploreErrorLoad,
         message: _paginated.error,
         icon: Icons.error_outline,
       );
     }
     if (_items.isEmpty) {
       return EmptyState(
-        title: 'No media found',
+        title: l10n.exploreEmptyTitle,
         message: _isSearching
-            ? 'Try another photo name, album, or folder path.'
-            : 'Try a different search or add folders to Home Feed.',
+            ? l10n.exploreEmptyMessageSearch
+            : l10n.exploreEmptyMessageNoSearch,
       );
     }
     final loadingMore = _paginated.isLoading && _items.isNotEmpty;
@@ -338,12 +342,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             selectedIds: _selectedIds,
             onSelectToggle: _toggleSelect,
             onLongPress: _startSelection,
-            onTap: (item) => context.push(
-              mediaViewerLocation(
-                item.uri,
-                mediaId: item.id,
-                favorite: item.isFavorite,
-              ),
+            onTap: (item) => openMediaViewer(
+              context,
+              ref,
+              items: _items,
+              item: item,
             ),
           )
         : ExploreMosaicGrid(
@@ -353,12 +356,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             selectedIds: _selectedIds,
             onSelectToggle: _toggleSelect,
             onLongPress: _startSelection,
-            onTap: (item) => context.push(
-              mediaViewerLocation(
-                item.uri,
-                mediaId: item.id,
-                favorite: item.isFavorite,
-              ),
+            onTap: (item) => openMediaViewer(
+              context,
+              ref,
+              items: _items,
+              item: item,
             ),
           );
 

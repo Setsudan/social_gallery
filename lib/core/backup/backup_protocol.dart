@@ -6,7 +6,7 @@ import 'package:social_gallery/core/backup/backup_file_metadata.dart';
 class BackupProtocol {
   BackupProtocol._();
 
-  static const protocolVersion = 1;
+  static const protocolVersion = 2;
   static const serviceType = '_socialgallery._tcp';
   static const chunkSize = 4 * 1024 * 1024;
 
@@ -23,6 +23,8 @@ class HealthResponse {
     required this.deviceName,
     required this.protocolVersion,
     this.tokenValid = false,
+    this.capabilities = const [],
+    this.vaultConfigured = false,
   });
 
   factory HealthResponse.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,10 @@ class HealthResponse {
       deviceName: json['deviceName'] as String? ?? '',
       protocolVersion: json['protocolVersion'] as int? ?? 0,
       tokenValid: json['tokenValid'] as bool? ?? false,
+      capabilities: (json['capabilities'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(),
+      vaultConfigured: json['vaultConfigured'] as bool? ?? false,
     );
   }
 
@@ -38,8 +44,11 @@ class HealthResponse {
   final String deviceName;
   final int protocolVersion;
   final bool tokenValid;
+  final List<String> capabilities;
+  final bool vaultConfigured;
 
   bool get isReady => status == 'ready';
+  bool get supportsLibrary => capabilities.contains('library');
 }
 
 class PairRequest {
@@ -87,6 +96,7 @@ class BackupInitItem {
     this.dateAdded,
     this.latitude,
     this.longitude,
+    this.isVault = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -101,6 +111,7 @@ class BackupInitItem {
     if (dateAdded != null) 'dateAdded': dateAdded,
     if (latitude != null) 'latitude': latitude,
     if (longitude != null) 'longitude': longitude,
+    if (isVault) 'isVault': true,
   };
 
   final int id;
@@ -114,6 +125,7 @@ class BackupInitItem {
   final int? dateAdded;
   final double? latitude;
   final double? longitude;
+  final bool isVault;
 
   BackupFileMetadata get metadata => BackupFileMetadata(
     dateTaken: dateTaken,
@@ -210,6 +222,7 @@ class BackupReconcileItem {
     required this.checksum,
     required this.folderName,
     required this.name,
+    this.isVault = false,
   });
 
   factory BackupReconcileItem.fromMedia({
@@ -217,12 +230,14 @@ class BackupReconcileItem {
     required String checksum,
     required String folderName,
     required String name,
+    bool isVault = false,
   }) {
     return BackupReconcileItem(
       id: id,
       checksum: checksum,
       folderName: folderName,
       name: name,
+      isVault: isVault,
     );
   }
 
@@ -231,12 +246,14 @@ class BackupReconcileItem {
     'checksum': checksum,
     'folderName': folderName,
     'name': name,
+    if (isVault) 'isVault': true,
   };
 
   final int id;
   final String checksum;
   final String folderName;
   final String name;
+  final bool isVault;
 }
 
 enum BackupReconcileStatus {
@@ -342,4 +359,181 @@ class DiscoveredDesktop {
   final String host;
   final int port;
   final String deviceName;
+}
+
+enum BackupStorageKind {
+  plain,
+  vault;
+
+  static BackupStorageKind fromJson(String? value) {
+    if (value == 'vault') return BackupStorageKind.vault;
+    return BackupStorageKind.plain;
+  }
+
+  String get jsonValue => name;
+}
+
+class VaultRegisterRequest {
+  const VaultRegisterRequest({required this.password});
+
+  Map<String, dynamic> toJson() => {'password': password};
+
+  final String password;
+}
+
+class VaultRegisterResponse {
+  const VaultRegisterResponse({required this.success});
+
+  factory VaultRegisterResponse.fromJson(Map<String, dynamic> json) {
+    return VaultRegisterResponse(success: json['success'] as bool? ?? false);
+  }
+
+  final bool success;
+}
+
+class VaultUnlockRequest {
+  const VaultUnlockRequest({required this.password});
+
+  Map<String, dynamic> toJson() => {'password': password};
+
+  final String password;
+}
+
+class VaultUnlockResponse {
+  const VaultUnlockResponse({
+    required this.vaultToken,
+    required this.expiresAtMs,
+  });
+
+  factory VaultUnlockResponse.fromJson(Map<String, dynamic> json) {
+    return VaultUnlockResponse(
+      vaultToken: json['vaultToken'] as String? ?? '',
+      expiresAtMs: json['expiresAtMs'] as int? ?? 0,
+    );
+  }
+
+  final String vaultToken;
+  final int expiresAtMs;
+}
+
+class LibraryCatalogItem {
+  const LibraryCatalogItem({
+    required this.mediaId,
+    required this.folderName,
+    required this.fileName,
+    required this.mime,
+    required this.size,
+    required this.isVault,
+    this.dateTaken,
+    this.syncedAtMs,
+  });
+
+  factory LibraryCatalogItem.fromJson(Map<String, dynamic> json) {
+    return LibraryCatalogItem(
+      mediaId: json['mediaId'] as int,
+      folderName: json['folderName'] as String? ?? '',
+      fileName: json['fileName'] as String? ?? '',
+      mime: json['mime'] as String? ?? 'application/octet-stream',
+      size: json['size'] as int? ?? 0,
+      isVault: json['isVault'] as bool? ?? false,
+      dateTaken: json['dateTaken'] as int?,
+      syncedAtMs: json['syncedAtMs'] as int?,
+    );
+  }
+
+  final int mediaId;
+  final String folderName;
+  final String fileName;
+  final String mime;
+  final int size;
+  final bool isVault;
+  final int? dateTaken;
+  final int? syncedAtMs;
+}
+
+class LibraryCatalogFolder {
+  const LibraryCatalogFolder({
+    required this.folderName,
+    required this.itemCount,
+    required this.isVault,
+  });
+
+  factory LibraryCatalogFolder.fromJson(Map<String, dynamic> json) {
+    return LibraryCatalogFolder(
+      folderName: json['folderName'] as String? ?? '',
+      itemCount: json['itemCount'] as int? ?? 0,
+      isVault: json['isVault'] as bool? ?? false,
+    );
+  }
+
+  final String folderName;
+  final int itemCount;
+  final bool isVault;
+}
+
+class LibraryCatalogResponse {
+  const LibraryCatalogResponse({
+    required this.folders,
+    required this.items,
+    required this.totalCount,
+    this.nextCursor,
+  });
+
+  factory LibraryCatalogResponse.fromJson(Map<String, dynamic> json) {
+    final folderList = json['folders'] as List<dynamic>? ?? const [];
+    final itemList = json['items'] as List<dynamic>? ?? const [];
+    return LibraryCatalogResponse(
+      folders: folderList
+          .map((e) => LibraryCatalogFolder.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      items: itemList
+          .map((e) => LibraryCatalogItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      totalCount: json['totalCount'] as int? ?? 0,
+      nextCursor: json['nextCursor'] as String?,
+    );
+  }
+
+  final List<LibraryCatalogFolder> folders;
+  final List<LibraryCatalogItem> items;
+  final int totalCount;
+  final String? nextCursor;
+}
+
+class LibraryStreamInitRequest {
+  const LibraryStreamInitRequest({
+    required this.mediaId,
+    this.vaultToken,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'mediaId': mediaId,
+    if (vaultToken != null) 'vaultToken': vaultToken,
+  };
+
+  final int mediaId;
+  final String? vaultToken;
+}
+
+class LibraryStreamInitResponse {
+  const LibraryStreamInitResponse({
+    required this.sessionId,
+    required this.size,
+    required this.mime,
+    required this.supportsRange,
+  });
+
+  factory LibraryStreamInitResponse.fromJson(Map<String, dynamic> json) {
+    return LibraryStreamInitResponse(
+      sessionId: json['sessionId'] as String? ?? '',
+      size: json['size'] as int? ?? 0,
+      mime: json['mime'] as String? ?? 'application/octet-stream',
+      supportsRange: json['supportsRange'] as bool? ?? true,
+    );
+  }
+
+  final String sessionId;
+  final int size;
+  final String mime;
+  final bool supportsRange;
 }

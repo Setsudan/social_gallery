@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 
 class MediaSelectionAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MediaSelectionAppBar({
@@ -27,44 +28,46 @@ class MediaSelectionAppBar extends StatelessWidget implements PreferredSizeWidge
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return AppBar(
-      title: Text('$selectedCount selected'),
+      title: Text(l10n.selectionCount(selectedCount)),
       leading: IconButton(
         icon: const Icon(Icons.close),
-        tooltip: 'Cancel selection',
+        tooltip: l10n.tooltipCancelSelection,
         onPressed: onCancel,
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.favorite),
-          tooltip: 'Favorite selected',
+          tooltip: l10n.tooltipFavoriteSelected,
           onPressed: onFavorite,
         ),
         IconButton(
           icon: const Icon(Icons.favorite_border),
-          tooltip: 'Unfavorite selected',
+          tooltip: l10n.tooltipUnfavoriteSelected,
           onPressed: onUnfavorite,
         ),
         IconButton(
           icon: const Icon(Icons.drive_file_move_outlined),
-          tooltip: 'Move selected',
+          tooltip: l10n.tooltipMoveSelected,
           onPressed: onMove,
         ),
         if (onCreateAlbum != null)
           IconButton(
             icon: const Icon(Icons.create_new_folder_outlined),
-            tooltip: 'Create album and move',
+            tooltip: l10n.tooltipCreateAlbumAndMove,
             onPressed: onCreateAlbum,
           ),
         if (onSetAlbumCover != null)
           IconButton(
             icon: const Icon(Icons.photo_album_outlined),
-            tooltip: 'Set as album cover',
+            tooltip: l10n.tooltipSetAlbumCover,
             onPressed: onSetAlbumCover,
           ),
         IconButton(
           icon: const Icon(Icons.delete_outline),
-          tooltip: 'Move to trash',
+          tooltip: l10n.tooltipMoveToTrash,
           onPressed: onTrash,
         ),
       ],

@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/exif/exif_reader.dart';
 import 'package:social_gallery/core/media/filesystem_image_loader.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/data/datasources/photo_manager_datasource.dart';
@@ -9,7 +11,6 @@ import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
-import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
@@ -93,6 +94,24 @@ class MediaRepository {
           backupState: Value(existing.backupState),
           lastSyncTime: Value(existing.lastSyncTime),
         );
+        final incomingLat =
+            row.latitude.present ? row.latitude.value : null;
+        final incomingLng =
+            row.longitude.present ? row.longitude.value : null;
+        final hasIncomingLocation = incomingLat != null &&
+            incomingLng != null &&
+            incomingLat != 0 &&
+            incomingLng != 0;
+        final hasExistingLocation = existing.latitude != null &&
+            existing.longitude != null &&
+            existing.latitude != 0 &&
+            existing.longitude != 0;
+        if (!hasIncomingLocation && hasExistingLocation) {
+          merged = merged.copyWith(
+            latitude: Value(existing.latitude),
+            longitude: Value(existing.longitude),
+          );
+        }
       }
       return merged;
     }).toList();
@@ -173,11 +192,6 @@ class MediaRepository {
         .toList();
   }
 
-  Future<List<FolderInfo>> getHomeFeedLockedAccountFolders() async {
-    final rows = await _db.getHomeFeedLockedAccountFolders();
-    return rows.map(folderFromRow).toList();
-  }
-
   Future<List<domain.MediaItem>> getExplorePage(int page) async {
     final rows = await _db.getExploreMediaPage(
       limit: pageSize,
@@ -242,6 +256,58 @@ class MediaRepository {
     }
   }
 
+  /// Reads GPS from EXIF or the device media index for items missing coordinates.
+  Future<int> backfillMediaLocations({
+    void Function(int processed, int total)? onProgress,
+  }) async {
+    final rows = await _db.getHomeFeedImagesMissingLocation();
+    if (rows.isEmpty) return 0;
+
+    var updated = 0;
+    for (var i = 0; i < rows.length; i++) {
+      final row = rows[i];
+      final coords = await _readGpsForMediaRow(row);
+      if (coords != null) {
+        await _db.updateMediaLocation(row.id, coords.$1, coords.$2);
+        updated++;
+      }
+      if (i % 10 == 0 || i == rows.length - 1) {
+        onProgress?.call(i + 1, rows.length);
+      }
+    }
+    return updated;
+  }
+
+  Future<(double, double)?> _readGpsForMediaRow(MediaRow row) async {
+    if (usesFilesystemGallery) {
+      final exif = await readExifFromPath(row.uri);
+      final lat = exif?.latitude;
+      final lng = exif?.longitude;
+      if (lat != null && lng != null && lat != 0 && lng != 0) {
+        return (lat, lng);
+      }
+      return null;
+    }
+
+    final entity = await AssetEntity.fromId(row.uri);
+    if (entity == null) return null;
+
+    var lat = entity.latitude;
+    var lng = entity.longitude;
+    if (lat != null && lng != null && lat != 0 && lng != 0) {
+      return (lat, lng);
+    }
+
+    final file = await entity.originFile ?? await entity.file;
+    final exif = await readExifFromPath(file?.path);
+    lat = exif?.latitude;
+    lng = exif?.longitude;
+    if (lat != null && lng != null && lat != 0 && lng != 0) {
+      return (lat, lng);
+    }
+    return null;
+  }
+
   Future<List<domain.MediaItem>> getOrganizeMediaPool() async {
     final rows = await _db.getOrganizeMediaPool();
     return rows.map(mediaItemFromRow).toList();
@@ -249,6 +315,11 @@ class MediaRepository {
 
   Future<List<domain.MediaItem>> getAllHomeFeedMedia() async {
     final rows = await _db.getAllHomeFeedMedia();
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<List<domain.MediaItem>> getMediaWithLocation() async {
+    final rows = await _db.getMediaWithLocation();
     return rows.map(mediaItemFromRow).toList();
   }
 
@@ -424,9 +495,15 @@ class MediaRepository {
   }
 
   Future<List<domain.MediaItem>> getMediaPendingBackup({int limit = 100}) async {
-    final rows = await _db.getMediaPendingBackup(limit: limit);
-    return rows.map(mediaItemFromRow).toList();
+    final rows = await _db.getMediaPendingBackupWithFolder(limit: limit);
+    return rows
+        .map(
+          (entry) => mediaItemFromRow(entry.row).copyWith(isVault: entry.isVault),
+        )
+        .toList();
   }
+
+  Future<bool> hasPendingVaultBackup() => _db.hasPendingVaultBackup();
 
   Future<int> countMediaPendingBackup() {
     return _db.countMediaPendingBackup();
@@ -448,8 +525,15 @@ class MediaRepository {
     required int offset,
     required int limit,
   }) async {
-    final rows = await _db.getBackedUpMediaSample(offset: offset, limit: limit);
-    return rows.map(mediaItemFromRow).toList();
+    final rows = await _db.getBackedUpMediaSampleWithFolder(
+      offset: offset,
+      limit: limit,
+    );
+    return rows
+        .map(
+          (entry) => mediaItemFromRow(entry.row).copyWith(isVault: entry.isVault),
+        )
+        .toList();
   }
 
   Future<int> countBackedUpMedia() {

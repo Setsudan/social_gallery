@@ -3,18 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
+import 'package:social_gallery/l10n/app_localizations.dart';
 
 class TravelModeListScreen extends ConsumerWidget {
   const TravelModeListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final modesAsync = ref.watch(travelModesProvider);
     final theme = Theme.of(context);
 
@@ -38,10 +41,9 @@ class TravelModeListScreen extends ConsumerWidget {
       body: modesAsync.when(
         data: (modes) {
           if (modes.isEmpty) {
-            return const EmptyState(
-              title: 'No trips yet',
-              message:
-                  'Create a travel mode to auto-organize photos from a date range.',
+            return EmptyState(
+              title: l10n.travelModeEmptyTitle,
+              message: l10n.travelModeEmptyMessage,
               icon: Icons.flight_outlined,
             );
           }
@@ -53,11 +55,7 @@ class TravelModeListScreen extends ConsumerWidget {
               final mode = modes[index];
               final listIndex = index;
               final status = travelModeStatus(mode);
-              final statusLabel = switch (status) {
-                TravelModeStatus.active => 'Active',
-                TravelModeStatus.upcoming => 'Upcoming',
-                TravelModeStatus.completed => 'Completed',
-              };
+              final statusLabel = _statusLabel(l10n, status);
               final statusColor = switch (status) {
                 TravelModeStatus.active => theme.colorScheme.primary,
                 TravelModeStatus.upcoming => theme.colorScheme.secondary,
@@ -101,8 +99,11 @@ class TravelModeListScreen extends ConsumerWidget {
                         leading: Icon(Icons.flight, color: statusColor),
                         title: Text(mode.name),
                         subtitle: Text(
-                          '${_formatDay(mode.startDate)} - ${_formatDay(mode.endDate)}\n'
-                          'Folder: ${mode.folderPath}',
+                          l10n.travelModeListSubtitle(
+                            _formatDay(mode.startDate),
+                            _formatDay(mode.endDate),
+                            mode.folderPath,
+                          ),
                         ),
                         isThreeLine: true,
                         trailing: Chip(
@@ -119,11 +120,19 @@ class TravelModeListScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
-          title: 'Could not load travel modes',
+          title: l10n.travelModeErrorLoad,
           message: e.toString(),
         ),
       ),
     );
+  }
+
+  static String _statusLabel(AppLocalizations l10n, TravelModeStatus status) {
+    return switch (status) {
+      TravelModeStatus.active => l10n.travelModeStatusActive,
+      TravelModeStatus.upcoming => l10n.travelModeStatusUpcoming,
+      TravelModeStatus.completed => l10n.travelModeStatusCompleted,
+    };
   }
 
   static String _formatDay(int ms) {

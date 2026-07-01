@@ -11,6 +11,7 @@ import 'package:social_gallery/core/backup/desktop_discovery_service.dart';
 import 'package:social_gallery/core/backup/desktop_backup_server.dart';
 import 'package:social_gallery/core/backup/pairing_service.dart';
 import 'package:social_gallery/core/backup/desktop_mdns_advertiser.dart';
+import 'package:social_gallery/core/backup/vault_password_store.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/notifications/desktop_backup_notification_service.dart';
 import 'package:social_gallery/data/repositories/media_repository.dart';
@@ -47,6 +48,8 @@ class DesktopBackupState {
     this.localIp,
     this.syncingMediaId,
     this.pairingSuccessDeviceName,
+    this.needsVaultPassword = false,
+    this.vaultEncryptedCount = 0,
   });
 
   final DesktopBackupPhase phase;
@@ -61,6 +64,8 @@ class DesktopBackupState {
   final String? localIp;
   final int? syncingMediaId;
   final String? pairingSuccessDeviceName;
+  final bool needsVaultPassword;
+  final int vaultEncryptedCount;
 
   double? get progress => total > 0 ? processed / total : null;
 
@@ -85,6 +90,8 @@ class DesktopBackupState {
     String? localIp,
     int? syncingMediaId,
     String? pairingSuccessDeviceName,
+    bool? needsVaultPassword,
+    int? vaultEncryptedCount,
     bool clearSyncingMediaId = false,
     bool clearPairingPin = false,
     bool clearPairingSuccess = false,
@@ -107,6 +114,8 @@ class DesktopBackupState {
       pairingSuccessDeviceName: clearPairingSuccess
           ? null
           : (pairingSuccessDeviceName ?? this.pairingSuccessDeviceName),
+      needsVaultPassword: needsVaultPassword ?? this.needsVaultPassword,
+      vaultEncryptedCount: vaultEncryptedCount ?? this.vaultEncryptedCount,
     );
   }
 }
@@ -118,7 +127,8 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     this._mediaRepo,
     this._availability,
     this._pairing,
-    this._discovery, {
+    this._discovery,
+    this._vaultPasswordStore, {
     Future<void> Function()? onLibraryRefresh,
     VoidCallback? onBackupFinished,
     DesktopBackupNotificationService? notifications,
@@ -147,6 +157,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
   final DesktopAvailabilityService _availability;
   final PairingService _pairing;
   final DesktopDiscoveryService _discovery;
+  final VaultPasswordStore _vaultPasswordStore;
   final Future<void> Function()? _onLibraryRefresh;
   final VoidCallback? _onBackupFinished;
   final DesktopBackupNotificationService? _notifications;
@@ -165,6 +176,64 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
   static const _reconcileChunkSize = 100;
   static const _verifySampleSize = 50;
   bool _backfillInProgress = false;
+
+  Future<bool> registerVaultPassword(String password) async {
+    await _vaultPasswordStore.savePassword(password);
+
+    final availability = await _availability.check(discoverIfNeeded: false);
+    if (!availability.available ||
+        availability.host == null ||
+        availability.port == null ||
+        _prefs.backupAuthToken == null) {
+      return false;
+    }
+
+    final client = DesktopBackupClient(
+      host: availability.host!,
+      port: availability.port!,
+      authToken: _prefs.backupAuthToken!,
+    );
+    final ok = await client.registerVaultPassword(password);
+    client.close();
+
+    if (ok) {
+      state = state.copyWith(needsVaultPassword: false, clearError: true);
+      unawaited(checkAndMaybeRun(force: true));
+    }
+    return ok;
+  }
+
+  Future<bool> _ensureVaultRegistered(DesktopBackupClient client) async {
+    if (!await _mediaRepo.hasPendingVaultBackup()) {
+      state = state.copyWith(needsVaultPassword: false);
+      return true;
+    }
+
+    var password = await _vaultPasswordStore.readPassword();
+    if (password == null || password.isEmpty) {
+      state = state.copyWith(
+        needsVaultPassword: true,
+        phase: DesktopBackupPhase.waitingForDesktop,
+        detail: 'Vault password required',
+        isRunning: false,
+      );
+      return false;
+    }
+
+    final registered = await client.registerVaultPassword(password);
+    if (!registered) {
+      state = state.copyWith(
+        needsVaultPassword: true,
+        phase: DesktopBackupPhase.error,
+        detail: 'Failed to register vault password',
+        isRunning: false,
+      );
+      return false;
+    }
+
+    state = state.copyWith(needsVaultPassword: false);
+    return true;
+  }
 
   Future<void> _recoverStaleInProgress() async {
     await _mediaRepo.resetStaleBackupInProgress();
@@ -222,6 +291,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       deviceName: deviceName,
       backupRoot: root,
       onFileImported: _scheduleLibraryRefresh,
+      onVaultFileStored: _refreshVaultCount,
       onPaired: _onServerPaired,
       onUnpaired: _onServerUnpaired,
     );
@@ -241,6 +311,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       pairingPin: pin,
       localServerPort: _server!.port,
       localIp: ip,
+      vaultEncryptedCount: _server!.vaultFileCount,
       detail: _pairing.isDesktopReceiverPaired
           ? 'Paired with ${_prefs.pairedMobileDeviceName}'
           : 'Ready to receive backups',
@@ -285,6 +356,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       state = state.copyWith(
         isRunning: false,
         phase: DesktopBackupPhase.desktopReady,
+        vaultEncryptedCount: _server?.vaultFileCount ?? 0,
         detail: _pairing.isDesktopReceiverPaired
             ? 'Paired with ${_prefs.pairedMobileDeviceName}'
             : 'Ready to receive backups',
@@ -336,6 +408,10 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     _libraryRefreshTimer = Timer(const Duration(seconds: 2), () {
       unawaited(_onLibraryRefresh());
     });
+  }
+
+  void _refreshVaultCount() {
+    state = state.copyWith(vaultEncryptedCount: _server?.vaultFileCount ?? 0);
   }
 
   Future<void> _stopDesktopServer() async {
@@ -551,6 +627,11 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
         authToken: _prefs.backupAuthToken!,
       );
 
+      if (!await _ensureVaultRegistered(client)) {
+        client.close();
+        return;
+      }
+
       final reconciled = await _reconcilePending(client, availability);
       if (!reconciled) {
         client.close();
@@ -743,6 +824,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
             checksum: checksum,
             folderName: item.folderName,
             name: item.displayName,
+            isVault: item.isVault,
           ),
         );
       }
@@ -847,6 +929,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
           checksum: checksum,
           folderName: item.folderName,
           name: item.displayName,
+          isVault: item.isVault,
         ),
       );
     }

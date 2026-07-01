@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/features/discover/widgets/deep_organize_tools_list.dart';
 import 'package:social_gallery/shared/widgets/async_tab_body.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
@@ -39,6 +40,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   Widget build(BuildContext context) {
     final motion = AppMotion.of(context, ref);
     final hubAsync = ref.watch(discoverHubProvider);
+    final l10n = context.l10n;
 
     listenForTabScrollToTop(
       ref,
@@ -58,7 +60,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           error: e,
           isLoading: false,
           empty: EmptyState(
-            title: 'Could not load discover',
+            title: l10n.discoverErrorLoad,
             message: e.toString(),
             icon: Icons.error_outline,
           ),
@@ -73,7 +75,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               context,
             ).add(const EdgeInsets.all(16)),
             children: [
-              const OneUiSectionHeader('Organize'),
+              OneUiSectionHeader(l10n.discoverSectionOrganize),
               const SizedBox(height: OneUiSpacing.sm),
               StaggeredEntrance(
                 index: 0,
@@ -84,15 +86,15 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 ),
               ),
               const SizedBox(height: OneUiSpacing.sectionGap),
-              const OneUiSectionHeader('Deep organize'),
+              OneUiSectionHeader(l10n.discoverSectionDeepOrganize),
               const SizedBox(height: OneUiSpacing.sm),
               StaggeredEntrance(
                 index: 1,
                 playOnceKey: 'discover_1',
                 child: DiscoverHubCard(
                   leading: const Icon(Icons.document_scanner_outlined),
-                  title: 'Deep organize',
-                  subtitle: 'Scan, similar photos, low quality, compression',
+                  title: l10n.discoverDeepOrganize,
+                  subtitle: l10n.discoverDeepOrganizeSubtitle,
                   onTap: () => context.push('/discover/deep-organize'),
                 ),
               ),
@@ -103,15 +105,15 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 child: DeepOrganizeToolsList(hub: hub),
               ),
               const SizedBox(height: OneUiSpacing.sectionGap),
-              const OneUiSectionHeader('Insights'),
+              OneUiSectionHeader(l10n.discoverSectionInsights),
               const SizedBox(height: OneUiSpacing.sm),
               StaggeredEntrance(
                 index: 5,
                 playOnceKey: 'discover_5',
                 child: DiscoverHubCard(
                   leading: const Icon(Icons.bar_chart_outlined),
-                  title: 'Shooting stats',
-                  subtitle: '${hub.processedCount} items organized so far',
+                  title: l10n.discoverShootingStats,
+                  subtitle: l10n.discoverShootingStatsSubtitle(hub.processedCount),
                   onTap: () => context.push('/discover/shooting-stats'),
                 ),
               ),
@@ -121,34 +123,34 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 playOnceKey: 'discover_6',
                 child: DiscoverHubCard(
                   leading: const Icon(Icons.favorite_outline),
-                  title: 'Likes review',
-                  subtitle: '${hub.likedCount} favorites',
+                  title: l10n.discoverLikesReview,
+                  subtitle: l10n.discoverLikesReviewSubtitle(hub.likedCount),
                   onTap: () => context.push('/discover/likes-review'),
                 ),
               ),
               const SizedBox(height: OneUiSpacing.sectionGap),
-              const OneUiSectionHeader('Cleanup'),
+              OneUiSectionHeader(l10n.discoverSectionCleanup),
               const SizedBox(height: OneUiSpacing.sm),
               StaggeredEntrance(
                 index: 7,
                 playOnceKey: 'discover_7',
                 child: DiscoverHubCard(
                   leading: const Icon(Icons.copy_all),
-                  title: 'Duplicates',
-                  subtitle: 'Find near-identical photos',
+                  title: l10n.discoverDuplicates,
+                  subtitle: l10n.discoverDuplicatesSubtitle,
                   onTap: () => context.push('/duplicates'),
                 ),
               ),
               const SizedBox(height: OneUiSpacing.sectionGap),
-              const OneUiSectionHeader('Explore'),
+              OneUiSectionHeader(l10n.discoverSectionExplore),
               const SizedBox(height: OneUiSpacing.sm),
               StaggeredEntrance(
                 index: 8,
                 playOnceKey: 'discover_8',
                 child: DiscoverHubCard(
                   leading: const Icon(Icons.burst_mode),
-                  title: 'Bursts',
-                  subtitle: 'Rapid-fire photo groups',
+                  title: l10n.discoverBurstsTitle,
+                  subtitle: l10n.discoverBurstsSubtitle,
                   onTap: () => context.push('/discover/bursts'),
                 ),
               ),
@@ -158,8 +160,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 playOnceKey: 'discover_9',
                 child: DiscoverHubCard(
                   leading: const Icon(Icons.auto_awesome_outlined),
-                  title: 'Smart suggestions',
-                  subtitle: 'Album and cleanup ideas',
+                  title: l10n.discoverSuggestionsTitle,
+                  subtitle: l10n.discoverSuggestionsSubtitle,
                   onTap: () => context.push('/discover/suggestions'),
                 ),
               ),
@@ -169,8 +171,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 playOnceKey: 'discover_10',
                 child: DiscoverHubCard(
                   leading: const Icon(Icons.place_outlined),
-                  title: 'Locations',
-                  subtitle: 'Photos grouped by place',
+                  title: l10n.discoverLocationsTitle,
+                  subtitle: hub.geotaggedCount > 0
+                      ? '${l10n.discoverLocationsSubtitle} - ${l10n.locationsGeotaggedBadge(hub.geotaggedCount)}'
+                      : l10n.discoverLocationsSubtitle,
                   onTap: () => context.push('/discover/locations'),
                 ),
               ),

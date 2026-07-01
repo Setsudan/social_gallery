@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 
 class OrganizeFilterSheet extends ConsumerStatefulWidget {
@@ -47,6 +48,7 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final folders = ref.watch(allFoldersProvider).valueOrNull ?? [];
+    final l10n = context.l10n;
 
     return SafeArea(
       child: Padding(
@@ -55,23 +57,23 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Filters', style: Theme.of(context).textTheme.titleLarge),
+            Text(l10n.organizeFiltersTitle, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            Text('Media type', style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.organizeMediaType, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             SegmentedButton<OrganizeMediaType>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: OrganizeMediaType.all,
-                  label: Text('All'),
+                  label: Text(l10n.organizeMediaAll),
                 ),
                 ButtonSegment(
                   value: OrganizeMediaType.image,
-                  label: Text('Image'),
+                  label: Text(l10n.organizeMediaImage),
                 ),
                 ButtonSegment(
                   value: OrganizeMediaType.video,
-                  label: Text('Video'),
+                  label: Text(l10n.organizeMediaVideo),
                 ),
               ],
               selected: {_type},
@@ -82,9 +84,9 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String?>(
               initialValue: _folderPath,
-              decoration: const InputDecoration(labelText: 'Folder'),
+              decoration: InputDecoration(labelText: l10n.organizeFilterFolder),
               items: [
-                const DropdownMenuItem(value: null, child: Text('All folders')),
+                DropdownMenuItem(value: null, child: Text(l10n.organizeAllFolders)),
                 ...folders.map(
                   (f) => DropdownMenuItem(value: f.path, child: Text(f.name)),
                 ),
@@ -94,8 +96,8 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
             const SizedBox(height: 12),
             TextFormField(
               initialValue: _month,
-              decoration: const InputDecoration(
-                labelText: 'Month (YYYY-MM)',
+              decoration: InputDecoration(
+                labelText: l10n.organizeFilterMonth,
                 hintText: '2024-06',
               ),
               onChanged: (v) => _month = v.trim().isEmpty ? null : v.trim(),
@@ -109,7 +111,7 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
                       widget.onApply(const OrganizeFilter());
                       Navigator.pop(context);
                     },
-                    child: const Text('Reset'),
+                    child: Text(l10n.actionReset),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -125,7 +127,7 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
                       );
                       Navigator.pop(context);
                     },
-                    child: const Text('Apply'),
+                    child: Text(l10n.actionApply),
                   ),
                 ),
               ],

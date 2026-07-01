@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/navigation/shell_nav_config.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
@@ -128,11 +129,16 @@ class _FloatingBottomNavState extends ConsumerState<FloatingBottomNav>
     _expand.duration = motion.fade;
 
     final theme = Theme.of(context);
-    final destinations = shellNavDestinations(galleryViewMode: widget.galleryViewMode);
+    final l10n = context.l10n;
+    final destinations = shellNavDestinations(
+      galleryViewMode: widget.galleryViewMode,
+      l10n: l10n,
+    );
     final selectedNavIndex =
         navIndexForBranch(
           widget.selectedBranchIndex,
           galleryViewMode: widget.galleryViewMode,
+          l10n: l10n,
         ) ??
         0;
 
@@ -227,7 +233,7 @@ class _FloatingBottomNavState extends ConsumerState<FloatingBottomNav>
                   _NavItemButton(
                     expandT: t,
                     selected: false,
-                    label: 'Settings',
+                    label: l10n.navSettings,
                     unselectedIcon: Icons.menu,
                     selectedIcon: Icons.menu,
                     filledWhenSelected: false,

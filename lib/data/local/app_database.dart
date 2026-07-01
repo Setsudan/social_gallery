@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 import 'tables/folders_table.dart';
+import 'tables/location_place_cache_table.dart';
 import 'tables/media_analysis_cache_table.dart';
 import 'tables/media_items_table.dart';
 import 'tables/travel_modes_table.dart';
@@ -14,14 +15,22 @@ import 'tables/travel_modes_table.dart';
 part 'app_database.g.dart';
 
 /// Local SQLite store for folders, media index, travel modes, and analysis cache.
-@DriftDatabase(tables: [Folders, MediaItems, TravelModes, MediaAnalysisCache])
+@DriftDatabase(
+  tables: [
+    Folders,
+    MediaItems,
+    TravelModes,
+    MediaAnalysisCache,
+    LocationPlaceCache,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,6 +51,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(mediaItems, mediaItems.focalLength);
         await m.addColumn(mediaItems, mediaItems.aperture);
         await m.createTable(mediaAnalysisCache);
+      }
+      if (from < 5) {
+        await m.createTable(locationPlaceCache);
       }
     },
   );
@@ -117,12 +129,20 @@ class AppDatabase extends _$AppDatabase {
   }) async {
     final rows = await customSelect(
       '''
-      SELECT m.* FROM media_items m
-      INNER JOIN folders f ON m.folder_path = f.path
-      WHERE f.follow_status = 'HOME_FEED'
-        AND f.is_biometric_locked = 0
-        AND m.is_trashed = 0
-      ORDER BY m.date_modified DESC
+      SELECT * FROM (
+        SELECT m.*,
+          ROW_NUMBER() OVER (
+            PARTITION BY m.folder_path
+            ORDER BY COALESCE(m.date_taken, m.date_modified) DESC, m.id DESC
+          ) AS rn
+        FROM media_items m
+        INNER JOIN folders f ON m.folder_path = f.path
+        WHERE f.follow_status = 'HOME_FEED'
+          AND f.is_biometric_locked = 0
+          AND m.is_trashed = 0
+      )
+      WHERE rn = 1
+      ORDER BY COALESCE(date_taken, date_modified) DESC, id DESC
       LIMIT ? OFFSET ?
       ''',
       variables: [Variable.withInt(limit), Variable.withInt(offset)],
@@ -292,6 +312,35 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  Future<List<MediaRow>> getHomeFeedImagesMissingLocation() async {
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE f.follow_status = 'HOME_FEED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+        AND m.mime_type LIKE 'image/%'
+        AND (
+          m.latitude IS NULL OR m.longitude IS NULL
+          OR m.latitude = 0 OR m.longitude = 0
+        )
+      ORDER BY m.date_modified DESC
+      ''',
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<void> updateMediaLocation(int id, double latitude, double longitude) {
+    return (update(mediaItems)..where((m) => m.id.equals(id))).write(
+      MediaItemsCompanion(
+        latitude: Value(latitude),
+        longitude: Value(longitude),
+      ),
+    );
+  }
+
   Future<void> replaceAllMedia(List<MediaItemsCompanion> items) async {
     await syncMediaItems(items, preserveIds: const {});
   }
@@ -455,17 +504,6 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
-  Future<List<Folder>> getHomeFeedLockedAccountFolders() {
-    return (select(folders)
-          ..where(
-            (f) =>
-                f.followStatus.equals('ACCOUNT_ONLY') &
-                f.isBiometricLocked.equals(true),
-          )
-          ..orderBy([(f) => OrderingTerm.asc(f.name)]))
-        .get();
-  }
-
   Future<List<MediaRow>> getMediaAddedAfter(int timestampMs) async {
     final rows =
         await (select(mediaItems)
@@ -594,6 +632,37 @@ class AppDatabase extends _$AppDatabase {
     return row.read(count) ?? 0;
   }
 
+  Future<List<MediaRow>> getMediaWithLocation() async {
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE f.follow_status = 'HOME_FEED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+        AND m.latitude IS NOT NULL AND m.longitude IS NOT NULL
+        AND m.latitude != 0 AND m.longitude != 0
+      ORDER BY m.date_modified DESC
+      ''',
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<LocationPlaceRow?> getCachedPlace(String placeKey) {
+    return (select(locationPlaceCache)
+          ..where((p) => p.placeKey.equals(placeKey)))
+        .getSingleOrNull();
+  }
+
+  Future<List<LocationPlaceRow>> getAllCachedPlaces() {
+    return select(locationPlaceCache).get();
+  }
+
+  Future<void> upsertPlace(LocationPlaceCacheCompanion row) {
+    return into(locationPlaceCache).insert(row, mode: InsertMode.replace);
+  }
+
   // --- NEW WORK: Move, Trash, Restore operations ---
 
   Future<void> moveMediaItems(
@@ -703,16 +772,62 @@ class AppDatabase extends _$AppDatabase {
   Future<List<MediaRow>> getMediaPendingBackup({int limit = 100}) async {
     final rows = await customSelect(
       '''
-      SELECT * FROM media_items
-      WHERE is_trashed = 0
-        AND backup_state IN (0, 3)
-      ORDER BY date_added ASC
+      SELECT m.* FROM media_items m
+      WHERE m.is_trashed = 0
+        AND m.backup_state IN (0, 3)
+      ORDER BY m.date_added ASC
       LIMIT ?
       ''',
       variables: [Variable<int>(limit)],
       readsFrom: {mediaItems},
     ).get();
     return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<List<({MediaRow row, bool isVault})>> getMediaPendingBackupWithFolder({
+    int limit = 100,
+  }) async {
+    final rows = await customSelect(
+      '''
+      SELECT m.*,
+        CASE
+          WHEN f.is_biometric_locked = 1 AND f.follow_status = 'ACCOUNT_ONLY'
+          THEN 1 ELSE 0
+        END AS is_vault
+      FROM media_items m
+      LEFT JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_trashed = 0
+        AND m.backup_state IN (0, 3)
+      ORDER BY m.date_added ASC
+      LIMIT ?
+      ''',
+      variables: [Variable<int>(limit)],
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows
+        .map(
+          (row) => (
+            row: _mediaFromQuery(row),
+            isVault: row.read<int>('is_vault') == 1,
+          ),
+        )
+        .toList();
+  }
+
+  Future<bool> hasPendingVaultBackup() async {
+    final row = await customSelect(
+      '''
+      SELECT COUNT(*) AS vault_count
+      FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_trashed = 0
+        AND m.backup_state IN (0, 3)
+        AND f.is_biometric_locked = 1
+        AND f.follow_status = 'ACCOUNT_ONLY'
+      ''',
+      readsFrom: {mediaItems, folders},
+    ).getSingle();
+    return row.read<int>('vault_count') > 0;
   }
 
   Future<int> countMediaPendingBackup() async {
@@ -754,16 +869,53 @@ class AppDatabase extends _$AppDatabase {
   }) async {
     final rows = await customSelect(
       '''
-      SELECT * FROM media_items
-      WHERE is_trashed = 0
-        AND backup_state = 1
-      ORDER BY last_sync_time ASC, id ASC
+      SELECT m.*,
+        CASE
+          WHEN f.is_biometric_locked = 1 AND f.follow_status = 'ACCOUNT_ONLY'
+          THEN 1 ELSE 0
+        END AS is_vault
+      FROM media_items m
+      LEFT JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_trashed = 0
+        AND m.backup_state = 1
+      ORDER BY m.last_sync_time ASC, m.id ASC
       LIMIT ? OFFSET ?
       ''',
       variables: [Variable<int>(limit), Variable<int>(offset)],
-      readsFrom: {mediaItems},
+      readsFrom: {mediaItems, folders},
     ).get();
     return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<List<({MediaRow row, bool isVault})>> getBackedUpMediaSampleWithFolder({
+    required int offset,
+    required int limit,
+  }) async {
+    final rows = await customSelect(
+      '''
+      SELECT m.*,
+        CASE
+          WHEN f.is_biometric_locked = 1 AND f.follow_status = 'ACCOUNT_ONLY'
+          THEN 1 ELSE 0
+        END AS is_vault
+      FROM media_items m
+      LEFT JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_trashed = 0
+        AND m.backup_state = 1
+      ORDER BY m.last_sync_time ASC, m.id ASC
+      LIMIT ? OFFSET ?
+      ''',
+      variables: [Variable<int>(limit), Variable<int>(offset)],
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows
+        .map(
+          (row) => (
+            row: _mediaFromQuery(row),
+            isVault: row.read<int>('is_vault') == 1,
+          ),
+        )
+        .toList();
   }
 
   Future<int> countBackedUpMedia() async {

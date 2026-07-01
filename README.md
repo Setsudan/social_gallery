@@ -2,7 +2,7 @@
 
 A local-first, social-style photo gallery for Android and iOS. Browse your device library through a feed, stories, and albums — all indexed and stored on-device. No cloud account required.
 
-**Version:** 0.0.9+1
+**Version:** 0.0.10+1
 
 ## Highlights
 
@@ -180,13 +180,45 @@ flutter run -d windows
 
 On first launch, complete onboarding: grant photo access, and on Android 11+ optionally grant **All files access** for move/delete across albums. On Windows, pick a root gallery folder.
 
-### Build release APK
+### Release builds
+
+Android APK and Windows MSI are **separate artifacts** — build only the platform you need. This keeps each output smaller than packaging everything together.
+
+#### Android APK (split per CPU architecture)
+
+Build one APK per ABI instead of a single universal (fat) APK:
 
 ```bash
-flutter build apk --release
+flutter build apk --release --split-per-abi
 ```
 
-Output: `build/app/outputs/flutter-apk/app-release.apk`
+Outputs in `build/app/outputs/flutter-apk/`:
+
+| File | Typical use |
+|------|-------------|
+| `app-arm64-v8a-release.apk` | Most phones and tablets (2017+) |
+| `app-armeabi-v7a-release.apk` | Older 32-bit ARM devices |
+| `app-x86_64-release.apk` | Emulators and rare x86 devices |
+
+Install the APK that matches the target device. Each file is much smaller than `app-release.apk` (all ABIs in one package).
+
+To build for a single architecture only:
+
+```bash
+flutter build apk --release --target-platform android-arm64
+```
+
+#### Windows MSI installer
+
+Requires [WiX Toolset](https://wixtoolset.org/) v3.11+ (see `installer/windows/README.md`). Independent of the Android build.
+
+```powershell
+.\installer\windows\build_msi.ps1
+```
+
+Output: `build/windows/installer/SocialGallery-<version>.msi`
+
+Use `-SkipFlutterBuild` to package an existing Windows release without rebuilding Flutter.
 
 ### Build iOS
 
@@ -195,16 +227,6 @@ flutter build ios --release
 ```
 
 Open `ios/Runner.xcworkspace` in Xcode to archive and sign.
-
-### Build Windows MSI installer
-
-Requires [WiX Toolset](https://wixtoolset.org/) v3.11+ (see `installer/windows/README.md`).
-
-```powershell
-.\installer\windows\build_msi.ps1
-```
-
-Output: `build/windows/installer/SocialGallery-<version>.msi`
 
 ## Platform notes
 
@@ -216,7 +238,7 @@ Output: `build/windows/installer/SocialGallery-<version>.msi`
 | ML deep organize scan | Yes | Yes | Limited |
 | Image compression | Yes | Yes | Not supported |
 | Duplicate scan notifications | Yes | Yes | No |
-| LAN backup to desktop | Yes | Yes | Receive only |
+| LAN backup to desktop | Yes | Yes | Receive + browse/stream |
 | Background trash cleanup | Workmanager | Limited | No |
 
 ## Developer documentation
@@ -234,6 +256,11 @@ Architecture, data flow, routing, and conventions are documented with Dart doc c
 ### Desktop backup (LAN)
 
 Mobile and desktop must be on the same Wi-Fi. On desktop: Settings → **Receive backups** → show pairing code. On mobile: Settings → **Desktop backup** → pair with PIN, then enable automatic backup. Backup only starts after a successful health check (desktop running and reachable). Cellular networks are never used for backup.
+
+**Protocol v2** adds two capabilities:
+
+- **Vault sync:** media from biometric-locked albums is encrypted at rest on the desktop as password-protected AES-256 zip archives. Set the vault password on mobile when prompted during the first locked-album backup.
+- **Browse/stream:** on mobile, open **Browse home archive** in Desktop backup settings to view photos and videos stored on the desktop over Wi-Fi without importing them to the phone.
 
 **Windows:** allow the app through the firewall when prompted on first backup receive.
 

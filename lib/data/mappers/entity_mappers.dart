@@ -33,6 +33,7 @@ domain.MediaItem _mediaItemFromFields({
   required String? originalPath,
   MediaBackupState backupState = MediaBackupState.pending,
   int? lastSyncTime,
+  bool isVault = false,
 }) {
   return domain.MediaItem(
     id: id,
@@ -62,6 +63,7 @@ domain.MediaItem _mediaItemFromFields({
     originalPath: originalPath,
     backupState: backupState,
     lastSyncTime: lastSyncTime,
+    isVault: isVault,
   );
 }
 

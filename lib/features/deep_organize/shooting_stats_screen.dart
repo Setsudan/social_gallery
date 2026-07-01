@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
 
@@ -14,32 +15,34 @@ class ShootingStatsScreen extends ConsumerStatefulWidget {
 class _ShootingStatsScreenState extends ConsumerState<ShootingStatsScreen> {
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
 
-  String _formatDuration(int ms) {
+  String _formatDuration(BuildContext context, int ms) {
+    final l10n = context.l10n;
     final minutes = ms ~/ 60000;
-    if (minutes < 60) return '$minutes min';
+    if (minutes < 60) return l10n.durationMinutes(minutes);
     final hours = minutes ~/ 60;
     final rem = minutes % 60;
-    return '${hours}h ${rem}m';
+    return l10n.durationHoursMinutes(hours, rem);
   }
 
   @override
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(shootingStatsProvider(_month));
+    final l10n = context.l10n;
 
     return statsAsync.when(
       loading: () => OneUiSubpageScaffold(
-        title: 'Shooting stats',
+        title: l10n.discoverShootingStats,
         isLoading: true,
         body: const SizedBox.shrink(),
       ),
       error: (e, _) => OneUiSubpageScaffold(
-        title: 'Shooting stats',
+        title: l10n.discoverShootingStats,
         error: e,
         body: const SizedBox.shrink(),
       ),
       data: (stats) => OneUiSubpageScaffold(
-        title: 'Shooting stats',
-        subtitle: 'Your on-device photography habits.',
+        title: l10n.discoverShootingStats,
+        subtitle: l10n.shootingStatsSubtitle,
         padding: const EdgeInsets.all(16),
         body: ListView(
           children: [
@@ -65,23 +68,26 @@ class _ShootingStatsScreenState extends ConsumerState<ShootingStatsScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _StatTile('Photos', '${stats.photoCount}'),
-            _StatTile('Videos', '${stats.videoCount}'),
-            _StatTile('Screenshots', '${stats.screenshotCount}'),
-            _StatTile('Liked', '${stats.likedCount}'),
-            _StatTile('Folders', '${stats.folderCount}'),
+            _StatTile(l10n.shootingStatsPhotos, '${stats.photoCount}'),
+            _StatTile(l10n.shootingStatsVideos, '${stats.videoCount}'),
+            _StatTile(l10n.shootingStatsScreenshots, '${stats.screenshotCount}'),
+            _StatTile(l10n.shootingStatsLiked, '${stats.likedCount}'),
+            _StatTile(l10n.shootingStatsFolders, '${stats.folderCount}'),
             _StatTile(
-              'Video duration',
-              _formatDuration(stats.totalVideoDurationMs),
+              l10n.shootingStatsVideoDuration,
+              _formatDuration(context, stats.totalVideoDurationMs),
             ),
             if (stats.mostActiveDay != null)
               _StatTile(
-                'Most active day',
-                '${stats.mostActiveDay} (${stats.mostActiveDayCount})',
+                l10n.shootingStatsMostActiveDay,
+                l10n.shootingStatsMostActiveDayValue(
+                  stats.mostActiveDay!,
+                  stats.mostActiveDayCount,
+                ),
               ),
             const SizedBox(height: 24),
             Text(
-              'Activity heatmap',
+              l10n.shootingStatsHeatmap,
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -117,8 +123,9 @@ class _Heatmap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (counts.isEmpty) {
-      return const Text('No activity this month.');
+      return Text(l10n.shootingStatsNoActivity);
     }
     final max = counts.values.fold<int>(0, (a, b) => a > b ? a : b);
     final entries = counts.entries.toList()
@@ -130,7 +137,7 @@ class _Heatmap extends StatelessWidget {
       children: entries.map((e) {
         final intensity = max == 0 ? 0.0 : e.value / max;
         return Tooltip(
-          message: '${e.key}: ${e.value}',
+          message: l10n.shootingStatsHeatmapTooltip(e.key, e.value),
           child: Container(
             width: 28,
             height: 28,

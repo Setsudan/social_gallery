@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/animation/modal_sheet.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
@@ -30,6 +31,7 @@ class _AlbumCoverPickerSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final mediaAsync = ref.watch(folderMediaProvider(folder.path));
     final currentCover = folder.customCoverUri?.trim();
 
@@ -45,7 +47,7 @@ class _AlbumCoverPickerSheet extends ConsumerWidget {
               OneUiSpacing.sm,
             ),
             child: Text(
-              'Choose cover for ${folder.name}',
+              l10n.albumChooseCoverTitle(folder.name),
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -56,13 +58,13 @@ class _AlbumCoverPickerSheet extends ConsumerWidget {
             ),
             error: (error, _) => Padding(
               padding: const EdgeInsets.all(OneUiSpacing.pageHorizontal),
-              child: Text('Could not load album photos: $error'),
+              child: Text(l10n.albumCoverLoadError(error.toString())),
             ),
             data: (items) {
               if (items.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(OneUiSpacing.pageHorizontal),
-                  child: Text('This album has no photos to use as a cover.'),
+                return Padding(
+                  padding: const EdgeInsets.all(OneUiSpacing.pageHorizontal),
+                  child: Text(l10n.albumCoverNoPhotos),
                 );
               }
 

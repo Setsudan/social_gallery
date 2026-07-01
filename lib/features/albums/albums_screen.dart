@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
@@ -41,19 +42,21 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
   }
 
   Widget? _lockedAlbumsHeaderAction(BuildContext context) {
+    final l10n = context.l10n;
     final width = MediaQuery.sizeOf(context).width;
     final isDesktopLayout = width > 800 || usesFilesystemGallery;
     if (!isDesktopLayout) return null;
 
     return IconButton(
       icon: const Icon(Icons.lock_outline),
-      tooltip: 'Locked albums',
+      tooltip: l10n.tooltipLockedAlbums,
       onPressed: _openLockedAlbums,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final motion = AppMotion.of(context, ref);
     final foldersAsync = ref.watch(allFoldersProvider);
 
@@ -76,7 +79,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => EmptyState(
           icon: Icons.error_outline,
-          title: 'Could not load albums',
+          title: l10n.albumsErrorLoad,
           message: error.toString(),
         ),
         data: (folders) {
@@ -94,15 +97,15 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: OneUiPageHeader(
-                    title: 'Albums',
+                    title: l10n.albumsTitle,
                     trailing: _lockedAlbumsHeaderAction(context),
                   ),
                 ),
                 SliverFillRemaining(
                   child: EmptyState(
                     icon: Icons.photo_album_outlined,
-                    title: 'No albums yet',
-                    message: 'Sync your library to see albums from your device.',
+                    title: l10n.albumsEmptyTitle,
+                    message: l10n.albumsEmptyMessage,
                   ),
                 ),
               ],
@@ -125,7 +128,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
             slivers: [
               SliverToBoxAdapter(
                 child: OneUiPageHeader(
-                  title: 'Albums',
+                  title: l10n.albumsTitle,
                   trailing: _lockedAlbumsHeaderAction(context),
                 ),
               ),

@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/app_locale_preference.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/core/l10n/l10n_labels.dart';
 import 'package:social_gallery/core/gallery/desktop_gallery_root_picker.dart';
 import 'package:social_gallery/core/permissions/media_permission_service.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
+import 'package:social_gallery/features/discover/location_index_controller.dart';
 import 'package:social_gallery/core/theme/accent_presets.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
@@ -19,9 +23,10 @@ import 'package:social_gallery/features/onboarding/onboarding_accent_swatch.dart
 import 'package:social_gallery/features/onboarding/onboarding_shell.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
+import 'package:social_gallery/shared/widgets/locale_preference_flag.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_page_header.dart';
 
-const _pageCount = 6;
+const _pageCount = 7;
 
 class OnboardingCarousel extends ConsumerStatefulWidget {
   const OnboardingCarousel({super.key});
@@ -100,6 +105,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
     if (!sync.isRunning) {
       unawaited(ref.read(gallerySyncProvider.notifier).run());
     }
+    ref.read(locationIndexControllerProvider.notifier).ensureStarted();
   }
 
   Future<void> _requestPermission() async {
@@ -118,22 +124,31 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
   }
 
   Future<void> _pickDesktopGalleryRoot() async {
+    final l10n = context.l10n;
     try {
-      final path = await pickDesktopGalleryRootFolder();
+      final path = await pickDesktopGalleryRootFolder(l10n);
       if (path != null && path.isNotEmpty) {
         final saved = await saveDesktopGalleryRootPath(
           ref.read(preferencesRepositoryProvider),
           path,
         );
         if (!saved) {
-          setState(() => _permissionError = 'Could not use that folder');
+          if (!mounted) return;
+          setState(
+            () => _permissionError = context.l10n.errorCouldNotUseFolder,
+          );
           return;
         }
         setState(() => _showDesktopRootPrompt = false);
         await _checkPermissions();
       }
     } catch (e) {
-      setState(() => _permissionError = 'Failed to select folder: $e');
+      if (!mounted) return;
+      setState(
+        () => _permissionError = context.l10n.errorFailedToSelectFolder(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -186,9 +201,13 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
       physics: const NeverScrollableScrollPhysics(),
       onPageChanged: (index) => setState(() => _pageIndex = index),
       children: [
-        _WelcomePage(
+        _LanguagePage(
           onNext: _nextPage,
-          onSkip: () => _goToPage(1),
+        ),
+        _WelcomePage(
+          onBack: _previousPage,
+          onNext: _nextPage,
+          onSkip: () => _goToPage(2),
         ),
         _PermissionsPage(
           permissionState: _permissionState,
@@ -230,19 +249,91 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
   }
 }
 
-class _WelcomePage extends StatelessWidget {
-  const _WelcomePage({required this.onNext, required this.onSkip});
+class _LanguagePage extends ConsumerWidget {
+  const _LanguagePage({required this.onNext});
 
+  final VoidCallback onNext;
+
+  static const _options = [
+    AppLocalePreference.system,
+    AppLocalePreference.en,
+    AppLocalePreference.fr,
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final current = ref.watch(
+      settingsProvider.select((s) => s.localePreference),
+    );
+    final theme = Theme.of(context);
+
+    return OnboardingShell(
+      pageIndex: 0,
+      pageCount: _pageCount,
+      showBack: false,
+      onNext: onNext,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: OneUiSpacing.lg),
+        children: [
+          OneUiPageHeader(
+            title: l10n.onboardingChooseLanguageTitle,
+            subtitle: l10n.onboardingChooseLanguageSubtitle,
+          ),
+          ..._options.map((preference) {
+            final selected = current == preference;
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: OneUiSpacing.pageHorizontal,
+                vertical: 4,
+              ),
+              child: Material(
+                color: selected
+                    ? theme.colorScheme.primaryContainer
+                    : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(OneUiRadii.card),
+                child: ListTile(
+                  leading: LocalePreferenceFlag(preference: preference),
+                  title: Text(appLocalePreferenceLabel(l10n, preference)),
+                  trailing: selected
+                      ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+                      : null,
+                  onTap: () {
+                    AppHaptics.medium();
+                    ref
+                        .read(settingsProvider.notifier)
+                        .setLocalePreference(preference);
+                  },
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _WelcomePage extends StatelessWidget {
+  const _WelcomePage({
+    required this.onBack,
+    required this.onNext,
+    required this.onSkip,
+  });
+
+  final VoidCallback onBack;
   final VoidCallback onNext;
   final VoidCallback onSkip;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     return OnboardingShell(
-      pageIndex: 0,
+      pageIndex: 1,
       pageCount: _pageCount,
-      showBack: false,
+      showBack: true,
+      onBack: onBack,
       showSkip: true,
       onSkip: onSkip,
       onNext: onNext,
@@ -258,14 +349,13 @@ class _WelcomePage extends StatelessWidget {
             ),
             const SizedBox(height: OneUiSpacing.xl),
             Text(
-              'Welcome to Social Gallery',
+              l10n.onboardingWelcomeTitle,
               style: theme.textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: OneUiSpacing.md),
             Text(
-              'Your photos stay on your device. Set up a few preferences '
-              'and we will index your library in the background.',
+              l10n.onboardingWelcomeBody,
               style: theme.textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
@@ -305,53 +395,50 @@ class _PermissionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
 
     Widget body;
     if (showDesktopRootPrompt) {
       body = _PermissionCard(
         icon: Icons.folder_open_outlined,
-        title: 'Select gallery folder',
-        message:
-            'Choose a folder on your computer to scan for photos and videos.',
+        title: l10n.onboardingSelectGalleryFolderTitle,
+        message: l10n.onboardingSelectGalleryFolderMessage,
         error: error,
         actions: [
           FilledButton.icon(
             onPressed: onPickDesktopRoot,
             icon: const Icon(Icons.folder),
-            label: const Text('Choose folder'),
+            label: Text(l10n.onboardingChooseFolder),
           ),
         ],
       );
     } else if (showStoragePrompt) {
       body = _PermissionCard(
         icon: Icons.folder_shared_outlined,
-        title: 'All files access (optional)',
-        message:
-            'On Android 11+, grant "All files access" to move or delete items '
-            'between albums. You can skip and grant it later.',
+        title: l10n.onboardingAllFilesAccessTitle,
+        message: l10n.onboardingAllFilesAccessMessage,
         actions: [
           FilledButton(
             onPressed: onRequestAllFilesAccess,
-            child: const Text('Grant access'),
+            child: Text(l10n.onboardingGrantAccess),
           ),
           TextButton(
             onPressed: onSkipStorage,
-            child: const Text('Continue without'),
+            child: Text(l10n.onboardingContinueWithout),
           ),
         ],
       );
     } else if (permissionState == MediaPermissionState.denied) {
       body = _PermissionCard(
         icon: Icons.photo_library_outlined,
-        title: 'Photos access required',
-        message:
-            'Social Gallery needs access to your photos and videos to build your library.',
+        title: l10n.onboardingPhotosAccessTitle,
+        message: l10n.onboardingPhotosAccessMessage,
         error: error,
         actions: [
           FilledButton(
             onPressed: onRequestPermission,
-            child: const Text('Grant permission'),
+            child: Text(l10n.onboardingGrantPermission),
           ),
         ],
       );
@@ -360,16 +447,16 @@ class _PermissionsPage extends StatelessWidget {
     } else {
       body = _PermissionCard(
         icon: Icons.check_circle_outline,
-        title: 'Access granted',
+        title: l10n.onboardingAccessGrantedTitle,
         message: permissionState == MediaPermissionState.limited
-            ? 'Limited photo access is enabled. Your library is indexing in the background.'
-            : 'Your library is indexing in the background while you finish setup.',
+            ? l10n.onboardingAccessGrantedLimitedMessage
+            : l10n.onboardingAccessGrantedFullMessage,
         actions: const [],
       );
     }
 
     return OnboardingShell(
-      pageIndex: 1,
+      pageIndex: 2,
       pageCount: _pageCount,
       onBack: onBack,
       onNext: onNext,
@@ -378,9 +465,9 @@ class _PermissionsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const OneUiPageHeader(
-              title: 'Permissions',
-              subtitle: 'Allow access so we can scan your albums.',
+            OneUiPageHeader(
+              title: l10n.onboardingPermissionsHeader,
+              subtitle: l10n.onboardingPermissionsSubtitle,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -404,7 +491,31 @@ class _PermissionsPage extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Gallery sync running in background',
+                        l10n.onboardingGallerySyncRunning,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: OneUiSpacing.sm),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: OneUiSpacing.pageHorizontal,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.place_outlined,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.onboardingLocationScanRunning,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),
@@ -487,20 +598,21 @@ class _ThemePage extends ConsumerWidget {
   final VoidCallback onSkip;
 
   static const _options = [
-    (AppThemeVariant.system, 'System default', Icons.brightness_auto_outlined),
-    (AppThemeVariant.light, 'Light', Icons.light_mode_outlined),
-    (AppThemeVariant.solar, 'Solar', Icons.wb_sunny_outlined),
-    (AppThemeVariant.dark, 'Dark', Icons.dark_mode_outlined),
-    (AppThemeVariant.darkOled, 'Dark OLED', Icons.contrast_outlined),
+    (AppThemeVariant.system, Icons.brightness_auto_outlined),
+    (AppThemeVariant.light, Icons.light_mode_outlined),
+    (AppThemeVariant.solar, Icons.wb_sunny_outlined),
+    (AppThemeVariant.dark, Icons.dark_mode_outlined),
+    (AppThemeVariant.darkOled, Icons.contrast_outlined),
   ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final current = ref.watch(settingsProvider.select((s) => s.appTheme));
     final theme = Theme.of(context);
 
     return OnboardingShell(
-      pageIndex: 2,
+      pageIndex: 3,
       pageCount: _pageCount,
       showSkip: true,
       onSkip: onSkip,
@@ -509,9 +621,9 @@ class _ThemePage extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.only(bottom: OneUiSpacing.lg),
         children: [
-          const OneUiPageHeader(
-            title: 'Choose a theme',
-            subtitle: 'Pick how Social Gallery looks. You can change this later.',
+          OneUiPageHeader(
+            title: l10n.onboardingChooseThemeTitle,
+            subtitle: l10n.onboardingChooseThemeSubtitle,
           ),
           ..._options.map((option) {
             final selected = current == option.$1;
@@ -526,8 +638,8 @@ class _ThemePage extends ConsumerWidget {
                     : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(OneUiRadii.card),
                 child: ListTile(
-                  leading: Icon(option.$3),
-                  title: Text(option.$2),
+                  leading: Icon(option.$2),
+                  title: Text(appThemeVariantLabel(l10n, option.$1)),
                   trailing: selected
                       ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
                       : null,
@@ -556,20 +668,14 @@ class _AppearancePage extends ConsumerWidget {
   final VoidCallback onNext;
   final VoidCallback onSkip;
 
-  String _fontLabel(double factor) {
-    if (factor < 0.9) return 'Small';
-    if (factor < 1.1) return 'Normal';
-    if (factor < 1.3) return 'Large';
-    return 'Extra large';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final theme = Theme.of(context);
 
     return OnboardingShell(
-      pageIndex: 3,
+      pageIndex: 4,
       pageCount: _pageCount,
       showSkip: true,
       onSkip: onSkip,
@@ -578,13 +684,13 @@ class _AppearancePage extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.only(bottom: OneUiSpacing.lg),
         children: [
-          const OneUiPageHeader(
-            title: 'Accent and text',
-            subtitle: 'Fine-tune colors and readability.',
+          OneUiPageHeader(
+            title: l10n.onboardingAccentAndTextTitle,
+            subtitle: l10n.onboardingAccentAndTextSubtitle,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
-            child: Text('Accent color', style: theme.textTheme.titleMedium),
+            child: Text(l10n.settingsAccentColor, style: theme.textTheme.titleMedium),
           ),
           const SizedBox(height: OneUiSpacing.sm),
           Padding(
@@ -608,7 +714,7 @@ class _AppearancePage extends ConsumerWidget {
           const SizedBox(height: OneUiSpacing.xl),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
-            child: Text('Font size', style: theme.textTheme.titleMedium),
+            child: Text(l10n.settingsFontSize, style: theme.textTheme.titleMedium),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
@@ -623,7 +729,7 @@ class _AppearancePage extends ConsumerWidget {
                         min: 0.8,
                         max: 1.4,
                         divisions: 3,
-                        label: _fontLabel(settings.fontSizeFactor),
+                        label: fontSizeLabel(l10n, settings.fontSizeFactor),
                         onChanged: (value) {
                           AppHaptics.selection();
                           ref.read(settingsProvider.notifier).setFontSizeFactor(value);
@@ -634,7 +740,7 @@ class _AppearancePage extends ConsumerWidget {
                   ],
                 ),
                 Text(
-                  _fontLabel(settings.fontSizeFactor),
+                  fontSizeLabel(l10n, settings.fontSizeFactor),
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: theme.colorScheme.primary,
                   ),
@@ -661,13 +767,14 @@ class _ViewModePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final galleryViewMode = ref.watch(
       settingsProvider.select((s) => s.galleryViewMode),
     );
     final theme = Theme.of(context);
 
     return OnboardingShell(
-      pageIndex: 4,
+      pageIndex: 5,
       pageCount: _pageCount,
       showSkip: true,
       onSkip: onSkip,
@@ -676,16 +783,15 @@ class _ViewModePage extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.only(bottom: OneUiSpacing.lg),
         children: [
-          const OneUiPageHeader(
-            title: 'Gallery or social?',
-            subtitle: 'Choose your default browsing style.',
+          OneUiPageHeader(
+            title: l10n.onboardingViewModeTitle,
+            subtitle: l10n.onboardingViewModeSubtitle,
           ),
           _ViewModeCard(
             selected: !galleryViewMode,
             icon: Icons.home_outlined,
-            title: 'Social style',
-            description:
-                'Home feed with stories and posts, plus an Explore tab for discovery.',
+            title: l10n.onboardingSocialStyleTitle,
+            description: l10n.onboardingSocialStyleDescription,
             onTap: () {
               AppHaptics.medium();
               ref.read(settingsProvider.notifier).setGalleryViewMode(false);
@@ -694,9 +800,8 @@ class _ViewModePage extends ConsumerWidget {
           _ViewModeCard(
             selected: galleryViewMode,
             icon: Icons.grid_view_rounded,
-            title: 'Gallery style',
-            description:
-                'Pinch-zoom gallery grid on Home with albums on Explore.',
+            title: l10n.onboardingGalleryStyleTitle,
+            description: l10n.onboardingGalleryStyleDescription,
             onTap: () {
               AppHaptics.medium();
               ref.read(settingsProvider.notifier).setGalleryViewMode(true);
@@ -705,7 +810,7 @@ class _ViewModePage extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.all(OneUiSpacing.pageHorizontal),
             child: Text(
-              'You can switch modes anytime in Settings.',
+              l10n.onboardingViewModeHint,
               style: theme.textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
@@ -805,32 +910,33 @@ class _FoldersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final foldersAsync = ref.watch(allFoldersProvider);
     final theme = Theme.of(context);
 
     return OnboardingShell(
-      pageIndex: 5,
+      pageIndex: 6,
       pageCount: _pageCount,
       onBack: onBack,
       onNext: onComplete,
-      nextLabel: 'Get started',
+      nextLabel: l10n.onboardingGetStarted,
       child: foldersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load folders: $e')),
+        error: (e, _) => Center(
+          child: Text(l10n.errorCouldNotLoadFolders(e.toString())),
+        ),
         data: (folders) {
           if (folders.isEmpty) {
             return ListView(
               children: [
-                const OneUiPageHeader(
-                  title: 'Your folders',
-                  subtitle:
-                      'Indexing is still running. You can adjust folders later in Settings.',
+                OneUiPageHeader(
+                  title: l10n.onboardingYourFoldersTitle,
+                  subtitle: l10n.onboardingYourFoldersSubtitleIndexing,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(OneUiSpacing.pageHorizontal),
                   child: Text(
-                    'No folders found yet. Tap Get started to enter the app '
-                    'while sync continues.',
+                    l10n.onboardingNoFoldersYet,
                     style: theme.textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
@@ -844,10 +950,9 @@ class _FoldersPage extends ConsumerWidget {
             itemCount: folders.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
-                return const OneUiPageHeader(
-                  title: 'Your folders',
-                  subtitle:
-                      'Choose what appears on Home Feed, as account-only, or hidden.',
+                return OneUiPageHeader(
+                  title: l10n.onboardingYourFoldersTitle,
+                  subtitle: l10n.onboardingYourFoldersSubtitleChoose,
                 );
               }
               final folder = folders[index - 1];
@@ -900,11 +1005,16 @@ class _OnboardingFolderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final locked = folder.isLockedAccount;
     final statusLabel = switch (folder.followStatus) {
-      FollowStatus.homeFeed => locked ? 'Locked' : 'Home Feed',
-      FollowStatus.accountOnly => locked ? 'Account (locked)' : 'Account',
-      FollowStatus.unfollowed => 'Hidden',
+      FollowStatus.homeFeed => locked
+          ? l10n.folderSecureLock
+          : l10n.folderVisibilityHomeFeed,
+      FollowStatus.accountOnly => locked
+          ? l10n.folderVisibilityAccountLocked
+          : l10n.folderVisibilityAccount,
+      FollowStatus.unfollowed => l10n.folderVisibilityHidden,
     };
 
     return Padding(
@@ -926,7 +1036,7 @@ class _OnboardingFolderTile extends StatelessWidget {
                   locked: locked,
                 ),
                 title: Text(folder.name),
-                subtitle: Text('${folder.mediaCount} items'),
+                subtitle: Text(l10n.folderItemCount(folder.mediaCount)),
                 trailing: Chip(label: Text(statusLabel)),
               ),
               const Divider(height: 8),
@@ -935,23 +1045,23 @@ class _OnboardingFolderTile extends StatelessWidget {
                 runSpacing: 6,
                 children: [
                   _VisibilityChip(
-                    label: 'Home',
+                    label: l10n.folderVisibilityHome,
                     selected: folder.followStatus == FollowStatus.homeFeed && !locked,
                     onTap: onHomeFeed,
                   ),
                   _VisibilityChip(
-                    label: 'Account',
+                    label: l10n.folderVisibilityAccount,
                     selected:
                         folder.followStatus == FollowStatus.accountOnly && !locked,
                     onTap: onAccount,
                   ),
                   _VisibilityChip(
-                    label: 'Lock',
+                    label: l10n.folderVisibilityLock,
                     selected: locked,
                     onTap: onLocked,
                   ),
                   _VisibilityChip(
-                    label: 'Hide',
+                    label: l10n.folderVisibilityHide,
                     selected: folder.followStatus == FollowStatus.unfollowed,
                     onTap: onHidden,
                   ),

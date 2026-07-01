@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart';
+import 'package:social_gallery/l10n/app_localizations.dart';
 
 class TravelModeEditorScreen extends ConsumerStatefulWidget {
   const TravelModeEditorScreen({super.key, this.travelModeId});
@@ -110,6 +112,7 @@ class _TravelModeEditorScreenState
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     final name = _nameController.text.trim();
     final folder = _folderController.text.trim();
     if (name.isEmpty ||
@@ -117,7 +120,7 @@ class _TravelModeEditorScreenState
         _startDate == null ||
         _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name, folder, and dates are required')),
+        SnackBar(content: Text(l10n.snackbarTravelModeRequiredFields)),
       );
       return;
     }
@@ -162,22 +165,23 @@ class _TravelModeEditorScreenState
   }
 
   Future<void> _delete() async {
+    final l10n = context.l10n;
     final id = widget.travelModeId;
     if (id == null) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete travel mode'),
-        content: const Text('This cannot be undone.'),
+        title: Text(l10n.travelModeDeleteTitle),
+        content: Text(l10n.travelModeDeleteMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l10n.actionDelete),
           ),
         ],
       ),
@@ -198,6 +202,7 @@ class _TravelModeEditorScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -221,7 +226,9 @@ class _TravelModeEditorScreenState
                   ),
                   child: TextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Trip name'),
+                    decoration: InputDecoration(
+                      labelText: l10n.travelModeTripName,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -231,16 +238,17 @@ class _TravelModeEditorScreenState
                   ),
                   child: TextField(
                     controller: _folderController,
-                    decoration: const InputDecoration(
-                      labelText: 'Target folder name',
-                      helperText: 'Album name for auto-moved media (no vault)',
+                    decoration: InputDecoration(
+                      labelText: l10n.travelModeTargetFolder,
+                      helperText: l10n.travelModeTargetFolderHelper,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 _dateCard(
                   theme,
-                  title: 'Start',
+                  l10n,
+                  title: l10n.travelModeStart,
                   date: _startDate,
                   onPickDate: () => _pickDate(start: true),
                   useTime: _useStartTime,
@@ -251,7 +259,8 @@ class _TravelModeEditorScreenState
                 const SizedBox(height: 12),
                 _dateCard(
                   theme,
-                  title: 'End',
+                  l10n,
+                  title: l10n.travelModeEnd,
                   date: _endDate,
                   onPickDate: () => _pickDate(start: false),
                   useTime: _useEndTime,
@@ -268,7 +277,7 @@ class _TravelModeEditorScreenState
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Save'),
+                      : Text(l10n.actionSave),
                 ),
               ],
             ),
@@ -276,7 +285,8 @@ class _TravelModeEditorScreenState
   }
 
   Widget _dateCard(
-    ThemeData theme, {
+    ThemeData theme,
+    AppLocalizations l10n, {
     required String title,
     required DateTime? date,
     required VoidCallback onPickDate,
@@ -298,19 +308,19 @@ class _TravelModeEditorScreenState
                 Expanded(
                   child: Text(
                     date == null
-                        ? 'Not set'
+                        ? l10n.valueNotSet
                         : '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
                   ),
                 ),
                 OutlinedButton(
                   onPressed: onPickDate,
-                  child: const Text('Date'),
+                  child: Text(l10n.travelModeDate),
                 ),
               ],
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Specific time'),
+              title: Text(l10n.travelModeSpecificTime),
               value: useTime,
               onChanged: onToggleTime,
             ),
@@ -319,12 +329,12 @@ class _TravelModeEditorScreenState
                 children: [
                   Expanded(
                     child: Text(
-                      time == null ? 'Not set' : time.format(context),
+                      time == null ? l10n.valueNotSet : time.format(context),
                     ),
                   ),
                   OutlinedButton(
                     onPressed: onPickTime,
-                    child: const Text('Time'),
+                    child: Text(l10n.travelModeTime),
                   ),
                 ],
               ),

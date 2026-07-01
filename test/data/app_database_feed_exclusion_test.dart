@@ -85,6 +85,49 @@ void main() {
     expect(rows.map((r) => r.folderPath), ['/open']);
   });
 
+  test('home feed returns only the latest media per folder', () async {
+    await seedFoldersAndMedia();
+    await db.replaceAllMedia([
+      MediaItemsCompanion.insert(
+        id: const Value(1),
+        uri: 'uri-open-old',
+        displayName: 'open-old.jpg',
+        folderName: 'Open',
+        folderPath: '/open',
+        dateAdded: 100,
+        dateModified: 100,
+        size: 1000,
+        mimeType: 'image/jpeg',
+      ),
+      MediaItemsCompanion.insert(
+        id: const Value(4),
+        uri: 'uri-open-new',
+        displayName: 'open-new.jpg',
+        folderName: 'Open',
+        folderPath: '/open',
+        dateAdded: 400,
+        dateModified: 400,
+        size: 1000,
+        mimeType: 'image/jpeg',
+      ),
+      MediaItemsCompanion.insert(
+        id: const Value(2),
+        uri: 'uri-account',
+        displayName: 'account.jpg',
+        folderName: 'Account',
+        folderPath: '/account',
+        dateAdded: 200,
+        dateModified: 200,
+        size: 1000,
+        mimeType: 'image/jpeg',
+      ),
+    ]);
+
+    final rows = await db.getHomeFeedMediaPage(limit: 10, offset: 0);
+    expect(rows.map((r) => r.id), [4]);
+    expect(rows.map((r) => r.displayName), ['open-new.jpg']);
+  });
+
   test('explore and favorites exclude account-only folder media', () async {
     await seedFoldersAndMedia();
 

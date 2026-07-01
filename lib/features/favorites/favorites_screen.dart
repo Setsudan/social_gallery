@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/shared/navigation/media_viewer_session.dart';
 import 'package:social_gallery/features/favorites/favorites_providers.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
@@ -25,25 +25,25 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final favoritesAsync = ref.watch(favoritesStreamProvider);
     return favoritesAsync.when(
       data: (items) => OneUiTabPageScaffold(
         extendBody: true,
         isEmpty: items.isEmpty,
-        empty: const EmptyState(
-          title: 'No favorites yet',
-          message: 'Double-tap a post on Home to favorite it.',
+        empty: EmptyState(
+          title: l10n.favoritesEmptyTitle,
+          message: l10n.favoritesEmptyMessage,
           icon: Icons.favorite_border,
         ),
         body: MediaGrid(
           controller: _scrollController,
           items: items,
-          onTap: (item) => context.push(
-            mediaViewerLocation(
-              item.uri,
-              mediaId: item.id,
-              favorite: true,
-            ),
+          onTap: (item) => openMediaViewer(
+            context,
+            ref,
+            items: items,
+            item: item,
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 
@@ -41,6 +42,7 @@ class _OrganizeTrashReviewSheetState extends State<OrganizeTrashReviewSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -49,12 +51,12 @@ class _OrganizeTrashReviewSheetState extends State<OrganizeTrashReviewSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Review trash (${widget.items.length})',
+              l10n.organizeTrashReviewTitle(widget.items.length),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'Selected items will be permanently deleted from your device.',
+              l10n.organizeTrashReviewMessage,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -112,7 +114,7 @@ class _OrganizeTrashReviewSheetState extends State<OrganizeTrashReviewSheet> {
                       await widget.onConfirm(_selected.toList());
                       if (context.mounted) Navigator.pop(context);
                     },
-              child: Text('Delete ${_selected.length} items'),
+              child: Text(l10n.organizeTrashDeleteCount(_selected.length)),
             ),
           ],
         ),

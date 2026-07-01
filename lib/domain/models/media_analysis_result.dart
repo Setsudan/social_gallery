@@ -85,6 +85,7 @@ class DiscoverHubData {
     this.pendingTrashCount = 0,
     this.likedCount = 0,
     this.processedCount = 0,
+    this.geotaggedCount = 0,
     this.isLoading = true,
   });
 
@@ -96,5 +97,6 @@ class DiscoverHubData {
   final int pendingTrashCount;
   final int likedCount;
   final int processedCount;
+  final int geotaggedCount;
   final bool isLoading;
 }

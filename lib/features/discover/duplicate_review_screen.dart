@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/domain/models/duplicate_group.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
@@ -61,8 +62,8 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
       SnackBar(
         content: Text(
           ok
-              ? 'Removed ${toDelete.length} duplicate(s).'
-              : 'Could not remove some items. Check permissions.',
+              ? context.l10n.snackbarDuplicatesRemoved(toDelete.length)
+              : context.l10n.snackbarDuplicatesRemoveFailed,
         ),
       ),
     );
@@ -77,10 +78,11 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final scan = ref.watch(duplicateScanControllerProvider);
+    final l10n = context.l10n;
 
     if (scan.error != null) {
       return OneUiSubpageScaffold(
-        title: 'Review duplicates',
+        title: l10n.duplicateReviewTitle,
         error: scan.error,
         body: const SizedBox.shrink(),
       );
@@ -101,8 +103,8 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
                 const SizedBox(height: 16),
                 Text(
                   scan.total > 0
-                      ? 'Analyzing ${scan.scanned} / ${scan.total} photos...'
-                      : 'Preparing duplicate scan...',
+                      ? l10n.duplicateScanProgress(scan.scanned, scan.total)
+                      : l10n.duplicateScanPreparing,
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -116,10 +118,10 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
     final group = _findGroup(groups);
         if (group == null) {
           return OneUiSubpageScaffold(
-            title: 'Review duplicates',
+            title: l10n.duplicateReviewTitle,
             isEmpty: true,
-            empty: const EmptyState(
-              title: 'Group not found',
+            empty: EmptyState(
+              title: l10n.duplicateReviewGroupNotFound,
               icon: Icons.search_off,
             ),
             body: const SizedBox.shrink(),
@@ -134,9 +136,8 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
         );
 
         return OneUiSubpageScaffold(
-          title: 'Review duplicates',
-          subtitle:
-              'Keep best is pre-selected. Tap items to change what will be removed.',
+          title: l10n.duplicateReviewTitle,
+          subtitle: l10n.duplicateReviewSubtitle,
           actions: [
             TextButton(
               onPressed: selectedIds.isEmpty || _deleting
@@ -148,7 +149,7 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text('Delete (${selectedIds.length})'),
+                  : Text(l10n.duplicateReviewDeleteCount(selectedIds.length)),
             ),
           ],
           body: GridView.builder(
@@ -184,9 +185,9 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
                       if (isKeeper)
                         Container(
                           color: Colors.black26,
-                          child: const Center(
+                          child: Center(
                             child: Chip(
-                              label: Text('Keep'),
+                              label: Text(l10n.actionKeep),
                               backgroundColor: Colors.green,
                             ),
                           ),

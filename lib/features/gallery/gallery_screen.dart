@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/shared/navigation/media_viewer_session.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
@@ -299,9 +301,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   void _openMedia(MediaItem item) {
-    context.push(
-      postDetailLocation(item.uri, mediaId: item.id, favorite: item.isFavorite),
-    );
+    openMediaViewer(context, ref, items: _items, item: item);
   }
 
   @override
@@ -353,6 +353,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       }
     });
 
+    final l10n = context.l10n;
     final motion = AppMotion.of(context, ref);
     final theme = Theme.of(context);
     final inSelectionMode = _inSelectionMode;
@@ -466,7 +467,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                     ),
                     child: FloatingActionButton.small(
                       heroTag: 'gallery_search',
-                      tooltip: 'Search photos and videos',
+                      tooltip: l10n.tooltipSearchGallery,
                       onPressed: _openSearch,
                       child: const Icon(Icons.search),
                     ),
@@ -481,10 +482,11 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   Widget _buildBody(ThemeData theme, AppMotion motion) {
+    final l10n = context.l10n;
     if (_paginated.error != null && _items.isEmpty) {
       return EmptyState(
         icon: Icons.error_outline,
-        title: 'Could not load gallery',
+        title: l10n.galleryErrorLoad,
         message: _paginated.error,
       );
     }
@@ -496,10 +498,10 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     if (_items.isEmpty) {
       return EmptyState(
         icon: Icons.photo_library_outlined,
-        title: _isSearching ? 'No media found' : 'No media yet',
+        title: _isSearching ? l10n.galleryEmptySearchTitle : l10n.galleryEmptyTitle,
         message: _isSearching
-            ? 'Try another photo name, album, or folder path.'
-            : 'Sync your library to see photos and videos here.',
+            ? l10n.galleryEmptySearchMessage
+            : l10n.galleryEmptyMessage,
       );
     }
 

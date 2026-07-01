@@ -3569,6 +3569,540 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
   }
 }
 
+class $LocationPlaceCacheTable extends LocationPlaceCache
+    with TableInfo<$LocationPlaceCacheTable, LocationPlaceRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocationPlaceCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _placeKeyMeta = const VerificationMeta(
+    'placeKey',
+  );
+  @override
+  late final GeneratedColumn<String> placeKey = GeneratedColumn<String>(
+    'place_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countryCodeMeta = const VerificationMeta(
+    'countryCode',
+  );
+  @override
+  late final GeneratedColumn<String> countryCode = GeneratedColumn<String>(
+    'country_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _countryNameMeta = const VerificationMeta(
+    'countryName',
+  );
+  @override
+  late final GeneratedColumn<String> countryName = GeneratedColumn<String>(
+    'country_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _localityMeta = const VerificationMeta(
+    'locality',
+  );
+  @override
+  late final GeneratedColumn<String> locality = GeneratedColumn<String>(
+    'locality',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _adminAreaMeta = const VerificationMeta(
+    'adminArea',
+  );
+  @override
+  late final GeneratedColumn<String> adminArea = GeneratedColumn<String>(
+    'admin_area',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _geocodedAtMeta = const VerificationMeta(
+    'geocodedAt',
+  );
+  @override
+  late final GeneratedColumn<int> geocodedAt = GeneratedColumn<int>(
+    'geocoded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    placeKey,
+    latitude,
+    longitude,
+    countryCode,
+    countryName,
+    locality,
+    adminArea,
+    geocodedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'location_place_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocationPlaceRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('place_key')) {
+      context.handle(
+        _placeKeyMeta,
+        placeKey.isAcceptableOrUnknown(data['place_key']!, _placeKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_placeKeyMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('country_code')) {
+      context.handle(
+        _countryCodeMeta,
+        countryCode.isAcceptableOrUnknown(
+          data['country_code']!,
+          _countryCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('country_name')) {
+      context.handle(
+        _countryNameMeta,
+        countryName.isAcceptableOrUnknown(
+          data['country_name']!,
+          _countryNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('locality')) {
+      context.handle(
+        _localityMeta,
+        locality.isAcceptableOrUnknown(data['locality']!, _localityMeta),
+      );
+    }
+    if (data.containsKey('admin_area')) {
+      context.handle(
+        _adminAreaMeta,
+        adminArea.isAcceptableOrUnknown(data['admin_area']!, _adminAreaMeta),
+      );
+    }
+    if (data.containsKey('geocoded_at')) {
+      context.handle(
+        _geocodedAtMeta,
+        geocodedAt.isAcceptableOrUnknown(data['geocoded_at']!, _geocodedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_geocodedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {placeKey};
+  @override
+  LocationPlaceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocationPlaceRow(
+      placeKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}place_key'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      countryCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}country_code'],
+      ),
+      countryName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}country_name'],
+      ),
+      locality: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}locality'],
+      ),
+      adminArea: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}admin_area'],
+      ),
+      geocodedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}geocoded_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LocationPlaceCacheTable createAlias(String alias) {
+    return $LocationPlaceCacheTable(attachedDatabase, alias);
+  }
+}
+
+class LocationPlaceRow extends DataClass
+    implements Insertable<LocationPlaceRow> {
+  final String placeKey;
+  final double latitude;
+  final double longitude;
+  final String? countryCode;
+  final String? countryName;
+  final String? locality;
+  final String? adminArea;
+  final int geocodedAt;
+  const LocationPlaceRow({
+    required this.placeKey,
+    required this.latitude,
+    required this.longitude,
+    this.countryCode,
+    this.countryName,
+    this.locality,
+    this.adminArea,
+    required this.geocodedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['place_key'] = Variable<String>(placeKey);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    if (!nullToAbsent || countryCode != null) {
+      map['country_code'] = Variable<String>(countryCode);
+    }
+    if (!nullToAbsent || countryName != null) {
+      map['country_name'] = Variable<String>(countryName);
+    }
+    if (!nullToAbsent || locality != null) {
+      map['locality'] = Variable<String>(locality);
+    }
+    if (!nullToAbsent || adminArea != null) {
+      map['admin_area'] = Variable<String>(adminArea);
+    }
+    map['geocoded_at'] = Variable<int>(geocodedAt);
+    return map;
+  }
+
+  LocationPlaceCacheCompanion toCompanion(bool nullToAbsent) {
+    return LocationPlaceCacheCompanion(
+      placeKey: Value(placeKey),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      countryCode: countryCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(countryCode),
+      countryName: countryName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(countryName),
+      locality: locality == null && nullToAbsent
+          ? const Value.absent()
+          : Value(locality),
+      adminArea: adminArea == null && nullToAbsent
+          ? const Value.absent()
+          : Value(adminArea),
+      geocodedAt: Value(geocodedAt),
+    );
+  }
+
+  factory LocationPlaceRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocationPlaceRow(
+      placeKey: serializer.fromJson<String>(json['placeKey']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      countryCode: serializer.fromJson<String?>(json['countryCode']),
+      countryName: serializer.fromJson<String?>(json['countryName']),
+      locality: serializer.fromJson<String?>(json['locality']),
+      adminArea: serializer.fromJson<String?>(json['adminArea']),
+      geocodedAt: serializer.fromJson<int>(json['geocodedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'placeKey': serializer.toJson<String>(placeKey),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'countryCode': serializer.toJson<String?>(countryCode),
+      'countryName': serializer.toJson<String?>(countryName),
+      'locality': serializer.toJson<String?>(locality),
+      'adminArea': serializer.toJson<String?>(adminArea),
+      'geocodedAt': serializer.toJson<int>(geocodedAt),
+    };
+  }
+
+  LocationPlaceRow copyWith({
+    String? placeKey,
+    double? latitude,
+    double? longitude,
+    Value<String?> countryCode = const Value.absent(),
+    Value<String?> countryName = const Value.absent(),
+    Value<String?> locality = const Value.absent(),
+    Value<String?> adminArea = const Value.absent(),
+    int? geocodedAt,
+  }) => LocationPlaceRow(
+    placeKey: placeKey ?? this.placeKey,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    countryCode: countryCode.present ? countryCode.value : this.countryCode,
+    countryName: countryName.present ? countryName.value : this.countryName,
+    locality: locality.present ? locality.value : this.locality,
+    adminArea: adminArea.present ? adminArea.value : this.adminArea,
+    geocodedAt: geocodedAt ?? this.geocodedAt,
+  );
+  LocationPlaceRow copyWithCompanion(LocationPlaceCacheCompanion data) {
+    return LocationPlaceRow(
+      placeKey: data.placeKey.present ? data.placeKey.value : this.placeKey,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      countryCode: data.countryCode.present
+          ? data.countryCode.value
+          : this.countryCode,
+      countryName: data.countryName.present
+          ? data.countryName.value
+          : this.countryName,
+      locality: data.locality.present ? data.locality.value : this.locality,
+      adminArea: data.adminArea.present ? data.adminArea.value : this.adminArea,
+      geocodedAt: data.geocodedAt.present
+          ? data.geocodedAt.value
+          : this.geocodedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocationPlaceRow(')
+          ..write('placeKey: $placeKey, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('countryName: $countryName, ')
+          ..write('locality: $locality, ')
+          ..write('adminArea: $adminArea, ')
+          ..write('geocodedAt: $geocodedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    placeKey,
+    latitude,
+    longitude,
+    countryCode,
+    countryName,
+    locality,
+    adminArea,
+    geocodedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocationPlaceRow &&
+          other.placeKey == this.placeKey &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.countryCode == this.countryCode &&
+          other.countryName == this.countryName &&
+          other.locality == this.locality &&
+          other.adminArea == this.adminArea &&
+          other.geocodedAt == this.geocodedAt);
+}
+
+class LocationPlaceCacheCompanion extends UpdateCompanion<LocationPlaceRow> {
+  final Value<String> placeKey;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<String?> countryCode;
+  final Value<String?> countryName;
+  final Value<String?> locality;
+  final Value<String?> adminArea;
+  final Value<int> geocodedAt;
+  final Value<int> rowid;
+  const LocationPlaceCacheCompanion({
+    this.placeKey = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.countryCode = const Value.absent(),
+    this.countryName = const Value.absent(),
+    this.locality = const Value.absent(),
+    this.adminArea = const Value.absent(),
+    this.geocodedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocationPlaceCacheCompanion.insert({
+    required String placeKey,
+    required double latitude,
+    required double longitude,
+    this.countryCode = const Value.absent(),
+    this.countryName = const Value.absent(),
+    this.locality = const Value.absent(),
+    this.adminArea = const Value.absent(),
+    required int geocodedAt,
+    this.rowid = const Value.absent(),
+  }) : placeKey = Value(placeKey),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       geocodedAt = Value(geocodedAt);
+  static Insertable<LocationPlaceRow> custom({
+    Expression<String>? placeKey,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<String>? countryCode,
+    Expression<String>? countryName,
+    Expression<String>? locality,
+    Expression<String>? adminArea,
+    Expression<int>? geocodedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (placeKey != null) 'place_key': placeKey,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (countryCode != null) 'country_code': countryCode,
+      if (countryName != null) 'country_name': countryName,
+      if (locality != null) 'locality': locality,
+      if (adminArea != null) 'admin_area': adminArea,
+      if (geocodedAt != null) 'geocoded_at': geocodedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocationPlaceCacheCompanion copyWith({
+    Value<String>? placeKey,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<String?>? countryCode,
+    Value<String?>? countryName,
+    Value<String?>? locality,
+    Value<String?>? adminArea,
+    Value<int>? geocodedAt,
+    Value<int>? rowid,
+  }) {
+    return LocationPlaceCacheCompanion(
+      placeKey: placeKey ?? this.placeKey,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      countryCode: countryCode ?? this.countryCode,
+      countryName: countryName ?? this.countryName,
+      locality: locality ?? this.locality,
+      adminArea: adminArea ?? this.adminArea,
+      geocodedAt: geocodedAt ?? this.geocodedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (placeKey.present) {
+      map['place_key'] = Variable<String>(placeKey.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (countryCode.present) {
+      map['country_code'] = Variable<String>(countryCode.value);
+    }
+    if (countryName.present) {
+      map['country_name'] = Variable<String>(countryName.value);
+    }
+    if (locality.present) {
+      map['locality'] = Variable<String>(locality.value);
+    }
+    if (adminArea.present) {
+      map['admin_area'] = Variable<String>(adminArea.value);
+    }
+    if (geocodedAt.present) {
+      map['geocoded_at'] = Variable<int>(geocodedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocationPlaceCacheCompanion(')
+          ..write('placeKey: $placeKey, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('countryName: $countryName, ')
+          ..write('locality: $locality, ')
+          ..write('adminArea: $adminArea, ')
+          ..write('geocodedAt: $geocodedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3577,6 +4111,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TravelModesTable travelModes = $TravelModesTable(this);
   late final $MediaAnalysisCacheTable mediaAnalysisCache =
       $MediaAnalysisCacheTable(this);
+  late final $LocationPlaceCacheTable locationPlaceCache =
+      $LocationPlaceCacheTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3586,6 +4122,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     mediaItems,
     travelModes,
     mediaAnalysisCache,
+    locationPlaceCache,
   ];
 }
 
@@ -5215,6 +5752,282 @@ typedef $$MediaAnalysisCacheTableProcessedTableManager =
       MediaAnalysisRow,
       PrefetchHooks Function()
     >;
+typedef $$LocationPlaceCacheTableCreateCompanionBuilder =
+    LocationPlaceCacheCompanion Function({
+      required String placeKey,
+      required double latitude,
+      required double longitude,
+      Value<String?> countryCode,
+      Value<String?> countryName,
+      Value<String?> locality,
+      Value<String?> adminArea,
+      required int geocodedAt,
+      Value<int> rowid,
+    });
+typedef $$LocationPlaceCacheTableUpdateCompanionBuilder =
+    LocationPlaceCacheCompanion Function({
+      Value<String> placeKey,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<String?> countryCode,
+      Value<String?> countryName,
+      Value<String?> locality,
+      Value<String?> adminArea,
+      Value<int> geocodedAt,
+      Value<int> rowid,
+    });
+
+class $$LocationPlaceCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $LocationPlaceCacheTable> {
+  $$LocationPlaceCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get placeKey => $composableBuilder(
+    column: $table.placeKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get countryCode => $composableBuilder(
+    column: $table.countryCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get countryName => $composableBuilder(
+    column: $table.countryName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get locality => $composableBuilder(
+    column: $table.locality,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get adminArea => $composableBuilder(
+    column: $table.adminArea,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get geocodedAt => $composableBuilder(
+    column: $table.geocodedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocationPlaceCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocationPlaceCacheTable> {
+  $$LocationPlaceCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get placeKey => $composableBuilder(
+    column: $table.placeKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get countryCode => $composableBuilder(
+    column: $table.countryCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get countryName => $composableBuilder(
+    column: $table.countryName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get locality => $composableBuilder(
+    column: $table.locality,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get adminArea => $composableBuilder(
+    column: $table.adminArea,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get geocodedAt => $composableBuilder(
+    column: $table.geocodedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocationPlaceCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocationPlaceCacheTable> {
+  $$LocationPlaceCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get placeKey =>
+      $composableBuilder(column: $table.placeKey, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<String> get countryCode => $composableBuilder(
+    column: $table.countryCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get countryName => $composableBuilder(
+    column: $table.countryName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get locality =>
+      $composableBuilder(column: $table.locality, builder: (column) => column);
+
+  GeneratedColumn<String> get adminArea =>
+      $composableBuilder(column: $table.adminArea, builder: (column) => column);
+
+  GeneratedColumn<int> get geocodedAt => $composableBuilder(
+    column: $table.geocodedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$LocationPlaceCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocationPlaceCacheTable,
+          LocationPlaceRow,
+          $$LocationPlaceCacheTableFilterComposer,
+          $$LocationPlaceCacheTableOrderingComposer,
+          $$LocationPlaceCacheTableAnnotationComposer,
+          $$LocationPlaceCacheTableCreateCompanionBuilder,
+          $$LocationPlaceCacheTableUpdateCompanionBuilder,
+          (
+            LocationPlaceRow,
+            BaseReferences<
+              _$AppDatabase,
+              $LocationPlaceCacheTable,
+              LocationPlaceRow
+            >,
+          ),
+          LocationPlaceRow,
+          PrefetchHooks Function()
+        > {
+  $$LocationPlaceCacheTableTableManager(
+    _$AppDatabase db,
+    $LocationPlaceCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocationPlaceCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocationPlaceCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocationPlaceCacheTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> placeKey = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<String?> countryCode = const Value.absent(),
+                Value<String?> countryName = const Value.absent(),
+                Value<String?> locality = const Value.absent(),
+                Value<String?> adminArea = const Value.absent(),
+                Value<int> geocodedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocationPlaceCacheCompanion(
+                placeKey: placeKey,
+                latitude: latitude,
+                longitude: longitude,
+                countryCode: countryCode,
+                countryName: countryName,
+                locality: locality,
+                adminArea: adminArea,
+                geocodedAt: geocodedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String placeKey,
+                required double latitude,
+                required double longitude,
+                Value<String?> countryCode = const Value.absent(),
+                Value<String?> countryName = const Value.absent(),
+                Value<String?> locality = const Value.absent(),
+                Value<String?> adminArea = const Value.absent(),
+                required int geocodedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => LocationPlaceCacheCompanion.insert(
+                placeKey: placeKey,
+                latitude: latitude,
+                longitude: longitude,
+                countryCode: countryCode,
+                countryName: countryName,
+                locality: locality,
+                adminArea: adminArea,
+                geocodedAt: geocodedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocationPlaceCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocationPlaceCacheTable,
+      LocationPlaceRow,
+      $$LocationPlaceCacheTableFilterComposer,
+      $$LocationPlaceCacheTableOrderingComposer,
+      $$LocationPlaceCacheTableAnnotationComposer,
+      $$LocationPlaceCacheTableCreateCompanionBuilder,
+      $$LocationPlaceCacheTableUpdateCompanionBuilder,
+      (
+        LocationPlaceRow,
+        BaseReferences<
+          _$AppDatabase,
+          $LocationPlaceCacheTable,
+          LocationPlaceRow
+        >,
+      ),
+      LocationPlaceRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5227,4 +6040,6 @@ class $AppDatabaseManager {
       $$TravelModesTableTableManager(_db, _db.travelModes);
   $$MediaAnalysisCacheTableTableManager get mediaAnalysisCache =>
       $$MediaAnalysisCacheTableTableManager(_db, _db.mediaAnalysisCache);
+  $$LocationPlaceCacheTableTableManager get locationPlaceCache =>
+      $$LocationPlaceCacheTableTableManager(_db, _db.locationPlaceCache);
 }

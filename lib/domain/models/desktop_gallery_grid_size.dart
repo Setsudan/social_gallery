@@ -4,18 +4,6 @@ enum DesktopGalleryGridSize {
   standard,
   large;
 
-  String get label => switch (this) {
-    compact => 'Compact',
-    standard => 'Standard',
-    large => 'Large',
-  };
-
-  String get subtitle => switch (this) {
-    compact => 'Smaller thumbnails, more columns',
-    standard => 'Balanced layout',
-    large => 'Bigger thumbnails, fewer columns',
-  };
-
   int get columnDelta => switch (this) {
     compact => 3,
     standard => 0,

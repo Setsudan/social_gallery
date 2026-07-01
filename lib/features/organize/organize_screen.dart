@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/auth/folder_access.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
@@ -37,8 +38,11 @@ class OrganizeScreen extends ConsumerWidget {
         ),
         title: Text(
           state.batchComplete
-              ? 'Organize'
-              : '${state.batchDone} / ${state.batchSize}',
+              ? context.l10n.organizeTitle
+              : context.l10n.organizeProgress(
+                  state.batchDone,
+                  state.batchSize,
+                ),
         ),
         actions: [
           if (state.pendingTrashCount > 0)
@@ -108,7 +112,7 @@ class OrganizeScreen extends ConsumerWidget {
   Future<void> _shareCurrent(BuildContext context, OrganizeState state) async {
     final item = state.currentCard;
     if (item == null) return;
-    await Share.share('Sharing ${item.displayName}');
+    await Share.share(context.l10n.organizeSharingItem(item.displayName));
   }
 
   void _openFilter(

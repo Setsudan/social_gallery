@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 
@@ -21,7 +22,7 @@ class UnsupportedMediaPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = _labelForKind(kind, entity);
+    final label = _labelForKind(context, kind, entity);
 
     return ColoredBox(
       color: scheme.surfaceContainerHigh,
@@ -68,20 +69,25 @@ class UnsupportedMediaPlaceholder extends StatelessWidget {
     }
   }
 
-  static String _labelForKind(AssetMediaKind kind, AssetEntity entity) {
+  static String _labelForKind(
+    BuildContext context,
+    AssetMediaKind kind,
+    AssetEntity entity,
+  ) {
     final ext = AssetMediaLoader.extensionFromEntity(entity);
     if (ext != null && ext.isNotEmpty) {
       return ext.toUpperCase();
     }
+    final l10n = context.l10n;
     switch (kind) {
       case AssetMediaKind.video:
-        return 'Video';
+        return l10n.mediaKindVideo;
       case AssetMediaKind.audio:
-        return 'Audio';
+        return l10n.mediaKindAudio;
       case AssetMediaKind.image:
-        return 'Image';
+        return l10n.mediaKindImage;
       case AssetMediaKind.unsupported:
-        return 'File';
+        return l10n.mediaKindFile;
     }
   }
 }

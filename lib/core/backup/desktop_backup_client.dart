@@ -21,7 +21,8 @@ class DesktopBackupClient {
   final String authToken;
   final http.Client _http;
 
-  Uri _uri(String path) => Uri.http('$host:$port', path);
+  Uri _uri(String path, [Map<String, String>? query]) =>
+      Uri.http('$host:$port', path, query);
 
   Map<String, String> get _headers => {
     'Authorization': 'Bearer $authToken',
@@ -75,6 +76,27 @@ class DesktopBackupClient {
     } catch (e) {
       debugPrint('Pair request failed: $e');
       return null;
+    }
+  }
+
+  Future<bool> registerVaultPassword(String password) async {
+    try {
+      final response = await _http
+          .post(
+            _uri('/v1/vault/register'),
+            headers: _headers,
+            body: BackupProtocol.encodeJson(
+              VaultRegisterRequest(password: password).toJson(),
+            ),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) return false;
+      final body = BackupProtocol.decodeJson(response.body);
+      return VaultRegisterResponse.fromJson(body).success;
+    } catch (e) {
+      debugPrint('Vault register failed: $e');
+      return false;
     }
   }
 
@@ -241,6 +263,7 @@ class DesktopBackupClient {
         dateAdded: item.dateAdded,
         latitude: item.latitude,
         longitude: item.longitude,
+        isVault: item.isVault,
       ),
     ]);
 

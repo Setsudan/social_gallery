@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/shared/navigation/shell_nav_config.dart';
@@ -221,7 +222,11 @@ class _DesktopSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final destinations = shellNavDestinations(galleryViewMode: galleryViewMode);
+    final l10n = context.l10n;
+    final destinations = shellNavDestinations(
+      galleryViewMode: galleryViewMode,
+      l10n: l10n,
+    );
 
     return SizedBox(
       width: width,
@@ -242,7 +247,7 @@ class _DesktopSidebar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'Social Gallery',
+                l10n.appTitle,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,
@@ -263,14 +268,14 @@ class _DesktopSidebar extends StatelessWidget {
               _SidebarItem(
                 icon: Icons.lock_outline,
                 selectedIcon: Icons.lock,
-                label: 'Locked albums',
+                label: l10n.navLockedAlbums,
                 selected: false,
                 onTap: onLockedAlbumsPressed!,
               ),
             _SidebarItem(
               icon: Icons.menu,
               selectedIcon: Icons.menu,
-              label: 'Settings',
+              label: l10n.navSettings,
               selected: false,
               onTap: onSettingsPressed,
             ),

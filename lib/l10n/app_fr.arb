@@ -1,0 +1,1113 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Social Gallery (beta)",
+  "actionCancel": "Annuler",
+  "actionSave": "Enregistrer",
+  "actionDelete": "Supprimer",
+  "actionOk": "OK",
+  "actionApply": "Appliquer",
+  "actionReset": "Reinitialiser",
+  "actionKeep": "Conserver",
+  "actionUnlock": "Deverrouiller",
+  "actionClear": "Effacer",
+  "actionOpenSettings": "Ouvrir les parametres",
+  "actionGoBack": "Retour",
+  "valueNotSet": "Non defini",
+  "errorGeneric": "Erreur",
+  "errorCouldNotLoad": "Impossible de charger",
+  "errorMediaNotFound": "Media introuvable",
+  "errorFolderNotFound": "Dossier introuvable",
+  "errorCouldNotUseFolder": "Impossible d'utiliser ce dossier",
+  "errorFailedToSelectFolder": "Echec de la selection du dossier : {error}",
+  "@errorFailedToSelectFolder": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCouldNotLoadFolders": "Impossible de charger les dossiers : {error}",
+  "@errorCouldNotLoadFolders": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "emptyNothingHere": "Rien ici",
+  "navHome": "Accueil",
+  "navGallery": "Galerie",
+  "navExplore": "Explorer",
+  "navAlbums": "Albums",
+  "navDiscover": "Decouvrir",
+  "navLockedAlbums": "Albums verrouilles",
+  "navSettings": "Parametres",
+  "settingsTitle": "Parametres",
+  "settingsSectionAppearance": "Apparence",
+  "settingsSectionGallery": "Galerie",
+  "settingsSectionContent": "Contenu",
+  "settingsSectionOrganize": "Organiser",
+  "settingsSectionStorage": "Stockage",
+  "settingsSectionAbout": "A propos",
+  "settingsLanguage": "Langue",
+  "settingsLanguageSystem": "Langue du systeme",
+  "settingsLanguageEnglish": "Anglais",
+  "settingsLanguageFrench": "Francais",
+  "settingsTheme": "Theme",
+  "settingsAccentColor": "Couleur d'accent",
+  "settingsAccentColorDescription": "Choisissez la couleur utilisee pour les boutons, liens et surlignages.",
+  "settingsFontSize": "Taille du texte",
+  "settingsFontSizeDescription": "Ajustez la taille du texte dans toute l'application.",
+  "settingsAnimationSpeed": "Vitesse des animations",
+  "settingsAnimationSpeedDescription": "Previsualisez la vitesse des transitions dans l'application.",
+  "settingsGalleryRootFolder": "Dossier racine de la galerie",
+  "settingsGalleryRootFolderEmptySubtitle": "Choisissez un dossier a analyser pour les photos et videos",
+  "settingsGalleryGridSize": "Taille de la grille",
+  "settingsGalleryViewMode": "Mode galerie",
+  "settingsGalleryViewModeSubtitle": "Onglet galerie avec pincement au lieu d'Accueil et Explorer",
+  "settingsManageContent": "Gerer le contenu",
+  "settingsManageContentSubtitle": "Dossiers, fil d'accueil et visibilite",
+  "settingsTravelMode": "Mode voyage",
+  "settingsTravelModeSubtitle": "Voyages et organisation par periode",
+  "settingsBatchSize": "Taille du lot",
+  "settingsBatchSizeDescription": "Nombre de photos par session d'organisation.",
+  "settingsBatchSizeValue": "{count} photos",
+  "@settingsBatchSizeValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsQueueOrder": "Ordre de la file",
+  "settingsReleaseKeptPhotos": "Remettre les photos conservees",
+  "settingsReleaseKeptPhotosSubtitle": "Remettre les photos traitees dans la file d'organisation",
+  "settingsTrashRetention": "Retention de la corbeille",
+  "settingsTrashRetentionDescription": "Les elements de la corbeille sont supprimes definitivement apres cette periode.",
+  "settingsTrashRetentionDays": "{days} jours",
+  "@settingsTrashRetentionDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDeletedItems": "Elements supprimes",
+  "settingsDeletedItemsSubtitle": "Voir, restaurer ou vider la corbeille",
+  "settingsCache": "Cache",
+  "settingsCacheSizeLimit": "Limite de taille du cache",
+  "settingsCacheSizeLimitDescription": "Stockage maximal utilise par les miniatures et fichiers temporaires.",
+  "settingsCacheSizeLimitValue": "{limitMb} Mo",
+  "@settingsCacheSizeLimitValue": {
+    "placeholders": {
+      "limitMb": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAutoClearOnClose": "Effacer a la fermeture",
+  "settingsAutoClearOnCloseSubtitle": "Effacer le cache lorsque l'application est fermee",
+  "settingsVersion": "Version",
+  "settingsPrivacyPolicy": "Politique de confidentialite",
+  "settingsOpenSourceLicenses": "Licences open source",
+  "settingsShareApp": "Partager l'application",
+  "settingsShareAppMessage": "Decouvrez Social Gallery - une galerie photo locale.",
+  "dialogClearCacheTitle": "Effacer le cache",
+  "dialogClearCacheMessage": "Effacer {size} de miniatures et fichiers temporaires en cache ?",
+  "@dialogClearCacheMessage": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarCacheCleared": "Cache efface",
+  "snackbarReleasedKeptPhotos": "Photos conservees remises en file",
+  "snackbarGalleryRootUpdated": "Dossier racine mis a jour. Reanalyse de la bibliotheque.",
+  "dialogSelectRootGalleryFolder": "Selectionner le dossier racine de la galerie",
+  "debugBuildTitle": "Version de debug",
+  "debugBuildMessage": "Ce n'est pas une version de production et elle peut contenir des erreurs.",
+  "themeSystemDefault": "Systeme",
+  "themeLight": "Clair",
+  "themeSolar": "Solaire",
+  "themeDark": "Sombre",
+  "themeDarkOled": "Sombre OLED",
+  "accentBlue": "Bleu",
+  "accentPurple": "Violet",
+  "accentGreen": "Vert",
+  "accentOrange": "Orange",
+  "accentRed": "Rouge",
+  "accentPink": "Rose",
+  "accentTeal": "Sarcelle",
+  "gridSizeCompact": "Compact",
+  "gridSizeStandard": "Standard",
+  "gridSizeLarge": "Grand",
+  "gridSizeCompactSubtitle": "Miniatures plus petites, plus de colonnes",
+  "gridSizeStandardSubtitle": "Disposition equilibree",
+  "gridSizeLargeSubtitle": "Miniatures plus grandes, moins de colonnes",
+  "fontSizeSmall": "Petit",
+  "fontSizeNormal": "Normal",
+  "fontSizeLarge": "Grand",
+  "fontSizeExtraLarge": "Tres grand",
+  "animationSpeedInstant": "Instantane",
+  "animationSpeedFast": "Rapide",
+  "animationSpeedNormal": "Normal",
+  "animationSpeedSlow": "Lent",
+  "queueOrderRandom": "Aleatoire",
+  "queueOrderChronological": "Chronologique",
+  "onboardingNext": "Suivant",
+  "onboardingSkip": "Passer",
+  "onboardingGetStarted": "Commencer",
+  "onboardingWelcomeTitle": "Bienvenue dans Social Gallery",
+  "onboardingWelcomeBody": "Vos photos restent sur votre appareil. Configurez quelques preferences et nous indexerons votre bibliotheque en arriere-plan.",
+  "onboardingPermissionsHeader": "Autorisations",
+  "onboardingPermissionsSubtitle": "Autorisez l'acces pour analyser vos albums.",
+  "onboardingSelectGalleryFolderTitle": "Selectionner le dossier de la galerie",
+  "onboardingSelectGalleryFolderMessage": "Choisissez un dossier sur votre ordinateur pour analyser les photos et videos.",
+  "onboardingChooseFolder": "Choisir un dossier",
+  "onboardingAllFilesAccessTitle": "Acces a tous les fichiers (optionnel)",
+  "onboardingAllFilesAccessMessage": "Sur Android 11+, accordez l'acces a tous les fichiers pour deplacer ou supprimer des elements entre albums. Vous pouvez passer et l'accorder plus tard.",
+  "onboardingGrantAccess": "Accorder l'acces",
+  "onboardingContinueWithout": "Continuer sans",
+  "onboardingPhotosAccessTitle": "Acces aux photos requis",
+  "onboardingPhotosAccessMessage": "Social Gallery a besoin d'acceder a vos photos et videos pour construire votre bibliotheque.",
+  "onboardingGrantPermission": "Accorder l'autorisation",
+  "onboardingAccessGrantedTitle": "Acces accorde",
+  "onboardingAccessGrantedLimitedMessage": "Acces photo limite active. Votre bibliotheque s'indexe en arriere-plan.",
+  "onboardingAccessGrantedFullMessage": "Votre bibliotheque s'indexe en arriere-plan pendant que vous terminez la configuration.",
+  "onboardingGallerySyncRunning": "Synchronisation de la galerie en cours",
+  "onboardingLocationScanRunning": "Indexation des lieux photo en arriere-plan",
+  "onboardingChooseLanguageTitle": "Choisir votre langue",
+  "onboardingChooseLanguageSubtitle": "Selectionnez la langue utilisee dans Social Gallery. Vous pourrez la modifier plus tard dans les parametres.",
+  "onboardingChooseThemeTitle": "Choisir un theme",
+  "onboardingChooseThemeSubtitle": "Choisissez l'apparence de Social Gallery. Vous pourrez la modifier plus tard.",
+  "onboardingAccentAndTextTitle": "Accent et texte",
+  "onboardingAccentAndTextSubtitle": "Ajustez les couleurs et la lisibilite.",
+  "onboardingViewModeTitle": "Galerie ou social ?",
+  "onboardingViewModeSubtitle": "Choisissez votre style de navigation par defaut.",
+  "onboardingSocialStyleTitle": "Style social",
+  "onboardingSocialStyleDescription": "Fil d'accueil avec stories et publications, plus un onglet Explorer.",
+  "onboardingGalleryStyleTitle": "Style galerie",
+  "onboardingGalleryStyleDescription": "Grille galerie avec pincement sur Accueil et albums sur Explorer.",
+  "onboardingViewModeHint": "Vous pouvez changer de mode a tout moment dans les Parametres.",
+  "onboardingYourFoldersTitle": "Vos dossiers",
+  "onboardingYourFoldersSubtitleIndexing": "L'indexation est en cours. Vous pourrez ajuster les dossiers plus tard dans les Parametres.",
+  "onboardingYourFoldersSubtitleChoose": "Choisissez ce qui apparait sur le fil d'accueil, en compte uniquement ou masque.",
+  "onboardingNoFoldersYet": "Aucun dossier trouve. Appuyez sur Commencer pour entrer dans l'application pendant la synchronisation.",
+  "folderItemCount": "{count, plural, =1{1 element} other{{count} elements}}",
+  "@folderItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderVisibilityHome": "Accueil",
+  "folderVisibilityAccount": "Compte",
+  "folderVisibilityLock": "Verrouiller",
+  "folderVisibilityHide": "Masquer",
+  "folderVisibilityHomeFeed": "Fil d'accueil",
+  "folderVisibilityAccountOnly": "Compte uniquement",
+  "folderVisibilityAccountLocked": "Compte uniquement (verrouille)",
+  "folderVisibilityHidden": "Masque",
+  "discoverBurstsTitle": "Rafales",
+  "discoverBurstsMessage": "La detection de rafales n'est pas encore disponible. Cet ecran regroupera les prises en rafale.",
+  "discoverSuggestionsTitle": "Suggestions intelligentes",
+  "discoverSuggestionsMessage": "Les suggestions mettront en avant des albums et des idees de nettoyage selon votre bibliotheque.",
+  "discoverLocationsTitle": "Lieux",
+  "discoverLocationsMessage": "Parcourez vos photos regroupees par lieu sur une carte ou en albums.",
+  "locationsTabPlaces": "Lieux",
+  "locationsTabMap": "Carte",
+  "locationsIndexing": "Indexation des lieux {indexed} / {total}...",
+  "@locationsIndexing": {
+    "placeholders": {
+      "indexed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsIndexingPreparing": "Preparation de l'index des lieux...",
+  "locationsBackfillPreparing": "Lecture du GPS des photos...",
+  "locationsBackfillProgress": "Lecture du GPS {indexed} / {total}...",
+  "@locationsBackfillProgress": {
+    "placeholders": {
+      "indexed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsEmptyTitle": "Aucune photo geolocalisee",
+  "locationsEmptyMessage": "Les photos avec des donnees GPS de votre appareil photo apparaitront ici apres la prochaine synchronisation.",
+  "locationsPhotoCount": "{count} photos",
+  "@locationsPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsCountry": "Pays",
+  "locationsCity": "Villes",
+  "locationsGeotaggedBadge": "{count} geolocalisees",
+  "@locationsGeotaggedBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsErrorTitle": "Impossible de charger les lieux",
+  "locationsErrorMessage": "Un probleme est survenu lors de la resolution des lieux de vos photos. Reessayez plus tard.",
+  "homeErrorLoadFeed": "Impossible de charger le fil",
+  "homeEmptyTitle": "Aucune publication",
+  "homeEmptyMessage": "Ajoutez des dossiers au fil d'accueil dans Gerer le contenu.",
+  "snackbarCameraCaptureComingSoon": "Capture photo bientot disponible",
+  "tooltipSearchGallery": "Rechercher photos et videos",
+  "galleryErrorLoad": "Impossible de charger la galerie",
+  "galleryEmptySearchTitle": "Aucun media trouve",
+  "galleryEmptyTitle": "Aucun media",
+  "galleryEmptySearchMessage": "Essayez un autre nom de photo, album ou chemin de dossier.",
+  "galleryEmptyMessage": "Synchronisez votre bibliotheque pour voir vos photos et videos ici.",
+  "tooltipSearch": "Rechercher",
+  "exploreErrorLoad": "Impossible de charger la bibliotheque",
+  "exploreEmptyTitle": "Aucun media trouve",
+  "exploreEmptyMessageNoSearch": "Essayez une autre recherche ou ajoutez des dossiers au fil d'accueil.",
+  "exploreEmptyMessageSearch": "Essayez un autre nom de photo, album ou chemin de dossier.",
+  "searchAlbumsAndFolders": "Albums et dossiers",
+  "searchNoMatchingAlbums": "Aucun album correspondant. Essayez un nom de photo ou de dossier.",
+  "searchRecentSearches": "Recherches recentes",
+  "searchClearAll": "Tout effacer",
+  "searchHint": "Rechercher photos, videos ou albums",
+  "tooltipClear": "Effacer",
+  "tooltipClearSearch": "Effacer la recherche",
+  "tooltipLockedAlbums": "Albums verrouilles",
+  "albumsErrorLoad": "Impossible de charger les albums",
+  "albumsTitle": "Albums",
+  "albumsEmptyTitle": "Aucun album",
+  "albumsEmptyMessage": "Synchronisez votre bibliotheque pour voir les albums de votre appareil.",
+  "lockedAlbumsTitle": "Albums verrouilles",
+  "lockedAlbumsEmptyTitle": "Aucun album verrouille",
+  "lockedAlbumsEmptyMessage": "Les albums proteges par biometrie apparaitront ici.",
+  "favoritesEmptyTitle": "Aucun favori",
+  "favoritesEmptyMessage": "Double-appuyez sur une publication pour l'ajouter aux favoris.",
+  "storageAllFilesAccessTitle": "Acces a tous les fichiers",
+  "storageAllFilesAccessGranted": "Accorde. Vous pouvez deplacer et supprimer des elements entre albums.",
+  "storageAllFilesAccessRequired": "Requis sur Android 11+ pour deplacer ou supprimer des elements entre albums.",
+  "storageGrantInSettings": "Accorder dans les parametres",
+  "storageAllFilesAccessDialogMessage": "La suppression ou le deplacement d'elements entre albums sur Android 11+ necessite l'acces a tous les fichiers dans les parametres systeme.",
+  "profileSelectFolder": "Selectionner un dossier",
+  "tooltipFileAccess": "Acces aux fichiers",
+  "tooltipManageContent": "Gerer le contenu",
+  "tooltipSettings": "Parametres",
+  "profileNoFolderSelected": "Aucun dossier selectionne",
+  "profileNoFolderSelectedMessage": "Synchronisez votre bibliotheque ou choisissez un dossier.",
+  "profileNoMediaInFolder": "Aucun media dans ce dossier",
+  "profileErrorLoadFolder": "Impossible de charger le dossier",
+  "profileErrorLoadFolders": "Impossible de charger les dossiers",
+  "selectionCount": "{count} selectionne(s)",
+  "@selectionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderManagementNoFolders": "Aucun dossier trouve.",
+  "folderShowInStories": "Afficher dans Stories",
+  "folderSecureLock": "Verrouillage securise",
+  "folderChangeCover": "Changer la couverture",
+  "folderUseLatestPhoto": "Utiliser la derniere photo",
+  "folderVisibilityTitle": "Visibilite du dossier",
+  "folderBiographyTitle": "Biographie",
+  "folderAddBiography": "Ajouter une biographie",
+  "folderNoMedia": "Aucun media",
+  "tooltipAlbumOptions": "Options de l'album",
+  "folderPickerDefaultTitle": "Deplacer les elements vers...",
+  "folderPickerSearchHint": "Rechercher des dossiers",
+  "albumChooseCoverTitle": "Choisir la couverture pour {folderName}",
+  "@albumChooseCoverTitle": {
+    "placeholders": {
+      "folderName": {
+        "type": "String"
+      }
+    }
+  },
+  "albumCoverLoadError": "Impossible de charger les photos de l'album : {error}",
+  "@albumCoverLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "albumCoverNoPhotos": "Cet album n'a pas de photos a utiliser comme couverture.",
+  "folderLockedTitle": "Ce dossier est verrouille",
+  "folderLockedMessage": "Utilisez la biometrie pour voir {folderName}.",
+  "@folderLockedMessage": {
+    "placeholders": {
+      "folderName": {
+        "type": "String"
+      }
+    }
+  },
+  "folderUnlockReason": "Deverrouiller {folderName}",
+  "@folderUnlockReason": {
+    "placeholders": {
+      "folderName": {
+        "type": "String"
+      }
+    }
+  },
+  "folderBiometricsUnavailable": "La biometrie n'est pas disponible. Enregistrez une empreinte ou un visage dans les parametres de l'appareil.",
+  "folderAuthFailed": "Authentification echouee ou annulee.",
+  "postMoveToTrash": "Deplacer vers la corbeille",
+  "postMoveToTrashMessage": "Cet element sera deplace vers la corbeille et pourra etre restaure depuis les Parametres.",
+  "tooltipDetails": "Details",
+  "tooltipShare": "Partager",
+  "tooltipFavorite": "Favori",
+  "postOpenFolder": "Ouvrir le dossier",
+  "metadataTitle": "Details",
+  "metadataFilename": "Nom du fichier",
+  "metadataDimensions": "Dimensions",
+  "metadataType": "Type",
+  "metadataSize": "Taille",
+  "metadataDateTaken": "Date de prise",
+  "metadataDateAdded": "Date d'ajout",
+  "metadataFolder": "Dossier",
+  "metadataDimensionsValue": "{width} x {height}",
+  "@metadataDimensionsValue": {
+    "placeholders": {
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaKindVideo": "Video",
+  "mediaKindAudio": "Audio",
+  "mediaKindImage": "Image",
+  "mediaKindFile": "Fichier",
+  "organizeTitle": "Organiser",
+  "organizeProgress": "{done} / {size}",
+  "@organizeProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeSharingItem": "Partage de {name}",
+  "@organizeSharingItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeBatchComplete": "Lot termine",
+  "organizeAllCaughtUp": "Tout est a jour",
+  "organizeRemainingItems": "{count} elements correspondent encore a vos filtres.",
+  "@organizeRemainingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeNoMoreItems": "Plus aucun element ne correspond aux filtres actuels.",
+  "organizeLoadNextBatch": "Charger le lot suivant",
+  "organizeReviewTrash": "Verifier la corbeille ({count})",
+  "@organizeReviewTrash": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeChangeFilter": "Changer le filtre",
+  "organizeReleaseKeptPhotos": "Remettre les photos conservees",
+  "organizeFiltersTitle": "Filtres",
+  "organizeMediaType": "Type de media",
+  "organizeMediaAll": "Tous",
+  "organizeMediaImage": "Image",
+  "organizeMediaVideo": "Video",
+  "organizeFilterFolder": "Dossier",
+  "organizeAllFolders": "Tous les dossiers",
+  "organizeFilterMonth": "Mois (AAAA-MM)",
+  "organizeStatsTitle": "Statistiques d'organisation",
+  "organizeStatProcessed": "Traites",
+  "organizeStatDeleted": "Supprimes",
+  "organizeStatLiked": "Aimes",
+  "organizeStatSpaceSaved": "Espace economise",
+  "organizeTrashReviewTitle": "Verifier la corbeille ({count})",
+  "@organizeTrashReviewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeTrashReviewMessage": "Les elements selectionnes seront supprimes definitivement de votre appareil.",
+  "organizeTrashDeleteCount": "Supprimer {count} elements",
+  "@organizeTrashDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkMoveToTrashTitle": "Deplacer vers la corbeille",
+  "bulkMoveToTrashMessage": "Deplacer {count} elements vers la corbeille ? Vous pourrez les restaurer depuis les Parametres.",
+  "@bulkMoveToTrashMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarMovedToTrash": "{count, plural, =1{1 element deplace} other{{count} elements deplaces}} vers la corbeille",
+  "@snackbarMovedToTrash": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarMovedItems": "{moved, plural, =1{1 element deplace} other{{moved} elements deplaces}}",
+  "@snackbarMovedItems": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarMoveFailed": "Impossible de deplacer les elements. Approuvez la demande systeme si affichee, ou verifiez l'acces au stockage dans les Parametres.",
+  "snackbarMovedPartial": "{moved} sur {total} elements deplaces",
+  "@snackbarMovedPartial": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkCreateAlbumTitle": "Creer un album",
+  "bulkAlbumNameLabel": "Nom de l'album",
+  "bulkCreateAndMove": "Creer et deplacer",
+  "snackbarAlbumCreatedAndMoved": "Album \"{albumName}\" cree et {count, plural, =1{1 element deplace} other{{count} elements deplaces}}",
+  "@snackbarAlbumCreatedAndMoved": {
+    "placeholders": {
+      "albumName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarAlbumCreateFailed": "Impossible de creer l'album. Verifiez l'acces au stockage.",
+  "tooltipCancelSelection": "Annuler la selection",
+  "tooltipFavoriteSelected": "Ajouter aux favoris",
+  "tooltipUnfavoriteSelected": "Retirer des favoris",
+  "tooltipMoveSelected": "Deplacer la selection",
+  "tooltipCreateAlbumAndMove": "Creer un album et deplacer",
+  "tooltipSetAlbumCover": "Definir comme couverture",
+  "tooltipMoveToTrash": "Deplacer vers la corbeille",
+  "trashDeletePermanentlyTitle": "Supprimer definitivement",
+  "trashDeletePermanentlyMessage": "Voulez-vous vraiment supprimer definitivement ces {count} elements de votre appareil ? Cette action est irreversible.",
+  "@trashDeletePermanentlyMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashDeletePermanentlyAction": "Supprimer definitivement",
+  "snackbarRestoredItems": "{count, plural, =1{1 element restaure} other{{count} elements restaures}}",
+  "@snackbarRestoredItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarPermanentlyDeleted": "{count, plural, =1{1 element supprime} other{{count} elements supprimes}} definitivement",
+  "@snackbarPermanentlyDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipRestoreSelected": "Restaurer la selection",
+  "tooltipDeletePermanently": "Supprimer definitivement",
+  "trashEmptyTitle": "Corbeille vide",
+  "trashEmptyMessage": "Les fichiers supprimes restent ici pour recuperation jusqu'a expiration.",
+  "trashExpiresToday": "Expire aujourd'hui",
+  "trashDaysLeft": "{days} jours restants",
+  "@trashDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverSectionOrganize": "Organiser",
+  "discoverSectionDeepOrganize": "Organisation approfondie",
+  "discoverSectionInsights": "Statistiques",
+  "discoverSectionCleanup": "Nettoyage",
+  "discoverSectionExplore": "Explorer",
+  "discoverErrorLoad": "Impossible de charger Decouvrir",
+  "discoverDeepOrganize": "Organisation approfondie",
+  "discoverDeepOrganizeSubtitle": "Analyse, photos similaires, basse qualite, compression",
+  "discoverShootingStats": "Statistiques photo",
+  "discoverShootingStatsSubtitle": "{count} elements organises jusqu'ici",
+  "@discoverShootingStatsSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverLikesReview": "Revue des favoris",
+  "discoverLikesReviewSubtitle": "{count} favoris",
+  "@discoverLikesReviewSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverDuplicates": "Doublons",
+  "discoverDuplicatesSubtitle": "Trouver des photos quasi identiques",
+  "discoverBurstsSubtitle": "Groupes de photos en rafale",
+  "discoverSuggestionsSubtitle": "Idees d'albums et de nettoyage",
+  "discoverLocationsSubtitle": "Photos regroupees par lieu",
+  "deepOrganizeTitle": "Organisation approfondie",
+  "deepOrganizeSubtitle": "Analysez votre bibliotheque sur l'appareil pour trouver des photos similaires et de basse qualite.",
+  "deepOrganizeScanProgress": "Analyse {scanned} / {total}",
+  "@deepOrganizeScanProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "deepOrganizeScanning": "Analyse en cours...",
+  "deepOrganizeStartScan": "Lancer l'analyse",
+  "deepOrganizeToolsHeader": "Outils",
+  "deepOrganizeCompressionSubtitle": "Reduire les grandes images sur l'appareil",
+  "deepOrganizeSimilarPhotos": "Photos similaires",
+  "deepOrganizeSimilarGroupsCount": "{count} groupes",
+  "@deepOrganizeSimilarGroupsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deepOrganizeLowQuality": "Basse qualite",
+  "deepOrganizeLowQualityCount": "{count} elements signales",
+  "@deepOrganizeLowQualityCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deepOrganizeCompression": "Compression",
+  "deepOrganizeRunScanFirst": "Lancez d'abord une analyse depuis Organisation approfondie.",
+  "similarPhotosEmptyTitle": "Aucun groupe similaire",
+  "similarPhotosSubtitle": "Choisissez la meilleure prise et supprimez les quasi-doublons.",
+  "similarPhotosGroupCount": "{count} elements similaires",
+  "@similarPhotosGroupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "similarPhotosKeepBestDeleteOthers": "Garder la meilleure, supprimer les autres",
+  "similarPhotosDeleteTitle": "Supprimer les photos similaires",
+  "similarPhotosDeleteMessage": "Conserver \"{name}\" et supprimer {count} elements similaires ?",
+  "@similarPhotosDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lowQualityReviewTitle": "Revue basse qualite",
+  "lowQualityReviewSubtitle": "Verifiez les prises signalees et supprimez ce dont vous n'avez pas besoin.",
+  "lowQualityEmptyTitle": "Aucun element de basse qualite",
+  "lowQualityProgress": "{index} / {total}",
+  "@lowQualityProgress": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "compressionTitle": "Compression d'images",
+  "compressionSubtitle": "Compressez les grandes photos sans quitter l'appareil.",
+  "compressionBestOnMobile": "Ideal sur mobile",
+  "compressionBestOnMobileSubtitle": "La compression fonctionne sur Android et iOS. Support bureau limite.",
+  "compressionResult": "{done} images compressees, {mb} Mo economises",
+  "@compressionResult": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "compressionCandidatesCount": "{count} images de plus de 3 Mo",
+  "@compressionCandidatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "compressionCompressing": "Compression en cours...",
+  "compressionCompressSelected": "Compresser {count} selectionne(s)",
+  "@compressionCompressSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "likesReviewEmptySubtitle": "Glissez vers la droite dans Organiser pour ajouter aux favoris.",
+  "likesReviewEmptyTitle": "Aucun element aime",
+  "likesReviewSubtitle": "Parcourez vos favoris.",
+  "likesReviewSharing": "Partage de {name}",
+  "@likesReviewSharing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shootingStatsSubtitle": "Vos habitudes photographiques sur l'appareil.",
+  "shootingStatsPhotos": "Photos",
+  "shootingStatsVideos": "Videos",
+  "shootingStatsScreenshots": "Captures d'ecran",
+  "shootingStatsLiked": "Aimes",
+  "shootingStatsFolders": "Dossiers",
+  "shootingStatsVideoDuration": "Duree video",
+  "durationMinutes": "{minutes} min",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "shootingStatsMostActiveDay": "Jour le plus actif",
+  "shootingStatsMostActiveDayValue": "{date} ({count})",
+  "@shootingStatsMostActiveDayValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shootingStatsHeatmap": "Carte d'activite",
+  "shootingStatsNoActivity": "Aucune activite ce mois-ci.",
+  "shootingStatsHeatmapTooltip": "{date} : {count}",
+  "@shootingStatsHeatmapTooltip": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicateScanProgress": "Analyse de {scanned} / {total} photos...",
+  "@duplicateScanProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicateScanPreparing": "Preparation de l'analyse des doublons...",
+  "duplicatesEmptyTitle": "Aucun groupe de doublons",
+  "duplicatesEmptyMessage": "Aucune photo quasi identique trouvee. Les doublons sont detectes par similarite visuelle, pas seulement par taille de fichier.",
+  "duplicatesGroupBadge": "{count} doublons",
+  "@duplicatesGroupBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesKeepBestAndReview": "Garder la meilleure et verifier",
+  "duplicateReviewTitle": "Verifier les doublons",
+  "duplicateReviewSubtitle": "La meilleure est preselectionnee. Appuyez sur les elements pour modifier ce qui sera supprime.",
+  "duplicateReviewGroupNotFound": "Groupe introuvable",
+  "duplicateReviewDeleteCount": "Supprimer ({count})",
+  "@duplicateReviewDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarDuplicatesRemoved": "{count, plural, =1{1 doublon supprime} other{{count} doublons supprimes}}.",
+  "@snackbarDuplicatesRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarDuplicatesRemoveFailed": "Impossible de supprimer certains elements. Verifiez les autorisations.",
+  "travelModeEmptyTitle": "Aucun voyage",
+  "travelModeEmptyMessage": "Creez un mode voyage pour organiser automatiquement les photos d'une periode.",
+  "travelModeStatusActive": "Actif",
+  "travelModeStatusUpcoming": "A venir",
+  "travelModeStatusCompleted": "Termine",
+  "travelModeListSubtitle": "{start} - {end}nDossier : {folder}",
+  "@travelModeListSubtitle": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "travelModeErrorLoad": "Impossible de charger les modes voyage",
+  "travelModeTripName": "Nom du voyage",
+  "travelModeTargetFolder": "Nom du dossier cible",
+  "travelModeTargetFolderHelper": "Nom de l'album pour les medias deplaces automatiquement (sans coffre)",
+  "travelModeStart": "Debut",
+  "travelModeEnd": "Fin",
+  "travelModeDate": "Date",
+  "travelModeTime": "Heure",
+  "travelModeSpecificTime": "Heure precise",
+  "snackbarTravelModeRequiredFields": "Nom, dossier et dates sont requis",
+  "travelModeDeleteTitle": "Supprimer le mode voyage",
+  "travelModeDeleteMessage": "Cette action est irreversible.",
+  "storyNoStoriesFound": "Aucune story recente dans ce dossier.",
+  "backupSectionTitle": "Sauvegarde bureau",
+  "backupReceiveBackups": "Recevoir les sauvegardes",
+  "backupReceiveBackupsSubtitle": "Autoriser cet ordinateur a recevoir les photos de votre telephone",
+  "backupIndexingBackups": "Indexation des sauvegardes",
+  "backupShowPairingCode": "Afficher le code d'appairage",
+  "backupStartReceivingToShowCode": "Activez la reception pour afficher le code",
+  "backupPairedDevice": "Appareil apparie",
+  "backupUnpairDevice": "Desapparier l'appareil",
+  "backupUnpairDeviceSubtitle": "Arreter d'accepter les sauvegardes de ce telephone",
+  "backupRefreshLibrary": "Actualiser la bibliotheque",
+  "backupRefreshLibrarySubtitle": "Reanalyser les dossiers apres de nouvelles sauvegardes",
+  "backupBackUpToDesktop": "Sauvegarder vers le bureau",
+  "backupBackUpToDesktopSubtitle": "Sauvegarde automatique sur le meme Wi-Fi quand le bureau est actif",
+  "backupPairedDesktop": "Bureau apparie",
+  "backupPairWithDesktop": "Apparier avec le bureau",
+  "backupBackUpNow": "Sauvegarder maintenant",
+  "backupBackUpNowSubtitle": "Ne fonctionne que lorsque le bureau est disponible",
+  "backupUnpairDesktop": "Desapparier le bureau",
+  "backupPairSheetTitle": "Apparier avec le bureau",
+  "backupPairSheetDescription": "Sur votre ordinateur, activez Recevoir les sauvegardes dans les Parametres et entrez le PIN affiche.",
+  "backupDesktopAddress": "Adresse du bureau",
+  "backupPort": "Port",
+  "backupPinLabel": "PIN a 6 chiffres",
+  "backupScanPairingQr": "Scanner le QR d'appairage",
+  "backupFindOnNetwork": "Rechercher sur le reseau",
+  "backupPair": "Apparier",
+  "backupErrorNoDesktopFound": "Aucun bureau trouve. Entrez l'adresse affichee sur votre ordinateur.",
+  "backupErrorEnterHostPortPin": "Entrez l'hote, le port et le PIN a 6 chiffres du bureau.",
+  "backupErrorPairingFailed": "Echec de l'appairage. Verifiez le PIN et reessayez.",
+  "backupErrorInvalidQr": "Le QR code n'est pas un lien d'appairage valide.",
+  "backupPairingSuccessTitle": "Appairage reussi",
+  "backupPairingSuccessMessage": "{deviceName} est maintenant apparie avec cet ordinateur. Les sauvegardes demarreront automatiquement sur le meme Wi-Fi.",
+  "@backupPairingSuccessMessage": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupPairYourPhoneTitle": "Appairer votre telephone",
+  "backupPinDisplay": "PIN : {pin}",
+  "@backupPinDisplay": {
+    "placeholders": {
+      "pin": {
+        "type": "String"
+      }
+    }
+  },
+  "backupQrInstructions": "Scannez avec l'appareil photo ou utilisez Scanner le QR dans Parametres > Sauvegarde bureau.",
+  "backupScanPairingQrTitle": "Scanner le QR d'appairage",
+  "backupStatusBackingUp": "Sauvegarde {processed}/{total}",
+  "@backupStatusBackingUp": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "backupStatusOff": "Desactive",
+  "backupStatusWaitingForDesktop": "En attente du bureau",
+  "backupStatusDesktopReady": "Bureau pret",
+  "backupStatusLastBackup": "Derniere sauvegarde {relativeTime}",
+  "@backupStatusLastBackup": {
+    "placeholders": {
+      "relativeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "backupStatusUpToDate": "A jour",
+  "backupStatusError": "Erreur - {detail}",
+  "@backupStatusError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "backupStatusIdle": "Inactif",
+  "timeJustNow": "a l'instant",
+  "timeMinutesAgo": "il y a {n} min",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "il y a {n} h",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "il y a {n} j",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "backupNotificationPreparing": "Preparation de la sauvegarde...",
+  "backupNotificationInProgress": "Sauvegarde en cours",
+  "backupNotificationProgress": "{processed} / {total} elements sauvegardes",
+  "@backupNotificationProgress": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "backupNotificationComplete": "Sauvegarde terminee",
+  "backupNotificationFailed": "Echec de la sauvegarde",
+  "backupNotificationPaused": "Sauvegarde en pause",
+  "notificationChannelDuplicateScan": "Analyse des doublons",
+  "notificationChannelDuplicateScanDescription": "Progression de la recherche de photos en double",
+  "notificationDuplicateScanTitle": "Analyse des doublons",
+  "notificationDuplicateScanPreparing": "Preparation de l'analyse des doublons...",
+  "notificationDuplicateScanProgress": "Analyse de {scanned} / {total} photos...",
+  "@notificationDuplicateScanProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationDuplicateScanNoneTitle": "Aucun doublon trouve",
+  "notificationDuplicateScanNoneBody": "Aucune photo quasi identique trouvee dans votre bibliotheque.",
+  "notificationDuplicateScanCompleteTitle": "Analyse des doublons terminee",
+  "notificationDuplicateScanCompleteBody": "{count, plural, =1{1 groupe de doublons trouve} other{{count} groupes de doublons trouves}}",
+  "@notificationDuplicateScanCompleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationDuplicateScanFailedTitle": "Echec de l'analyse des doublons",
+  "notificationDuplicateScanFailedBody": "Impossible de terminer l'analyse. Ouvrez Doublons pour reessayer.",
+  "notificationChannelDesktopBackup": "Sauvegarde bureau",
+  "notificationChannelDesktopBackupDescription": "Progression de la sauvegarde des photos vers votre ordinateur",
+  "backupDetailDisabled": "Sauvegarde desactivee",
+  "backupDetailNotReceiving": "Reception des sauvegardes desactivee",
+  "backupDetailPairedWith": "Apparie avec {name}",
+  "@backupDetailPairedWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupDetailReadyToReceive": "Pret a recevoir les sauvegardes",
+  "backupDetailIndexingBackups": "Indexation des sauvegardes existantes...",
+  "backupDetailIndexingBackupsProgress": "Indexation des sauvegardes ({scanned} fichiers)...",
+  "@backupDetailIndexingBackupsProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailSearchingDesktop": "Recherche du bureau...",
+  "backupDetailFoundDesktop": "{name} trouve",
+  "@backupDetailFoundDesktop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupDetailNoDesktopFound": "Aucun bureau trouve sur le reseau",
+  "backupDetailNotPaired": "Non apparie",
+  "backupDetailCheckingDesktop": "Verification de la disponibilite du bureau...",
+  "backupDetailWaitingForDesktop": "En attente du bureau",
+  "backupDetailDesktopReady": "Bureau pret",
+  "backupDetailDesktopUnavailable": "Bureau indisponible",
+  "backupDetailReconcilingItems": "Reconciliation de {count} elements",
+  "@backupDetailReconcilingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailReconciling": "Reconciliation avec le bureau",
+  "backupDetailBackingUpItems": "Sauvegarde de {count} elements",
+  "@backupDetailBackingUpItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailCheckingItems": "Recherche d'elements a sauvegarder",
+  "backupDetailDesktopDisconnected": "Bureau devenu indisponible",
+  "backupDetailWaitingForSync": "En attente de la fin de la synchronisation...",
+  "backupDetailFoundMoreItems": "{count} elements supplementaires a sauvegarder",
+  "@backupDetailFoundMoreItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailAllBackedUp": "Toutes les photos sont sauvegardees",
+  "backupDetailBackedUpItems": "{count} elements sauvegardes",
+  "@backupDetailBackedUpItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpBatch": "Sauvegarde du lot {batch} ({count} elements)",
+  "@backupDetailBackingUpBatch": {
+    "placeholders": {
+      "batch": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpFile": "Sauvegarde de {folder}/{name}",
+  "@backupDetailBackingUpFile": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupDetailBackupFailed": "Echec de la sauvegarde",
+  "backupDetailReconcilingProgress": "Reconciliation de {count} elements...",
+  "@backupDetailReconcilingProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailReconcileFailed": "Echec de la reconciliation",
+  "backupDetailVerifyingItems": "Verification de {count} elements sauvegardes...",
+  "@backupDetailVerifyingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailVerifyFailed": "Echec de la verification",
+  "backupDetailDesktopDisconnectedDuringReconcile": "Bureau devenu indisponible pendant la reconciliation",
+  "backupDetailDesktopDisconnectedDuringVerify": "Bureau devenu indisponible pendant la verification",
+  "backupDetailDesktopDisconnectedDuringBackup": "Bureau deconnecte pendant la sauvegarde",
+  "backupDetailDesktopDoesNotUpload": "L'application bureau ne s'envoie pas de sauvegarde a elle-meme",
+  "backupDetailNotPairedWithDesktop": "Non apparie avec un bureau"
+}

@@ -1,0 +1,1147 @@
+{
+  "@@locale": "en",
+  "appTitle": "Social Gallery (beta)",
+  "actionCancel": "Cancel",
+  "actionSave": "Save",
+  "actionDelete": "Delete",
+  "actionOk": "OK",
+  "actionApply": "Apply",
+  "actionReset": "Reset",
+  "actionKeep": "Keep",
+  "actionUnlock": "Unlock",
+  "actionClear": "Clear",
+  "actionOpenSettings": "Open settings",
+  "actionGoBack": "Go Back",
+  "valueNotSet": "Not set",
+  "errorGeneric": "Error",
+  "errorCouldNotLoad": "Could not load",
+  "errorMediaNotFound": "Media not found",
+  "errorFolderNotFound": "Folder not found",
+  "errorCouldNotUseFolder": "Could not use that folder",
+  "errorFailedToSelectFolder": "Failed to select folder: {error}",
+  "@errorFailedToSelectFolder": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCouldNotLoadFolders": "Could not load folders: {error}",
+  "@errorCouldNotLoadFolders": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "emptyNothingHere": "Nothing here",
+  "navHome": "Home",
+  "navGallery": "Gallery",
+  "navExplore": "Explore",
+  "navAlbums": "Albums",
+  "navDiscover": "Discover",
+  "navLockedAlbums": "Locked albums",
+  "navSettings": "Settings",
+  "settingsTitle": "Settings",
+  "settingsSectionAppearance": "Appearance",
+  "settingsSectionGallery": "Gallery",
+  "settingsSectionContent": "Content",
+  "settingsSectionOrganize": "Organize",
+  "settingsSectionStorage": "Storage",
+  "settingsSectionAbout": "About",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System default",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageFrench": "French",
+  "settingsTheme": "Theme",
+  "settingsAccentColor": "Accent color",
+  "settingsAccentColorDescription": "Choose the accent used for buttons, links, and highlights.",
+  "settingsFontSize": "Font size",
+  "settingsFontSizeDescription": "Scale text across the app.",
+  "settingsAnimationSpeed": "Animation speed",
+  "settingsAnimationSpeedDescription": "Preview how fast transitions feel across the app.",
+  "settingsGalleryRootFolder": "Gallery root folder",
+  "settingsGalleryRootFolderEmptySubtitle": "Choose a folder to scan for photos and videos",
+  "settingsGalleryGridSize": "Gallery grid size",
+  "settingsGalleryViewMode": "Gallery view mode",
+  "settingsGalleryViewModeSubtitle": "Pinch-zoom gallery tab instead of Home and Explore",
+  "settingsManageContent": "Manage content",
+  "settingsManageContentSubtitle": "Folders, home feed, and visibility",
+  "settingsTravelMode": "Travel mode",
+  "settingsTravelModeSubtitle": "Trips and date-range organization",
+  "settingsBatchSize": "Batch size",
+  "settingsBatchSizeDescription": "Number of photos per organize session.",
+  "settingsBatchSizeValue": "{count} photos",
+  "@settingsBatchSizeValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsQueueOrder": "Queue order",
+  "settingsReleaseKeptPhotos": "Release kept photos",
+  "settingsReleaseKeptPhotosSubtitle": "Return processed photos to the organize queue",
+  "settingsTrashRetention": "Trash retention",
+  "settingsTrashRetentionDescription": "Items in trash are permanently removed after this period.",
+  "settingsTrashRetentionDays": "{days} days",
+  "@settingsTrashRetentionDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsDeletedItems": "Deleted items",
+  "settingsDeletedItemsSubtitle": "View, restore, or empty trash",
+  "settingsCache": "Cache",
+  "settingsCacheSizeLimit": "Cache size limit",
+  "settingsCacheSizeLimitDescription": "Maximum storage used by thumbnails and temp files.",
+  "settingsCacheSizeLimitValue": "{limitMb} MB",
+  "@settingsCacheSizeLimitValue": {
+    "placeholders": {
+      "limitMb": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAutoClearOnClose": "Auto-clear on close",
+  "settingsAutoClearOnCloseSubtitle": "Clear cache when the app is closed",
+  "settingsVersion": "Version",
+  "settingsPrivacyPolicy": "Privacy policy",
+  "settingsOpenSourceLicenses": "Open-source licenses",
+  "settingsShareApp": "Share app",
+  "settingsShareAppMessage": "Check out Social Gallery - a local-first photo gallery.",
+  "dialogClearCacheTitle": "Clear cache",
+  "dialogClearCacheMessage": "Clear {size} of cached thumbnails and temp files?",
+  "@dialogClearCacheMessage": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarCacheCleared": "Cache cleared",
+  "snackbarReleasedKeptPhotos": "Released kept photos",
+  "snackbarGalleryRootUpdated": "Gallery root updated. Rescanning library.",
+  "dialogSelectRootGalleryFolder": "Select Root Gallery Folder",
+  "debugBuildTitle": "Debug build",
+  "debugBuildMessage": "This is not a production build and may contain errors.",
+  "themeSystemDefault": "System default",
+  "themeLight": "Light",
+  "themeSolar": "Solar",
+  "themeDark": "Dark",
+  "themeDarkOled": "Dark OLED",
+  "accentBlue": "Blue",
+  "accentPurple": "Purple",
+  "accentGreen": "Green",
+  "accentOrange": "Orange",
+  "accentRed": "Red",
+  "accentPink": "Pink",
+  "accentTeal": "Teal",
+  "gridSizeCompact": "Compact",
+  "gridSizeStandard": "Standard",
+  "gridSizeLarge": "Large",
+  "gridSizeCompactSubtitle": "Smaller thumbnails, more columns",
+  "gridSizeStandardSubtitle": "Balanced layout",
+  "gridSizeLargeSubtitle": "Bigger thumbnails, fewer columns",
+  "fontSizeSmall": "Small",
+  "fontSizeNormal": "Normal",
+  "fontSizeLarge": "Large",
+  "fontSizeExtraLarge": "Extra large",
+  "animationSpeedInstant": "Instant",
+  "animationSpeedFast": "Fast",
+  "animationSpeedNormal": "Normal",
+  "animationSpeedSlow": "Slow",
+  "queueOrderRandom": "Random",
+  "queueOrderChronological": "Chronological",
+  "onboardingNext": "Next",
+  "onboardingSkip": "Skip",
+  "onboardingGetStarted": "Get started",
+  "onboardingWelcomeTitle": "Welcome to Social Gallery",
+  "onboardingWelcomeBody": "Your photos stay on your device. Set up a few preferences and we will index your library in the background.",
+  "onboardingPermissionsHeader": "Permissions",
+  "onboardingPermissionsSubtitle": "Allow access so we can scan your albums.",
+  "onboardingSelectGalleryFolderTitle": "Select gallery folder",
+  "onboardingSelectGalleryFolderMessage": "Choose a folder on your computer to scan for photos and videos.",
+  "onboardingChooseFolder": "Choose folder",
+  "onboardingAllFilesAccessTitle": "All files access (optional)",
+  "onboardingAllFilesAccessMessage": "On Android 11+, grant \"All files access\" to move or delete items between albums. You can skip and grant it later.",
+  "onboardingGrantAccess": "Grant access",
+  "onboardingContinueWithout": "Continue without",
+  "onboardingPhotosAccessTitle": "Photos access required",
+  "onboardingPhotosAccessMessage": "Social Gallery needs access to your photos and videos to build your library.",
+  "onboardingGrantPermission": "Grant permission",
+  "onboardingAccessGrantedTitle": "Access granted",
+  "onboardingAccessGrantedLimitedMessage": "Limited photo access is enabled. Your library is indexing in the background.",
+  "onboardingAccessGrantedFullMessage": "Your library is indexing in the background while you finish setup.",
+  "onboardingGallerySyncRunning": "Gallery sync running in background",
+  "onboardingLocationScanRunning": "Photo locations indexing in background",
+  "onboardingChooseLanguageTitle": "Choose your language",
+  "onboardingChooseLanguageSubtitle": "Pick the language used across Social Gallery. You can change this later in Settings.",
+  "onboardingChooseThemeTitle": "Choose a theme",
+  "onboardingChooseThemeSubtitle": "Pick how Social Gallery looks. You can change this later.",
+  "onboardingAccentAndTextTitle": "Accent and text",
+  "onboardingAccentAndTextSubtitle": "Fine-tune colors and readability.",
+  "onboardingViewModeTitle": "Gallery or social?",
+  "onboardingViewModeSubtitle": "Choose your default browsing style.",
+  "onboardingSocialStyleTitle": "Social style",
+  "onboardingSocialStyleDescription": "Home feed with stories and posts, plus an Explore tab for discovery.",
+  "onboardingGalleryStyleTitle": "Gallery style",
+  "onboardingGalleryStyleDescription": "Pinch-zoom gallery grid on Home with albums on Explore.",
+  "onboardingViewModeHint": "You can switch modes anytime in Settings.",
+  "onboardingYourFoldersTitle": "Your folders",
+  "onboardingYourFoldersSubtitleIndexing": "Indexing is still running. You can adjust folders later in Settings.",
+  "onboardingYourFoldersSubtitleChoose": "Choose what appears on Home Feed, as account-only, or hidden.",
+  "onboardingNoFoldersYet": "No folders found yet. Tap Get started to enter the app while sync continues.",
+  "folderItemCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@folderItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderVisibilityHome": "Home",
+  "folderVisibilityAccount": "Account",
+  "folderVisibilityLock": "Lock",
+  "folderVisibilityHide": "Hide",
+  "folderVisibilityHomeFeed": "Home Feed",
+  "folderVisibilityAccountOnly": "Account only",
+  "folderVisibilityAccountLocked": "Account only (locked)",
+  "folderVisibilityHidden": "Hidden",
+  "discoverBurstsTitle": "Bursts",
+  "discoverBurstsMessage": "Burst detection is not available yet. This screen will group rapid-fire shots.",
+  "discoverSuggestionsTitle": "Smart suggestions",
+  "discoverSuggestionsMessage": "Suggestions will highlight albums and clean-up ideas based on your library.",
+  "discoverLocationsTitle": "Locations",
+  "discoverLocationsMessage": "Browse photos grouped by place on a map or in albums.",
+  "locationsTabPlaces": "Places",
+  "locationsTabMap": "Map",
+  "locationsIndexing": "Indexing places {indexed} / {total}...",
+  "@locationsIndexing": {
+    "placeholders": {
+      "indexed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsIndexingPreparing": "Preparing location index...",
+  "locationsBackfillPreparing": "Reading GPS from photos...",
+  "locationsBackfillProgress": "Reading GPS {indexed} / {total}...",
+  "@locationsBackfillProgress": {
+    "placeholders": {
+      "indexed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsEmptyTitle": "No geotagged photos",
+  "locationsEmptyMessage": "Photos with GPS data from your camera will appear here after the next library sync.",
+  "locationsPhotoCount": "{count} photos",
+  "@locationsPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsCountry": "Countries",
+  "locationsCity": "Cities",
+  "locationsGeotaggedBadge": "{count} geotagged",
+  "@locationsGeotaggedBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsErrorTitle": "Could not load places",
+  "locationsErrorMessage": "Something went wrong while resolving photo locations. Try again later.",
+  "homeErrorLoadFeed": "Could not load feed",
+  "homeEmptyTitle": "No posts yet",
+  "homeEmptyMessage": "Add folders to Home Feed in Manage Content.",
+  "snackbarCameraCaptureComingSoon": "Camera capture coming soon",
+  "tooltipSearchGallery": "Search photos and videos",
+  "galleryErrorLoad": "Could not load gallery",
+  "galleryEmptySearchTitle": "No media found",
+  "galleryEmptyTitle": "No media yet",
+  "galleryEmptySearchMessage": "Try another photo name, album, or folder path.",
+  "galleryEmptyMessage": "Sync your library to see photos and videos here.",
+  "tooltipSearch": "Search",
+  "exploreErrorLoad": "Could not load library",
+  "exploreEmptyTitle": "No media found",
+  "exploreEmptyMessageNoSearch": "Try a different search or add folders to Home Feed.",
+  "exploreEmptyMessageSearch": "Try another photo name, album, or folder path.",
+  "searchAlbumsAndFolders": "Albums and folders",
+  "searchNoMatchingAlbums": "No matching albums. Try a photo or folder name.",
+  "searchRecentSearches": "Recent searches",
+  "searchClearAll": "Clear all",
+  "searchHint": "Search photos, videos, or albums",
+  "tooltipClear": "Clear",
+  "tooltipClearSearch": "Clear search",
+  "tooltipLockedAlbums": "Locked albums",
+  "albumsErrorLoad": "Could not load albums",
+  "albumsTitle": "Albums",
+  "albumsEmptyTitle": "No albums yet",
+  "albumsEmptyMessage": "Sync your library to see albums from your device.",
+  "lockedAlbumsTitle": "Locked albums",
+  "lockedAlbumsEmptyTitle": "No locked albums",
+  "lockedAlbumsEmptyMessage": "Albums protected with biometrics will appear here.",
+  "favoritesEmptyTitle": "No favorites yet",
+  "favoritesEmptyMessage": "Double-tap a post on Home to favorite it.",
+  "storageAllFilesAccessTitle": "All files access",
+  "storageAllFilesAccessGranted": "Granted. You can move and delete items across albums.",
+  "storageAllFilesAccessRequired": "Required on Android 11+ to move or delete items between albums.",
+  "storageGrantInSettings": "Grant in settings",
+  "storageAllFilesAccessDialogMessage": "Deleting or moving items between albums on Android 11+ requires \"All files access\" in system settings.",
+  "profileSelectFolder": "Select folder",
+  "tooltipFileAccess": "File access",
+  "tooltipManageContent": "Manage content",
+  "tooltipSettings": "Settings",
+  "profileNoFolderSelected": "No folder selected",
+  "profileNoFolderSelectedMessage": "Sync your library or pick a folder.",
+  "profileNoMediaInFolder": "No media in this folder",
+  "profileErrorLoadFolder": "Could not load folder",
+  "profileErrorLoadFolders": "Could not load folders",
+  "selectionCount": "{count} selected",
+  "@selectionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderManagementNoFolders": "No folders found.",
+  "folderShowInStories": "Show in Stories",
+  "folderSecureLock": "Secure Lock",
+  "folderChangeCover": "Change cover",
+  "folderUseLatestPhoto": "Use latest photo",
+  "folderVisibilityTitle": "Folder visibility",
+  "folderBiographyTitle": "Biography",
+  "folderAddBiography": "Add biography",
+  "folderNoMedia": "No media",
+  "tooltipAlbumOptions": "Album options",
+  "folderPickerDefaultTitle": "Move items to...",
+  "folderPickerSearchHint": "Search folders",
+  "albumChooseCoverTitle": "Choose cover for {folderName}",
+  "@albumChooseCoverTitle": {
+    "placeholders": {
+      "folderName": {
+        "type": "String"
+      }
+    }
+  },
+  "albumCoverLoadError": "Could not load album photos: {error}",
+  "@albumCoverLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "albumCoverNoPhotos": "This album has no photos to use as a cover.",
+  "folderLockedTitle": "This folder is locked",
+  "folderLockedMessage": "Use biometrics to view {folderName}.",
+  "@folderLockedMessage": {
+    "placeholders": {
+      "folderName": {
+        "type": "String"
+      }
+    }
+  },
+  "folderUnlockReason": "Unlock {folderName}",
+  "@folderUnlockReason": {
+    "placeholders": {
+      "folderName": {
+        "type": "String"
+      }
+    }
+  },
+  "folderBiometricsUnavailable": "Biometrics are not available. Enroll fingerprint or face unlock in device settings.",
+  "folderAuthFailed": "Authentication failed or was cancelled.",
+  "postMoveToTrash": "Move to trash",
+  "postMoveToTrashMessage": "This item will be moved to trash and can be restored from Settings.",
+  "tooltipDetails": "Details",
+  "tooltipShare": "Share",
+  "tooltipFavorite": "Favorite",
+  "postOpenFolder": "Open folder",
+  "metadataTitle": "Details",
+  "metadataFilename": "Filename",
+  "metadataDimensions": "Dimensions",
+  "metadataType": "Type",
+  "metadataSize": "Size",
+  "metadataDateTaken": "Date taken",
+  "metadataDateAdded": "Date added",
+  "metadataFolder": "Folder",
+  "metadataDimensionsValue": "{width} x {height}",
+  "@metadataDimensionsValue": {
+    "placeholders": {
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaKindVideo": "Video",
+  "mediaKindAudio": "Audio",
+  "mediaKindImage": "Image",
+  "mediaKindFile": "File",
+  "organizeTitle": "Organize",
+  "organizeProgress": "{done} / {size}",
+  "@organizeProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeSharingItem": "Sharing {name}",
+  "@organizeSharingItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeBatchComplete": "Batch complete",
+  "organizeAllCaughtUp": "All caught up",
+  "organizeRemainingItems": "{count} items still match your filters.",
+  "@organizeRemainingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeNoMoreItems": "No more items match the current filters.",
+  "organizeLoadNextBatch": "Load next batch",
+  "organizeReviewTrash": "Review trash ({count})",
+  "@organizeReviewTrash": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeChangeFilter": "Change filter",
+  "organizeReleaseKeptPhotos": "Release kept photos",
+  "organizeFiltersTitle": "Filters",
+  "organizeMediaType": "Media type",
+  "organizeMediaAll": "All",
+  "organizeMediaImage": "Image",
+  "organizeMediaVideo": "Video",
+  "organizeFilterFolder": "Folder",
+  "organizeAllFolders": "All folders",
+  "organizeFilterMonth": "Month (YYYY-MM)",
+  "organizeStatsTitle": "Organize stats",
+  "organizeStatProcessed": "Processed",
+  "organizeStatDeleted": "Deleted",
+  "organizeStatLiked": "Liked",
+  "organizeStatSpaceSaved": "Space saved",
+  "organizeTrashReviewTitle": "Review trash ({count})",
+  "@organizeTrashReviewTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "organizeTrashReviewMessage": "Selected items will be permanently deleted from your device.",
+  "organizeTrashDeleteCount": "Delete {count} items",
+  "@organizeTrashDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkMoveToTrashTitle": "Move to trash",
+  "bulkMoveToTrashMessage": "Move {count} items to trash? You can restore them from Settings.",
+  "@bulkMoveToTrashMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarMovedToTrash": "Moved {count, plural, =1{1 item} other{{count} items}} to trash",
+  "@snackbarMovedToTrash": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarMovedItems": "Moved {moved, plural, =1{1 item} other{{moved} items}}",
+  "@snackbarMovedItems": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarMoveFailed": "Could not move items. Approve the system prompt if shown, or check storage access in Settings.",
+  "snackbarMovedPartial": "Moved {moved} of {total} items",
+  "@snackbarMovedPartial": {
+    "placeholders": {
+      "moved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkCreateAlbumTitle": "Create album",
+  "bulkAlbumNameLabel": "Album name",
+  "bulkCreateAndMove": "Create and move",
+  "snackbarAlbumCreatedAndMoved": "Created \"{albumName}\" and moved {count, plural, =1{1 item} other{{count} items}}",
+  "@snackbarAlbumCreatedAndMoved": {
+    "placeholders": {
+      "albumName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarAlbumCreateFailed": "Could not create album. Check storage access.",
+  "tooltipCancelSelection": "Cancel selection",
+  "tooltipFavoriteSelected": "Favorite selected",
+  "tooltipUnfavoriteSelected": "Unfavorite selected",
+  "tooltipMoveSelected": "Move selected",
+  "tooltipCreateAlbumAndMove": "Create album and move",
+  "tooltipSetAlbumCover": "Set as album cover",
+  "tooltipMoveToTrash": "Move to trash",
+  "trashDeletePermanentlyTitle": "Delete permanently",
+  "trashDeletePermanentlyMessage": "Are you sure you want to permanently delete these {count} items from your device? This action cannot be undone.",
+  "@trashDeletePermanentlyMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashDeletePermanentlyAction": "Delete Permanently",
+  "snackbarRestoredItems": "Restored {count, plural, =1{1 item} other{{count} items}}",
+  "@snackbarRestoredItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarPermanentlyDeleted": "Permanently deleted {count, plural, =1{1 item} other{{count} items}}",
+  "@snackbarPermanentlyDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipRestoreSelected": "Restore selected",
+  "tooltipDeletePermanently": "Delete permanently",
+  "trashEmptyTitle": "Trash is empty",
+  "trashEmptyMessage": "Deleted files will stay here for recovery until they expire.",
+  "trashExpiresToday": "Expires today",
+  "trashDaysLeft": "{days} days left",
+  "@trashDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverSectionOrganize": "Organize",
+  "discoverSectionDeepOrganize": "Deep organize",
+  "discoverSectionInsights": "Insights",
+  "discoverSectionCleanup": "Cleanup",
+  "discoverSectionExplore": "Explore",
+  "discoverErrorLoad": "Could not load discover",
+  "discoverDeepOrganize": "Deep organize",
+  "discoverDeepOrganizeSubtitle": "Scan, similar photos, low quality, compression",
+  "discoverShootingStats": "Shooting stats",
+  "discoverShootingStatsSubtitle": "{count} items organized so far",
+  "@discoverShootingStatsSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverLikesReview": "Likes review",
+  "discoverLikesReviewSubtitle": "{count} favorites",
+  "@discoverLikesReviewSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discoverDuplicates": "Duplicates",
+  "discoverDuplicatesSubtitle": "Find near-identical photos",
+  "discoverBurstsSubtitle": "Rapid-fire photo groups",
+  "discoverSuggestionsSubtitle": "Album and cleanup ideas",
+  "discoverLocationsSubtitle": "Photos grouped by place",
+  "deepOrganizeTitle": "Deep organize",
+  "deepOrganizeSubtitle": "Scan your library on device to find similar and low-quality photos.",
+  "deepOrganizeScanProgress": "Scanning {scanned} / {total}",
+  "@deepOrganizeScanProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "deepOrganizeScanning": "Scanning...",
+  "deepOrganizeStartScan": "Start scan",
+  "deepOrganizeToolsHeader": "Tools",
+  "deepOrganizeCompressionSubtitle": "Shrink large images on device",
+  "deepOrganizeSimilarPhotos": "Similar photos",
+  "deepOrganizeSimilarGroupsCount": "{count} groups",
+  "@deepOrganizeSimilarGroupsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deepOrganizeLowQuality": "Low quality",
+  "deepOrganizeLowQualityCount": "{count} items flagged",
+  "@deepOrganizeLowQualityCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deepOrganizeCompression": "Compression",
+  "deepOrganizeRunScanFirst": "Run a scan from Deep organize first.",
+  "similarPhotosEmptyTitle": "No similar groups found",
+  "similarPhotosSubtitle": "Pick the best shot and remove near-duplicates.",
+  "similarPhotosGroupCount": "{count} similar items",
+  "@similarPhotosGroupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "similarPhotosKeepBestDeleteOthers": "Keep best, delete others",
+  "similarPhotosDeleteTitle": "Delete similar photos",
+  "similarPhotosDeleteMessage": "Keep \"{name}\" and delete {count} similar items?",
+  "@similarPhotosDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lowQualityReviewTitle": "Low quality review",
+  "lowQualityReviewSubtitle": "Review flagged shots and delete what you do not need.",
+  "lowQualityEmptyTitle": "No low-quality items",
+  "lowQualityProgress": "{index} / {total}",
+  "@lowQualityProgress": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "compressionTitle": "Image compression",
+  "compressionSubtitle": "Compress large photos without leaving the device.",
+  "compressionBestOnMobile": "Best on mobile",
+  "compressionBestOnMobileSubtitle": "Compression works on Android and iOS. Desktop support is limited.",
+  "compressionResult": "Compressed {done} images, saved {mb} MB",
+  "@compressionResult": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "compressionCandidatesCount": "{count} images over 3 MB",
+  "@compressionCandidatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "compressionCompressing": "Compressing...",
+  "compressionCompressSelected": "Compress {count} selected",
+  "@compressionCompressSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "likesReviewEmptySubtitle": "Swipe right in Organize to favorite photos.",
+  "likesReviewEmptyTitle": "No liked items yet",
+  "likesReviewSubtitle": "Scroll through your favorites.",
+  "likesReviewSharing": "Sharing {name}",
+  "@likesReviewSharing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shootingStatsSubtitle": "Your on-device photography habits.",
+  "shootingStatsPhotos": "Photos",
+  "shootingStatsVideos": "Videos",
+  "shootingStatsScreenshots": "Screenshots",
+  "shootingStatsLiked": "Liked",
+  "shootingStatsFolders": "Folders",
+  "shootingStatsVideoDuration": "Video duration",
+  "durationMinutes": "{minutes} min",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "shootingStatsMostActiveDay": "Most active day",
+  "shootingStatsMostActiveDayValue": "{date} ({count})",
+  "@shootingStatsMostActiveDayValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shootingStatsHeatmap": "Activity heatmap",
+  "shootingStatsNoActivity": "No activity this month.",
+  "shootingStatsHeatmapTooltip": "{date}: {count}",
+  "@shootingStatsHeatmapTooltip": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicateScanProgress": "Analyzing {scanned} / {total} photos...",
+  "@duplicateScanProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicateScanPreparing": "Preparing duplicate scan...",
+  "duplicatesEmptyTitle": "No duplicate groups found",
+  "duplicatesEmptyMessage": "No near-identical photos found. Duplicates are matched by visual similarity, not just file size.",
+  "duplicatesGroupBadge": "{count} duplicates",
+  "@duplicatesGroupBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesKeepBestAndReview": "Keep best and review",
+  "duplicateReviewTitle": "Review duplicates",
+  "duplicateReviewSubtitle": "Keep best is pre-selected. Tap items to change what will be removed.",
+  "duplicateReviewGroupNotFound": "Group not found",
+  "duplicateReviewDeleteCount": "Delete ({count})",
+  "@duplicateReviewDeleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarDuplicatesRemoved": "Removed {count, plural, =1{1 duplicate} other{{count} duplicates}}.",
+  "@snackbarDuplicatesRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarDuplicatesRemoveFailed": "Could not remove some items. Check permissions.",
+  "travelModeEmptyTitle": "No trips yet",
+  "travelModeEmptyMessage": "Create a travel mode to auto-organize photos from a date range.",
+  "travelModeStatusActive": "Active",
+  "travelModeStatusUpcoming": "Upcoming",
+  "travelModeStatusCompleted": "Completed",
+  "travelModeListSubtitle": "{start} - {end}nFolder: {folder}",
+  "@travelModeListSubtitle": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "travelModeErrorLoad": "Could not load travel modes",
+  "travelModeTripName": "Trip name",
+  "travelModeTargetFolder": "Target folder name",
+  "travelModeTargetFolderHelper": "Album name for auto-moved media (no vault)",
+  "travelModeStart": "Start",
+  "travelModeEnd": "End",
+  "travelModeDate": "Date",
+  "travelModeTime": "Time",
+  "travelModeSpecificTime": "Specific time",
+  "snackbarTravelModeRequiredFields": "Name, folder, and dates are required",
+  "travelModeDeleteTitle": "Delete travel mode",
+  "travelModeDeleteMessage": "This cannot be undone.",
+  "storyNoStoriesFound": "No recent stories found in this folder.",
+  "backupSectionTitle": "Desktop backup",
+  "backupReceiveBackups": "Receive backups",
+  "backupReceiveBackupsSubtitle": "Allow this computer to receive photos from your phone",
+  "backupIndexingBackups": "Indexing backups",
+  "backupShowPairingCode": "Show pairing code",
+  "backupStartReceivingToShowCode": "Start receiving to show code",
+  "backupPairedDevice": "Paired device",
+  "backupUnpairDevice": "Unpair device",
+  "backupUnpairDeviceSubtitle": "Stop accepting backups from this phone",
+  "backupRefreshLibrary": "Refresh library",
+  "backupRefreshLibrarySubtitle": "Rescan folders after new backups arrive",
+  "backupBackUpToDesktop": "Back up to desktop",
+  "backupBackUpToDesktopSubtitle": "Automatic backup on same Wi-Fi when desktop is running",
+  "backupPairedDesktop": "Paired desktop",
+  "backupPairWithDesktop": "Pair with desktop",
+  "backupBackUpNow": "Back up now",
+  "backupBackUpNowSubtitle": "Only runs when desktop is available",
+  "backupUnpairDesktop": "Unpair desktop",
+  "backupPairSheetTitle": "Pair with desktop",
+  "backupPairSheetDescription": "On your computer, enable Receive backups in Settings and enter the PIN shown there.",
+  "backupDesktopAddress": "Desktop address",
+  "backupPort": "Port",
+  "backupPinLabel": "6-digit PIN",
+  "backupScanPairingQr": "Scan pairing QR code",
+  "backupFindOnNetwork": "Find on network",
+  "backupPair": "Pair",
+  "backupErrorNoDesktopFound": "No desktop found. Enter the address shown on your computer.",
+  "backupErrorEnterHostPortPin": "Enter host, port, and 6-digit PIN from desktop.",
+  "backupErrorPairingFailed": "Pairing failed. Check the PIN and try again.",
+  "backupErrorInvalidQr": "QR code is not a valid backup pairing link.",
+  "backupPairingSuccessTitle": "Pairing successful",
+  "backupPairingSuccessMessage": "{deviceName} is now paired with this computer. Backups will start automatically when both devices are on the same Wi-Fi.",
+  "@backupPairingSuccessMessage": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupPairYourPhoneTitle": "Pair your phone",
+  "backupPinDisplay": "PIN: {pin}",
+  "@backupPinDisplay": {
+    "placeholders": {
+      "pin": {
+        "type": "String"
+      }
+    }
+  },
+  "backupQrInstructions": "Scan with your phone camera or use Scan pairing QR in Settings > Desktop backup.",
+  "backupScanPairingQrTitle": "Scan pairing QR",
+  "backupStatusBackingUp": "Backing up {processed}/{total}",
+  "@backupStatusBackingUp": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "backupStatusOff": "Off",
+  "backupStatusWaitingForDesktop": "Waiting for desktop",
+  "backupStatusDesktopReady": "Desktop ready",
+  "backupStatusLastBackup": "Last backup {relativeTime}",
+  "@backupStatusLastBackup": {
+    "placeholders": {
+      "relativeTime": {
+        "type": "String"
+      }
+    }
+  },
+  "backupStatusUpToDate": "Up to date",
+  "backupStatusError": "Error - {detail}",
+  "@backupStatusError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "backupStatusIdle": "Idle",
+  "timeJustNow": "just now",
+  "timeMinutesAgo": "{n}m ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{n}h ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{n}d ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "backupNotificationPreparing": "Preparing backup...",
+  "backupNotificationInProgress": "Backup in progress",
+  "backupNotificationProgress": "Backed up {processed} / {total} items",
+  "@backupNotificationProgress": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "backupNotificationComplete": "Backup complete",
+  "backupNotificationFailed": "Backup failed",
+  "backupNotificationPaused": "Backup paused",
+  "notificationChannelDuplicateScan": "Duplicate scan",
+  "notificationChannelDuplicateScanDescription": "Progress while searching for duplicate photos",
+  "notificationDuplicateScanTitle": "Scanning for duplicates",
+  "notificationDuplicateScanPreparing": "Preparing duplicate scan...",
+  "notificationDuplicateScanProgress": "Analyzing {scanned} / {total} photos...",
+  "@notificationDuplicateScanProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationDuplicateScanNoneTitle": "No duplicates found",
+  "notificationDuplicateScanNoneBody": "No near-identical photos were found in your library.",
+  "notificationDuplicateScanCompleteTitle": "Duplicate scan complete",
+  "notificationDuplicateScanCompleteBody": "{count, plural, =1{Found 1 duplicate group} other{Found {count} duplicate groups}}",
+  "@notificationDuplicateScanCompleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "Found": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationDuplicateScanFailedTitle": "Duplicate scan failed",
+  "notificationDuplicateScanFailedBody": "Could not finish scanning. Open Duplicates to try again.",
+  "notificationChannelDesktopBackup": "Desktop backup",
+  "notificationChannelDesktopBackupDescription": "Progress while backing up photos to your computer",
+  "backupDetailDisabled": "Backup disabled",
+  "backupDetailNotReceiving": "Not receiving backups",
+  "backupDetailPairedWith": "Paired with {name}",
+  "@backupDetailPairedWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupDetailReadyToReceive": "Ready to receive backups",
+  "backupDetailIndexingBackups": "Indexing existing backups...",
+  "backupDetailIndexingBackupsProgress": "Indexing existing backups ({scanned} files)...",
+  "@backupDetailIndexingBackupsProgress": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailSearchingDesktop": "Searching for desktop...",
+  "backupDetailFoundDesktop": "Found {name}",
+  "@backupDetailFoundDesktop": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupDetailNoDesktopFound": "No desktop found on network",
+  "backupDetailNotPaired": "Not paired",
+  "backupDetailCheckingDesktop": "Checking desktop availability...",
+  "backupDetailWaitingForDesktop": "Waiting for desktop",
+  "backupDetailDesktopReady": "Desktop ready",
+  "backupDetailDesktopUnavailable": "Desktop unavailable",
+  "backupDetailReconcilingItems": "Reconciling {count} items",
+  "@backupDetailReconcilingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailReconciling": "Reconciling with desktop",
+  "backupDetailBackingUpItems": "Backing up {count} items",
+  "@backupDetailBackingUpItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailCheckingItems": "Checking for items to back up",
+  "backupDetailDesktopDisconnected": "Desktop became unavailable",
+  "backupDetailWaitingForSync": "Waiting for library sync to finish...",
+  "backupDetailFoundMoreItems": "Found {count} more items to back up",
+  "@backupDetailFoundMoreItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailAllBackedUp": "All photos are backed up",
+  "backupDetailBackedUpItems": "Backed up {count} items",
+  "@backupDetailBackedUpItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpBatch": "Backing up batch {batch} ({count} items)",
+  "@backupDetailBackingUpBatch": {
+    "placeholders": {
+      "batch": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpFile": "Backing up {folder}/{name}",
+  "@backupDetailBackingUpFile": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupDetailBackupFailed": "Backup failed",
+  "backupDetailReconcilingProgress": "Reconciling {count} items...",
+  "@backupDetailReconcilingProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailReconcileFailed": "Reconcile failed",
+  "backupDetailVerifyingItems": "Verifying {count} backed-up items...",
+  "@backupDetailVerifyingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailVerifyFailed": "Verify failed",
+  "backupDetailDesktopDisconnectedDuringReconcile": "Desktop became unavailable during reconcile",
+  "backupDetailDesktopDisconnectedDuringVerify": "Desktop became unavailable during verify",
+  "backupDetailDesktopDisconnectedDuringBackup": "Desktop disconnected during backup",
+  "backupDetailDesktopDoesNotUpload": "Desktop app does not upload to itself",
+  "backupDetailNotPairedWithDesktop": "Not paired with a desktop",
+  "vaultPasswordSetTitle": "Set vault backup password",
+  "vaultPasswordSetDescription": "Locked albums are encrypted on your desktop as AES-256 protected archives. Choose a password you will use to browse them later.",
+  "vaultPasswordEnterTitle": "Enter vault password",
+  "vaultPasswordEnterDescription": "Enter your vault password to access encrypted backups on desktop.",
+  "vaultPasswordLabel": "Password",
+  "vaultPasswordConfirmLabel": "Confirm password",
+  "vaultPasswordChangeTitle": "Vault backup password",
+  "vaultPasswordChangeSubtitle": "Change the password used for encrypted locked-album backups",
+  "backupVaultStorageTitle": "Encrypted vault storage",
+  "backupVaultStorageCount": "{count, plural, =0{No encrypted files} =1{1 encrypted file} other{{count} encrypted files}}",
+  "@backupVaultStorageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopArchiveTitle": "Home archive",
+  "desktopArchiveBrowseTitle": "Browse home archive",
+  "desktopArchiveBrowseSubtitle": "View photos and videos stored on your desktop over Wi-Fi",
+  "desktopArchiveEmpty": "No archived media found",
+  "desktopArchiveLoadFailed": "Could not load desktop archive",
+  "desktopArchiveStreamFailed": "Could not stream this file",
+  "desktopArchiveItemCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@desktopArchiveItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

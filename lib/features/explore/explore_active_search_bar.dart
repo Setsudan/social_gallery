@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 
 /// Top search bar shown while a search filter is active on Gallery / Explore.
@@ -18,6 +19,7 @@ class ExploreActiveSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -36,7 +38,7 @@ class ExploreActiveSearchBar extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                tooltip: 'Clear search',
+                tooltip: l10n.tooltipClearSearch,
                 onPressed: onBack,
               ),
               Expanded(
@@ -70,7 +72,7 @@ class ExploreActiveSearchBar extends StatelessWidget {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: 20),
-                          tooltip: 'Clear search',
+                          tooltip: l10n.tooltipClearSearch,
                           onPressed: onClear,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
