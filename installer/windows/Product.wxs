@@ -18,7 +18,8 @@
       DowngradeErrorMessage="A newer version of Social Gallery is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
-    <UIRef Id="WixUI_Minimal" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_InstallDir" />
 
     <Icon Id="AppIcon" SourceFile="$(var.RepoRoot)\windows\runner\resources\app_icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />

@@ -3,21 +3,20 @@ import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
 /// Resolves which backup badge to show on a thumbnail, if any.
+///
+/// Backup check/in-progress states are communicated via push notifications
+/// only, so this only surfaces the permanent "backed up" status.
 MediaBackupState? visibleBackupState(
   MediaItem item, {
   int? syncingMediaId,
 }) {
-  if (syncingMediaId == item.id) {
-    return MediaBackupState.inProgress;
-  }
   return switch (item.backupState) {
     MediaBackupState.backedUp => MediaBackupState.backedUp,
-    MediaBackupState.inProgress => MediaBackupState.inProgress,
     _ => null,
   };
 }
 
-/// Cloud or progress overlay for backed-up / in-progress media.
+/// Cloud badge shown on thumbnails that have been backed up.
 class MediaBackupBadge extends StatelessWidget {
   const MediaBackupBadge({super.key, required this.state});
 
@@ -40,14 +39,6 @@ class MediaBackupBadge extends StatelessWidget {
               Icons.cloud_done_rounded,
               color: Colors.white,
               size: 14,
-            ),
-            MediaBackupState.inProgress => const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
             ),
             _ => const SizedBox.shrink(),
           },

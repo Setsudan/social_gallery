@@ -470,20 +470,24 @@ class PhotoManagerDatasource {
     return byName?.id;
   }
 
-  Future<int> moveAssetsOnDisk(
+  /// Moves [assetIds] to [targetFolderPath] and returns the IDs that were
+  /// actually moved successfully (a subset of [assetIds], not necessarily a
+  /// prefix, since individual assets can fail independently on some
+  /// platforms).
+  Future<List<String>> moveAssetsOnDisk(
     List<String> assetIds,
     String targetFolderPath,
   ) async {
-    if (assetIds.isEmpty) return 0;
+    if (assetIds.isEmpty) return const [];
 
     if (usesFilesystemGallery) {
-      var moved = 0;
+      final movedIds = <String>[];
       for (final assetId in assetIds) {
         if (await moveAssetOnDisk(assetId, targetFolderPath)) {
-          moved++;
+          movedIds.add(assetId);
         }
       }
-      return moved;
+      return movedIds;
     }
 
     final entities = <AssetEntity>[];
@@ -491,7 +495,7 @@ class PhotoManagerDatasource {
       final entity = await AssetEntity.fromId(assetId);
       if (entity != null) entities.add(entity);
     }
-    if (entities.isEmpty) return 0;
+    if (entities.isEmpty) return const [];
 
     final albums = await listAlbums();
     if (Platform.isAndroid) {
@@ -501,7 +505,7 @@ class PhotoManagerDatasource {
       );
       if (relativePath == null) {
         debugPrint('moveAssetsOnDisk: could not resolve target path');
-        return 0;
+        return const [];
       }
 
       try {
@@ -511,7 +515,7 @@ class PhotoManagerDatasource {
         );
         if (moved) {
           await PhotoManager.clearFileCache();
-          return entities.length;
+          return entities.map((e) => e.id).toList();
         }
       } catch (e) {
         debugPrint('moveAssetsToPath failed: $e');
@@ -530,38 +534,38 @@ class PhotoManagerDatasource {
             );
             if (legacyMoved) {
               await PhotoManager.clearFileCache();
-              return 1;
+              return [entities.first.id];
             }
           } catch (e) {
             debugPrint('moveAssetToAnother failed: $e');
           }
         }
       }
-      return 0;
+      return const [];
     }
 
     if (Platform.isIOS || Platform.isMacOS) {
       final targetAlbum = albums
           .where((album) => album.id == targetFolderPath)
           .firstOrNull;
-      if (targetAlbum == null) return 0;
+      if (targetAlbum == null) return const [];
 
-      var moved = 0;
+      final movedIds = <String>[];
       for (final entity in entities) {
         try {
           await PhotoManager.editor.copyAssetToPath(
             asset: entity,
             pathEntity: targetAlbum,
           );
-          moved++;
+          movedIds.add(entity.id);
         } catch (e) {
           debugPrint('copyAssetToPath failed: $e');
         }
       }
-      return moved;
+      return movedIds;
     }
 
-    return 0;
+    return const [];
   }
 
   Future<bool> moveAssetOnDisk(String assetId, String targetFolderPath) async {
@@ -584,7 +588,7 @@ class PhotoManagerDatasource {
     }
 
     final moved = await moveAssetsOnDisk([assetId], targetFolderPath);
-    return moved > 0;
+    return moved.isNotEmpty;
   }
 
   Future<String?> _resolveAndroidRelativePath(

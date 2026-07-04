@@ -19,7 +19,6 @@ import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
-import 'package:social_gallery/shared/widgets/backup_progress_banner.dart';
 
 /// Root widget: theme, lifecycle sync, and feed refresh coordination.
 class SocialGalleryApp extends ConsumerStatefulWidget {
@@ -165,12 +164,7 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
               disableAnimations:
                   !motion.enabled || MediaQuery.disableAnimationsOf(context),
             ),
-            child: Column(
-              children: [
-                const BackupProgressBanner(),
-                Expanded(child: child!),
-              ],
-            ),
+            child: child!,
           );
         },
       ),

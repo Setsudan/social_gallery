@@ -199,39 +199,28 @@ class _BackupPairingSheetState extends ConsumerState<BackupPairingSheet> {
   }
 }
 
+/// Status text for the desktop backup settings tile.
+///
+/// Transient "checking" and "in-progress" states are intentionally not
+/// described here; that information is communicated exclusively through
+/// push notifications, so this only reflects settled states.
 String backupStatusLabel(
   AppLocalizations l10n,
   DesktopBackupState state,
   DateTime? lastBackupAt,
 ) {
-  if (state.showsProgressUi) {
-    if (state.total > 0) {
-      return l10n.backupStatusBackingUp(state.processed, state.total);
-    }
-    return localizeBackupDetail(l10n, state.detail);
-  }
-  if (state.isRunning) {
-    return localizeBackupDetail(l10n, state.detail);
-  }
   return switch (state.phase) {
     DesktopBackupPhase.disabled => l10n.backupStatusOff,
     DesktopBackupPhase.waitingForDesktop => l10n.backupStatusWaitingForDesktop,
     DesktopBackupPhase.desktopReady => l10n.backupStatusDesktopReady,
-    DesktopBackupPhase.indexing => localizeBackupDetail(l10n, state.detail),
-    DesktopBackupPhase.reconciling => localizeBackupDetail(l10n, state.detail),
-    DesktopBackupPhase.verifying => localizeBackupDetail(l10n, state.detail),
-    DesktopBackupPhase.syncing => localizeBackupDetail(l10n, state.detail),
-    DesktopBackupPhase.done => lastBackupAt != null
+    DesktopBackupPhase.error => l10n.backupStatusError(
+      localizeBackupDetail(l10n, state.detail),
+    ),
+    _ => lastBackupAt != null
         ? l10n.backupStatusLastBackup(
             localizeBackupRelativeTime(l10n, lastBackupAt),
           )
         : l10n.backupStatusUpToDate,
-    DesktopBackupPhase.error => l10n.backupStatusError(
-      localizeBackupDetail(l10n, state.detail),
-    ),
-    _ => state.detail.isNotEmpty
-        ? localizeBackupDetail(l10n, state.detail)
-        : l10n.backupStatusIdle,
   };
 }
 

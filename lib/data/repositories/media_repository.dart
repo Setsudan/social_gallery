@@ -388,13 +388,15 @@ class MediaRepository {
         .getSingleOrNull();
     final folderName = folder?.name ?? _folderNameFromPath(resolvedPath);
 
-    final moved = await _photoManager.moveAssetsOnDisk(
+    final movedUris = await _photoManager.moveAssetsOnDisk(
       items.map((item) => item.uri).toList(),
       targetFolderPath,
     );
 
-    if (moved > 0) {
-      final movedItems = items.take(moved).toList();
+    if (movedUris.isNotEmpty) {
+      final movedUriSet = movedUris.toSet();
+      final movedItems =
+          items.where((item) => movedUriSet.contains(item.uri)).toList();
       await _db.moveMediaItems(
         movedItems.map((item) => item.id).toList(),
         resolvedPath,
@@ -409,7 +411,7 @@ class MediaRepository {
       );
     }
 
-    return moved;
+    return movedUris.length;
   }
 
   String _folderNameFromPath(String path) {

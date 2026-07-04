@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:path/path.dart' as p;
 import 'package:pointycastle/export.dart';
+import 'package:social_gallery/core/backup/desktop_backup_inventory.dart';
 
 /// Creates password-protected AES-256 encrypted zip archives for vault storage.
 class VaultArchiveService {
@@ -13,11 +14,11 @@ class VaultArchiveService {
   static const _nonceLength = 12;
 
   static String vaultRelativePath(String folderName, String fileName) {
-    final safeFolder = folderName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_').trim();
-    final safeName = p.basename(fileName).replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+    final safeFolder = DesktopBackupInventory.sanitizeFolderName(folderName);
+    final safeName = DesktopBackupInventory.sanitizeFileName(fileName);
     final base = p.basenameWithoutExtension(safeName);
     final ext = p.extension(safeName);
-    return '.social_gallery/vault/${safeFolder.isEmpty ? 'Unsorted' : safeFolder}/$base$ext.zip';
+    return '.social_gallery/vault/$safeFolder/$base$ext.zip';
   }
 
   /// Encrypts [plainPath] into an AES-256-GCM protected zip at [outputPath].

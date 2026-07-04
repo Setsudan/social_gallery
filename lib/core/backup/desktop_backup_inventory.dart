@@ -122,13 +122,19 @@ class DesktopBackupInventory {
   String get _inventoryPath =>
       p.join(backupRoot, _hiddenDir, _inventoryFile);
 
+  static final RegExp _dotsOnly = RegExp(r'^\.+$');
+
   static String sanitizeFileName(String fileName) {
-    return p.basename(fileName).replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+    final base = p
+        .basename(fileName)
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .trim();
+    return base.isEmpty || _dotsOnly.hasMatch(base) ? 'file' : base;
   }
 
   static String sanitizeFolderName(String folderName) {
     final safe = folderName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_').trim();
-    return safe.isEmpty ? 'Unsorted' : safe;
+    return safe.isEmpty || _dotsOnly.hasMatch(safe) ? 'Unsorted' : safe;
   }
 
   static String canonicalKey(String folderName, String fileName) {

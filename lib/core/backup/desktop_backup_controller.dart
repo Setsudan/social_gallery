@@ -782,6 +782,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
         await _notifications?.onBackupStopped(
           completionTitle: _backupCompletionTitle(),
           completionBody: _backupCompletionBody(),
+          isError: state.phase == DesktopBackupPhase.error,
         );
       }
       _runInProgress = false;

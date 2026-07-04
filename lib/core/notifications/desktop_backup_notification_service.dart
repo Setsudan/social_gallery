@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -7,12 +8,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const desktopBackupNotificationId = 1002;
 
-const _channelId = 'desktop_backup';
-const _channelName = 'Desktop backup';
-const _channelDescription =
-    'Progress while backing up photos to your computer';
+const _progressChannelId = 'desktop_backup_progress';
+const _progressChannelName = 'Backup progress';
+const _progressChannelDescription =
+    'Ongoing progress while backing up photos to your computer';
+
+const _statusChannelId = 'desktop_backup_status';
+const _statusChannelName = 'Backup results';
+const _statusChannelDescription =
+    'Backup completed, paused, or failed alerts';
+
+const _successColor = Color(0xFF2E7D32);
+const _errorColor = Color(0xFFC62828);
+const _pausedColor = Color(0xFFEF6C00);
 
 /// Ongoing notification and Android foreground service during LAN backup.
+///
+/// This is the sole UX surface for backup check/progress/result state: the
+/// app shows no in-app banners or badges for these transient states, so every
+/// meaningful transition must be reflected here.
 class DesktopBackupNotificationService {
   DesktopBackupNotificationService();
 
@@ -58,10 +72,21 @@ class DesktopBackupNotificationService {
             AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
-        _channelId,
-        _channelName,
-        description: _channelDescription,
+        _progressChannelId,
+        _progressChannelName,
+        description: _progressChannelDescription,
         importance: Importance.low,
+        playSound: false,
+        enableVibration: false,
+        showBadge: false,
+      ),
+    );
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _statusChannelId,
+        _statusChannelName,
+        description: _statusChannelDescription,
+        importance: Importance.high,
       ),
     );
 
@@ -131,25 +156,31 @@ class DesktopBackupNotificationService {
     await _syncVisibility(force: true);
   }
 
+  /// Ends the active backup run and reports its outcome.
+  ///
+  /// Since there is no in-app indicator for backup state, the outcome is
+  /// always surfaced here whenever a run was actually active, regardless of
+  /// whether the app is currently foregrounded.
   Future<void> onBackupStopped({
     String? completionTitle,
     String? completionBody,
+    bool isError = false,
   }) async {
     if (!supportsNotifications) {
       return;
     }
 
-    final showCompletion =
-        _backupActive && (!_appInForeground || _notificationVisible);
+    final wasActive = _backupActive;
     _backupActive = false;
     await _stopForegroundService();
     await _plugin.cancel(id: desktopBackupNotificationId);
     _notificationVisible = false;
 
-    if (showCompletion && completionTitle != null) {
+    if (wasActive && completionTitle != null) {
       await _showBriefCompletion(
         title: completionTitle,
         body: completionBody ?? '',
+        isError: isError,
       );
     }
   }
@@ -202,17 +233,23 @@ class DesktopBackupNotificationService {
 
     if (Platform.isAndroid) {
       final androidDetails = AndroidNotificationDetails(
-        _channelId,
-        _channelName,
-        channelDescription: _channelDescription,
+        _progressChannelId,
+        _progressChannelName,
+        channelDescription: _progressChannelDescription,
         importance: Importance.low,
         priority: Priority.low,
         onlyAlertOnce: true,
         ongoing: true,
+        silent: true,
+        category: AndroidNotificationCategory.progress,
+        visibility: NotificationVisibility.public,
+        ticker: title,
+        groupKey: 'desktop_backup',
         showProgress: _total > 0,
         maxProgress: _total > 0 ? _total : 0,
         progress: _total > 0 ? _processed : 0,
         indeterminate: _total <= 0,
+        styleInformation: BigTextStyleInformation(body),
       );
 
       final androidPlugin = _plugin
@@ -272,27 +309,43 @@ class DesktopBackupNotificationService {
   Future<void> _showBriefCompletion({
     required String title,
     required String body,
+    required bool isError,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
+    final isPaused = !isError && title.toLowerCase().contains('paused');
+    final color = isError
+        ? _errorColor
+        : isPaused
+            ? _pausedColor
+            : _successColor;
+
+    final androidDetails = AndroidNotificationDetails(
+      _statusChannelId,
+      _statusChannelName,
+      channelDescription: _statusChannelDescription,
+      importance: isError ? Importance.high : Importance.defaultImportance,
+      priority: isError ? Priority.high : Priority.defaultPriority,
+      category: isError
+          ? AndroidNotificationCategory.error
+          : AndroidNotificationCategory.status,
+      visibility: NotificationVisibility.public,
       autoCancel: true,
+      color: color,
+      styleInformation: body.isNotEmpty
+          ? BigTextStyleInformation(body)
+          : null,
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: false,
-      presentSound: false,
+      presentSound: isError,
     );
 
     await _plugin.show(
       id: desktopBackupNotificationId,
       title: title,
       body: body,
-      notificationDetails: const NotificationDetails(
+      notificationDetails: NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       ),

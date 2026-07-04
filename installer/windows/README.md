@@ -40,7 +40,7 @@ Output: `build/windows/installer/SocialGallery-<version>.msi`
 
 ## What the installer does
 
-- Installs to `Program Files\Social Gallery`
+- Lets the user choose the install location (defaults to `Program Files\Social Gallery`)
 - Adds a Start Menu shortcut
 - Supports upgrade via fixed `UpgradeCode` (same family replaces older MSI)
 - Packages the full Release folder (exe, DLLs, `data/` assets)
