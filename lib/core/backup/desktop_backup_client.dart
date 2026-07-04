@@ -1,11 +1,31 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/backup/backup_checksum_cache.dart';
 import 'package:social_gallery/core/backup/backup_protocol.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+
+export 'package:social_gallery/core/backup/backup_checksum_cache.dart';
+
+/// Phase of a single-file upload on the mobile client.
+enum BackupUploadPhase {
+  preparing,
+  uploading,
+  completing,
+}
+
+typedef BackupUploadProgress = void Function({
+  required BackupUploadPhase phase,
+  required int bytesSent,
+  required int bytesTotal,
+});
+
+typedef BackupUploadStallHandler = void Function(String fileName);
 
 /// Mobile-side client for uploading media to the desktop backup server.
 class DesktopBackupClient {
@@ -21,6 +41,14 @@ class DesktopBackupClient {
   final String authToken;
   final http.Client _http;
 
+  static const _chunkTimeout = Duration(minutes: 3);
+  static const _stallThreshold = Duration(seconds: 60);
+  static const _maxChunkAttempts = 3;
+  static const _preparingTimeout = Duration(minutes: 5);
+  static const _maxChunksInFlight = 2;
+
+  final Map<int, Future<File?>> _openFileCache = {};
+
   Uri _uri(String path, [Map<String, String>? query]) =>
       Uri.http('$host:$port', path, query);
 
@@ -29,7 +57,12 @@ class DesktopBackupClient {
     'Content-Type': 'application/json',
   };
 
-  void close() => _http.close();
+  void close() {
+    _openFileCache.clear();
+    _http.close();
+  }
+
+  void clearOpenFileCache() => _openFileCache.clear();
 
   Future<HealthResponse?> health() async {
     try {
@@ -178,24 +211,49 @@ class DesktopBackupClient {
     }
   }
 
-  Future<bool> uploadChunk(String sessionId, List<int> bytes) async {
-    try {
-      final response = await _http
-          .put(
-            _uri('/v1/backup/chunk/$sessionId'),
-            headers: {
-              'Authorization': 'Bearer $authToken',
-              'Content-Type': 'application/octet-stream',
-            },
-            body: bytes,
-          )
-          .timeout(const Duration(minutes: 10));
+  Future<bool> _uploadChunkWithRetry(
+    String sessionId,
+    List<int> bytes, {
+    BackupUploadStallHandler? onStall,
+    required String fileName,
+  }) async {
+    for (var attempt = 0; attempt < _maxChunkAttempts; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(
+          Duration(seconds: attempt == 1 ? 2 : 5),
+        );
+      }
 
-      return response.statusCode == 200;
-    } catch (e) {
-      debugPrint('Chunk upload failed: $e');
-      return false;
+      var stallNotified = false;
+      final stallTimer = Timer(_stallThreshold, () {
+        if (!stallNotified) {
+          stallNotified = true;
+          onStall?.call(fileName);
+        }
+      });
+
+      try {
+        final response = await _http
+            .put(
+              _uri('/v1/backup/chunk/$sessionId'),
+              headers: {
+                'Authorization': 'Bearer $authToken',
+                'Content-Type': 'application/octet-stream',
+              },
+              body: bytes,
+            )
+            .timeout(_chunkTimeout);
+
+        stallTimer.cancel();
+        if (response.statusCode == 200) return true;
+      } catch (e) {
+        stallTimer.cancel();
+        debugPrint(
+          'Chunk upload failed (attempt ${attempt + 1}/$_maxChunkAttempts): $e',
+        );
+      }
     }
+    return false;
   }
 
   Future<BackupCompleteResponse?> completeUpload({
@@ -224,6 +282,10 @@ class DesktopBackupClient {
     }
   }
 
+  Future<File?> openMediaFile(MediaItem item) {
+    return _openFileCache.putIfAbsent(item.id, () => _openMediaFile(item));
+  }
+
   Future<File?> _openMediaFile(MediaItem item) async {
     try {
       final entity = await AssetEntity.fromId(item.uri);
@@ -236,41 +298,143 @@ class DesktopBackupClient {
   }
 
   Future<String?> computeChecksum(MediaItem item) async {
-    final file = await _openMediaFile(item);
+    final file = await openMediaFile(item);
     if (file == null) return null;
-    final digest = await sha256.bind(file.openRead()).first;
-    return digest.toString();
+    return computeFileChecksum(file);
   }
 
-  Future<bool> uploadMediaItem(MediaItem item) async {
-    final file = await _openMediaFile(item);
+  Future<String?> computeFileChecksum(
+    File file, {
+    int? size,
+    BackupUploadProgress? onProgress,
+  }) async {
+    final totalSize = size ?? await file.length();
+    try {
+      final accumulator = _DigestAccumulator();
+      final input = sha256.startChunkedConversion(accumulator);
+      var bytesRead = 0;
+
+      await for (final chunk in file.openRead().timeout(_preparingTimeout)) {
+        input.add(chunk);
+        bytesRead += chunk.length;
+        onProgress?.call(
+          phase: BackupUploadPhase.preparing,
+          bytesSent: bytesRead,
+          bytesTotal: totalSize,
+        );
+      }
+      input.close();
+      return accumulator.value?.toString();
+    } catch (e) {
+      debugPrint('Checksum computation failed: $e');
+      return null;
+    }
+  }
+
+  BackupInitItem _initItemFor(MediaItem item, int size, String checksum) {
+    return BackupInitItem(
+      id: item.id,
+      name: item.displayName,
+      folderName: item.folderName,
+      size: size,
+      mime: item.mimeType,
+      checksum: checksum,
+      dateTaken: item.dateTaken,
+      dateModified: item.dateModified,
+      dateAdded: item.dateAdded,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      isVault: item.isVault,
+    );
+  }
+
+  Future<bool> uploadMediaItem(
+    MediaItem item, {
+    BackupUploadProgress? onProgress,
+    BackupUploadStallHandler? onStall,
+    String? knownChecksum,
+    BackupUploadSession? uploadSession,
+  }) async {
+    final file = await openMediaFile(item);
     if (file == null) return false;
+    return uploadFile(
+      item,
+      file,
+      onProgress: onProgress,
+      onStall: onStall,
+      knownChecksum: knownChecksum,
+      uploadSession: uploadSession,
+    );
+  }
 
+  /// Uploads with a precomputed checksum and server session from batch init.
+  Future<bool> uploadPreparedFile(
+    MediaItem item,
+    File file, {
+    required String checksum,
+    required BackupUploadSession uploadSession,
+    BackupUploadProgress? onProgress,
+    BackupUploadStallHandler? onStall,
+  }) {
+    return uploadFile(
+      item,
+      file,
+      knownChecksum: checksum,
+      uploadSession: uploadSession,
+      onProgress: onProgress,
+      onStall: onStall,
+    );
+  }
+
+  /// Uploads an already-resolved file. For tests and [uploadMediaItem].
+  Future<bool> uploadFile(
+    MediaItem item,
+    File file, {
+    BackupUploadProgress? onProgress,
+    BackupUploadStallHandler? onStall,
+    String? knownChecksum,
+    BackupUploadSession? uploadSession,
+  }) async {
     final size = await file.length();
-    final checksumDigest = await sha256.bind(file.openRead()).first;
-    final checksum = checksumDigest.toString();
+    final fileLabel = '${item.folderName}/${item.displayName}';
 
-    final init = await initBackup([
-      BackupInitItem(
-        id: item.id,
-        name: item.displayName,
-        folderName: item.folderName,
-        size: size,
-        mime: item.mimeType,
-        checksum: checksum,
-        dateTaken: item.dateTaken,
-        dateModified: item.dateModified,
-        dateAdded: item.dateAdded,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        isVault: item.isVault,
-      ),
-    ]);
+    onProgress?.call(
+      phase: BackupUploadPhase.preparing,
+      bytesSent: 0,
+      bytesTotal: size,
+    );
 
-    if (init == null || init.sessions.isEmpty) return false;
+    var checksum = knownChecksum;
+    var session = uploadSession;
 
-    final session = init.sessions.first;
+    if (session == null) {
+      if (checksum == null) {
+        checksum = await computeFileChecksum(
+          file,
+          size: size,
+          onProgress: onProgress,
+        );
+        if (checksum == null) return false;
+      }
+
+      final init = await initBackup([_initItemFor(item, size, checksum)]);
+      if (init == null || init.sessions.isEmpty) return false;
+
+      final initSession = init.sessions.first;
+      session = BackupUploadSession(
+        sessionId: initSession.sessionId,
+        alreadyExists: initSession.alreadyExists,
+      );
+    } else if (checksum == null) {
+      return false;
+    }
+
     if (session.alreadyExists) {
+      onProgress?.call(
+        phase: BackupUploadPhase.completing,
+        bytesSent: size,
+        bytesTotal: size,
+      );
       final complete = await completeUpload(
         sessionId: session.sessionId,
         checksum: checksum,
@@ -278,21 +442,21 @@ class DesktopBackupClient {
       return complete?.matchesAck(mediaId: item.id, checksum: checksum) ?? false;
     }
 
-    final stream = file.openRead();
-    var buffer = <int>[];
-    await for (final bytes in stream) {
-      buffer.addAll(bytes);
-      while (buffer.length >= BackupProtocol.chunkSize) {
-        final chunk = buffer.sublist(0, BackupProtocol.chunkSize);
-        buffer = buffer.sublist(BackupProtocol.chunkSize);
-        final ok = await uploadChunk(session.sessionId, chunk);
-        if (!ok) return false;
-      }
-    }
-    if (buffer.isNotEmpty) {
-      final ok = await uploadChunk(session.sessionId, buffer);
-      if (!ok) return false;
-    }
+    final uploaded = await _streamFileUpload(
+      file: file,
+      sessionId: session.sessionId,
+      size: size,
+      fileLabel: fileLabel,
+      onProgress: onProgress,
+      onStall: onStall,
+    );
+    if (!uploaded) return false;
+
+    onProgress?.call(
+      phase: BackupUploadPhase.completing,
+      bytesSent: size,
+      bytesTotal: size,
+    );
 
     final complete = await completeUpload(
       sessionId: session.sessionId,
@@ -300,4 +464,98 @@ class DesktopBackupClient {
     );
     return complete?.matchesAck(mediaId: item.id, checksum: checksum) ?? false;
   }
+
+  Future<bool> _streamFileUpload({
+    required File file,
+    required String sessionId,
+    required int size,
+    required String fileLabel,
+    BackupUploadProgress? onProgress,
+    BackupUploadStallHandler? onStall,
+  }) async {
+    var bytesSent = 0;
+    onProgress?.call(
+      phase: BackupUploadPhase.uploading,
+      bytesSent: 0,
+      bytesTotal: size,
+    );
+
+    final buffer = BytesBuilder(copy: false);
+    final inFlight = <Future<bool>>[];
+
+    Future<bool> drainInFlight({bool all = false}) async {
+      while (inFlight.isNotEmpty &&
+          (all || inFlight.length >= _maxChunksInFlight)) {
+        final ok = await inFlight.removeAt(0);
+        if (!ok) return false;
+      }
+      return true;
+    }
+
+    Future<bool> enqueueChunk(List<int> chunk) async {
+      inFlight.add(
+        _uploadChunkWithRetry(
+          sessionId,
+          chunk,
+          onStall: onStall,
+          fileName: fileLabel,
+        ),
+      );
+      return drainInFlight();
+    }
+
+    try {
+      await for (final bytes in file.openRead().timeout(_preparingTimeout)) {
+        buffer.add(bytes);
+
+        while (buffer.length >= BackupProtocol.chunkSize) {
+          final chunk = _takeChunk(buffer, BackupProtocol.chunkSize);
+          if (!await enqueueChunk(chunk)) return false;
+          bytesSent += chunk.length;
+          onProgress?.call(
+            phase: BackupUploadPhase.uploading,
+            bytesSent: bytesSent,
+            bytesTotal: size,
+          );
+        }
+      }
+
+      if (buffer.length > 0) {
+        final tail = buffer.takeBytes();
+        if (!await enqueueChunk(tail)) return false;
+        bytesSent += tail.length;
+        onProgress?.call(
+          phase: BackupUploadPhase.uploading,
+          bytesSent: bytesSent,
+          bytesTotal: size,
+        );
+      }
+
+      return drainInFlight(all: true);
+    } catch (e) {
+      debugPrint('File upload stream failed: $e');
+      return false;
+    }
+  }
+
+  Uint8List _takeChunk(BytesBuilder buffer, int chunkSize) {
+    final bytes = buffer.takeBytes();
+    if (bytes.length <= chunkSize) {
+      return Uint8List.fromList(bytes);
+    }
+    buffer.add(bytes.sublist(chunkSize));
+    return Uint8List.fromList(bytes.sublist(0, chunkSize));
+  }
+}
+
+class _DigestAccumulator implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest data) {
+    value = data;
+  }
+
+  @override
+  void close() {}
 }

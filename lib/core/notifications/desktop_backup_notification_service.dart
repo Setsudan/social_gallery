@@ -5,8 +5,10 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/notifications/notification_constants.dart';
 
 const desktopBackupNotificationId = 1002;
+const desktopBackupStallNotificationId = 1003;
 
 const _progressChannelId = 'desktop_backup_progress';
 const _progressChannelName = 'Backup progress';
@@ -35,13 +37,15 @@ class DesktopBackupNotificationService {
 
   var _initialized = false;
   var _permissionsRequested = false;
-  var _appInForeground = true;
   var _backupActive = false;
   var _foregroundServiceActive = false;
   var _notificationVisible = false;
   var _processed = 0;
   var _total = 0;
   var _detail = '';
+  var _bytesSent = 0;
+  var _bytesTotal = 0;
+  var _phase = '';
   DateTime? _lastProgressUpdate;
 
   bool get supportsNotifications =>
@@ -53,7 +57,7 @@ class DesktopBackupNotificationService {
     }
 
     const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings(androidNotificationIcon);
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -117,7 +121,6 @@ class DesktopBackupNotificationService {
   }
 
   void setAppInForeground(bool inForeground) {
-    _appInForeground = inForeground;
     unawaited(_syncVisibility());
   }
 
@@ -131,6 +134,9 @@ class DesktopBackupNotificationService {
     _processed = 0;
     _total = 0;
     _detail = 'Preparing backup...';
+    _bytesSent = 0;
+    _bytesTotal = 0;
+    _phase = '';
     _lastProgressUpdate = null;
     await _syncVisibility(force: true);
   }
@@ -139,6 +145,9 @@ class DesktopBackupNotificationService {
     required int processed,
     required int total,
     required String detail,
+    int bytesSent = 0,
+    int bytesTotal = 0,
+    String phase = '',
     bool force = false,
   }) async {
     if (!supportsNotifications || !_backupActive) {
@@ -148,6 +157,9 @@ class DesktopBackupNotificationService {
     _processed = processed;
     _total = total;
     _detail = detail;
+    _bytesSent = bytesSent;
+    _bytesTotal = bytesTotal;
+    _phase = phase;
 
     if (!force && !_shouldEmitProgressUpdate()) {
       return;
@@ -156,11 +168,47 @@ class DesktopBackupNotificationService {
     await _syncVisibility(force: true);
   }
 
+  Future<void> onBackupStallWarning(String fileName) async {
+    if (!supportsNotifications || !_backupActive) {
+      return;
+    }
+
+    await _ensurePermissions();
+
+    const title = 'Backup slow';
+    final body = 'Transfer stalled on $fileName. Retrying...';
+
+    final androidDetails = AndroidNotificationDetails(
+      _statusChannelId,
+      _statusChannelName,
+      channelDescription: _statusChannelDescription,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      category: AndroidNotificationCategory.progress,
+      visibility: NotificationVisibility.public,
+      autoCancel: true,
+      onlyAlertOnce: true,
+      styleInformation: BigTextStyleInformation(body),
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: false,
+      presentSound: false,
+    );
+
+    await _plugin.show(
+      id: desktopBackupStallNotificationId,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      ),
+    );
+  }
+
   /// Ends the active backup run and reports its outcome.
-  ///
-  /// Since there is no in-app indicator for backup state, the outcome is
-  /// always surfaced here whenever a run was actually active, regardless of
-  /// whether the app is currently foregrounded.
   Future<void> onBackupStopped({
     String? completionTitle,
     String? completionBody,
@@ -174,6 +222,7 @@ class DesktopBackupNotificationService {
     _backupActive = false;
     await _stopForegroundService();
     await _plugin.cancel(id: desktopBackupNotificationId);
+    await _plugin.cancel(id: desktopBackupStallNotificationId);
     _notificationVisible = false;
 
     if (wasActive && completionTitle != null) {
@@ -213,10 +262,7 @@ class DesktopBackupNotificationService {
   }
 
   bool _shouldShowNotification() {
-    if (Platform.isAndroid) {
-      return true;
-    }
-    return !_appInForeground;
+    return true;
   }
 
   Future<void> _showProgress({bool force = false}) async {
@@ -360,9 +406,27 @@ class DesktopBackupNotificationService {
       return _detail;
     }
     if (_total > 0) {
-      return 'Backed up $_processed / $_total items';
+      final base = 'Backed up $_processed / $_total items';
+      if (_bytesTotal > 0) {
+        final filePercent = ((_bytesSent / _bytesTotal) * 100).round();
+        final phaseLabel = _phaseLabel();
+        if (phaseLabel.isNotEmpty) {
+          return '$base - $phaseLabel ($filePercent%)';
+        }
+        return '$base ($filePercent%)';
+      }
+      return base;
     }
     return 'Preparing backup...';
+  }
+
+  String _phaseLabel() {
+    return switch (_phase) {
+      'preparing' => 'Preparing file',
+      'uploading' => 'Uploading',
+      'completing' => 'Finishing',
+      _ => '',
+    };
   }
 }
 

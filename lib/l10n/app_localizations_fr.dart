@@ -1910,6 +1910,40 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get backupPhasePreparing => 'Preparation du fichier...';
+
+  @override
+  String get backupPhaseUploading => 'Envoi en cours...';
+
+  @override
+  String get backupPhaseCompleting => 'Finalisation du fichier...';
+
+  @override
+  String backupUploadFileProgress(int percent) {
+    return 'Fichier en cours : $percent %';
+  }
+
+  @override
+  String backupDetailBackingUpFileProgress(String path, int percent) {
+    return 'Sauvegarde de $path ($percent %)';
+  }
+
+  @override
+  String backupDetailBackingUpFilesProgress(int count, int percent) {
+    return 'Sauvegarde de $count fichiers ($percent %)';
+  }
+
+  @override
+  String backupDetailReceivingFileProgress(String path, int percent) {
+    return '$path ($percent %)';
+  }
+
+  @override
+  String backupDetailBackedUpWithFailures(int succeeded, int failed) {
+    return '$succeeded elements sauvegardes, $failed en echec';
+  }
+
+  @override
   String get backupCloseBlockedTitle => 'Sauvegarde en cours';
 
   @override

@@ -1128,6 +1128,61 @@
       }
     }
   },
+  "backupPhasePreparing": "Preparation du fichier...",
+  "backupPhaseUploading": "Envoi en cours...",
+  "backupPhaseCompleting": "Finalisation du fichier...",
+  "backupUploadFileProgress": "Fichier en cours : {percent} %",
+  "@backupUploadFileProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpFileProgress": "Sauvegarde de {path} ({percent} %)",
+  "@backupDetailBackingUpFileProgress": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpFilesProgress": "Sauvegarde de {count} fichiers ({percent} %)",
+  "@backupDetailBackingUpFilesProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailReceivingFileProgress": "{path} ({percent} %)",
+  "@backupDetailReceivingFileProgress": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackedUpWithFailures": "{succeeded} elements sauvegardes, {failed} en echec",
+  "@backupDetailBackedUpWithFailures": {
+    "placeholders": {
+      "succeeded": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "backupCloseBlockedTitle": "Sauvegarde en cours",
   "backupCloseBlockedMessage": "Votre telephone envoie encore des photos. Gardez cette application ouverte jusqu'a la fin de la sauvegarde."
 }

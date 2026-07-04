@@ -122,11 +122,50 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
       );
     }
   }
+  if (detail.startsWith('Backed up ') && detail.contains(' failed')) {
+    final match = RegExp(
+      r'^Backed up (\d+) items, (\d+) failed$',
+    ).firstMatch(detail);
+    if (match != null) {
+      return l10n.backupDetailBackedUpWithFailures(
+        int.parse(match.group(1)!),
+        int.parse(match.group(2)!),
+      );
+    }
+  }
+  if (detail.startsWith('Backing up ') && detail.endsWith('%)')) {
+    final match = RegExp(r'^Backing up (\d+) files \((\d+)%\)$').firstMatch(
+      detail,
+    );
+    if (match != null) {
+      return l10n.backupDetailBackingUpFilesProgress(
+        int.parse(match.group(1)!),
+        int.parse(match.group(2)!),
+      );
+    }
+  }
   if (detail.startsWith('Backing up ') && detail.contains('/')) {
+    final percentMatch = RegExp(r'^Backing up (.+) \((\d+)%\)$').firstMatch(detail);
+    if (percentMatch != null) {
+      return l10n.backupDetailBackingUpFileProgress(
+        percentMatch.group(1)!,
+        int.parse(percentMatch.group(2)!),
+      );
+    }
     final slash = detail.indexOf('/');
     final folder = detail.substring('Backing up '.length, slash);
     final name = detail.substring(slash + 1);
     return l10n.backupDetailBackingUpFile(folder, name);
+  }
+
+  if (detail.contains(' - ') && RegExp(r' - \d+%$').hasMatch(detail)) {
+    final match = RegExp(r'^(.+) - (\d+)%$').firstMatch(detail);
+    if (match != null) {
+      return l10n.backupDetailReceivingFileProgress(
+        match.group(1)!,
+        int.parse(match.group(2)!),
+      );
+    }
   }
 
   return detail;

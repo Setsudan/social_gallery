@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/core/backup/backup_concurrency.dart';
 import 'package:social_gallery/core/backup/backup_protocol.dart';
 import 'package:social_gallery/core/backup/desktop_availability_service.dart';
 import 'package:social_gallery/core/backup/desktop_backup_client.dart';
@@ -17,6 +18,86 @@ import 'package:social_gallery/core/notifications/desktop_backup_notification_se
 import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 import 'package:social_gallery/domain/models/backup_state.dart';
+import 'package:social_gallery/domain/models/media_item.dart';
+
+/// Per-file upload phase shown in progress UI.
+enum BackupSyncPhase {
+  idle,
+  preparing,
+  uploading,
+  completing,
+}
+
+class _BatchUploadProgress {
+  const _BatchUploadProgress({
+    required this.bytesSent,
+    required this.bytesTotal,
+    required this.phase,
+    required this.fileDetail,
+  });
+
+  final int bytesSent;
+  final int bytesTotal;
+  final BackupSyncPhase phase;
+  final String fileDetail;
+}
+
+class _BatchUploadTracker {
+  final Map<int, _BatchUploadProgress> _items = {};
+
+  void update({
+    required int mediaId,
+    required int bytesSent,
+    required int bytesTotal,
+    required BackupSyncPhase phase,
+    required String fileDetail,
+  }) {
+    _items[mediaId] = _BatchUploadProgress(
+      bytesSent: bytesSent,
+      bytesTotal: bytesTotal,
+      phase: phase,
+      fileDetail: fileDetail,
+    );
+  }
+
+  void remove(int mediaId) => _items.remove(mediaId);
+
+  int get activeCount => _items.length;
+
+  int get aggregateBytesSent =>
+      _items.values.fold(0, (sum, item) => sum + item.bytesSent);
+
+  int get aggregateBytesTotal =>
+      _items.values.fold(0, (sum, item) => sum + item.bytesTotal);
+
+  BackupSyncPhase get aggregatePhase {
+    if (_items.values.any((item) => item.phase == BackupSyncPhase.uploading)) {
+      return BackupSyncPhase.uploading;
+    }
+    if (_items.values.any((item) => item.phase == BackupSyncPhase.completing)) {
+      return BackupSyncPhase.completing;
+    }
+    return BackupSyncPhase.preparing;
+  }
+
+  String buildDetail() {
+    if (_items.isEmpty) return '';
+    if (_items.length == 1) {
+      final progress = _items.values.first;
+      if (progress.bytesTotal > 0) {
+        final percent =
+            ((progress.bytesSent / progress.bytesTotal) * 100).round();
+        return '${progress.fileDetail} ($percent%)';
+      }
+      return progress.fileDetail;
+    }
+
+    final total = aggregateBytesTotal;
+    final percent =
+        total > 0 ? ((aggregateBytesSent / total) * 100).round() : 0;
+    return 'Backing up ${_items.length} files ($percent%)';
+  }
+}
 
 /// Phase of the desktop backup state machine.
 enum DesktopBackupPhase {
@@ -52,6 +133,14 @@ class DesktopBackupState {
     this.vaultEncryptedCount = 0,
     this.isReceivingBackup = false,
     this.receivingCompletedCount = 0,
+    this.syncingPhase = BackupSyncPhase.idle,
+    this.syncingBytesSent = 0,
+    this.syncingBytesTotal = 0,
+    this.syncingStartedAt,
+    this.receivingFileName,
+    this.receivingBytesReceived = 0,
+    this.receivingBytesTotal = 0,
+    this.failedThisRun = 0,
   });
 
   final DesktopBackupPhase phase;
@@ -70,8 +159,24 @@ class DesktopBackupState {
   final int vaultEncryptedCount;
   final bool isReceivingBackup;
   final int receivingCompletedCount;
+  final BackupSyncPhase syncingPhase;
+  final int syncingBytesSent;
+  final int syncingBytesTotal;
+  final DateTime? syncingStartedAt;
+  final String? receivingFileName;
+  final int receivingBytesReceived;
+  final int receivingBytesTotal;
+  final int failedThisRun;
 
   double? get progress => total > 0 ? processed / total : null;
+
+  double? get fileProgress =>
+      syncingBytesTotal > 0 ? syncingBytesSent / syncingBytesTotal : null;
+
+  double? get receivingFileProgress =>
+      receivingBytesTotal > 0
+          ? receivingBytesReceived / receivingBytesTotal
+          : null;
 
   bool get showsProgressUi =>
       isRunning &&
@@ -98,7 +203,17 @@ class DesktopBackupState {
     int? vaultEncryptedCount,
     bool? isReceivingBackup,
     int? receivingCompletedCount,
+    BackupSyncPhase? syncingPhase,
+    int? syncingBytesSent,
+    int? syncingBytesTotal,
+    DateTime? syncingStartedAt,
+    String? receivingFileName,
+    int? receivingBytesReceived,
+    int? receivingBytesTotal,
+    int? failedThisRun,
     bool clearSyncingMediaId = false,
+    bool clearSyncingProgress = false,
+    bool clearReceivingProgress = false,
     bool clearPairingPin = false,
     bool clearPairingSuccess = false,
     bool clearError = false,
@@ -125,6 +240,28 @@ class DesktopBackupState {
       isReceivingBackup: isReceivingBackup ?? this.isReceivingBackup,
       receivingCompletedCount:
           receivingCompletedCount ?? this.receivingCompletedCount,
+      syncingPhase: clearSyncingProgress
+          ? BackupSyncPhase.idle
+          : (syncingPhase ?? this.syncingPhase),
+      syncingBytesSent: clearSyncingProgress
+          ? 0
+          : (syncingBytesSent ?? this.syncingBytesSent),
+      syncingBytesTotal: clearSyncingProgress
+          ? 0
+          : (syncingBytesTotal ?? this.syncingBytesTotal),
+      syncingStartedAt: clearSyncingProgress
+          ? null
+          : (syncingStartedAt ?? this.syncingStartedAt),
+      receivingFileName: clearReceivingProgress
+          ? null
+          : (receivingFileName ?? this.receivingFileName),
+      receivingBytesReceived: clearReceivingProgress
+          ? 0
+          : (receivingBytesReceived ?? this.receivingBytesReceived),
+      receivingBytesTotal: clearReceivingProgress
+          ? 0
+          : (receivingBytesTotal ?? this.receivingBytesTotal),
+      failedThisRun: failedThisRun ?? this.failedThisRun,
     );
   }
 }
@@ -182,9 +319,11 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
   int _backoffSeconds = 30;
   static const _maxBackoffSeconds = 300;
   static const _batchSize = 25;
+  static const _backupConcurrency = 4;
   static const _reconcileChunkSize = 100;
   static const _verifySampleSize = 50;
   bool _backfillInProgress = false;
+  final BackupSessionChecksumCache _checksumCache = BackupSessionChecksumCache();
 
   Future<bool> registerVaultPassword(String password) async {
     await _vaultPasswordStore.savePassword(password);
@@ -426,19 +565,39 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     state = state.copyWith(vaultEncryptedCount: _server?.vaultFileCount ?? 0);
   }
 
-  void _onReceivingStateChanged(bool receiving, int completedCount) {
+  void _onReceivingStateChanged(
+    bool receiving,
+    int completedCount, {
+    String? currentFileName,
+    int bytesReceived = 0,
+    int bytesTotal = 0,
+  }) {
     if (!usesFilesystemGallery) return;
 
     final deviceName = _prefs.pairedMobileDeviceName ?? 'phone';
-    final detail = receiving
-        ? 'Receiving backup from $deviceName'
-        : (_pairing.isDesktopReceiverPaired
-            ? 'Paired with ${_prefs.pairedMobileDeviceName}'
-            : 'Ready to receive backups');
+    String detail;
+    if (receiving && currentFileName != null && currentFileName.isNotEmpty) {
+      if (bytesTotal > 0) {
+        final percent = ((bytesReceived / bytesTotal) * 100).round();
+        detail = '$currentFileName - $percent%';
+      } else {
+        detail = currentFileName;
+      }
+    } else if (receiving) {
+      detail = 'Receiving backup from $deviceName';
+    } else {
+      detail = _pairing.isDesktopReceiverPaired
+          ? 'Paired with ${_prefs.pairedMobileDeviceName}'
+          : 'Ready to receive backups';
+    }
 
     state = state.copyWith(
       isReceivingBackup: receiving,
       receivingCompletedCount: completedCount,
+      receivingFileName: currentFileName,
+      receivingBytesReceived: bytesReceived,
+      receivingBytesTotal: bytesTotal,
+      clearReceivingProgress: !receiving,
       detail: detail,
       phase: receiving
           ? DesktopBackupPhase.syncing
@@ -649,6 +808,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
 
     var notificationsActive = false;
     DesktopBackupClient? client;
+    _checksumCache.clear();
     try {
       await _notifications?.onBackupStarted();
       notificationsActive = _notifications != null;
@@ -685,6 +845,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
 
       sessionPendingTotal = await _mediaRepo.countMediaPendingBackup();
       var totalProcessed = 0;
+      var failedThisRun = 0;
       var batchNumber = 0;
 
       state = state.copyWith(
@@ -729,20 +890,26 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
             continue;
           }
 
-          if (totalProcessed == 0) {
+          if (totalProcessed == 0 && failedThisRun == 0) {
             state = state.copyWith(
               isRunning: false,
               phase: DesktopBackupPhase.done,
               detail: 'All photos are backed up',
+              clearSyncingProgress: true,
             );
           } else {
             await _prefs.setLastBackupAt(DateTime.now());
+            final detail = failedThisRun > 0
+                ? 'Backed up $totalProcessed items, $failedThisRun failed'
+                : 'Backed up $totalProcessed items';
             state = state.copyWith(
               isRunning: false,
               phase: DesktopBackupPhase.done,
-              detail: 'Backed up $totalProcessed items',
+              detail: detail,
               processed: totalProcessed,
-              total: totalProcessed,
+              total: totalProcessed + failedThisRun,
+              failedThisRun: failedThisRun,
+              clearSyncingProgress: true,
             );
           }
           break;
@@ -757,47 +924,242 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
         );
         await _syncBackupNotification();
 
-        for (final item in pending) {
-          await _mediaRepo.updateBackupState(
-            item.id,
-            MediaBackupState.inProgress,
-          );
+        final uploadClient = client;
 
+        var abortBatch = false;
+        var disconnectDuringBatch = false;
+        final uploadTracker = _BatchUploadTracker();
+        var lastProgressNotifyAt = DateTime.now();
+
+        void refreshUploadState({
+          bool forceNotify = false,
+          bool phaseChanged = false,
+        }) {
+          final detail = uploadTracker.buildDetail();
+          if (detail.isNotEmpty) {
+            state = state.copyWith(
+              detail: detail,
+              processed: totalProcessed,
+              syncingPhase: uploadTracker.aggregatePhase,
+              syncingBytesSent: uploadTracker.aggregateBytesSent,
+              syncingBytesTotal: uploadTracker.aggregateBytesTotal,
+              syncingStartedAt: state.syncingStartedAt ?? DateTime.now(),
+              failedThisRun: failedThisRun,
+              clearSyncingMediaId: true,
+            );
+          }
+
+          final now = DateTime.now();
+          final shouldNotify = forceNotify ||
+              phaseChanged ||
+              now.difference(lastProgressNotifyAt) >=
+                  const Duration(seconds: 1);
+          if (shouldNotify) {
+            lastProgressNotifyAt = now;
+            unawaited(_syncBackupNotification(force: forceNotify || phaseChanged));
+          }
+        }
+
+        final preparedUploads = await runWithConcurrency(
+          items: pending,
+          concurrency: _backupConcurrency,
+          shouldCancel: () => abortBatch,
+          task: (item, _) async {
+            if (abortBatch) return null;
+
+            final file = await uploadClient.openMediaFile(item);
+            if (file == null) return null;
+
+            var checksum = _checksumCache.lookup(item);
+            if (checksum == null) {
+              checksum = await uploadClient.computeFileChecksum(file);
+              if (checksum == null) return null;
+              _checksumCache.put(item, checksum);
+            }
+
+            return (item: item, file: file, checksum: checksum);
+          },
+        );
+
+        final readyUploads = preparedUploads.whereType<
+            ({MediaItem item, File file, String checksum})>().toList();
+
+        if (readyUploads.isEmpty) {
+          for (final item in pending) {
+            await _mediaRepo.updateBackupState(item.id, MediaBackupState.failed);
+            failedThisRun++;
+          }
           state = state.copyWith(
-            detail: 'Backing up ${item.folderName}/${item.displayName}',
             processed: totalProcessed,
-            syncingMediaId: item.id,
+            failedThisRun: failedThisRun,
+            clearSyncingProgress: true,
           );
           await _syncBackupNotification();
+          continue;
+        }
 
-          final success = await client.uploadMediaItem(item);
-          if (success) {
-            await _mediaRepo.markMediaBackedUp(item.id);
-            totalProcessed++;
-          } else {
-            await _mediaRepo.updateBackupState(item.id, MediaBackupState.failed);
-            final stillAvailable = await _isStillAvailable(availability);
-            if (!stillAvailable) {
-              state = state.copyWith(
-                phase: DesktopBackupPhase.waitingForDesktop,
-                detail: 'Desktop disconnected during backup',
-                isRunning: false,
-                processed: totalProcessed,
-                clearSyncingMediaId: true,
+        final initItems = readyUploads
+            .map(
+              (upload) => BackupInitItem(
+                id: upload.item.id,
+                name: upload.item.displayName,
+                folderName: upload.item.folderName,
+                size: upload.item.size,
+                mime: upload.item.mimeType,
+                checksum: upload.checksum,
+                dateTaken: upload.item.dateTaken,
+                dateModified: upload.item.dateModified,
+                dateAdded: upload.item.dateAdded,
+                latitude: upload.item.latitude,
+                longitude: upload.item.longitude,
+                isVault: upload.item.isVault,
+              ),
+            )
+            .toList();
+
+        final initResponse = await uploadClient.initBackup(initItems);
+        if (initResponse == null) {
+          for (final upload in readyUploads) {
+            await _mediaRepo.updateBackupState(
+              upload.item.id,
+              MediaBackupState.failed,
+            );
+            failedThisRun++;
+          }
+          if (!await _isStillAvailable(availability)) {
+            abortBatch = true;
+            disconnectDuringBatch = true;
+          }
+        } else {
+          final sessionsByMediaId = {
+            for (final session in initResponse.sessions)
+              session.mediaId: BackupUploadSession(
+                sessionId: session.sessionId,
+                alreadyExists: session.alreadyExists,
+              ),
+          };
+
+          final uploadResults = await runWithConcurrency(
+            items: readyUploads,
+            concurrency: _backupConcurrency,
+            shouldCancel: () => abortBatch,
+            task: (upload, _) async {
+              if (abortBatch) return false;
+
+              final session = sessionsByMediaId[upload.item.id];
+              if (session == null) return false;
+
+              await _mediaRepo.updateBackupState(
+                upload.item.id,
+                MediaBackupState.inProgress,
               );
-              _scheduleRetry();
-              client.close();
-              return;
+
+              final fileDetail =
+                  'Backing up ${upload.item.folderName}/${upload.item.displayName}';
+              uploadTracker.update(
+                mediaId: upload.item.id,
+                bytesSent: 0,
+                bytesTotal: upload.item.size,
+                phase: BackupSyncPhase.preparing,
+                fileDetail: fileDetail,
+              );
+              refreshUploadState(forceNotify: true, phaseChanged: true);
+
+              var lastPhase = BackupSyncPhase.preparing;
+              final success = await uploadClient.uploadPreparedFile(
+                upload.item,
+                upload.file,
+                checksum: upload.checksum,
+                uploadSession: session,
+                onProgress: ({
+                  required BackupUploadPhase phase,
+                  required int bytesSent,
+                  required int bytesTotal,
+                }) {
+                  final syncPhase = switch (phase) {
+                    BackupUploadPhase.preparing => BackupSyncPhase.preparing,
+                    BackupUploadPhase.uploading => BackupSyncPhase.uploading,
+                    BackupUploadPhase.completing => BackupSyncPhase.completing,
+                  };
+                  final phaseChanged = syncPhase != lastPhase;
+                  lastPhase = syncPhase;
+                  uploadTracker.update(
+                    mediaId: upload.item.id,
+                    bytesSent: bytesSent,
+                    bytesTotal: bytesTotal,
+                    phase: syncPhase,
+                    fileDetail: fileDetail,
+                  );
+                  refreshUploadState(phaseChanged: phaseChanged);
+                },
+                onStall: (fileName) {
+                  unawaited(_notifications?.onBackupStallWarning(fileName));
+                },
+              );
+
+              uploadTracker.remove(upload.item.id);
+              uploadClient.clearOpenFileCache();
+
+              if (success) {
+                await _mediaRepo.markMediaBackedUp(upload.item.id);
+                return true;
+              }
+
+              await _mediaRepo.updateBackupState(
+                upload.item.id,
+                MediaBackupState.failed,
+              );
+              if (!await _isStillAvailable(availability)) {
+                abortBatch = true;
+                disconnectDuringBatch = true;
+              }
+              return false;
+            },
+          );
+
+          for (final success in uploadResults) {
+            if (success == null) continue;
+            if (success) {
+              totalProcessed++;
+            } else {
+              failedThisRun++;
             }
           }
 
-          state = state.copyWith(processed: totalProcessed);
-          await _syncBackupNotification();
+          final failedPrepareCount = pending.length - readyUploads.length;
+          failedThisRun += failedPrepareCount;
         }
+
+        uploadClient.clearOpenFileCache();
+
+        if (disconnectDuringBatch) {
+          state = state.copyWith(
+            phase: DesktopBackupPhase.waitingForDesktop,
+            detail: 'Desktop disconnected during backup',
+            isRunning: false,
+            processed: totalProcessed,
+            failedThisRun: failedThisRun,
+            clearSyncingMediaId: true,
+            clearSyncingProgress: true,
+          );
+          _scheduleRetry();
+          client.close();
+          return;
+        }
+
+        state = state.copyWith(
+          processed: totalProcessed,
+          failedThisRun: failedThisRun,
+          clearSyncingProgress: true,
+        );
+        await _syncBackupNotification();
       }
 
       client.close();
-      state = state.copyWith(clearSyncingMediaId: true);
+      state = state.copyWith(
+        clearSyncingMediaId: true,
+        clearSyncingProgress: true,
+      );
       _onBackupFinished?.call();
     } catch (e, stack) {
       debugPrint('Backup error: $e\n$stack');
@@ -818,6 +1180,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
           isError: state.phase == DesktopBackupPhase.error,
         );
       }
+      _checksumCache.clear();
       _runInProgress = false;
     }
   }
@@ -845,26 +1208,53 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       )).where((item) => !reconciledIds.contains(item.id)).toList();
       if (pending.isEmpty) break;
 
-      final items = <BackupReconcileItem>[];
-      final checksums = <int, String>{};
-
+      final skipReconcile = <MediaItem>[];
+      final needsReconcile = <MediaItem>[];
       for (final item in pending) {
-        final checksum = await client.computeChecksum(item);
+        if (item.backupState == MediaBackupState.pending &&
+            item.lastSyncTime == null) {
+          skipReconcile.add(item);
+        } else {
+          needsReconcile.add(item);
+        }
+      }
+
+      reconciledIds.addAll(skipReconcile.map((item) => item.id));
+
+      if (needsReconcile.isEmpty) {
+        continue;
+      }
+
+      final items = <BackupReconcileItem>[];
+
+      final checksumResults = await runWithConcurrency(
+        items: needsReconcile,
+        concurrency: _backupConcurrency,
+        task: (item, _) async {
+          final checksum = await client.computeChecksum(item);
+          return (item: item, checksum: checksum);
+        },
+      );
+
+      for (final result in checksumResults) {
+        if (result == null) continue;
+        final checksum = result.checksum;
         if (checksum == null) continue;
-        checksums[item.id] = checksum;
+        _checksumCache.put(result.item, checksum);
         items.add(
           BackupReconcileItem.fromMedia(
-            id: item.id,
+            id: result.item.id,
             checksum: checksum,
-            folderName: item.folderName,
-            name: item.displayName,
-            isVault: item.isVault,
+            folderName: result.item.folderName,
+            name: result.item.displayName,
+            isVault: result.item.isVault,
           ),
         );
       }
 
       if (items.isEmpty) {
-        reconciledIds.addAll(pending.map((item) => item.id));
+        reconciledIds.addAll(needsReconcile.map((item) => item.id));
+        client.clearOpenFileCache();
         continue;
       }
 
@@ -907,7 +1297,8 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       );
 
       reconciledCount += items.length;
-      reconciledIds.addAll(pending.map((item) => item.id));
+      reconciledIds.addAll(needsReconcile.map((item) => item.id));
+      client.clearOpenFileCache();
 
       state = state.copyWith(
         processed: reconciledCount,
@@ -954,16 +1345,26 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     }
 
     final items = <BackupReconcileItem>[];
-    for (final item in sample) {
-      final checksum = await client.computeChecksum(item);
+    final checksumResults = await runWithConcurrency(
+      items: sample,
+      concurrency: _backupConcurrency,
+      task: (item, _) async {
+        final checksum = await client.computeChecksum(item);
+        return (item: item, checksum: checksum);
+      },
+    );
+
+    for (final result in checksumResults) {
+      if (result == null) continue;
+      final checksum = result.checksum;
       if (checksum == null) continue;
       items.add(
         BackupReconcileItem.fromMedia(
-          id: item.id,
+          id: result.item.id,
           checksum: checksum,
-          folderName: item.folderName,
-          name: item.displayName,
-          isVault: item.isVault,
+          folderName: result.item.folderName,
+          name: result.item.displayName,
+          isVault: result.item.isVault,
         ),
       );
     }
@@ -1002,6 +1403,9 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       processed: state.processed,
       total: state.total,
       detail: state.detail,
+      bytesSent: state.syncingBytesSent,
+      bytesTotal: state.syncingBytesTotal,
+      phase: state.syncingPhase.name,
       force: force,
     );
   }

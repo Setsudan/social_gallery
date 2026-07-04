@@ -1131,6 +1131,61 @@
       }
     }
   },
+  "backupPhasePreparing": "Preparing file...",
+  "backupPhaseUploading": "Uploading...",
+  "backupPhaseCompleting": "Finishing file...",
+  "backupUploadFileProgress": "Current file: {percent}%",
+  "@backupUploadFileProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpFileProgress": "Backing up {path} ({percent}%)",
+  "@backupDetailBackingUpFileProgress": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackingUpFilesProgress": "Backing up {count} files ({percent}%)",
+  "@backupDetailBackingUpFilesProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailReceivingFileProgress": "{path} ({percent}%)",
+  "@backupDetailReceivingFileProgress": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "backupDetailBackedUpWithFailures": "Backed up {succeeded} items, {failed} failed",
+  "@backupDetailBackedUpWithFailures": {
+    "placeholders": {
+      "succeeded": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "backupCloseBlockedTitle": "Backup in progress",
   "backupCloseBlockedMessage": "Your phone is still sending photos. Keep this app open until the backup finishes.",
   "vaultPasswordSetTitle": "Set vault backup password",

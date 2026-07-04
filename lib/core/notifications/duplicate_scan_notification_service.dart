@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:social_gallery/core/notifications/duplicate_scan_notification_throttle.dart';
+import 'package:social_gallery/core/notifications/notification_constants.dart';
 
 const duplicateScanNotificationId = 1001;
 
@@ -34,7 +35,8 @@ class DuplicateScanNotificationService {
       return;
     }
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings(androidNotificationIcon);
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,

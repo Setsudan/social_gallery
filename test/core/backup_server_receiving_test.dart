@@ -18,6 +18,9 @@ void main() {
   late int port;
   late List<bool> receivingStates;
   late List<int> completedCounts;
+  late List<String?> receivedFileNames;
+  late List<int> receivedByteCounts;
+  late List<int> receivedByteTotals;
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('backup_receiving_test_');
@@ -28,14 +31,26 @@ void main() {
     await prefs.setBackupAuthToken(token);
     receivingStates = [];
     completedCounts = [];
+    receivedFileNames = [];
+    receivedByteCounts = [];
+    receivedByteTotals = [];
 
     server = DesktopBackupServer(
       pairing: pairing,
       deviceName: 'TestDesktop',
       backupRoot: tempDir.path,
-      onReceivingStateChanged: (receiving, completedCount) {
+      onReceivingStateChanged: (
+        receiving,
+        completedCount, {
+        currentFileName,
+        int bytesReceived = 0,
+        int bytesTotal = 0,
+      }) {
         receivingStates.add(receiving);
         completedCounts.add(completedCount);
+        receivedFileNames.add(currentFileName);
+        receivedByteCounts.add(bytesReceived);
+        receivedByteTotals.add(bytesTotal);
       },
     );
     await server.start();
@@ -87,10 +102,40 @@ void main() {
     expect(initResponse.statusCode, 200);
     expect(server.isReceivingBackup, isTrue);
     expect(receivingStates, contains(true));
+    expect(receivedFileNames.any((name) => name == 'Camera/photo.jpg'), isTrue);
 
     final initBody = BackupProtocol.decodeJson(initResponse.body);
     final sessionId = initBody['sessions'][0]['sessionId'] as String;
     expect(sessionId.startsWith('exists-'), isFalse);
+  });
+
+  test('receiving callback reports byte progress on chunk upload', () async {
+    final bytes = List<int>.generate(8192, (index) => index % 256);
+    final checksum = await hashBytes(bytes);
+
+    final initResponse = await postJson('/v1/backup/init', {
+      'items': [
+        {
+          'id': 77,
+          'checksum': checksum,
+          'folderName': 'Camera',
+          'name': 'large.jpg',
+          'mime': 'image/jpeg',
+          'size': bytes.length,
+        },
+      ],
+    });
+    final initBody = BackupProtocol.decodeJson(initResponse.body);
+    final sessionId = initBody['sessions'][0]['sessionId'] as String;
+
+    final chunkResponse = await http.put(
+      Uri.http('127.0.0.1:$port', '/v1/backup/chunk/$sessionId'),
+      headers: {'Authorization': 'Bearer $token'},
+      body: bytes,
+    );
+    expect(chunkResponse.statusCode, 200);
+    expect(receivedByteCounts.any((value) => value == bytes.length), isTrue);
+    expect(receivedByteTotals.any((value) => value == bytes.length), isTrue);
   });
 
   test('receiving callback ends after complete and idle timeout', () async {
@@ -130,5 +175,30 @@ void main() {
     await Future<void>.delayed(const Duration(seconds: 6));
     expect(server.isReceivingBackup, isFalse);
     expect(receivingStates.last, isFalse);
+  });
+
+  test('expired upload sessions are cleaned up', () async {
+    final bytes = [1, 2, 3];
+    final checksum = await hashBytes(bytes);
+
+    final initResponse = await postJson('/v1/backup/init', {
+      'items': [
+        {
+          'id': 88,
+          'checksum': checksum,
+          'folderName': 'Camera',
+          'name': 'stale.jpg',
+          'mime': 'image/jpeg',
+          'size': bytes.length,
+        },
+      ],
+    });
+    expect(initResponse.statusCode, 200);
+    expect(server.isReceivingBackup, isTrue);
+
+    await server.expireUploadSessionsForTest();
+    await Future<void>.delayed(const Duration(seconds: 6));
+
+    expect(server.isReceivingBackup, isFalse);
   });
 }

@@ -3254,6 +3254,54 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 file received} other{{count} files received}}'**
   String backupReceivingFiles(int count);
 
+  /// No description provided for @backupPhasePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing file...'**
+  String get backupPhasePreparing;
+
+  /// No description provided for @backupPhaseUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get backupPhaseUploading;
+
+  /// No description provided for @backupPhaseCompleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing file...'**
+  String get backupPhaseCompleting;
+
+  /// No description provided for @backupUploadFileProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Current file: {percent}%'**
+  String backupUploadFileProgress(int percent);
+
+  /// No description provided for @backupDetailBackingUpFileProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Backing up {path} ({percent}%)'**
+  String backupDetailBackingUpFileProgress(String path, int percent);
+
+  /// No description provided for @backupDetailBackingUpFilesProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Backing up {count} files ({percent}%)'**
+  String backupDetailBackingUpFilesProgress(int count, int percent);
+
+  /// No description provided for @backupDetailReceivingFileProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{path} ({percent}%)'**
+  String backupDetailReceivingFileProgress(String path, int percent);
+
+  /// No description provided for @backupDetailBackedUpWithFailures.
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up {succeeded} items, {failed} failed'**
+  String backupDetailBackedUpWithFailures(int succeeded, int failed);
+
   /// No description provided for @backupCloseBlockedTitle.
   ///
   /// In en, this message translates to:

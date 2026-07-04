@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -33,7 +34,9 @@ class _UploadSession {
     required this.isVault,
     this.mime,
     this.plainSize,
-  });
+  }) {
+    _hashSink = sha256.startChunkedConversion(_hashAccumulator);
+  }
 
   final int mediaId;
   final String targetPath;
@@ -44,7 +47,16 @@ class _UploadSession {
   final bool isVault;
   final String? mime;
   final int? plainSize;
+  final DateTime createdAt = DateTime.now();
   RandomAccessFile? _file;
+  int bytesReceived = 0;
+  bool _hashClosed = false;
+  final _hashAccumulator = _SessionDigestAccumulator();
+  late final ByteConversionSink _hashSink;
+
+  String get displayName => '$folderName/$fileName';
+
+  int get expectedBytes => plainSize ?? 0;
 
   Future<void> appendChunk(List<int> bytes) async {
     if (_file == null) {
@@ -52,15 +64,51 @@ class _UploadSession {
       await file.parent.create(recursive: true);
       _file = await file.open(mode: FileMode.writeOnly);
     }
+    if (!_hashClosed) {
+      _hashSink.add(bytes);
+    }
     await _file!.writeFrom(bytes);
+    bytesReceived += bytes.length;
   }
 
   Future<void> finalize() async {
     await _file?.close();
     _file = null;
+    if (!_hashClosed) {
+      _hashSink.close();
+      _hashClosed = true;
+    }
   }
 
-  Future<String> computeChecksum() => _hashFile(targetPath);
+  Future<void> discard() async {
+    await finalize();
+    final file = File(targetPath);
+    if (await file.exists()) {
+      try {
+        await file.parent.delete(recursive: true);
+      } catch (_) {}
+    }
+  }
+
+  String computeChecksum() {
+    if (!_hashClosed) {
+      _hashSink.close();
+      _hashClosed = true;
+    }
+    return _hashAccumulator.value?.toString() ?? '';
+  }
+}
+
+class _SessionDigestAccumulator implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest data) {
+    value = data;
+  }
+
+  @override
+  void close() {}
 }
 
 class _DownloadSession {
@@ -107,7 +155,13 @@ class DesktopBackupServer {
   final void Function(String mobileDeviceName)? onPaired;
   final VoidCallback? onUnpaired;
   final VoidCallback? onVaultFileStored;
-  void Function(bool receiving, int completedCount)? onReceivingStateChanged;
+  void Function(
+    bool receiving,
+    int completedCount, {
+    String? currentFileName,
+    int bytesReceived,
+    int bytesTotal,
+  })? onReceivingStateChanged;
   final DesktopBackupInventory _inventory;
   final VaultConfigStore _vaultConfig;
   final VaultArchiveService _vaultArchive;
@@ -125,11 +179,15 @@ class DesktopBackupServer {
   int _receivingCompletedCount = 0;
   int _activeBackupOperations = 0;
   Timer? _receivingIdleTimer;
+  Timer? _uploadSessionCleanupTimer;
+  DateTime? _lastReceivingNotify;
 
   static const _vaultTokenTtl = Duration(minutes: 15);
   static const _downloadSessionTtl = Duration(minutes: 30);
+  static const _uploadSessionTtl = Duration(minutes: 30);
   static const _maxDownloadSessions = 20;
   static const _receivingIdleDelay = Duration(seconds: 5);
+  static const _receivingNotifyThrottle = Duration(seconds: 1);
 
   int? get port => _port;
 
@@ -141,6 +199,20 @@ class DesktopBackupServer {
 
   int get vaultFileCount =>
       _inventory.allEntries.where((entry) => entry.isVault).length;
+
+  /// Removes all in-progress upload sessions. For tests only.
+  @visibleForTesting
+  Future<void> expireUploadSessionsForTest() async {
+    final expired = _sessions.keys.toList();
+    for (final sessionId in expired) {
+      final session = _sessions.remove(sessionId);
+      await session?.discard();
+    }
+    if (expired.isNotEmpty) {
+      _scheduleReceivingEnd();
+      _notifyReceivingState(force: true);
+    }
+  }
 
   Future<void> start() async {
     if (_server != null) return;
@@ -186,6 +258,11 @@ class DesktopBackupServer {
 
     _server = await shelf_io.serve(handler, InternetAddress.anyIPv4, 0);
     _port = _server!.port;
+    _uploadSessionCleanupTimer?.cancel();
+    _uploadSessionCleanupTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => unawaited(_cleanupUploadSessions()),
+    );
     debugPrint('Backup server listening on port $_port');
   }
 
@@ -202,19 +279,41 @@ class DesktopBackupServer {
     _vaultEncryptionKey = null;
     _receivingIdleTimer?.cancel();
     _receivingIdleTimer = null;
+    _uploadSessionCleanupTimer?.cancel();
+    _uploadSessionCleanupTimer = null;
     _activeBackupOperations = 0;
     _setReceiving(false);
   }
 
-  void _notifyReceivingState() {
-    onReceivingStateChanged?.call(_isReceivingBackup, _receivingCompletedCount);
+  _UploadSession? _primaryUploadSession() {
+    if (_sessions.isEmpty) return null;
+    return _sessions.values.first;
+  }
+
+  void _notifyReceivingState({bool force = false}) {
+    final session = _primaryUploadSession();
+    final now = DateTime.now();
+    if (!force &&
+        _lastReceivingNotify != null &&
+        now.difference(_lastReceivingNotify!) < _receivingNotifyThrottle) {
+      return;
+    }
+    _lastReceivingNotify = now;
+
+    onReceivingStateChanged?.call(
+      _isReceivingBackup,
+      _receivingCompletedCount,
+      currentFileName: session?.displayName,
+      bytesReceived: session?.bytesReceived ?? 0,
+      bytesTotal: session?.expectedBytes ?? 0,
+    );
   }
 
   void _setReceiving(bool receiving) {
     if (receiving) {
       if (!_isReceivingBackup) {
         _isReceivingBackup = true;
-        _notifyReceivingState();
+        _notifyReceivingState(force: true);
       }
       return;
     }
@@ -225,7 +324,7 @@ class DesktopBackupServer {
 
     _isReceivingBackup = false;
     _receivingCompletedCount = 0;
-    _notifyReceivingState();
+    _notifyReceivingState(force: true);
   }
 
   void _enterBackupActivity() {
@@ -261,7 +360,7 @@ class DesktopBackupServer {
 
   void _recordSuccessfulComplete() {
     _receivingCompletedCount++;
-    _notifyReceivingState();
+    _notifyReceivingState(force: true);
   }
 
   Middleware get _logRequests => (Handler inner) {
@@ -330,6 +429,28 @@ class DesktopBackupServer {
           await session.tempFile!.parent.delete(recursive: true);
         } catch (_) {}
       }
+    }
+  }
+
+  Future<void> _cleanupUploadSessions() async {
+    if (_sessions.isEmpty) return;
+
+    final now = DateTime.now();
+    final expired = <String>[];
+    for (final entry in _sessions.entries) {
+      if (now.difference(entry.value.createdAt) > _uploadSessionTtl) {
+        expired.add(entry.key);
+      }
+    }
+
+    for (final sessionId in expired) {
+      final session = _sessions.remove(sessionId);
+      await session?.discard();
+    }
+
+    if (expired.isNotEmpty) {
+      _scheduleReceivingEnd();
+      _notifyReceivingState(force: true);
     }
   }
 
@@ -675,6 +796,7 @@ class DesktopBackupServer {
         });
       }
 
+      _notifyReceivingState(force: true);
       return _json({'sessions': sessions});
     } catch (e) {
       return _json({'error': e.toString()}, status: 400);
@@ -701,6 +823,7 @@ class DesktopBackupServer {
       await for (final bytes in stream) {
         await session.appendChunk(bytes);
       }
+      _notifyReceivingState(force: true);
       return Response.ok('ok');
     } catch (e) {
       debugPrint('Chunk write failed: $e');
@@ -747,7 +870,7 @@ class DesktopBackupServer {
       }
 
       await session.finalize();
-      final actual = await session.computeChecksum();
+      final actual = session.computeChecksum();
       if (actual != checksum) {
         final file = File(session.targetPath);
         if (await file.exists()) {
@@ -888,7 +1011,7 @@ class DesktopBackupServer {
             )
             .toList(),
         'totalCount': entries.length,
-        if (nextCursor != null) 'nextCursor': nextCursor,
+        'nextCursor': ?nextCursor,
       });
     } catch (e) {
       return _json({'error': e.toString()}, status: 400);
