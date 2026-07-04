@@ -53,6 +53,7 @@ dependencies:
   bonsoir: ^5.1.11
   app_links: ^6.4.0
   mobile_scanner: ^7.0.0
+  window_manager: ^0.4.3
 
 dev_dependencies:
   flutter_test:

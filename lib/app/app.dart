@@ -10,6 +10,7 @@ import 'package:social_gallery/core/l10n/app_locale_preference.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/l10n/app_localizations.dart';
 import 'package:social_gallery/core/backup/backup_deep_link.dart';
+import 'package:social_gallery/core/backup/desktop_backup_window_guard.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/notifications/desktop_backup_notification_service.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart';
@@ -132,41 +133,43 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
       accent: settings.accentColor,
     );
 
-    return AnimatedTheme(
-      data: theme,
-      duration: const Duration(milliseconds: 200),
-      child: MaterialApp.router(
-        onGenerateTitle: (context) => context.l10n.appTitle,
-        theme: theme,
-        routerConfig: router,
-        locale: settings.localePreference.toLocale(),
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalePreference.supportedLocales,
-        localeResolutionCallback: (deviceLocale, supportedLocales) {
-          return AppLocalePreference.resolveLocale(
-            preference: settings.localePreference,
-            deviceLocale: deviceLocale,
-          );
-        },
-        builder: (context, child) {
-          final motion = AppMotion.fromSettings(
-            settings,
-            systemAnimationsDisabled: MediaQuery.disableAnimationsOf(context),
-          );
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(settings.fontSizeFactor),
-              disableAnimations:
-                  !motion.enabled || MediaQuery.disableAnimationsOf(context),
-            ),
-            child: child!,
-          );
-        },
+    return DesktopBackupWindowGuard(
+      child: AnimatedTheme(
+        data: theme,
+        duration: const Duration(milliseconds: 200),
+        child: MaterialApp.router(
+          onGenerateTitle: (context) => context.l10n.appTitle,
+          theme: theme,
+          routerConfig: router,
+          locale: settings.localePreference.toLocale(),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalePreference.supportedLocales,
+          localeResolutionCallback: (deviceLocale, supportedLocales) {
+            return AppLocalePreference.resolveLocale(
+              preference: settings.localePreference,
+              deviceLocale: deviceLocale,
+            );
+          },
+          builder: (context, child) {
+            final motion = AppMotion.fromSettings(
+              settings,
+              systemAnimationsDisabled: MediaQuery.disableAnimationsOf(context),
+            );
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(settings.fontSizeFactor),
+                disableAnimations:
+                    !motion.enabled || MediaQuery.disableAnimationsOf(context),
+              ),
+              child: child!,
+            );
+          },
+        ),
       ),
     );
   }

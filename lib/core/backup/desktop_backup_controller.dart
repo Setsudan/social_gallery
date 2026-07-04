@@ -50,6 +50,8 @@ class DesktopBackupState {
     this.pairingSuccessDeviceName,
     this.needsVaultPassword = false,
     this.vaultEncryptedCount = 0,
+    this.isReceivingBackup = false,
+    this.receivingCompletedCount = 0,
   });
 
   final DesktopBackupPhase phase;
@@ -66,6 +68,8 @@ class DesktopBackupState {
   final String? pairingSuccessDeviceName;
   final bool needsVaultPassword;
   final int vaultEncryptedCount;
+  final bool isReceivingBackup;
+  final int receivingCompletedCount;
 
   double? get progress => total > 0 ? processed / total : null;
 
@@ -92,6 +96,8 @@ class DesktopBackupState {
     String? pairingSuccessDeviceName,
     bool? needsVaultPassword,
     int? vaultEncryptedCount,
+    bool? isReceivingBackup,
+    int? receivingCompletedCount,
     bool clearSyncingMediaId = false,
     bool clearPairingPin = false,
     bool clearPairingSuccess = false,
@@ -116,6 +122,9 @@ class DesktopBackupState {
           : (pairingSuccessDeviceName ?? this.pairingSuccessDeviceName),
       needsVaultPassword: needsVaultPassword ?? this.needsVaultPassword,
       vaultEncryptedCount: vaultEncryptedCount ?? this.vaultEncryptedCount,
+      isReceivingBackup: isReceivingBackup ?? this.isReceivingBackup,
+      receivingCompletedCount:
+          receivingCompletedCount ?? this.receivingCompletedCount,
     );
   }
 }
@@ -257,6 +266,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
   }
 
   Future<void> setDesktopReceiveEnabled(bool enabled) async {
+    if (!enabled && state.isReceivingBackup) return;
     await _prefs.setDesktopReceiveBackups(enabled);
     if (enabled) {
       await _syncDesktopServerState();
@@ -294,7 +304,9 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       onVaultFileStored: _refreshVaultCount,
       onPaired: _onServerPaired,
       onUnpaired: _onServerUnpaired,
+      onReceivingStateChanged: _onReceivingStateChanged,
     );
+    _server!.onReceivingStateChanged = _onReceivingStateChanged;
 
     if (!_server!.isRunning) {
       await _server!.start();
@@ -414,7 +426,28 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     state = state.copyWith(vaultEncryptedCount: _server?.vaultFileCount ?? 0);
   }
 
+  void _onReceivingStateChanged(bool receiving, int completedCount) {
+    if (!usesFilesystemGallery) return;
+
+    final deviceName = _prefs.pairedMobileDeviceName ?? 'phone';
+    final detail = receiving
+        ? 'Receiving backup from $deviceName'
+        : (_pairing.isDesktopReceiverPaired
+            ? 'Paired with ${_prefs.pairedMobileDeviceName}'
+            : 'Ready to receive backups');
+
+    state = state.copyWith(
+      isReceivingBackup: receiving,
+      receivingCompletedCount: completedCount,
+      detail: detail,
+      phase: receiving
+          ? DesktopBackupPhase.syncing
+          : DesktopBackupPhase.desktopReady,
+    );
+  }
+
   Future<void> _stopDesktopServer() async {
+    if (state.isReceivingBackup) return;
     await _mdnsAdvertiser.stop();
     await _server?.stop();
     _pairing.clearPin();

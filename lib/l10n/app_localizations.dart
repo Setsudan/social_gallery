@@ -1622,6 +1622,18 @@ abstract class AppLocalizations {
   /// **'Open folder'**
   String get postOpenFolder;
 
+  /// No description provided for @postFindInFileExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in file explorer'**
+  String get postFindInFileExplorer;
+
+  /// No description provided for @postFindInFileExplorerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open file location'**
+  String get postFindInFileExplorerFailed;
+
   /// No description provided for @metadataTitle.
   ///
   /// In en, this message translates to:
@@ -3229,6 +3241,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not paired with a desktop'**
   String get backupDetailNotPairedWithDesktop;
+
+  /// No description provided for @backupReceivingFromDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving backup from {deviceName}'**
+  String backupReceivingFromDevice(String deviceName);
+
+  /// No description provided for @backupReceivingFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file received} other{{count} files received}}'**
+  String backupReceivingFiles(int count);
+
+  /// No description provided for @backupCloseBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup in progress'**
+  String get backupCloseBlockedTitle;
+
+  /// No description provided for @backupCloseBlockedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone is still sending photos. Keep this app open until the backup finishes.'**
+  String get backupCloseBlockedMessage;
 
   /// No description provided for @vaultPasswordSetTitle.
   ///

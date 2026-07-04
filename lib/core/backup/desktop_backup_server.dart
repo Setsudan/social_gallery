@@ -92,6 +92,7 @@ class DesktopBackupServer {
     this.onPaired,
     this.onUnpaired,
     this.onVaultFileStored,
+    this.onReceivingStateChanged,
     DesktopBackupInventory? inventory,
     VaultConfigStore? vaultConfig,
     VaultArchiveService? vaultArchive,
@@ -106,6 +107,7 @@ class DesktopBackupServer {
   final void Function(String mobileDeviceName)? onPaired;
   final VoidCallback? onUnpaired;
   final VoidCallback? onVaultFileStored;
+  void Function(bool receiving, int completedCount)? onReceivingStateChanged;
   final DesktopBackupInventory _inventory;
   final VaultConfigStore _vaultConfig;
   final VaultArchiveService _vaultArchive;
@@ -119,14 +121,23 @@ class DesktopBackupServer {
   final _downloadSessions = <String, _DownloadSession>{};
   final _vaultTokens = <String, DateTime>{};
   Uint8List? _vaultEncryptionKey;
+  bool _isReceivingBackup = false;
+  int _receivingCompletedCount = 0;
+  int _activeBackupOperations = 0;
+  Timer? _receivingIdleTimer;
 
   static const _vaultTokenTtl = Duration(minutes: 15);
   static const _downloadSessionTtl = Duration(minutes: 30);
   static const _maxDownloadSessions = 20;
+  static const _receivingIdleDelay = Duration(seconds: 5);
 
   int? get port => _port;
 
   bool get isRunning => _server != null;
+
+  bool get isReceivingBackup => _isReceivingBackup;
+
+  int get receivingCompletedCount => _receivingCompletedCount;
 
   int get vaultFileCount =>
       _inventory.allEntries.where((entry) => entry.isVault).length;
@@ -142,11 +153,27 @@ class DesktopBackupServer {
     router.post('/v1/pair', _handlePair);
     router.post('/v1/unpair', _handleUnpair);
     router.post('/v1/vault/register', _handleVaultRegister);
-    router.post('/v1/backup/init', _handleBackupInit);
-    router.post('/v1/backup/reconcile', _handleReconcile);
-    router.post('/v1/backup/verify', _handleVerify);
-    router.put('/v1/backup/chunk/<sessionId>', _handleChunk);
-    router.post('/v1/backup/complete', _handleComplete);
+    router.post(
+      '/v1/backup/init',
+      (request) => _withBackupActivity(() => _handleBackupInit(request)),
+    );
+    router.post(
+      '/v1/backup/reconcile',
+      (request) => _withBackupActivity(() => _handleReconcile(request)),
+    );
+    router.post(
+      '/v1/backup/verify',
+      (request) => _withBackupActivity(() => _handleVerify(request)),
+    );
+    router.put(
+      '/v1/backup/chunk/<sessionId>',
+      (request, sessionId) =>
+          _withBackupActivity(() => _handleChunk(request, sessionId)),
+    );
+    router.post(
+      '/v1/backup/complete',
+      (request) => _withBackupActivity(() => _handleComplete(request)),
+    );
     router.get('/v1/library/catalog', _handleLibraryCatalog);
     router.get('/v1/library/thumbnail/<mediaId>', _handleLibraryThumbnail);
     router.post('/v1/library/vault/unlock', _handleVaultUnlock);
@@ -173,6 +200,68 @@ class DesktopBackupServer {
     await _cleanupDownloadSessions();
     _vaultTokens.clear();
     _vaultEncryptionKey = null;
+    _receivingIdleTimer?.cancel();
+    _receivingIdleTimer = null;
+    _activeBackupOperations = 0;
+    _setReceiving(false);
+  }
+
+  void _notifyReceivingState() {
+    onReceivingStateChanged?.call(_isReceivingBackup, _receivingCompletedCount);
+  }
+
+  void _setReceiving(bool receiving) {
+    if (receiving) {
+      if (!_isReceivingBackup) {
+        _isReceivingBackup = true;
+        _notifyReceivingState();
+      }
+      return;
+    }
+
+    _receivingIdleTimer?.cancel();
+    _receivingIdleTimer = null;
+    if (!_isReceivingBackup) return;
+
+    _isReceivingBackup = false;
+    _receivingCompletedCount = 0;
+    _notifyReceivingState();
+  }
+
+  void _enterBackupActivity() {
+    _receivingIdleTimer?.cancel();
+    _receivingIdleTimer = null;
+    _setReceiving(true);
+  }
+
+  void _scheduleReceivingEnd() {
+    if (_sessions.isNotEmpty || _activeBackupOperations > 0) {
+      _enterBackupActivity();
+      return;
+    }
+
+    _receivingIdleTimer?.cancel();
+    _receivingIdleTimer = Timer(_receivingIdleDelay, () {
+      if (_sessions.isEmpty && _activeBackupOperations == 0) {
+        _setReceiving(false);
+      }
+    });
+  }
+
+  Future<T> _withBackupActivity<T>(Future<T> Function() fn) async {
+    _activeBackupOperations++;
+    _enterBackupActivity();
+    try {
+      return await fn();
+    } finally {
+      _activeBackupOperations--;
+      _scheduleReceivingEnd();
+    }
+  }
+
+  void _recordSuccessfulComplete() {
+    _receivingCompletedCount++;
+    _notifyReceivingState();
   }
 
   Middleware get _logRequests => (Handler inner) {
@@ -634,6 +723,7 @@ class DesktopBackupServer {
           final entry = _inventory.lookup(mediaId);
           if (entry != null && entry.checksum == checksum && !entry.isVault) {
             onFileImported?.call();
+            _recordSuccessfulComplete();
             return _json({
               'success': true,
               'path': entry.relativePath,
@@ -642,6 +732,7 @@ class DesktopBackupServer {
             });
           }
         }
+        _recordSuccessfulComplete();
         return _json({
           'success': true,
           'path': '',
@@ -700,6 +791,7 @@ class DesktopBackupServer {
 
         onVaultFileStored?.call();
 
+        _recordSuccessfulComplete();
         return _json({
           'success': true,
           'path': vaultRelative,
@@ -724,6 +816,7 @@ class DesktopBackupServer {
 
       onFileImported?.call();
 
+      _recordSuccessfulComplete();
       return _json({
         'success': true,
         'path': relativePath,

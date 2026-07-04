@@ -372,6 +372,8 @@
   "tooltipShare": "Partager",
   "tooltipFavorite": "Favori",
   "postOpenFolder": "Ouvrir le dossier",
+  "postFindInFileExplorer": "Afficher dans l'explorateur de fichiers",
+  "postFindInFileExplorerFailed": "Impossible d'ouvrir l'emplacement du fichier",
   "metadataTitle": "Details",
   "metadataFilename": "Nom du fichier",
   "metadataDimensions": "Dimensions",
@@ -1109,5 +1111,23 @@
   "backupDetailDesktopDisconnectedDuringVerify": "Bureau devenu indisponible pendant la verification",
   "backupDetailDesktopDisconnectedDuringBackup": "Bureau deconnecte pendant la sauvegarde",
   "backupDetailDesktopDoesNotUpload": "L'application bureau ne s'envoie pas de sauvegarde a elle-meme",
-  "backupDetailNotPairedWithDesktop": "Non apparie avec un bureau"
+  "backupDetailNotPairedWithDesktop": "Non apparie avec un bureau",
+  "backupReceivingFromDevice": "Reception de la sauvegarde depuis {deviceName}",
+  "@backupReceivingFromDevice": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupReceivingFiles": "{count, plural, =1{1 fichier recu} other{{count} fichiers recus}}",
+  "@backupReceivingFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupCloseBlockedTitle": "Sauvegarde en cours",
+  "backupCloseBlockedMessage": "Votre telephone envoie encore des photos. Gardez cette application ouverte jusqu'a la fin de la sauvegarde."
 }

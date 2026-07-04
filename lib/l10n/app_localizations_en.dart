@@ -861,6 +861,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postOpenFolder => 'Open folder';
 
   @override
+  String get postFindInFileExplorer => 'Find in file explorer';
+
+  @override
+  String get postFindInFileExplorerFailed => 'Could not open file location';
+
+  @override
   String get metadataTitle => 'Details';
 
   @override
@@ -1861,6 +1867,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupDetailNotPairedWithDesktop => 'Not paired with a desktop';
+
+  @override
+  String backupReceivingFromDevice(String deviceName) {
+    return 'Receiving backup from $deviceName';
+  }
+
+  @override
+  String backupReceivingFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files received',
+      one: '1 file received',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupCloseBlockedTitle => 'Backup in progress';
+
+  @override
+  String get backupCloseBlockedMessage =>
+      'Your phone is still sending photos. Keep this app open until the backup finishes.';
 
   @override
   String get vaultPasswordSetTitle => 'Set vault backup password';

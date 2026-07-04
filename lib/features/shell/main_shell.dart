@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/backup/desktop_backup_controller.dart';
+import 'package:social_gallery/core/l10n/backup_detail_l10n.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/shared/navigation/shell_nav_config.dart';
@@ -75,6 +78,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       settingsProvider.select((settings) => settings.galleryViewMode),
     );
     final sync = ref.watch(gallerySyncProvider);
+    final backupState = ref.watch(desktopBackupProvider);
     final width = MediaQuery.sizeOf(context).width;
     final isDesktop = width > 800;
 
@@ -108,11 +112,21 @@ class _MainShellState extends ConsumerState<MainShell> {
                       : null,
                 ),
                 Expanded(
-                  child: SafeArea(
-                    child: FloatingNavInsets(
-                      overlayHeight: 0,
-                      child: widget.navigationShell,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (usesFilesystemGallery && backupState.isReceivingBackup)
+                        _BackupReceivingBanner(state: backupState),
+                      Expanded(
+                        child: SafeArea(
+                          top: !backupState.isReceivingBackup,
+                          child: FloatingNavInsets(
+                            overlayHeight: 0,
+                            child: widget.navigationShell,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -197,6 +211,70 @@ class _SyncOverlayFade extends StatelessWidget {
         total: sync.total > 0 ? sync.total : null,
         error: sync.error,
         onSkip: () => ref.read(gallerySyncProvider.notifier).dismissOverlay(),
+      ),
+    );
+  }
+}
+
+class _BackupReceivingBanner extends StatelessWidget {
+  const _BackupReceivingBanner({required this.state});
+
+  final DesktopBackupState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final detail = localizeBackupDetail(l10n, state.detail);
+    final subtitle = state.receivingCompletedCount > 0
+        ? l10n.backupReceivingFiles(state.receivingCompletedCount)
+        : l10n.backupNotificationInProgress;
+
+    return Material(
+      color: theme.colorScheme.primaryContainer,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.cloud_download_outlined,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      detail,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer
+                            .withValues(alpha: 0.85),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      backgroundColor: theme.colorScheme.onPrimaryContainer
+                          .withValues(alpha: 0.15),
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

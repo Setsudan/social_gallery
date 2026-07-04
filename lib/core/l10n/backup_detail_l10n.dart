@@ -55,6 +55,11 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
       detail.substring('Paired with '.length),
     );
   }
+  if (detail.startsWith('Receiving backup from ')) {
+    return l10n.backupReceivingFromDevice(
+      detail.substring('Receiving backup from '.length),
+    );
+  }
   if (detail.startsWith('Found ')) {
     return l10n.backupDetailFoundDesktop(detail.substring('Found '.length));
   }

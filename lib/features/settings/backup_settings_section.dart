@@ -432,6 +432,18 @@ class _BackupSettingsSectionState extends ConsumerState<BackupSettingsSection> {
             showChevron: false,
           ),
           if (prefs.desktopReceiveBackups) ...[
+            if (backupState.isReceivingBackup)
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.cloud,
+                title: l10n.backupNotificationInProgress,
+                subtitle: localizeBackupDetail(l10n, backupState.detail),
+                value: backupState.receivingCompletedCount > 0
+                    ? l10n.backupReceivingFiles(
+                        backupState.receivingCompletedCount,
+                      )
+                    : null,
+                showChevron: false,
+              ),
             if (backupState.phase == DesktopBackupPhase.indexing &&
                 backupState.isRunning)
               OneUiSettingsTile(

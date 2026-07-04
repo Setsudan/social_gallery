@@ -22,6 +22,8 @@ import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
+import 'package:social_gallery/core/platform/reveal_in_file_explorer.dart';
+
 import 'package:social_gallery/core/animation/app_motion.dart';
 
 import 'package:social_gallery/core/animation/modal_sheet.dart';
@@ -446,6 +448,30 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
 
 
+  Future<void> _findInFileExplorer() async {
+
+    final l10n = context.l10n;
+
+    final item = _loadedMedia ?? _currentItem;
+
+    final path = item.uri;
+
+    if (path.isEmpty) return;
+
+    final ok = await revealInFileExplorer(path);
+
+    if (!mounted || ok) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+
+      SnackBar(content: Text(l10n.postFindInFileExplorerFailed)),
+
+    );
+
+  }
+
+
+
   @override
 
   Widget build(BuildContext context) {
@@ -554,6 +580,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
                       _openFolder();
 
+                    case 'explorer':
+
+                      _findInFileExplorer();
+
                     case 'trash':
 
                       _moveToTrash();
@@ -579,6 +609,24 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     ),
 
                   ),
+
+                  if (usesFilesystemGallery)
+
+                    PopupMenuItem(
+
+                      value: 'explorer',
+
+                      child: ListTile(
+
+                        leading: const Icon(Icons.folder_open_outlined),
+
+                        title: Text(l10n.postFindInFileExplorer),
+
+                        contentPadding: EdgeInsets.zero,
+
+                      ),
+
+                    ),
 
                   PopupMenuItem(
 

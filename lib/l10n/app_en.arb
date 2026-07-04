@@ -372,6 +372,8 @@
   "tooltipShare": "Share",
   "tooltipFavorite": "Favorite",
   "postOpenFolder": "Open folder",
+  "postFindInFileExplorer": "Find in file explorer",
+  "postFindInFileExplorerFailed": "Could not open file location",
   "metadataTitle": "Details",
   "metadataFilename": "Filename",
   "metadataDimensions": "Dimensions",
@@ -1113,6 +1115,24 @@
   "backupDetailDesktopDisconnectedDuringBackup": "Desktop disconnected during backup",
   "backupDetailDesktopDoesNotUpload": "Desktop app does not upload to itself",
   "backupDetailNotPairedWithDesktop": "Not paired with a desktop",
+  "backupReceivingFromDevice": "Receiving backup from {deviceName}",
+  "@backupReceivingFromDevice": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupReceivingFiles": "{count, plural, =1{1 file received} other{{count} files received}}",
+  "@backupReceivingFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupCloseBlockedTitle": "Backup in progress",
+  "backupCloseBlockedMessage": "Your phone is still sending photos. Keep this app open until the backup finishes.",
   "vaultPasswordSetTitle": "Set vault backup password",
   "vaultPasswordSetDescription": "Locked albums are encrypted on your desktop as AES-256 protected archives. Choose a password you will use to browse them later.",
   "vaultPasswordEnterTitle": "Enter vault password",
