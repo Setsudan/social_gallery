@@ -6,6 +6,7 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
+import 'package:social_gallery/domain/models/explore_search_query.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/home/home_providers.dart';
 
@@ -238,9 +239,9 @@ final galleryPaginatedProvider = NotifierProvider.autoDispose<
 
 /// Paginated explore/search results; [arg] is the search query string.
 class ExplorePaginatedNotifier
-    extends AutoDisposeFamilyNotifier<PaginatedListState<MediaItem>, String> {
+    extends AutoDisposeFamilyNotifier<PaginatedListState<MediaItem>, ExploreSearchQuery> {
   @override
-  PaginatedListState<MediaItem> build(String query) {
+  PaginatedListState<MediaItem> build(ExploreSearchQuery query) {
     Future.microtask(() => loadMore(refresh: true));
     return const PaginatedListState();
   }
@@ -277,6 +278,6 @@ class ExplorePaginatedNotifier
 }
 
 final explorePaginatedProvider = NotifierProvider.autoDispose
-    .family<ExplorePaginatedNotifier, PaginatedListState<MediaItem>, String>(
+    .family<ExplorePaginatedNotifier, PaginatedListState<MediaItem>, ExploreSearchQuery>(
   ExplorePaginatedNotifier.new,
 );

@@ -13,6 +13,7 @@ class MediaAnalysisCache extends Table {
   BoolColumn get hasClosedEyes =>
       boolean().withDefault(const Constant(false))();
   TextColumn get labelsJson => text().nullable()();
+  TextColumn get dominantColor => text().nullable()();
   IntColumn get scannedAt => integer()();
 
   @override

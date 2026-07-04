@@ -679,7 +679,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchClearAll => 'Clear all';
 
   @override
-  String get searchHint => 'Search photos, videos, or albums';
+  String get searchHint => 'Search photos, videos, objects, or colors';
+
+  @override
+  String get searchObjectsAndAnimals => 'Objects and animals';
+
+  @override
+  String get searchFilterByColor => 'Filter by color';
+
+  @override
+  String searchIndexingProgress(int scanned, int total) {
+    return 'Indexing photos for search: $scanned / $total';
+  }
+
+  @override
+  String get exploreEmptyMessageIndexing =>
+      'Photos are still being indexed for search. Try again in a moment.';
+
+  @override
+  String get searchChipCat => 'Cat';
+
+  @override
+  String get searchChipDog => 'Dog';
+
+  @override
+  String get searchChipPerson => 'Person';
+
+  @override
+  String get searchChipFood => 'Food';
+
+  @override
+  String get searchChipCar => 'Car';
+
+  @override
+  String get searchChipFlower => 'Flower';
+
+  @override
+  String get searchChipBottle => 'Bottle';
+
+  @override
+  String get searchChipBird => 'Bird';
+
+  @override
+  String get searchChipBeach => 'Beach';
+
+  @override
+  String get searchChipMountain => 'Mountain';
+
+  @override
+  String get searchColorRed => 'Red';
+
+  @override
+  String get searchColorOrange => 'Orange';
+
+  @override
+  String get searchColorYellow => 'Yellow';
+
+  @override
+  String get searchColorGreen => 'Green';
+
+  @override
+  String get searchColorTeal => 'Teal';
+
+  @override
+  String get searchColorBlue => 'Blue';
+
+  @override
+  String get searchColorPurple => 'Purple';
+
+  @override
+  String get searchColorPink => 'Pink';
+
+  @override
+  String get searchColorBrown => 'Brown';
+
+  @override
+  String get searchColorBlack => 'Black';
+
+  @override
+  String get searchColorWhite => 'White';
+
+  @override
+  String get searchColorGray => 'Gray';
+
+  @override
+  String get deepOrganizeIndexForSearch => 'Index photos for search';
+
+  @override
+  String get deepOrganizeIndexingForSearch => 'Indexing for search...';
 
   @override
   String get tooltipClear => 'Clear';

@@ -110,6 +110,7 @@ class DuplicateScanController extends StateNotifier<DuplicateScanState> {
             faceCount: existing?.faceCount ?? 0,
             hasClosedEyes: existing?.hasClosedEyes ?? false,
             labels: existing?.labels ?? const [],
+            dominantColor: existing?.dominantColor,
             scannedAt: DateTime.now().millisecondsSinceEpoch,
           ),
         );

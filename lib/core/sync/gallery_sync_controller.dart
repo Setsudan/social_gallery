@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/analysis/media_tagging_controller.dart'
+    show mediaTaggingControllerProvider;
 import 'package:social_gallery/core/workers/trash_cleanup_worker.dart';
 import 'package:social_gallery/features/discover/discover_providers.dart'
     show invalidateAnalysisProvidersFromRef;
@@ -174,6 +176,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       invalidateAnalysisProvidersFromRef(_ref);
       invalidateLocationProvidersFromRef(_ref);
       _ref.read(locationIndexControllerProvider.notifier).scheduleAfterLibrarySync();
+      _ref.read(mediaTaggingControllerProvider.notifier).scheduleAfterLibrarySync();
       await _ref
           .read(preferencesRepositoryProvider)
           .setLastGallerySyncAt(DateTime.now());

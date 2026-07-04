@@ -1,29 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/analysis/media_tagging_controller.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
+import 'package:social_gallery/domain/models/explore_search_query.dart';
+import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/recent_search.dart';
 import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
+import 'package:social_gallery/features/explore/explore_search_helpers.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 
 class ExploreSearchOverlay extends ConsumerStatefulWidget {
-  const ExploreSearchOverlay({super.key, this.initialQuery = ''});
+  const ExploreSearchOverlay({super.key, this.initialQuery = const ExploreSearchQuery()});
 
-  final String initialQuery;
+  final ExploreSearchQuery initialQuery;
 
-  static Future<String?> show(
+  static Future<ExploreSearchQuery?> show(
     BuildContext context, {
-    String initialQuery = '',
+    ExploreSearchQuery initialQuery = const ExploreSearchQuery(),
   }) {
     final container = ProviderScope.containerOf(context);
     container.read(exploreSearchOverlayOpenProvider.notifier).state = true;
 
     return Navigator.of(context)
-        .push<String>(
+        .push<ExploreSearchQuery>(
           PageRouteBuilder(
             opaque: true,
             transitionDuration: const Duration(milliseconds: 350),
@@ -61,11 +64,15 @@ class ExploreSearchOverlay extends ConsumerStatefulWidget {
 class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
+  String? _selectedLabel;
+  String? _selectedColor;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialQuery);
+    _controller = TextEditingController(text: widget.initialQuery.text);
+    _selectedLabel = widget.initialQuery.label;
+    _selectedColor = widget.initialQuery.color;
     _focusNode = FocusNode();
     _controller.addListener(_onQueryChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -87,14 +94,46 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
 
   void _dismiss({required bool clearActiveSearch}) {
     AppHaptics.light();
-    Navigator.of(context).pop(clearActiveSearch ? '' : null);
+    Navigator.of(context).pop(
+      clearActiveSearch ? const ExploreSearchQuery() : null,
+    );
   }
 
-  void _submit(String query) {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) return;
+  ExploreSearchQuery _buildQuery() {
+    return ExploreSearchQuery(
+      text: _controller.text.trim(),
+      label: _selectedLabel,
+      color: _selectedColor,
+    );
+  }
+
+  void _submit([String? textOverride]) {
+    if (textOverride != null) {
+      _controller.text = textOverride;
+    }
+    final query = _buildQuery();
+    if (query.isEmpty) return;
     AppHaptics.light();
-    Navigator.of(context).pop(trimmed);
+    Navigator.of(context).pop(query);
+  }
+
+  void _submitLabel(String label) {
+    setState(() {
+      _selectedLabel = label;
+      _controller.clear();
+    });
+    AppHaptics.light();
+    Navigator.of(context).pop(
+      ExploreSearchQuery(label: label),
+    );
+  }
+
+  void _submitColor(String color) {
+    setState(() => _selectedColor = color);
+    AppHaptics.light();
+    Navigator.of(context).pop(
+      ExploreSearchQuery(color: color),
+    );
   }
 
   List<String> _folderSuggestions(AsyncValue<List<FolderInfo>> foldersAsync) {
@@ -115,6 +154,35 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
     return filtered.take(12).toList();
   }
 
+  String _localize(String key) {
+    final l10n = context.l10n;
+    return switch (key) {
+      'searchChipCat' => l10n.searchChipCat,
+      'searchChipDog' => l10n.searchChipDog,
+      'searchChipPerson' => l10n.searchChipPerson,
+      'searchChipFood' => l10n.searchChipFood,
+      'searchChipCar' => l10n.searchChipCar,
+      'searchChipFlower' => l10n.searchChipFlower,
+      'searchChipBottle' => l10n.searchChipBottle,
+      'searchChipBird' => l10n.searchChipBird,
+      'searchChipBeach' => l10n.searchChipBeach,
+      'searchChipMountain' => l10n.searchChipMountain,
+      'searchColorRed' => l10n.searchColorRed,
+      'searchColorOrange' => l10n.searchColorOrange,
+      'searchColorYellow' => l10n.searchColorYellow,
+      'searchColorGreen' => l10n.searchColorGreen,
+      'searchColorTeal' => l10n.searchColorTeal,
+      'searchColorBlue' => l10n.searchColorBlue,
+      'searchColorPurple' => l10n.searchColorPurple,
+      'searchColorPink' => l10n.searchColorPink,
+      'searchColorBrown' => l10n.searchColorBrown,
+      'searchColorBlack' => l10n.searchColorBlack,
+      'searchColorWhite' => l10n.searchColorWhite,
+      'searchColorGray' => l10n.searchColorGray,
+      _ => key,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -125,6 +193,7 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
     final folderSuggestions = _folderSuggestions(foldersAsync);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final tagging = ref.watch(mediaTaggingControllerProvider);
 
     return PopScope(
       canPop: false,
@@ -152,6 +221,78 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
                 OneUiSpacing.lg,
               ),
               children: [
+                if (tagging.isScanning) ...[
+                  LinearProgressIndicator(value: tagging.progress),
+                  const SizedBox(height: OneUiSpacing.sm),
+                  Text(
+                    l10n.searchIndexingProgress(tagging.scanned, tagging.total),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: OneUiSpacing.lg),
+                ],
+                Text(
+                  l10n.searchObjectsAndAnimals,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: OneUiSpacing.md),
+                Wrap(
+                  spacing: OneUiSpacing.sm,
+                  runSpacing: OneUiSpacing.sm,
+                  children: kExploreLabelChips.entries.map((entry) {
+                    final label = entry.value;
+                    return ActionChip(
+                      label: Text(_localize(entry.key)),
+                      onPressed: () => _submitLabel(label),
+                      backgroundColor: colorScheme.surfaceContainer,
+                      side: BorderSide.none,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(OneUiRadii.chip),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: OneUiSpacing.xl),
+                Text(
+                  l10n.searchFilterByColor,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: OneUiSpacing.md),
+                Wrap(
+                  spacing: OneUiSpacing.sm,
+                  runSpacing: OneUiSpacing.sm,
+                  children: searchableColorBuckets.map((colorId) {
+                    final swatch = kColorBucketColors[colorId]!;
+                    final selected = _selectedColor == colorId;
+                    return Tooltip(
+                      message: _localize(exploreSearchColorKey(colorId)),
+                      child: InkWell(
+                        onTap: () => _submitColor(colorId),
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: swatch,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selected
+                                  ? colorScheme.primary
+                                  : colorScheme.outline.withValues(alpha: 0.4),
+                              width: selected ? 2.5 : 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: OneUiSpacing.xl),
                 Text(
                   l10n.searchAlbumsAndFolders,
                   style: theme.textTheme.titleMedium?.copyWith(

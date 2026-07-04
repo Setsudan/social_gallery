@@ -85,3 +85,87 @@ bool computeIsSolidColor(Uint8List bytes) {
   }
   return same / total > 0.95;
 }
+
+/// Named color buckets used for search filters.
+const kColorBuckets = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'teal',
+  'blue',
+  'purple',
+  'pink',
+  'brown',
+  'black',
+  'white',
+  'gray',
+];
+
+/// Maps average thumbnail RGB to a [kColorBuckets] id, or null if undecodable.
+String? computeDominantColor(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return null;
+
+  final sample = img.copyResize(decoded, width: 32, height: 32);
+  var rSum = 0.0;
+  var gSum = 0.0;
+  var bSum = 0.0;
+  final count = sample.width * sample.height;
+
+  for (var y = 0; y < sample.height; y++) {
+    for (var x = 0; x < sample.width; x++) {
+      final p = sample.getPixel(x, y);
+      rSum += p.r;
+      gSum += p.g;
+      bSum += p.b;
+    }
+  }
+
+  return rgbToColorBucket(
+    (rSum / count).round(),
+    (gSum / count).round(),
+    (bSum / count).round(),
+  );
+}
+
+/// Pure helper for unit tests and [computeDominantColor].
+String rgbToColorBucket(int r, int g, int b) {
+  final maxC = [r, g, b].reduce((a, c) => a > c ? a : c);
+  final minC = [r, g, b].reduce((a, c) => a < c ? a : c);
+  final delta = maxC - minC;
+
+  final lightness = maxC / 255.0;
+  if (lightness < 0.15) return 'black';
+  if (lightness > 0.92 && delta < 30) return 'white';
+  if (delta < 25) return 'gray';
+
+  final saturation = maxC == 0 ? 0.0 : delta / maxC;
+  if (saturation < 0.12) {
+    if (lightness < 0.35) return 'black';
+    if (lightness > 0.85) return 'white';
+    return 'gray';
+  }
+
+  var hue = 0.0;
+  if (delta > 0) {
+    if (maxC == r) {
+      hue = 60 * (((g - b) / delta) % 6);
+    } else if (maxC == g) {
+      hue = 60 * (((b - r) / delta) + 2);
+    } else {
+      hue = 60 * (((r - g) / delta) + 4);
+    }
+  }
+  if (hue < 0) hue += 360;
+
+  if (hue < 15 || hue >= 345) return 'red';
+  if (hue < 40) return r > g * 1.2 ? 'orange' : 'brown';
+  if (hue < 65) return 'yellow';
+  if (hue < 150) return 'green';
+  if (hue < 185) return 'teal';
+  if (hue < 250) return 'blue';
+  if (hue < 290) return 'purple';
+  if (hue < 330) return 'pink';
+  return 'red';
+}

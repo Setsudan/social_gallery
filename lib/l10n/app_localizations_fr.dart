@@ -690,7 +690,95 @@ class AppLocalizationsFr extends AppLocalizations {
   String get searchClearAll => 'Tout effacer';
 
   @override
-  String get searchHint => 'Rechercher photos, videos ou albums';
+  String get searchHint => 'Rechercher photos, videos, objets ou couleurs';
+
+  @override
+  String get searchObjectsAndAnimals => 'Objets et animaux';
+
+  @override
+  String get searchFilterByColor => 'Filtrer par couleur';
+
+  @override
+  String searchIndexingProgress(int scanned, int total) {
+    return 'Indexation pour la recherche : $scanned / $total';
+  }
+
+  @override
+  String get exploreEmptyMessageIndexing =>
+      'Les photos sont encore indexees pour la recherche. Reessayez dans un instant.';
+
+  @override
+  String get searchChipCat => 'Chat';
+
+  @override
+  String get searchChipDog => 'Chien';
+
+  @override
+  String get searchChipPerson => 'Personne';
+
+  @override
+  String get searchChipFood => 'Nourriture';
+
+  @override
+  String get searchChipCar => 'Voiture';
+
+  @override
+  String get searchChipFlower => 'Fleur';
+
+  @override
+  String get searchChipBottle => 'Bouteille';
+
+  @override
+  String get searchChipBird => 'Oiseau';
+
+  @override
+  String get searchChipBeach => 'Plage';
+
+  @override
+  String get searchChipMountain => 'Montagne';
+
+  @override
+  String get searchColorRed => 'Rouge';
+
+  @override
+  String get searchColorOrange => 'Orange';
+
+  @override
+  String get searchColorYellow => 'Jaune';
+
+  @override
+  String get searchColorGreen => 'Vert';
+
+  @override
+  String get searchColorTeal => 'Bleu-vert';
+
+  @override
+  String get searchColorBlue => 'Bleu';
+
+  @override
+  String get searchColorPurple => 'Violet';
+
+  @override
+  String get searchColorPink => 'Rose';
+
+  @override
+  String get searchColorBrown => 'Marron';
+
+  @override
+  String get searchColorBlack => 'Noir';
+
+  @override
+  String get searchColorWhite => 'Blanc';
+
+  @override
+  String get searchColorGray => 'Gris';
+
+  @override
+  String get deepOrganizeIndexForSearch =>
+      'Indexer les photos pour la recherche';
+
+  @override
+  String get deepOrganizeIndexingForSearch => 'Indexation pour la recherche...';
 
   @override
   String get tooltipClear => 'Effacer';

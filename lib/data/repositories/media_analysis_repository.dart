@@ -48,6 +48,7 @@ class MediaAnalysisRepository {
       faceCount: row.faceCount,
       hasClosedEyes: row.hasClosedEyes,
       labels: labels,
+      dominantColor: row.dominantColor,
       scannedAt: row.scannedAt,
     );
   }
@@ -64,6 +65,7 @@ class MediaAnalysisRepository {
       labelsJson: Value(
         result.labels.isEmpty ? null : jsonEncode(result.labels),
       ),
+      dominantColor: Value(result.dominantColor),
       scannedAt: Value(result.scannedAt),
     );
   }

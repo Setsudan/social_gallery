@@ -1,7 +1,7 @@
 name: social_gallery
 description: Local-first social-style photo gallery.
 publish_to: 'none'
-version: 0.0.10+1
+version: 0.0.11+1
 
 environment:
   sdk: ^3.11.5
@@ -54,6 +54,7 @@ dependencies:
   app_links: ^6.4.0
   mobile_scanner: ^7.0.0
   window_manager: ^0.4.3
+  flutter_litert: ^3.2.1
 
 dev_dependencies:
   flutter_test:
@@ -66,3 +67,6 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
+  assets:
+    - assets/ml/mobilenet_v2_1.0_224_quant.tflite
+    - assets/ml/imagenet_labels.txt

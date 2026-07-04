@@ -11,6 +11,8 @@ import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/gallery_grouping_period.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/features/explore/explore_active_search_bar.dart';
+import 'package:social_gallery/domain/models/explore_search_query.dart';
+import 'package:social_gallery/features/explore/explore_search_helpers.dart';
 import 'package:social_gallery/features/explore/explore_search_overlay.dart';
 import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
 import 'package:social_gallery/core/auth/folder_access.dart';
@@ -47,7 +49,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   final Set<int> _selectedIds = {};
   final Map<int, GlobalKey> _tileKeys = {};
-  String _searchQuery = '';
+  ExploreSearchQuery _searchQuery = const ExploreSearchQuery();
   List<FolderInfo> _folderSuggestions = [];
   int? _activeDragPointer;
   Offset? _dragStartPosition;
@@ -55,7 +57,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   bool? _dragSelectAdding;
   final Set<int> _dragVisitedIds = {};
   bool get _inSelectionMode => _selectedIds.isNotEmpty;
-  bool get _isSearching => _searchQuery.isNotEmpty;
+  bool get _isSearching => !_searchQuery.isEmpty;
 
   PaginatedListState<MediaItem> get _paginated => _isSearching
       ? ref.watch(explorePaginatedProvider(_searchQuery))
@@ -250,39 +252,77 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     await _applySearch(query);
   }
 
-  Future<void> _applySearch(String query) async {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) {
+  Future<void> _applySearch(ExploreSearchQuery query) async {
+    if (query.isEmpty) {
       _resetSearch();
       return;
     }
 
-    final folders =
-        await ref.read(folderRepositoryProvider).searchFolders(trimmed);
+    final folderQuery = query.text.trim().isNotEmpty
+        ? query.text.trim()
+        : (query.label ?? '');
+    final folders = folderQuery.isEmpty
+        ? <FolderInfo>[]
+        : await ref.read(folderRepositoryProvider).searchFolders(folderQuery);
     if (!mounted) return;
 
     setState(() {
-      _searchQuery = trimmed;
+      _searchQuery = query;
       _folderSuggestions = folders;
     });
 
     await ref
-        .read(explorePaginatedProvider(trimmed).notifier)
+        .read(explorePaginatedProvider(query).notifier)
         .loadMore(refresh: true);
     if (!mounted) return;
 
-    final items = ref.read(explorePaginatedProvider(trimmed)).items;
+    final items = ref.read(explorePaginatedProvider(query)).items;
     final thumbnailUri = items.isNotEmpty ? items.first.uri : null;
-    await ref.read(recentSearchesProvider.notifier).add(
-          trimmed,
-          thumbnailUri: thumbnailUri,
-        );
+    final recentLabel = exploreSearchSummary(
+      query: query,
+      localize: (key) => _localizeSearchKey(key),
+    );
+    if (recentLabel.isNotEmpty) {
+      await ref.read(recentSearchesProvider.notifier).add(
+            recentLabel,
+            thumbnailUri: thumbnailUri,
+          );
+    }
+  }
+
+  String _localizeSearchKey(String key) {
+    final l10n = context.l10n;
+    return switch (key) {
+      'searchChipCat' => l10n.searchChipCat,
+      'searchChipDog' => l10n.searchChipDog,
+      'searchChipPerson' => l10n.searchChipPerson,
+      'searchChipFood' => l10n.searchChipFood,
+      'searchChipCar' => l10n.searchChipCar,
+      'searchChipFlower' => l10n.searchChipFlower,
+      'searchChipBottle' => l10n.searchChipBottle,
+      'searchChipBird' => l10n.searchChipBird,
+      'searchChipBeach' => l10n.searchChipBeach,
+      'searchChipMountain' => l10n.searchChipMountain,
+      'searchColorRed' => l10n.searchColorRed,
+      'searchColorOrange' => l10n.searchColorOrange,
+      'searchColorYellow' => l10n.searchColorYellow,
+      'searchColorGreen' => l10n.searchColorGreen,
+      'searchColorTeal' => l10n.searchColorTeal,
+      'searchColorBlue' => l10n.searchColorBlue,
+      'searchColorPurple' => l10n.searchColorPurple,
+      'searchColorPink' => l10n.searchColorPink,
+      'searchColorBrown' => l10n.searchColorBrown,
+      'searchColorBlack' => l10n.searchColorBlack,
+      'searchColorWhite' => l10n.searchColorWhite,
+      'searchColorGray' => l10n.searchColorGray,
+      _ => key,
+    };
   }
 
   void _resetSearch() {
     if (_searchQuery.isEmpty && _folderSuggestions.isEmpty) return;
     setState(() {
-      _searchQuery = '';
+      _searchQuery = const ExploreSearchQuery();
       _folderSuggestions = [];
     });
   }
@@ -418,6 +458,12 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                     onBack: _handleSearchBack,
                     onClear: _handleSearchBack,
                     onTapQuery: _openSearch,
+                    onRemoveLabel: () => _applySearch(
+                      _searchQuery.copyWith(clearLabel: true),
+                    ),
+                    onRemoveColor: () => _applySearch(
+                      _searchQuery.copyWith(clearColor: true),
+                    ),
                   ),
                 if (!inSelectionMode && _folderSuggestions.isNotEmpty)
                   SizedBox(

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/analysis/desktop_image_labeler.dart';
 import 'package:social_gallery/core/analysis/image_metrics.dart';
 import 'package:social_gallery/core/media/filesystem_image_loader.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
@@ -24,10 +25,23 @@ class MediaAnalysisProgress {
   double get fraction => total == 0 ? 0 : scanned / total;
 }
 
+typedef MediaAnalysisNeedsScan = bool Function(
+  int mediaId,
+  MediaAnalysisResult? cached,
+);
+
 class MediaAnalysisService {
   bool get mlAvailable =>
       !kIsWeb &&
       (Platform.isAndroid || Platform.isIOS);
+
+  bool get desktopLabelingAvailable =>
+      !kIsWeb && usesFilesystemGallery && DesktopImageLabeler.instance.isAvailable;
+
+  static bool needsTaggingScan(int mediaId, MediaAnalysisResult? cached) {
+    if (cached == null) return true;
+    return !cached.isFullyTaggedForSearch;
+  }
 
   Future<MediaAnalysisResult?> analyzeItem(
     MediaItem item, {
@@ -44,6 +58,7 @@ class MediaAnalysisService {
     final blurScore = computeBlurScore(bytes);
     final exposureScore = computeExposureScore(bytes);
     final isSolidColor = computeIsSolidColor(bytes);
+    final dominantColor = computeDominantColor(bytes);
 
     var faceCount = 0;
     var hasClosedEyes = false;
@@ -54,6 +69,9 @@ class MediaAnalysisService {
       faceCount = ml.faceCount;
       hasClosedEyes = ml.hasClosedEyes;
       labels.addAll(ml.labels);
+    } else if (desktopLabelingAvailable) {
+      final desktopLabels = await DesktopImageLabeler.instance.labelImage(bytes);
+      labels.addAll(desktopLabels);
     }
 
     return MediaAnalysisResult(
@@ -64,7 +82,8 @@ class MediaAnalysisService {
       isSolidColor: isSolidColor,
       faceCount: faceCount,
       hasClosedEyes: hasClosedEyes,
-      labels: labels,
+      labels: mergeNormalizedLabels(labels),
+      dominantColor: dominantColor,
       scannedAt: DateTime.now().millisecondsSinceEpoch,
     );
   }
@@ -119,15 +138,18 @@ class MediaAnalysisService {
 
   Stream<MediaAnalysisProgress> scanLibrary({
     required List<MediaItem> items,
-    required Set<int> alreadyScanned,
+    Map<int, MediaAnalysisResult>? cachedById,
+    MediaAnalysisNeedsScan? needsScan,
     void Function(MediaAnalysisResult result)? onResult,
   }) async* {
     final images = items.where((i) => !i.isVideo).toList();
     final total = images.length;
     var scanned = 0;
+    final shouldScan = needsScan ?? (_, cached) => cached == null;
 
     for (final item in images) {
-      if (alreadyScanned.contains(item.id)) {
+      final cached = cachedById?[item.id];
+      if (!shouldScan(item.id, cached)) {
         scanned++;
         yield MediaAnalysisProgress(
           scanned: scanned,
@@ -183,11 +205,14 @@ class MediaAnalysisService {
       final inputImage = InputImage.fromFilePath(tempFile.path);
 
       final labeler = ImageLabeler(
-        options: ImageLabelerOptions(confidenceThreshold: 0.6),
+        options: ImageLabelerOptions(confidenceThreshold: 0.55),
       );
       final labelResults = await labeler.processImage(inputImage);
       labels.addAll(
-        labelResults.take(3).map((e) => e.label),
+        labelResults
+            .take(8)
+            .map((e) => normalizeLabel(e.label))
+            .where((label) => label.isNotEmpty),
       );
       await labeler.close();
 

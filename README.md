@@ -2,7 +2,7 @@
 
 A local-first, social-style photo gallery for Android and iOS. Browse your device library through a feed, stories, and albums — all indexed and stored on-device. No cloud account required.
 
-**Version:** 0.0.10+1
+**Version:** 0.0.11+1
 
 ## Highlights
 
@@ -43,7 +43,9 @@ Settings opens from the menu button in the bottom nav (or sidebar on wide screen
 ### Explore and search
 
 - Full-screen search with **recent searches**
-- Search matches folder names and media metadata
+- Search matches folder names, media metadata, **detected objects/animals**, and **dominant color**
+- Object chips (cat, dog, bottle, etc.) and color filters for quick discovery
+- Background indexing tags photos automatically after library sync
 - Folder suggestions above results; tap to open folder profile
 - Grid or mosaic layout (mosaic on desktop / Windows)
 - Multi-select: move, trash, favorite, create album and move

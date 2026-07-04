@@ -30,7 +30,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -54,6 +54,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.createTable(locationPlaceCache);
+      }
+      if (from < 6) {
+        await m.addColumn(mediaAnalysisCache, mediaAnalysisCache.dominantColor);
       }
     },
   );
@@ -175,8 +178,82 @@ class AppDatabase extends _$AppDatabase {
     String query, {
     required int limit,
     required int offset,
+  }) {
+    return searchExploreMediaFiltered(
+      text: query,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  Future<List<MediaRow>> searchExploreMediaFiltered({
+    String text = '',
+    String? label,
+    String? color,
+    required int limit,
+    required int offset,
   }) async {
-    final pattern = '%${query.toLowerCase()}%';
+    final trimmedText = text.trim().toLowerCase();
+    final trimmedLabel = label?.trim().toLowerCase();
+    final trimmedColor = color?.trim().toLowerCase();
+
+    final textPattern = '%$trimmedText%';
+    final labelPattern = trimmedLabel == null || trimmedLabel.isEmpty
+        ? null
+        : '%$trimmedLabel%';
+    final hasText = trimmedText.isNotEmpty;
+    final hasLabel = labelPattern != null;
+    final hasColor = trimmedColor != null && trimmedColor.isNotEmpty;
+
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      LEFT JOIN media_analysis_cache a ON a.media_id = m.id
+      WHERE f.follow_status != 'UNFOLLOWED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+        AND (
+          ? = 0
+          OR LOWER(m.display_name) LIKE ?
+          OR LOWER(m.folder_name) LIKE ?
+          OR LOWER(f.name) LIKE ?
+          OR LOWER(m.folder_path) LIKE ?
+          OR LOWER(m.mime_type) LIKE ?
+          OR LOWER(a.labels_json) LIKE ?
+        )
+        AND (
+          ? = 0
+          OR LOWER(a.labels_json) LIKE ?
+        )
+        AND (
+          ? = 0
+          OR a.dominant_color = ?
+        )
+      ORDER BY m.date_modified DESC
+      LIMIT ? OFFSET ?
+      ''',
+      variables: [
+        Variable.withInt(hasText ? 1 : 0),
+        Variable.withString(textPattern),
+        Variable.withString(textPattern),
+        Variable.withString(textPattern),
+        Variable.withString(textPattern),
+        Variable.withString(textPattern),
+        Variable.withString(textPattern),
+        Variable.withInt(hasLabel ? 1 : 0),
+        Variable.withString(labelPattern ?? ''),
+        Variable.withInt(hasColor ? 1 : 0),
+        Variable.withString(trimmedColor ?? ''),
+        Variable.withInt(limit),
+        Variable.withInt(offset),
+      ],
+      readsFrom: {mediaItems, folders, mediaAnalysisCache},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<List<MediaRow>> getAllSearchableMedia() async {
     final rows = await customSelect(
       '''
       SELECT m.* FROM media_items m
@@ -184,25 +261,8 @@ class AppDatabase extends _$AppDatabase {
       WHERE f.follow_status != 'UNFOLLOWED'
         AND f.is_biometric_locked = 0
         AND m.is_trashed = 0
-        AND (
-          LOWER(m.display_name) LIKE ?
-          OR LOWER(m.folder_name) LIKE ?
-          OR LOWER(f.name) LIKE ?
-          OR LOWER(m.folder_path) LIKE ?
-          OR LOWER(m.mime_type) LIKE ?
-        )
       ORDER BY m.date_modified DESC
-      LIMIT ? OFFSET ?
       ''',
-      variables: [
-        Variable.withString(pattern),
-        Variable.withString(pattern),
-        Variable.withString(pattern),
-        Variable.withString(pattern),
-        Variable.withString(pattern),
-        Variable.withInt(limit),
-        Variable.withInt(offset),
-      ],
       readsFrom: {mediaItems, folders},
     ).get();
     return rows.map(_mediaFromQuery).toList();

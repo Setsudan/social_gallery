@@ -176,11 +176,11 @@ class MediaAnalysisController extends StateNotifier<MediaAnalysisScanState> {
 
       final items = await mediaRepo.getAllHomeFeedMedia();
       final cached = await analysisRepo.getAllCached();
-      final scannedIds = cached.keys.toSet();
 
       await for (final progress in service.scanLibrary(
         items: items,
-        alreadyScanned: scannedIds,
+        cachedById: cached,
+        needsScan: MediaAnalysisService.needsTaggingScan,
         onResult: (result) async {
           await analysisRepo.saveResult(result);
         },

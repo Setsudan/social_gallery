@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/app/router.dart';
+import 'package:social_gallery/core/analysis/media_tagging_controller.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/domain/models/explore_search_query.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/explore/explore_active_search_bar.dart';
 import 'package:social_gallery/features/explore/explore_recent_searches_provider.dart';
+import 'package:social_gallery/features/explore/explore_search_helpers.dart';
 import 'package:social_gallery/features/explore/explore_search_overlay.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
@@ -34,10 +37,10 @@ class ExploreScreen extends ConsumerStatefulWidget {
 class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final _scrollController = ScrollController();
   List<FolderInfo> _folderSuggestions = [];
-  String _searchQuery = '';
+  ExploreSearchQuery _searchQuery = const ExploreSearchQuery();
   final Set<int> _selectedIds = {};
 
-  bool get _isSearching => _searchQuery.isNotEmpty;
+  bool get _isSearching => !_searchQuery.isEmpty;
 
   void _handleSearchBack() {
     AppHaptics.light();
@@ -124,7 +127,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       return;
     }
     setState(() {
-      _searchQuery = '';
+      _searchQuery = const ExploreSearchQuery();
       _folderSuggestions = [];
     });
   }
@@ -144,33 +147,71 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     await _applySearch(query);
   }
 
-  Future<void> _applySearch(String query) async {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) {
+  Future<void> _applySearch(ExploreSearchQuery query) async {
+    if (query.isEmpty) {
       _resetSearch();
       return;
     }
 
-    final folders =
-        await ref.read(folderRepositoryProvider).searchFolders(trimmed);
+    final folderQuery = query.text.trim().isNotEmpty
+        ? query.text.trim()
+        : (query.label ?? '');
+    final folders = folderQuery.isEmpty
+        ? <FolderInfo>[]
+        : await ref.read(folderRepositoryProvider).searchFolders(folderQuery);
     if (!mounted) return;
 
     setState(() {
-      _searchQuery = trimmed;
+      _searchQuery = query;
       _folderSuggestions = folders;
     });
 
     await ref
-        .read(explorePaginatedProvider(trimmed).notifier)
+        .read(explorePaginatedProvider(query).notifier)
         .loadMore(refresh: true);
     if (!mounted) return;
 
-    final items = ref.read(explorePaginatedProvider(trimmed)).items;
+    final items = ref.read(explorePaginatedProvider(query)).items;
     final thumbnailUri = items.isNotEmpty ? items.first.uri : null;
-    await ref.read(recentSearchesProvider.notifier).add(
-          trimmed,
-          thumbnailUri: thumbnailUri,
-        );
+    final recentLabel = exploreSearchSummary(
+      query: query,
+      localize: (key) => _localizeSearchKey(key),
+    );
+    if (recentLabel.isNotEmpty) {
+      await ref.read(recentSearchesProvider.notifier).add(
+            recentLabel,
+            thumbnailUri: thumbnailUri,
+          );
+    }
+  }
+
+  String _localizeSearchKey(String key) {
+    final l10n = context.l10n;
+    return switch (key) {
+      'searchChipCat' => l10n.searchChipCat,
+      'searchChipDog' => l10n.searchChipDog,
+      'searchChipPerson' => l10n.searchChipPerson,
+      'searchChipFood' => l10n.searchChipFood,
+      'searchChipCar' => l10n.searchChipCar,
+      'searchChipFlower' => l10n.searchChipFlower,
+      'searchChipBottle' => l10n.searchChipBottle,
+      'searchChipBird' => l10n.searchChipBird,
+      'searchChipBeach' => l10n.searchChipBeach,
+      'searchChipMountain' => l10n.searchChipMountain,
+      'searchColorRed' => l10n.searchColorRed,
+      'searchColorOrange' => l10n.searchColorOrange,
+      'searchColorYellow' => l10n.searchColorYellow,
+      'searchColorGreen' => l10n.searchColorGreen,
+      'searchColorTeal' => l10n.searchColorTeal,
+      'searchColorBlue' => l10n.searchColorBlue,
+      'searchColorPurple' => l10n.searchColorPurple,
+      'searchColorPink' => l10n.searchColorPink,
+      'searchColorBrown' => l10n.searchColorBrown,
+      'searchColorBlack' => l10n.searchColorBlack,
+      'searchColorWhite' => l10n.searchColorWhite,
+      'searchColorGray' => l10n.searchColorGray,
+      _ => key,
+    };
   }
 
   Future<void> _openFolderProfile(FolderInfo folder) async {
@@ -180,7 +221,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     _resetSearch();
     await context.push(folderProfileLocation(folder.path));
     if (!mounted) return;
-    await ref.read(explorePaginatedProvider('').notifier).loadMore(refresh: true);
+    await ref
+        .read(explorePaginatedProvider(const ExploreSearchQuery()).notifier)
+        .loadMore(refresh: true);
   }
 
   @override
@@ -194,6 +237,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final inSelectionMode = _selectedIds.isNotEmpty;
+    final tagging = ref.watch(mediaTaggingControllerProvider);
     final motion = AppMotion.of(context, ref);
     listenForTabScrollToTop(
       ref,
@@ -254,6 +298,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   onBack: _handleSearchBack,
                   onClear: _handleSearchBack,
                   onTapQuery: _openSearchOverlay,
+                  onRemoveLabel: () => _applySearch(
+                    _searchQuery.copyWith(clearLabel: true),
+                  ),
+                  onRemoveColor: () => _applySearch(
+                    _searchQuery.copyWith(clearColor: true),
+                  ),
+                ),
+              if (!inSelectionMode && tagging.isScanning)
+                MaterialBanner(
+                  content: Text(
+                    l10n.searchIndexingProgress(tagging.scanned, tagging.total),
+                  ),
+                  leading: const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  actions: const [SizedBox.shrink()],
                 ),
               if (!inSelectionMode && _folderSuggestions.isNotEmpty)
                 SizedBox(
@@ -312,6 +374,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   Widget _buildGrid() {
     final l10n = context.l10n;
+    final tagging = ref.watch(mediaTaggingControllerProvider);
     if (_paginated.isLoading && _items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -323,10 +386,13 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       );
     }
     if (_items.isEmpty) {
+      final indexing = tagging.isScanning && _searchQuery.hasContentFilters;
       return EmptyState(
         title: l10n.exploreEmptyTitle,
         message: _isSearching
-            ? l10n.exploreEmptyMessageSearch
+            ? (indexing
+                ? l10n.exploreEmptyMessageIndexing
+                : l10n.exploreEmptyMessageSearch)
             : l10n.exploreEmptyMessageNoSearch,
       );
     }

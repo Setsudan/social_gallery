@@ -1301,8 +1301,176 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search photos, videos, or albums'**
+  /// **'Search photos, videos, objects, or colors'**
   String get searchHint;
+
+  /// No description provided for @searchObjectsAndAnimals.
+  ///
+  /// In en, this message translates to:
+  /// **'Objects and animals'**
+  String get searchObjectsAndAnimals;
+
+  /// No description provided for @searchFilterByColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by color'**
+  String get searchFilterByColor;
+
+  /// No description provided for @searchIndexingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexing photos for search: {scanned} / {total}'**
+  String searchIndexingProgress(int scanned, int total);
+
+  /// No description provided for @exploreEmptyMessageIndexing.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos are still being indexed for search. Try again in a moment.'**
+  String get exploreEmptyMessageIndexing;
+
+  /// No description provided for @searchChipCat.
+  ///
+  /// In en, this message translates to:
+  /// **'Cat'**
+  String get searchChipCat;
+
+  /// No description provided for @searchChipDog.
+  ///
+  /// In en, this message translates to:
+  /// **'Dog'**
+  String get searchChipDog;
+
+  /// No description provided for @searchChipPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get searchChipPerson;
+
+  /// No description provided for @searchChipFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get searchChipFood;
+
+  /// No description provided for @searchChipCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Car'**
+  String get searchChipCar;
+
+  /// No description provided for @searchChipFlower.
+  ///
+  /// In en, this message translates to:
+  /// **'Flower'**
+  String get searchChipFlower;
+
+  /// No description provided for @searchChipBottle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottle'**
+  String get searchChipBottle;
+
+  /// No description provided for @searchChipBird.
+  ///
+  /// In en, this message translates to:
+  /// **'Bird'**
+  String get searchChipBird;
+
+  /// No description provided for @searchChipBeach.
+  ///
+  /// In en, this message translates to:
+  /// **'Beach'**
+  String get searchChipBeach;
+
+  /// No description provided for @searchChipMountain.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountain'**
+  String get searchChipMountain;
+
+  /// No description provided for @searchColorRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get searchColorRed;
+
+  /// No description provided for @searchColorOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get searchColorOrange;
+
+  /// No description provided for @searchColorYellow.
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow'**
+  String get searchColorYellow;
+
+  /// No description provided for @searchColorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get searchColorGreen;
+
+  /// No description provided for @searchColorTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get searchColorTeal;
+
+  /// No description provided for @searchColorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get searchColorBlue;
+
+  /// No description provided for @searchColorPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get searchColorPurple;
+
+  /// No description provided for @searchColorPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get searchColorPink;
+
+  /// No description provided for @searchColorBrown.
+  ///
+  /// In en, this message translates to:
+  /// **'Brown'**
+  String get searchColorBrown;
+
+  /// No description provided for @searchColorBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get searchColorBlack;
+
+  /// No description provided for @searchColorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get searchColorWhite;
+
+  /// No description provided for @searchColorGray.
+  ///
+  /// In en, this message translates to:
+  /// **'Gray'**
+  String get searchColorGray;
+
+  /// No description provided for @deepOrganizeIndexForSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Index photos for search'**
+  String get deepOrganizeIndexForSearch;
+
+  /// No description provided for @deepOrganizeIndexingForSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexing for search...'**
+  String get deepOrganizeIndexingForSearch;
 
   /// No description provided for @tooltipClear.
   ///

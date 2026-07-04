@@ -3097,6 +3097,17 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _dominantColorMeta = const VerificationMeta(
+    'dominantColor',
+  );
+  @override
+  late final GeneratedColumn<String> dominantColor = GeneratedColumn<String>(
+    'dominant_color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _scannedAtMeta = const VerificationMeta(
     'scannedAt',
   );
@@ -3118,6 +3129,7 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
     faceCount,
     hasClosedEyes,
     labelsJson,
+    dominantColor,
     scannedAt,
   ];
   @override
@@ -3189,6 +3201,15 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
         labelsJson.isAcceptableOrUnknown(data['labels_json']!, _labelsJsonMeta),
       );
     }
+    if (data.containsKey('dominant_color')) {
+      context.handle(
+        _dominantColorMeta,
+        dominantColor.isAcceptableOrUnknown(
+          data['dominant_color']!,
+          _dominantColorMeta,
+        ),
+      );
+    }
     if (data.containsKey('scanned_at')) {
       context.handle(
         _scannedAtMeta,
@@ -3238,6 +3259,10 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
         DriftSqlType.string,
         data['${effectivePrefix}labels_json'],
       ),
+      dominantColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dominant_color'],
+      ),
       scannedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}scanned_at'],
@@ -3261,6 +3286,7 @@ class MediaAnalysisRow extends DataClass
   final int faceCount;
   final bool hasClosedEyes;
   final String? labelsJson;
+  final String? dominantColor;
   final int scannedAt;
   const MediaAnalysisRow({
     required this.mediaId,
@@ -3271,6 +3297,7 @@ class MediaAnalysisRow extends DataClass
     required this.faceCount,
     required this.hasClosedEyes,
     this.labelsJson,
+    this.dominantColor,
     required this.scannedAt,
   });
   @override
@@ -3291,6 +3318,9 @@ class MediaAnalysisRow extends DataClass
     map['has_closed_eyes'] = Variable<bool>(hasClosedEyes);
     if (!nullToAbsent || labelsJson != null) {
       map['labels_json'] = Variable<String>(labelsJson);
+    }
+    if (!nullToAbsent || dominantColor != null) {
+      map['dominant_color'] = Variable<String>(dominantColor);
     }
     map['scanned_at'] = Variable<int>(scannedAt);
     return map;
@@ -3314,6 +3344,9 @@ class MediaAnalysisRow extends DataClass
       labelsJson: labelsJson == null && nullToAbsent
           ? const Value.absent()
           : Value(labelsJson),
+      dominantColor: dominantColor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dominantColor),
       scannedAt: Value(scannedAt),
     );
   }
@@ -3332,6 +3365,7 @@ class MediaAnalysisRow extends DataClass
       faceCount: serializer.fromJson<int>(json['faceCount']),
       hasClosedEyes: serializer.fromJson<bool>(json['hasClosedEyes']),
       labelsJson: serializer.fromJson<String?>(json['labelsJson']),
+      dominantColor: serializer.fromJson<String?>(json['dominantColor']),
       scannedAt: serializer.fromJson<int>(json['scannedAt']),
     );
   }
@@ -3347,6 +3381,7 @@ class MediaAnalysisRow extends DataClass
       'faceCount': serializer.toJson<int>(faceCount),
       'hasClosedEyes': serializer.toJson<bool>(hasClosedEyes),
       'labelsJson': serializer.toJson<String?>(labelsJson),
+      'dominantColor': serializer.toJson<String?>(dominantColor),
       'scannedAt': serializer.toJson<int>(scannedAt),
     };
   }
@@ -3360,6 +3395,7 @@ class MediaAnalysisRow extends DataClass
     int? faceCount,
     bool? hasClosedEyes,
     Value<String?> labelsJson = const Value.absent(),
+    Value<String?> dominantColor = const Value.absent(),
     int? scannedAt,
   }) => MediaAnalysisRow(
     mediaId: mediaId ?? this.mediaId,
@@ -3372,6 +3408,9 @@ class MediaAnalysisRow extends DataClass
     faceCount: faceCount ?? this.faceCount,
     hasClosedEyes: hasClosedEyes ?? this.hasClosedEyes,
     labelsJson: labelsJson.present ? labelsJson.value : this.labelsJson,
+    dominantColor: dominantColor.present
+        ? dominantColor.value
+        : this.dominantColor,
     scannedAt: scannedAt ?? this.scannedAt,
   );
   MediaAnalysisRow copyWithCompanion(MediaAnalysisCacheCompanion data) {
@@ -3392,6 +3431,9 @@ class MediaAnalysisRow extends DataClass
       labelsJson: data.labelsJson.present
           ? data.labelsJson.value
           : this.labelsJson,
+      dominantColor: data.dominantColor.present
+          ? data.dominantColor.value
+          : this.dominantColor,
       scannedAt: data.scannedAt.present ? data.scannedAt.value : this.scannedAt,
     );
   }
@@ -3407,6 +3449,7 @@ class MediaAnalysisRow extends DataClass
           ..write('faceCount: $faceCount, ')
           ..write('hasClosedEyes: $hasClosedEyes, ')
           ..write('labelsJson: $labelsJson, ')
+          ..write('dominantColor: $dominantColor, ')
           ..write('scannedAt: $scannedAt')
           ..write(')'))
         .toString();
@@ -3422,6 +3465,7 @@ class MediaAnalysisRow extends DataClass
     faceCount,
     hasClosedEyes,
     labelsJson,
+    dominantColor,
     scannedAt,
   );
   @override
@@ -3436,6 +3480,7 @@ class MediaAnalysisRow extends DataClass
           other.faceCount == this.faceCount &&
           other.hasClosedEyes == this.hasClosedEyes &&
           other.labelsJson == this.labelsJson &&
+          other.dominantColor == this.dominantColor &&
           other.scannedAt == this.scannedAt);
 }
 
@@ -3448,6 +3493,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
   final Value<int> faceCount;
   final Value<bool> hasClosedEyes;
   final Value<String?> labelsJson;
+  final Value<String?> dominantColor;
   final Value<int> scannedAt;
   const MediaAnalysisCacheCompanion({
     this.mediaId = const Value.absent(),
@@ -3458,6 +3504,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     this.faceCount = const Value.absent(),
     this.hasClosedEyes = const Value.absent(),
     this.labelsJson = const Value.absent(),
+    this.dominantColor = const Value.absent(),
     this.scannedAt = const Value.absent(),
   });
   MediaAnalysisCacheCompanion.insert({
@@ -3469,6 +3516,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     this.faceCount = const Value.absent(),
     this.hasClosedEyes = const Value.absent(),
     this.labelsJson = const Value.absent(),
+    this.dominantColor = const Value.absent(),
     required int scannedAt,
   }) : scannedAt = Value(scannedAt);
   static Insertable<MediaAnalysisRow> custom({
@@ -3480,6 +3528,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     Expression<int>? faceCount,
     Expression<bool>? hasClosedEyes,
     Expression<String>? labelsJson,
+    Expression<String>? dominantColor,
     Expression<int>? scannedAt,
   }) {
     return RawValuesInsertable({
@@ -3491,6 +3540,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
       if (faceCount != null) 'face_count': faceCount,
       if (hasClosedEyes != null) 'has_closed_eyes': hasClosedEyes,
       if (labelsJson != null) 'labels_json': labelsJson,
+      if (dominantColor != null) 'dominant_color': dominantColor,
       if (scannedAt != null) 'scanned_at': scannedAt,
     });
   }
@@ -3504,6 +3554,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     Value<int>? faceCount,
     Value<bool>? hasClosedEyes,
     Value<String?>? labelsJson,
+    Value<String?>? dominantColor,
     Value<int>? scannedAt,
   }) {
     return MediaAnalysisCacheCompanion(
@@ -3515,6 +3566,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
       faceCount: faceCount ?? this.faceCount,
       hasClosedEyes: hasClosedEyes ?? this.hasClosedEyes,
       labelsJson: labelsJson ?? this.labelsJson,
+      dominantColor: dominantColor ?? this.dominantColor,
       scannedAt: scannedAt ?? this.scannedAt,
     );
   }
@@ -3546,6 +3598,9 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     if (labelsJson.present) {
       map['labels_json'] = Variable<String>(labelsJson.value);
     }
+    if (dominantColor.present) {
+      map['dominant_color'] = Variable<String>(dominantColor.value);
+    }
     if (scannedAt.present) {
       map['scanned_at'] = Variable<int>(scannedAt.value);
     }
@@ -3563,6 +3618,7 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
           ..write('faceCount: $faceCount, ')
           ..write('hasClosedEyes: $hasClosedEyes, ')
           ..write('labelsJson: $labelsJson, ')
+          ..write('dominantColor: $dominantColor, ')
           ..write('scannedAt: $scannedAt')
           ..write(')'))
         .toString();
@@ -5471,6 +5527,7 @@ typedef $$MediaAnalysisCacheTableCreateCompanionBuilder =
       Value<int> faceCount,
       Value<bool> hasClosedEyes,
       Value<String?> labelsJson,
+      Value<String?> dominantColor,
       required int scannedAt,
     });
 typedef $$MediaAnalysisCacheTableUpdateCompanionBuilder =
@@ -5483,6 +5540,7 @@ typedef $$MediaAnalysisCacheTableUpdateCompanionBuilder =
       Value<int> faceCount,
       Value<bool> hasClosedEyes,
       Value<String?> labelsJson,
+      Value<String?> dominantColor,
       Value<int> scannedAt,
     });
 
@@ -5532,6 +5590,11 @@ class $$MediaAnalysisCacheTableFilterComposer
 
   ColumnFilters<String> get labelsJson => $composableBuilder(
     column: $table.labelsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dominantColor => $composableBuilder(
+    column: $table.dominantColor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5590,6 +5653,11 @@ class $$MediaAnalysisCacheTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get dominantColor => $composableBuilder(
+    column: $table.dominantColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get scannedAt => $composableBuilder(
     column: $table.scannedAt,
     builder: (column) => ColumnOrderings(column),
@@ -5634,6 +5702,11 @@ class $$MediaAnalysisCacheTableAnnotationComposer
 
   GeneratedColumn<String> get labelsJson => $composableBuilder(
     column: $table.labelsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dominantColor => $composableBuilder(
+    column: $table.dominantColor,
     builder: (column) => column,
   );
 
@@ -5689,6 +5762,7 @@ class $$MediaAnalysisCacheTableTableManager
                 Value<int> faceCount = const Value.absent(),
                 Value<bool> hasClosedEyes = const Value.absent(),
                 Value<String?> labelsJson = const Value.absent(),
+                Value<String?> dominantColor = const Value.absent(),
                 Value<int> scannedAt = const Value.absent(),
               }) => MediaAnalysisCacheCompanion(
                 mediaId: mediaId,
@@ -5699,6 +5773,7 @@ class $$MediaAnalysisCacheTableTableManager
                 faceCount: faceCount,
                 hasClosedEyes: hasClosedEyes,
                 labelsJson: labelsJson,
+                dominantColor: dominantColor,
                 scannedAt: scannedAt,
               ),
           createCompanionCallback:
@@ -5711,6 +5786,7 @@ class $$MediaAnalysisCacheTableTableManager
                 Value<int> faceCount = const Value.absent(),
                 Value<bool> hasClosedEyes = const Value.absent(),
                 Value<String?> labelsJson = const Value.absent(),
+                Value<String?> dominantColor = const Value.absent(),
                 required int scannedAt,
               }) => MediaAnalysisCacheCompanion.insert(
                 mediaId: mediaId,
@@ -5721,6 +5797,7 @@ class $$MediaAnalysisCacheTableTableManager
                 faceCount: faceCount,
                 hasClosedEyes: hasClosedEyes,
                 labelsJson: labelsJson,
+                dominantColor: dominantColor,
                 scannedAt: scannedAt,
               ),
           withReferenceMapper: (p0) => p0

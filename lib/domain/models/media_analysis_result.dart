@@ -9,6 +9,7 @@ class MediaAnalysisResult {
     this.faceCount = 0,
     this.hasClosedEyes = false,
     this.labels = const [],
+    this.dominantColor,
     required this.scannedAt,
   });
 
@@ -20,7 +21,11 @@ class MediaAnalysisResult {
   final int faceCount;
   final bool hasClosedEyes;
   final List<String> labels;
+  final String? dominantColor;
   final int scannedAt;
+
+  bool get isFullyTaggedForSearch =>
+      dominantColor != null && dominantColor!.isNotEmpty;
 }
 
 /// Burst-like cluster from [FindSimilarGroups]; [representativeId] is the suggested keeper.

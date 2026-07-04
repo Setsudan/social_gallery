@@ -12,6 +12,7 @@ import 'package:social_gallery/data/repositories/preferences_repository.dart';
 import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
+import 'package:social_gallery/domain/models/explore_search_query.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
 /// Single entry point for indexed media: sync, queries, favorites, trash, and device I/O.
@@ -205,17 +206,24 @@ class MediaRepository {
   }
 
   Future<List<domain.MediaItem>> searchExplorePage(
-    String query,
+    ExploreSearchQuery query,
     int page,
   ) async {
-    if (query.trim().isEmpty) {
+    if (query.isEmpty) {
       return getExplorePage(page);
     }
-    final rows = await _db.searchExploreMedia(
-      query.trim(),
+    final rows = await _db.searchExploreMediaFiltered(
+      text: query.text,
+      label: query.label,
+      color: query.color,
       limit: pageSize,
       offset: page * pageSize,
     );
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<List<domain.MediaItem>> getAllSearchableMedia() async {
+    final rows = await _db.getAllSearchableMedia();
     return rows.map(mediaItemFromRow).toList();
   }
 
