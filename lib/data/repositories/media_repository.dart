@@ -504,8 +504,14 @@ class MediaRepository {
     );
   }
 
-  Future<List<domain.MediaItem>> getMediaPendingBackup({int limit = 100}) async {
-    final rows = await _db.getMediaPendingBackupWithFolder(limit: limit);
+  Future<List<domain.MediaItem>> getMediaPendingBackup({
+    int limit = 100,
+    String? folderPath,
+  }) async {
+    final rows = await _db.getMediaPendingBackupWithFolder(
+      limit: limit,
+      folderPath: folderPath,
+    );
     return rows
         .map(
           (entry) => mediaItemFromRow(entry.row).copyWith(isVault: entry.isVault),
@@ -513,10 +519,14 @@ class MediaRepository {
         .toList();
   }
 
+  Future<List<PendingBackupFolder>> getPendingBackupFolders() {
+    return _db.getPendingBackupFolders();
+  }
+
   Future<bool> hasPendingVaultBackup() => _db.hasPendingVaultBackup();
 
-  Future<int> countMediaPendingBackup() {
-    return _db.countMediaPendingBackup();
+  Future<int> countMediaPendingBackup({String? folderPath}) {
+    return _db.countMediaPendingBackup(folderPath: folderPath);
   }
 
   Future<void> updateBackupState(int id, MediaBackupState state) {

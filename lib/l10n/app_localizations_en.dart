@@ -2010,7 +2010,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupCloseBlockedMessage =>
-      'Your phone is still sending photos. Keep this app open until the backup finishes.';
+      'Your phone is still sending photos. Quitting now may interrupt the backup.';
+
+  @override
+  String get backupCloseWait => 'Wait for backup';
+
+  @override
+  String get backupCloseQuitAnyway => 'Quit anyway';
 
   @override
   String get vaultPasswordSetTitle => 'Set vault backup password';

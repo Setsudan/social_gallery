@@ -2036,7 +2036,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupCloseBlockedMessage =>
-      'Votre telephone envoie encore des photos. Gardez cette application ouverte jusqu\'a la fin de la sauvegarde.';
+      'Votre telephone envoie encore des photos. Quitter maintenant peut interrompre la sauvegarde.';
+
+  @override
+  String get backupCloseWait => 'Attendre la fin';
+
+  @override
+  String get backupCloseQuitAnyway => 'Quitter quand meme';
 
   @override
   String get vaultPasswordSetTitle => 'Set vault backup password';

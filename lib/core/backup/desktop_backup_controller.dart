@@ -612,6 +612,25 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     _pairing.clearPin();
   }
 
+  /// Stops the backup server when the user closes the desktop app during receive.
+  Future<void> shutdownForWindowClose() async {
+    _libraryRefreshTimer?.cancel();
+    _libraryRefreshTimer = null;
+    await _mdnsAdvertiser.stop();
+    await _server?.stop();
+    _pairing.clearPin();
+    state = state.copyWith(
+      isReceivingBackup: false,
+      clearReceivingProgress: true,
+      phase: _pairing.isDesktopReceiverPaired
+          ? DesktopBackupPhase.desktopReady
+          : DesktopBackupPhase.idle,
+      detail: _pairing.isDesktopReceiverPaired
+          ? 'Paired with ${_prefs.pairedMobileDeviceName}'
+          : 'Ready to receive backups',
+    );
+  }
+
   Future<void> refreshDesktopPairingPin() async {
     if (!usesFilesystemGallery || !_prefs.desktopReceiveBackups) return;
     if (_pairing.isDesktopReceiverPaired) return;
@@ -846,7 +865,6 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       sessionPendingTotal = await _mediaRepo.countMediaPendingBackup();
       var totalProcessed = 0;
       var failedThisRun = 0;
-      var batchNumber = 0;
 
       state = state.copyWith(
         phase: DesktopBackupPhase.syncing,
@@ -856,6 +874,10 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
             : 'Checking for items to back up',
       );
       await _syncBackupNotification(force: true);
+
+      var folderQueue = await _mediaRepo.getPendingBackupFolders();
+      var folderIndex = 0;
+      var idleFolderPasses = 0;
 
       while (true) {
         if (!await _isStillAvailable(availability)) {
@@ -868,9 +890,12 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
           break;
         }
 
-        final pending =
-            await _mediaRepo.getMediaPendingBackup(limit: _batchSize);
-        if (pending.isEmpty) {
+        if (folderIndex >= folderQueue.length) {
+          folderQueue = await _mediaRepo.getPendingBackupFolders();
+          folderIndex = 0;
+        }
+
+        if (folderQueue.isEmpty) {
           if (_isGallerySyncRunning?.call() ?? false) {
             state = state.copyWith(
               detail: 'Waiting for library sync to finish...',
@@ -882,6 +907,8 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
 
           final remaining = await _mediaRepo.countMediaPendingBackup();
           if (remaining > 0) {
+            folderQueue = await _mediaRepo.getPendingBackupFolders();
+            folderIndex = 0;
             state = state.copyWith(
               total: remaining,
               detail: 'Found $remaining more items to back up',
@@ -915,12 +942,57 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
           break;
         }
 
-        batchNumber++;
+        final currentFolder = folderQueue[folderIndex];
+        var pending = await _mediaRepo.getMediaPendingBackup(
+          limit: _batchSize,
+          folderPath: currentFolder.folderPath,
+        );
+        if (pending.isEmpty) {
+          folderIndex++;
+          idleFolderPasses++;
+          if (idleFolderPasses >= folderQueue.length) {
+            idleFolderPasses = 0;
+            final remaining = await _mediaRepo.countMediaPendingBackup();
+            if (remaining > 0) {
+              pending = await _mediaRepo.getMediaPendingBackup(limit: _batchSize);
+              if (pending.isNotEmpty) {
+                folderQueue = await _mediaRepo.getPendingBackupFolders();
+                folderIndex = 0;
+              } else {
+                folderQueue = [];
+                folderIndex = 0;
+                continue;
+              }
+            } else {
+              folderQueue = [];
+              folderIndex = 0;
+              continue;
+            }
+          } else {
+            continue;
+          }
+        } else {
+          idleFolderPasses = 0;
+        }
+
+        final batchFolderPath = pending.first.folderPath;
+        final batchFolderName = pending.first.folderName;
+        final folderRemaining = await _mediaRepo.countMediaPendingBackup(
+          folderPath: batchFolderPath,
+        );
         final remainingAfterBatch =
             await _mediaRepo.countMediaPendingBackup();
+        final folderPosition = folderQueue.indexWhere(
+          (folder) => folder.folderPath == batchFolderPath,
+        );
+        final folderLabel = folderPosition >= 0
+            ? 'folder ${folderPosition + 1}/${folderQueue.length}'
+            : 'next batch';
         state = state.copyWith(
           total: totalProcessed + remainingAfterBatch,
-          detail: 'Backing up batch $batchNumber (${pending.length} items)',
+          detail:
+              'Backing up $batchFolderName ($folderLabel, '
+              '$folderRemaining items remaining)',
         );
         await _syncBackupNotification();
 
@@ -1189,7 +1261,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     DesktopBackupClient client,
     DesktopAvailabilityResult availability,
   ) async {
-    final reconciledIds = <int>{};
+    final handledIds = <int>{};
     var reconciledCount = 0;
 
     while (true) {
@@ -1203,108 +1275,126 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
         return false;
       }
 
-      final pending = (await _mediaRepo.getMediaPendingBackup(
-        limit: _reconcileChunkSize,
-      )).where((item) => !reconciledIds.contains(item.id)).toList();
-      if (pending.isEmpty) break;
+      final folderQueue = await _mediaRepo.getPendingBackupFolders();
+      if (folderQueue.isEmpty) break;
 
-      final skipReconcile = <MediaItem>[];
-      final needsReconcile = <MediaItem>[];
-      for (final item in pending) {
-        if (item.backupState == MediaBackupState.pending &&
-            item.lastSyncTime == null) {
-          skipReconcile.add(item);
-        } else {
+      var madeProgress = false;
+
+      for (final folder in folderQueue) {
+        if (!await _isStillAvailable(availability)) {
+          state = state.copyWith(
+            phase: DesktopBackupPhase.waitingForDesktop,
+            detail: 'Desktop became unavailable during reconcile',
+            isRunning: false,
+          );
+          _scheduleRetry();
+          return false;
+        }
+
+        final chunk = await _mediaRepo.getMediaPendingBackup(
+          limit: _reconcileChunkSize,
+          folderPath: folder.folderPath,
+        );
+
+        final needsReconcile = <MediaItem>[];
+        for (final item in chunk) {
+          if (handledIds.contains(item.id)) continue;
+          if (item.backupState == MediaBackupState.pending &&
+              item.lastSyncTime == null) {
+            handledIds.add(item.id);
+            continue;
+          }
           needsReconcile.add(item);
         }
-      }
 
-      reconciledIds.addAll(skipReconcile.map((item) => item.id));
+        if (needsReconcile.isEmpty) continue;
 
-      if (needsReconcile.isEmpty) {
-        continue;
-      }
+        final items = <BackupReconcileItem>[];
 
-      final items = <BackupReconcileItem>[];
-
-      final checksumResults = await runWithConcurrency(
-        items: needsReconcile,
-        concurrency: _backupConcurrency,
-        task: (item, _) async {
-          final checksum = await client.computeChecksum(item);
-          return (item: item, checksum: checksum);
-        },
-      );
-
-      for (final result in checksumResults) {
-        if (result == null) continue;
-        final checksum = result.checksum;
-        if (checksum == null) continue;
-        _checksumCache.put(result.item, checksum);
-        items.add(
-          BackupReconcileItem.fromMedia(
-            id: result.item.id,
-            checksum: checksum,
-            folderName: result.item.folderName,
-            name: result.item.displayName,
-            isVault: result.item.isVault,
-          ),
+        final checksumResults = await runWithConcurrency(
+          items: needsReconcile,
+          concurrency: _backupConcurrency,
+          task: (item, _) async {
+            final checksum = await client.computeChecksum(item);
+            return (item: item, checksum: checksum);
+          },
         );
-      }
 
-      if (items.isEmpty) {
-        reconciledIds.addAll(needsReconcile.map((item) => item.id));
-        client.clearOpenFileCache();
-        continue;
-      }
-
-      state = state.copyWith(
-        phase: DesktopBackupPhase.reconciling,
-        detail: 'Reconciling ${items.length} items...',
-      );
-      await _syncBackupNotification();
-
-      final response = await client.reconcileItems(items);
-      if (response == null) {
-        state = state.copyWith(
-          phase: DesktopBackupPhase.error,
-          detail: 'Reconcile failed',
-          isRunning: false,
-        );
-        _scheduleRetry();
-        return false;
-      }
-
-      final presentIds = <int>[];
-      final mismatchIds = <int>[];
-      final missingIds = <int>[];
-
-      for (final result in response.results) {
-        switch (result.status) {
-          case BackupReconcileStatus.present:
-            presentIds.add(result.mediaId);
-          case BackupReconcileStatus.mismatch:
-            mismatchIds.add(result.mediaId);
-          case BackupReconcileStatus.missing:
-            missingIds.add(result.mediaId);
+        for (final result in checksumResults) {
+          if (result == null) continue;
+          final checksum = result.checksum;
+          if (checksum == null) continue;
+          _checksumCache.put(result.item, checksum);
+          items.add(
+            BackupReconcileItem.fromMedia(
+              id: result.item.id,
+              checksum: checksum,
+              folderName: result.item.folderName,
+              name: result.item.displayName,
+              isVault: result.item.isVault,
+            ),
+          );
         }
+
+        handledIds.addAll(needsReconcile.map((item) => item.id));
+
+        if (items.isEmpty) {
+          client.clearOpenFileCache();
+          continue;
+        }
+
+        madeProgress = true;
+
+        state = state.copyWith(
+          phase: DesktopBackupPhase.reconciling,
+          detail:
+              'Reconciling ${folder.folderName} (${items.length} items)...',
+        );
+        await _syncBackupNotification();
+
+        final response = await client.reconcileItems(items);
+        if (response == null) {
+          state = state.copyWith(
+            phase: DesktopBackupPhase.error,
+            detail: 'Reconcile failed',
+            isRunning: false,
+          );
+          _scheduleRetry();
+          return false;
+        }
+
+        final presentIds = <int>[];
+        final mismatchIds = <int>[];
+        final missingIds = <int>[];
+
+        for (final result in response.results) {
+          switch (result.status) {
+            case BackupReconcileStatus.present:
+              presentIds.add(result.mediaId);
+            case BackupReconcileStatus.mismatch:
+              mismatchIds.add(result.mediaId);
+            case BackupReconcileStatus.missing:
+              missingIds.add(result.mediaId);
+          }
+        }
+
+        await _mediaRepo.reconcileBackupStates(
+          presentIds: presentIds,
+          mismatchIds: mismatchIds,
+          missingIds: missingIds,
+        );
+
+        reconciledCount += items.length;
+        client.clearOpenFileCache();
+
+        state = state.copyWith(
+          processed: reconciledCount,
+          total: await _mediaRepo.countMediaPendingBackup() + presentIds.length,
+        );
+        await _syncBackupNotification();
       }
 
-      await _mediaRepo.reconcileBackupStates(
-        presentIds: presentIds,
-        mismatchIds: mismatchIds,
-        missingIds: missingIds,
-      );
-
-      reconciledCount += items.length;
-      reconciledIds.addAll(needsReconcile.map((item) => item.id));
-      client.clearOpenFileCache();
-
-      state = state.copyWith(
-        processed: reconciledCount,
-        total: await _mediaRepo.countMediaPendingBackup() + presentIds.length,
-      );
-      await _syncBackupNotification();
+      if (!madeProgress) break;
     }
 
     return true;

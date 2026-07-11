@@ -137,4 +137,208 @@ void main() {
     expect(sample.map((row) => row.id).toList(), [20]);
     expect(await db.countBackedUpMedia(), 1);
   });
+
+  test('getPendingBackupFolders orders by album age then pending size', () async {
+    Future<void> insertMedia({
+      required int id,
+      required String folderName,
+      required String folderPath,
+      required int dateAdded,
+      required int size,
+      int backupState = 0,
+    }) async {
+      await db.into(db.mediaItems).insert(
+        MediaItemsCompanion.insert(
+          id: Value(id),
+          uri: 'uri$id',
+          displayName: '$id.jpg',
+          folderName: folderName,
+          folderPath: folderPath,
+          dateAdded: dateAdded,
+          dateModified: dateAdded,
+          size: size,
+          mimeType: 'image/jpeg',
+          backupState: Value(backupState),
+        ),
+      );
+    }
+
+    await insertMedia(
+      id: 1,
+      folderName: 'OldLarge',
+      folderPath: '/old-large',
+      dateAdded: 100,
+      size: 500_000_000,
+    );
+    await insertMedia(
+      id: 2,
+      folderName: 'OldLarge',
+      folderPath: '/old-large',
+      dateAdded: 200,
+      size: 100,
+      backupState: 1,
+    );
+    await insertMedia(
+      id: 3,
+      folderName: 'NewSmall',
+      folderPath: '/new-small',
+      dateAdded: 500,
+      size: 50_000,
+    );
+    await insertMedia(
+      id: 4,
+      folderName: 'OldSmall',
+      folderPath: '/old-small',
+      dateAdded: 150,
+      size: 10_000,
+    );
+    await insertMedia(
+      id: 5,
+      folderName: 'OldSmall',
+      folderPath: '/old-small',
+      dateAdded: 160,
+      size: 20_000,
+      backupState: 1,
+    );
+
+    final folders = await db.getPendingBackupFolders();
+    expect(folders.map((folder) => folder.folderPath).toList(), [
+      '/old-large',
+      '/old-small',
+      '/new-small',
+    ]);
+    expect(folders[0].pendingBytes, 500_000_000);
+    expect(folders[1].pendingBytes, 10_000);
+    expect(folders[2].pendingBytes, 50_000);
+  });
+
+  test('getPendingBackupFolders prefers smaller pending folders at same album age',
+      () async {
+    Future<void> insertPending({
+      required int id,
+      required String folderPath,
+      required String folderName,
+      required int albumOldestDate,
+      required int pendingSize,
+    }) async {
+      await db.into(db.mediaItems).insert(
+        MediaItemsCompanion.insert(
+          id: Value(id),
+          uri: 'uri$id',
+          displayName: '$id.jpg',
+          folderName: folderName,
+          folderPath: folderPath,
+          dateAdded: albumOldestDate,
+          dateModified: albumOldestDate,
+          size: pendingSize,
+          mimeType: 'image/jpeg',
+          backupState: const Value(0),
+        ),
+      );
+    }
+
+    await insertPending(
+      id: 10,
+      folderPath: '/b',
+      folderName: 'B',
+      albumOldestDate: 100,
+      pendingSize: 1_000_000,
+    );
+    await insertPending(
+      id: 11,
+      folderPath: '/a',
+      folderName: 'A',
+      albumOldestDate: 100,
+      pendingSize: 100,
+    );
+
+    final folders = await db.getPendingBackupFolders();
+    expect(folders.map((folder) => folder.folderPath).toList(), ['/a', '/b']);
+  });
+
+  test('getMediaPendingBackup filters by folderPath', () async {
+    Future<void> insertPending({
+      required int id,
+      required String folderPath,
+      required String folderName,
+      required int dateAdded,
+    }) async {
+      await db.into(db.mediaItems).insert(
+        MediaItemsCompanion.insert(
+          id: Value(id),
+          uri: 'uri$id',
+          displayName: '$id.jpg',
+          folderName: folderName,
+          folderPath: folderPath,
+          dateAdded: dateAdded,
+          dateModified: dateAdded,
+          size: 100,
+          mimeType: 'image/jpeg',
+          backupState: const Value(0),
+        ),
+      );
+    }
+
+    await insertPending(
+      id: 1,
+      folderPath: '/camera',
+      folderName: 'Camera',
+      dateAdded: 2,
+    );
+    await insertPending(
+      id: 2,
+      folderPath: '/camera',
+      folderName: 'Camera',
+      dateAdded: 1,
+    );
+    await insertPending(
+      id: 3,
+      folderPath: '/downloads',
+      folderName: 'Downloads',
+      dateAdded: 3,
+    );
+
+    final cameraPending = await db.getMediaPendingBackup(folderPath: '/camera');
+    expect(cameraPending.map((row) => row.id).toList(), [2, 1]);
+
+    final downloadsPending =
+        await db.getMediaPendingBackup(folderPath: '/downloads');
+    expect(downloadsPending.map((row) => row.id).toList(), [3]);
+  });
+
+  test('countMediaPendingBackup filters by folderPath', () async {
+    await db.into(db.mediaItems).insert(
+      MediaItemsCompanion.insert(
+        id: const Value(1),
+        uri: 'a',
+        displayName: 'a.jpg',
+        folderName: 'Camera',
+        folderPath: '/camera',
+        dateAdded: 1,
+        dateModified: 1,
+        size: 100,
+        mimeType: 'image/jpeg',
+        backupState: const Value(0),
+      ),
+    );
+    await db.into(db.mediaItems).insert(
+      MediaItemsCompanion.insert(
+        id: const Value(2),
+        uri: 'b',
+        displayName: 'b.jpg',
+        folderName: 'Downloads',
+        folderPath: '/downloads',
+        dateAdded: 2,
+        dateModified: 2,
+        size: 100,
+        mimeType: 'image/jpeg',
+        backupState: const Value(0),
+      ),
+    );
+
+    expect(await db.countMediaPendingBackup(), 2);
+    expect(await db.countMediaPendingBackup(folderPath: '/camera'), 1);
+    expect(await db.countMediaPendingBackup(folderPath: '/downloads'), 1);
+    expect(await db.countMediaPendingBackup(folderPath: '/missing'), 0);
+  });
 }

@@ -1221,7 +1221,9 @@
     }
   },
   "backupCloseBlockedTitle": "Backup in progress",
-  "backupCloseBlockedMessage": "Your phone is still sending photos. Keep this app open until the backup finishes.",
+  "backupCloseBlockedMessage": "Your phone is still sending photos. Quitting now may interrupt the backup.",
+  "backupCloseWait": "Wait for backup",
+  "backupCloseQuitAnyway": "Quit anyway",
   "vaultPasswordSetTitle": "Set vault backup password",
   "vaultPasswordSetDescription": "Locked albums are encrypted on your desktop as AES-256 protected archives. Choose a password you will use to browse them later.",
   "vaultPasswordEnterTitle": "Enter vault password",

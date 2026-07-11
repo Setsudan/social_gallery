@@ -8,7 +8,7 @@ import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:window_manager/window_manager.dart';
 
-/// Blocks window close while the desktop is actively receiving a mobile backup.
+/// Prompts before closing the desktop window during an active mobile backup.
 class DesktopBackupWindowGuard extends ConsumerStatefulWidget {
   const DesktopBackupWindowGuard({super.key, required this.child});
 
@@ -44,54 +44,70 @@ class _DesktopBackupWindowGuardState extends ConsumerState<DesktopBackupWindowGu
     super.dispose();
   }
 
-  Future<void> _syncPreventClose(bool isReceiving) async {
-    if (!_supportsWindowGuard) return;
-    await windowManager.setPreventClose(isReceiving);
-  }
-
-  Future<void> _showCloseBlockedDialog() async {
-    if (!mounted || _dialogVisible) return;
+  Future<bool> _showCloseConfirmDialog() async {
+    if (!mounted || _dialogVisible) return false;
     _dialogVisible = true;
     final l10n = context.l10n;
-    await showDialog<void>(
+    final backupState = ref.read(desktopBackupProvider);
+    var message = l10n.backupCloseBlockedMessage;
+    final fileName = backupState.receivingFileName;
+    if (fileName != null && fileName.isNotEmpty) {
+      final total = backupState.receivingBytesTotal;
+      if (total > 0) {
+        final percent =
+            ((backupState.receivingBytesReceived / total) * 100).round();
+        message = '$message\n\n$fileName ($percent%)';
+      } else {
+        message = '$message\n\n$fileName';
+      }
+    }
+
+    final quitAnyway = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(l10n.backupCloseBlockedTitle),
-          content: Text(l10n.backupCloseBlockedMessage),
+          content: Text(message),
           actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.backupCloseWait),
+            ),
             FilledButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.actionOk),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.backupCloseQuitAnyway),
             ),
           ],
         );
       },
     );
     _dialogVisible = false;
+    return quitAnyway ?? false;
+  }
+
+  Future<void> _handleWindowClose() async {
+    final isReceiving = ref.read(
+      desktopBackupProvider.select((state) => state.isReceivingBackup),
+    );
+    if (!isReceiving) {
+      await windowManager.destroy();
+      return;
+    }
+
+    final quitAnyway = await _showCloseConfirmDialog();
+    if (!quitAnyway || !mounted) return;
+
+    await ref.read(desktopBackupProvider.notifier).shutdownForWindowClose();
+    await windowManager.destroy();
   }
 
   @override
   void onWindowClose() {
-    final isReceiving = ref.read(
-      desktopBackupProvider.select((state) => state.isReceivingBackup),
-    );
-    if (isReceiving) {
-      unawaited(_showCloseBlockedDialog());
-      return;
-    }
-    unawaited(windowManager.destroy());
+    unawaited(_handleWindowClose());
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<bool>(
-      desktopBackupProvider.select((state) => state.isReceivingBackup),
-      (previous, next) {
-        unawaited(_syncPreventClose(next));
-      },
-    );
-
     return widget.child;
   }
 }

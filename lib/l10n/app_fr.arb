@@ -1218,5 +1218,7 @@
     }
   },
   "backupCloseBlockedTitle": "Sauvegarde en cours",
-  "backupCloseBlockedMessage": "Votre telephone envoie encore des photos. Gardez cette application ouverte jusqu'a la fin de la sauvegarde."
+  "backupCloseBlockedMessage": "Votre telephone envoie encore des photos. Quitter maintenant peut interrompre la sauvegarde.",
+  "backupCloseWait": "Attendre la fin",
+  "backupCloseQuitAnyway": "Quitter quand meme"
 }

@@ -14,6 +14,14 @@ import 'tables/travel_modes_table.dart';
 
 part 'app_database.g.dart';
 
+typedef PendingBackupFolder = ({
+  String folderPath,
+  String folderName,
+  int oldestDateAdded,
+  int pendingBytes,
+  int pendingCount,
+});
+
 /// Local SQLite store for folders, media index, travel modes, and analysis cache.
 @DriftDatabase(
   tables: [
@@ -829,16 +837,61 @@ class AppDatabase extends _$AppDatabase {
     return (delete(travelModes)..where((t) => t.id.equals(id))).go();
   }
 
-  Future<List<MediaRow>> getMediaPendingBackup({int limit = 100}) async {
+  Future<List<PendingBackupFolder>> getPendingBackupFolders() async {
+    final rows = await customSelect(
+      '''
+      SELECT
+        m.folder_path,
+        MIN(m.folder_name) AS folder_name,
+        (
+          SELECT MIN(m2.date_added)
+          FROM media_items m2
+          WHERE m2.folder_path = m.folder_path
+            AND m2.is_trashed = 0
+        ) AS oldest_date_added,
+        SUM(m.size) AS pending_bytes,
+        COUNT(*) AS pending_count
+      FROM media_items m
+      WHERE m.is_trashed = 0
+        AND m.backup_state IN (0, 3)
+      GROUP BY m.folder_path
+      ORDER BY oldest_date_added ASC, pending_bytes ASC, m.folder_path ASC
+      ''',
+      readsFrom: {mediaItems},
+    ).get();
+    return rows
+        .map(
+          (row) => (
+            folderPath: row.read<String>('folder_path'),
+            folderName: row.read<String>('folder_name'),
+            oldestDateAdded: row.read<int>('oldest_date_added'),
+            pendingBytes: row.read<int>('pending_bytes'),
+            pendingCount: row.read<int>('pending_count'),
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<MediaRow>> getMediaPendingBackup({
+    int limit = 100,
+    String? folderPath,
+  }) async {
+    final folderFilter =
+        folderPath != null ? 'AND m.folder_path = ?' : '';
+    final variables = <Variable>[
+      if (folderPath != null) Variable<String>(folderPath),
+      Variable<int>(limit),
+    ];
     final rows = await customSelect(
       '''
       SELECT m.* FROM media_items m
       WHERE m.is_trashed = 0
         AND m.backup_state IN (0, 3)
+        $folderFilter
       ORDER BY m.date_added ASC
       LIMIT ?
       ''',
-      variables: [Variable<int>(limit)],
+      variables: variables,
       readsFrom: {mediaItems},
     ).get();
     return rows.map(_mediaFromQuery).toList();
@@ -846,7 +899,14 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<({MediaRow row, bool isVault})>> getMediaPendingBackupWithFolder({
     int limit = 100,
+    String? folderPath,
   }) async {
+    final folderFilter =
+        folderPath != null ? 'AND m.folder_path = ?' : '';
+    final variables = <Variable>[
+      if (folderPath != null) Variable<String>(folderPath),
+      Variable<int>(limit),
+    ];
     final rows = await customSelect(
       '''
       SELECT m.*,
@@ -858,10 +918,11 @@ class AppDatabase extends _$AppDatabase {
       LEFT JOIN folders f ON m.folder_path = f.path
       WHERE m.is_trashed = 0
         AND m.backup_state IN (0, 3)
+        $folderFilter
       ORDER BY m.date_added ASC
       LIMIT ?
       ''',
-      variables: [Variable<int>(limit)],
+      variables: variables,
       readsFrom: {mediaItems, folders},
     ).get();
     return rows
@@ -890,13 +951,19 @@ class AppDatabase extends _$AppDatabase {
     return row.read<int>('vault_count') > 0;
   }
 
-  Future<int> countMediaPendingBackup() async {
+  Future<int> countMediaPendingBackup({String? folderPath}) async {
+    final folderFilter = folderPath != null ? 'AND folder_path = ?' : '';
+    final variables = <Variable>[
+      if (folderPath != null) Variable<String>(folderPath),
+    ];
     final row = await customSelect(
       '''
       SELECT COUNT(*) AS pending_count FROM media_items
       WHERE is_trashed = 0
         AND backup_state IN (0, 3)
+        $folderFilter
       ''',
+      variables: variables,
       readsFrom: {mediaItems},
     ).getSingle();
     return row.read<int>('pending_count');

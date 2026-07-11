@@ -3479,8 +3479,20 @@ abstract class AppLocalizations {
   /// No description provided for @backupCloseBlockedMessage.
   ///
   /// In en, this message translates to:
-  /// **'Your phone is still sending photos. Keep this app open until the backup finishes.'**
+  /// **'Your phone is still sending photos. Quitting now may interrupt the backup.'**
   String get backupCloseBlockedMessage;
+
+  /// No description provided for @backupCloseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for backup'**
+  String get backupCloseWait;
+
+  /// No description provided for @backupCloseQuitAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit anyway'**
+  String get backupCloseQuitAnyway;
 
   /// No description provided for @vaultPasswordSetTitle.
   ///
