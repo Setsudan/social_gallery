@@ -19,12 +19,12 @@ import 'package:social_gallery/core/auth/folder_access.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/shared/media/media_bulk_actions.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
-import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/usecases/group_media_by_period.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
+import 'package:social_gallery/shared/widgets/floating_selection_chrome.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
@@ -33,7 +33,8 @@ import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 // Wider thresholds so one deliberate pinch maps to one period step.
 const _pinchZoomInThreshold = 0.78;
 const _pinchZoomOutThreshold = 1.22;
-const _dragSelectThresholdPx = 8.0;
+/// Min horizontal movement before drag-select wins over scroll.
+const _dragSelectThresholdPx = 12.0;
 
 class GalleryScreen extends ConsumerStatefulWidget {
   const GalleryScreen({super.key});
@@ -65,8 +66,16 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   List<MediaItem> get _items => _paginated.items;
 
-  void _clearSelectionAndRefresh() {
-    setState(_selectedIds.clear);
+  void _setGallerySelectionActive(bool active) {
+    if (ref.read(gallerySelectionActiveProvider) == active) return;
+    ref.read(gallerySelectionActiveProvider.notifier).state = active;
+  }
+
+  void _syncGallerySelectionActive() {
+    _setGallerySelectionActive(_selectedIds.isNotEmpty);
+  }
+
+  void _refreshMediaLists() {
     if (_isSearching) {
       ref
           .read(explorePaginatedProvider(_searchQuery).notifier)
@@ -74,6 +83,13 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     } else {
       ref.read(galleryPaginatedProvider.notifier).loadMore(refresh: true);
     }
+  }
+
+  /// Leaves selection mode immediately and returns a snapshot for the action.
+  Set<int> _takeSelection() {
+    final ids = Set<int>.of(_selectedIds);
+    _exitSelectionMode();
+    return ids;
   }
 
   void _toggleSelect(MediaItem item) {
@@ -85,6 +101,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
         _selectedIds.add(item.id);
       }
     });
+    _syncGallerySelectionActive();
   }
 
   void _startSelection(MediaItem item) {
@@ -92,6 +109,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     setState(() {
       _selectedIds.add(item.id);
     });
+    _syncGallerySelectionActive();
   }
 
   void _exitSelectionMode() {
@@ -99,9 +117,15 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       _selectedIds.clear();
       _resetDragSelectState();
     });
+    _syncGallerySelectionActive();
   }
 
   GlobalKey _tileKeyFor(int id) => _tileKeys.putIfAbsent(id, GlobalKey.new);
+
+  void _pruneTileKeys(Iterable<int> liveIds) {
+    final live = liveIds is Set<int> ? liveIds : liveIds.toSet();
+    _tileKeys.removeWhere((id, _) => !live.contains(id));
+  }
 
   void _resetDragSelectState() {
     _activeDragPointer = null;
@@ -119,15 +143,21 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   int? _itemIdAt(Offset globalPosition) {
+    int? bestId;
+    var bestArea = double.infinity;
     for (final entry in _tileKeys.entries) {
       final box = entry.value.currentContext?.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) continue;
+      if (box == null || !box.hasSize || !box.attached) continue;
       final rect = box.localToGlobal(Offset.zero) & box.size;
-      if (rect.contains(globalPosition)) {
-        return entry.key;
+      if (!rect.contains(globalPosition)) continue;
+      final area = rect.width * rect.height;
+      // Prefer the smallest containing tile (avoids oversized wrappers).
+      if (area < bestArea) {
+        bestArea = area;
+        bestId = entry.key;
       }
     }
-    return null;
+    return bestId;
   }
 
   void _applyDragSelectAt(Offset globalPosition) {
@@ -144,11 +174,13 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     if (changed) {
       AppHaptics.selection();
       setState(() {});
+      _syncGallerySelectionActive();
     }
   }
 
   void _handleSelectionPointerDown(PointerDownEvent event) {
     if (!_inSelectionMode) return;
+    _pruneTileKeys(_items.map((item) => item.id));
     _activeDragPointer = event.pointer;
     _dragStartPosition = event.position;
     _dragSelecting = false;
@@ -162,8 +194,12 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     final start = _dragStartPosition;
     if (start == null) return;
 
+    final delta = event.position - start;
+
     if (!_dragSelecting) {
-      if ((event.position - start).distance < _dragSelectThresholdPx) return;
+      // Vertical-dominant movement is a scroll — do not hijack it.
+      if (delta.dy.abs() >= delta.dx.abs()) return;
+      if (delta.dx.abs() < _dragSelectThresholdPx) return;
 
       final anchorId = _itemIdAt(start);
       if (anchorId == null) return;
@@ -173,6 +209,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
         _dragSelectAdding = !_selectedIds.contains(anchorId);
       });
       _applyDragSelectAt(start);
+      _applyDragSelectAt(event.position);
       return;
     }
 
@@ -181,45 +218,97 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   void _handleSelectionPointerUp(PointerEvent event) {
     if (_activeDragPointer != event.pointer) return;
-
-    if (!_dragSelecting) {
-      final itemId = _itemIdAt(event.position);
-      if (itemId != null) {
-        final item = _itemById(itemId);
-        if (item != null) _toggleSelect(item);
-      }
-    }
-
+    // Taps are handled by the tile widgets; Listener only owns drag-select.
     setState(_resetDragSelectState);
   }
 
-  Future<void> _bulkTrash() => bulkTrash(
-        ref,
-        context,
-        _selectedIds,
-        onDone: _clearSelectionAndRefresh,
-      );
+  Future<void> _bulkTrash() async {
+    final ids = _takeSelection();
+    if (ids.isEmpty) return;
+    await bulkTrash(
+      ref,
+      context,
+      ids,
+      onDone: _refreshMediaLists,
+    );
+  }
 
-  Future<void> _bulkMove() => bulkMove(
-        ref,
-        context,
-        _selectedIds,
-        onDone: _clearSelectionAndRefresh,
-      );
+  Future<void> _bulkMove() async {
+    final ids = _takeSelection();
+    if (ids.isEmpty) return;
+    await bulkMove(
+      ref,
+      context,
+      ids,
+      onDone: _refreshMediaLists,
+    );
+  }
 
-  Future<void> _createAlbumAndMove() => createAlbumAndMove(
-        ref,
-        context,
-        _selectedIds,
-        onDone: _clearSelectionAndRefresh,
-      );
+  Future<void> _createAlbumAndMove() async {
+    final ids = _takeSelection();
+    if (ids.isEmpty) return;
+    await createAlbumAndMove(
+      ref,
+      context,
+      ids,
+      onDone: _refreshMediaLists,
+    );
+  }
 
-  Future<void> _bulkFavorite(bool favorite) => bulkFavorite(
-        ref,
-        _selectedIds,
-        favorite,
-        onDone: _clearSelectionAndRefresh,
-      );
+  Future<void> _bulkFavorite(bool favorite) async {
+    final ids = _takeSelection();
+    if (ids.isEmpty) return;
+    await bulkFavorite(
+      ref,
+      ids,
+      favorite,
+      onDone: _refreshMediaLists,
+    );
+  }
+
+  Future<void> _bulkShare() async {
+    final ids = _takeSelection();
+    if (ids.isEmpty) return;
+    await bulkShare(ref, context, ids);
+  }
+
+  Future<void> _copyToClipboard() async {
+    final ids = _takeSelection();
+    if (ids.isEmpty) return;
+    await copyMediaToClipboard(ref, context, ids);
+  }
+
+  Future<void> _setAsWallpaper() async {
+    final ids = _takeSelection();
+    if (ids.isEmpty) return;
+    await setMediaAsWallpaper(ref, context, ids);
+  }
+
+  Future<void> _showMoreActions() async {
+    final showCopy = _selectedIds.length == 1;
+    final single = showCopy ? _itemById(_selectedIds.first) : null;
+    final showWallpaper = showCopy && (single == null || !single.isVideo);
+
+    final action = await showSelectionMoreSheet(
+      context: context,
+      showCopy: showCopy,
+      showWallpaper: showWallpaper,
+    );
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case SelectionMoreAction.favorite:
+        await _bulkFavorite(true);
+      case SelectionMoreAction.unfavorite:
+        await _bulkFavorite(false);
+      case SelectionMoreAction.createAlbum:
+        await _createAlbumAndMove();
+      case SelectionMoreAction.copyToClipboard:
+        await _copyToClipboard();
+      case SelectionMoreAction.setAsWallpaper:
+        await _setAsWallpaper();
+    }
+  }
 
   bool _handlePinchZoomIn() {
     if (_inSelectionMode) return false;
@@ -352,6 +441,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   @override
   void dispose() {
+    _setGallerySelectionActive(false);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -434,18 +524,6 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       },
       child: Scaffold(
         extendBody: true,
-        appBar: AnimatedMediaSelectionAppBar(
-          visible: inSelectionMode,
-          selectedCount: _selectedIds.length,
-          duration: motion.fade,
-          curve: motion.enterCurve,
-          onCancel: _exitSelectionMode,
-          onFavorite: () => _bulkFavorite(true),
-          onUnfavorite: () => _bulkFavorite(false),
-          onMove: _bulkMove,
-          onTrash: _bulkTrash,
-          onCreateAlbum: _createAlbumAndMove,
-        ),
         body: Stack(
           fit: StackFit.expand,
           children: [
@@ -520,6 +598,49 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                   ),
                 ),
               ),
+            if (inSelectionMode) ...[
+              Positioned(
+                top: 0,
+                left: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: OneUiSpacing.sm,
+                      left: OneUiSpacing.pageHorizontal,
+                    ),
+                    child: FloatingSelectionCountPill(
+                      count: _selectedIds.length,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: OneUiSpacing.sm,
+                      right: OneUiSpacing.pageHorizontal,
+                    ),
+                    child: FloatingSelectionCancelButton(
+                      onPressed: _exitSelectionMode,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: FloatingSelectionActionBar(
+                  onMove: _bulkMove,
+                  onShare: _bulkShare,
+                  onDelete: _bulkTrash,
+                  onMore: _showMoreActions,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -643,7 +764,9 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                   item: item,
                   selected: _selectedIds.contains(item.id),
                   inSelectionMode: inSelectionMode,
-                  onTap: inSelectionMode ? null : () => _openMedia(item),
+                  onTap: inSelectionMode
+                      ? () => _toggleSelect(item)
+                      : () => _openMedia(item),
                   onLongPress:
                       inSelectionMode ? null : () => _startSelection(item),
                 );
@@ -736,7 +859,9 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                 item: item,
                 selected: _selectedIds.contains(item.id),
                 inSelectionMode: inSelectionMode,
-                onTap: inSelectionMode ? null : () => _openMedia(item),
+                onTap: inSelectionMode
+                    ? () => _toggleSelect(item)
+                    : () => _openMedia(item),
                 onLongPress:
                     inSelectionMode ? null : () => _startSelection(item),
               );

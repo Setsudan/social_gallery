@@ -1022,6 +1022,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get organizeMoveFailed =>
+      'Impossible de déplacer cet élément. Réessayez.';
+
+  @override
   String get organizeBatchComplete => 'Lot termine';
 
   @override
@@ -1186,6 +1190,70 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tooltipMoveToTrash => 'Deplacer vers la corbeille';
+
+  @override
+  String get selectionActionMove => 'Deplacer';
+
+  @override
+  String get selectionActionShare => 'Partager';
+
+  @override
+  String get selectionActionDelete => 'Supprimer';
+
+  @override
+  String get selectionActionMore => 'Plus';
+
+  @override
+  String get selectionCopyToClipboard => 'Copier dans le presse-papiers';
+
+  @override
+  String get selectionSetAsWallpaper => 'Definir comme fond d\'ecran';
+
+  @override
+  String snackbarSharedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count elements partages',
+      one: '1 element partage',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get snackbarShareFailed => 'Impossible de partager la selection';
+
+  @override
+  String get snackbarCopiedToClipboard => 'Copie dans le presse-papiers';
+
+  @override
+  String get snackbarCopyFailed =>
+      'Impossible de copier dans le presse-papiers';
+
+  @override
+  String get snackbarCopyUnsupported =>
+      'Seules les images peuvent etre copiees';
+
+  @override
+  String get snackbarWallpaperSet => 'Fond d\'ecran mis a jour';
+
+  @override
+  String get snackbarWallpaperFailed =>
+      'Impossible de definir le fond d\'ecran';
+
+  @override
+  String get snackbarWallpaperUnsupported =>
+      'Le fond d\'ecran est disponible uniquement pour les images sur Android';
+
+  @override
+  String get wallpaperConfirmTitle => 'Definir comme fond d\'ecran ?';
+
+  @override
+  String get wallpaperConfirmMessage =>
+      'Cette image sera definie comme fond d\'ecran de l\'ecran d\'accueil.';
+
+  @override
+  String get wallpaperConfirmAction => 'Definir';
 
   @override
   String get trashDeletePermanentlyTitle => 'Supprimer definitivement';

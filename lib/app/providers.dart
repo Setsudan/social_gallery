@@ -228,6 +228,12 @@ final folderMediaProvider = StreamProvider.family<List<MediaItem>, String>((
   return ref.watch(mediaRepositoryProvider).watchFolderMedia(path);
 });
 
+/// Bounded first page of album media for cover pickers and light previews.
+final folderCoverCandidatesProvider =
+    FutureProvider.family<List<MediaItem>, String>((ref, path) {
+  return ref.watch(mediaRepositoryProvider).getFolderMediaPage(path, 0);
+});
+
 /// User preferences mirrored from [PreferencesRepository] for UI binding.
 class AppSettings {
   final AppThemeVariant appTheme;

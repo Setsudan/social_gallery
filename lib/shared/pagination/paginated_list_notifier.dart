@@ -49,7 +49,7 @@ final feedRefreshCoordinatorProvider = Provider<void>((ref) {
   });
 });
 
-/// Refreshes home feed, gallery, explore, and stories providers.
+/// Refreshes home feed, gallery, explore, stories, and folder grids.
 void refreshFeedProvidersFromRef(Ref ref) {
   if (ref.exists(homeFeedPaginatedProvider)) {
     unawaited(
@@ -69,6 +69,15 @@ void refreshFeedProvidersFromRef(Ref ref) {
 
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
+  ref.invalidate(folderMediaPaginatedProvider);
+
+  if (ref.exists(favoritesPaginatedProvider)) {
+    unawaited(
+      ref.read(favoritesPaginatedProvider.notifier).loadMore(refresh: true),
+    );
+  } else {
+    ref.invalidate(favoritesPaginatedProvider);
+  }
 }
 
 /// Widget-side alias for [refreshFeedProvidersFromRef].
@@ -91,6 +100,15 @@ void refreshFeedProviders(WidgetRef ref) {
 
   ref.invalidate(explorePaginatedProvider);
   ref.invalidate(homeStoriesProvider);
+  ref.invalidate(folderMediaPaginatedProvider);
+
+  if (ref.exists(favoritesPaginatedProvider)) {
+    unawaited(
+      ref.read(favoritesPaginatedProvider.notifier).loadMore(refresh: true),
+    );
+  } else {
+    ref.invalidate(favoritesPaginatedProvider);
+  }
 }
 
 const paginatedLoadMoreThresholdPx = 400.0;
@@ -184,6 +202,22 @@ class HomeFeedPaginatedNotifier
       );
     }
   }
+
+  /// Updates favorite flag in-place without reloading the feed page.
+  void setItemFavorite(int mediaId, bool isFavorite) {
+    final items = [
+      for (final item in state.items)
+        if (item.media.id == mediaId)
+          FeedItem(
+            folderName: item.folderName,
+            folderPath: item.folderPath,
+            media: item.media.copyWith(isFavorite: isFavorite),
+          )
+        else
+          item,
+    ];
+    state = state.copyWith(items: items);
+  }
 }
 
 final homeFeedPaginatedProvider = NotifierProvider.autoDispose<
@@ -247,12 +281,13 @@ class ExplorePaginatedNotifier
   }
 
   Future<void> loadMore({bool refresh = false}) async {
-    if (state.isLoading) return;
+    if (state.isLoading && !refresh) return;
     state = state.copyWith(
       isLoading: true,
       clearError: true,
       page: refresh ? 0 : null,
       hasMore: refresh ? true : null,
+      items: refresh ? const [] : null,
     );
 
     try {
@@ -280,4 +315,96 @@ class ExplorePaginatedNotifier
 final explorePaginatedProvider = NotifierProvider.autoDispose
     .family<ExplorePaginatedNotifier, PaginatedListState<MediaItem>, ExploreSearchQuery>(
   ExplorePaginatedNotifier.new,
+);
+
+/// Paginated favorites grid.
+class FavoritesPaginatedNotifier
+    extends AutoDisposeNotifier<PaginatedListState<MediaItem>> {
+  @override
+  PaginatedListState<MediaItem> build() {
+    Future.microtask(() => loadMore(refresh: true));
+    return const PaginatedListState();
+  }
+
+  Future<void> loadMore({bool refresh = false}) async {
+    if (state.isLoading && !refresh) return;
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      page: refresh ? 0 : null,
+      hasMore: refresh ? true : null,
+      items: refresh ? const [] : null,
+    );
+
+    try {
+      final pageToLoad = refresh ? 0 : state.page;
+      final page = await ref
+          .read(mediaRepositoryProvider)
+          .getFavoritesPage(pageToLoad);
+      final nextItems = refresh ? page : [...state.items, ...page];
+      state = PaginatedListState(
+        items: nextItems,
+        page: pageToLoad + 1,
+        isLoading: false,
+        hasMore: page.length >= MediaRepository.pageSize,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        hasMore: refresh ? false : state.hasMore,
+      );
+    }
+  }
+}
+
+final favoritesPaginatedProvider = NotifierProvider.autoDispose<
+    FavoritesPaginatedNotifier, PaginatedListState<MediaItem>>(
+  FavoritesPaginatedNotifier.new,
+);
+
+/// Paginated media for one album folder path.
+class FolderMediaPaginatedNotifier extends AutoDisposeFamilyNotifier<
+    PaginatedListState<MediaItem>, String> {
+  @override
+  PaginatedListState<MediaItem> build(String folderPath) {
+    Future.microtask(() => loadMore(refresh: true));
+    return const PaginatedListState();
+  }
+
+  Future<void> loadMore({bool refresh = false}) async {
+    if (state.isLoading && !refresh) return;
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      page: refresh ? 0 : null,
+      hasMore: refresh ? true : null,
+      items: refresh ? const [] : null,
+    );
+
+    try {
+      final pageToLoad = refresh ? 0 : state.page;
+      final page = await ref
+          .read(mediaRepositoryProvider)
+          .getFolderMediaPage(arg, pageToLoad);
+      final nextItems = refresh ? page : [...state.items, ...page];
+      state = PaginatedListState(
+        items: nextItems,
+        page: pageToLoad + 1,
+        isLoading: false,
+        hasMore: page.length >= MediaRepository.pageSize,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        hasMore: refresh ? false : state.hasMore,
+      );
+    }
+  }
+}
+
+final folderMediaPaginatedProvider = NotifierProvider.autoDispose
+    .family<FolderMediaPaginatedNotifier, PaginatedListState<MediaItem>, String>(
+  FolderMediaPaginatedNotifier.new,
 );

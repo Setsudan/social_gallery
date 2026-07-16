@@ -444,6 +444,7 @@
     }
   },
   "organizeSharingItem": "Partage de {name}",
+  "organizeMoveFailed": "Impossible de déplacer cet élément. Réessayez.",
   "@organizeSharingItem": {
     "placeholders": {
       "name": {
@@ -562,6 +563,30 @@
   "tooltipCreateAlbumAndMove": "Creer un album et deplacer",
   "tooltipSetAlbumCover": "Definir comme couverture",
   "tooltipMoveToTrash": "Deplacer vers la corbeille",
+  "selectionActionMove": "Deplacer",
+  "selectionActionShare": "Partager",
+  "selectionActionDelete": "Supprimer",
+  "selectionActionMore": "Plus",
+  "selectionCopyToClipboard": "Copier dans le presse-papiers",
+  "selectionSetAsWallpaper": "Definir comme fond d'ecran",
+  "snackbarSharedItems": "{count, plural, =1{1 element partage} other{{count} elements partages}}",
+  "@snackbarSharedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarShareFailed": "Impossible de partager la selection",
+  "snackbarCopiedToClipboard": "Copie dans le presse-papiers",
+  "snackbarCopyFailed": "Impossible de copier dans le presse-papiers",
+  "snackbarCopyUnsupported": "Seules les images peuvent etre copiees",
+  "snackbarWallpaperSet": "Fond d'ecran mis a jour",
+  "snackbarWallpaperFailed": "Impossible de definir le fond d'ecran",
+  "snackbarWallpaperUnsupported": "Le fond d'ecran est disponible uniquement pour les images sur Android",
+  "wallpaperConfirmTitle": "Definir comme fond d'ecran ?",
+  "wallpaperConfirmMessage": "Cette image sera definie comme fond d'ecran de l'ecran d'accueil.",
+  "wallpaperConfirmAction": "Definir",
   "trashDeletePermanentlyTitle": "Supprimer definitivement",
   "trashDeletePermanentlyMessage": "Voulez-vous vraiment supprimer definitivement ces {count} elements de votre appareil ? Cette action est irreversible.",
   "@trashDeletePermanentlyMessage": {

@@ -1,6 +1,10 @@
 import 'package:drift/drift.dart';
 
 /// Drift table for device albums: visibility, covers, stories, and lock flags.
+@TableIndex(
+  name: 'folders_follow_biometric',
+  columns: {#followStatus, #isBiometricLocked},
+)
 class Folders extends Table {
   TextColumn get path => text()();
   TextColumn get name => text()();

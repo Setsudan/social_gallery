@@ -230,6 +230,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                             ? Image.file(
                                                 trashedFile,
                                                 fit: BoxFit.contain,
+                                                cacheWidth:
+                                                    (MediaQuery.sizeOf(context)
+                                                                .shortestSide *
+                                                            MediaQuery.devicePixelRatioOf(
+                                                              context,
+                                                            ))
+                                                        .ceil()
+                                                        .clamp(720, 4096),
                                               )
                                             : const Center(
                                                 child: Icon(

@@ -22,6 +22,29 @@ typedef PendingBackupFolder = ({
   int pendingCount,
 });
 
+/// Local-only fields preserved across a device library sync.
+class MediaSyncMergeState {
+  const MediaSyncMergeState({
+    required this.isFavorite,
+    required this.isTrashed,
+    required this.trashedAt,
+    required this.originalPath,
+    required this.backupState,
+    required this.lastSyncTime,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  final bool isFavorite;
+  final bool isTrashed;
+  final int? trashedAt;
+  final String? originalPath;
+  final int backupState;
+  final int? lastSyncTime;
+  final double? latitude;
+  final double? longitude;
+}
+
 /// Local SQLite store for folders, media index, travel modes, and analysis cache.
 @DriftDatabase(
   tables: [
@@ -38,7 +61,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -65,6 +88,40 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 6) {
         await m.addColumn(mediaAnalysisCache, mediaAnalysisCache.dominantColor);
+      }
+      if (from < 7) {
+        await m.createIndex(Index(
+          'media_items_folder_trashed_modified',
+          '''
+CREATE INDEX media_items_folder_trashed_modified
+ON media_items (folder_path, is_trashed, date_modified DESC)
+''',
+        ));
+        await m.createIndex(Index(
+          'media_items_favorite_trashed_modified',
+          '''
+CREATE INDEX media_items_favorite_trashed_modified
+ON media_items (is_trashed, is_favorite, date_modified DESC)
+''',
+        ));
+        await m.createIndex(Index(
+          'media_items_trashed_modified',
+          '''
+CREATE INDEX media_items_trashed_modified
+ON media_items (is_trashed, date_modified DESC)
+''',
+        ));
+        await m.createIndex(Index(
+          'media_items_backup_state',
+          'CREATE INDEX media_items_backup_state ON media_items (backup_state)',
+        ));
+        await m.createIndex(Index(
+          'folders_follow_biometric',
+          '''
+CREATE INDEX folders_follow_biometric
+ON folders (follow_status, is_biometric_locked)
+''',
+        ));
       }
     },
   );
@@ -292,6 +349,27 @@ class AppDatabase extends _$AppDatabase {
     ).watch().map((rows) => rows.map(_mediaFromQuery).toList());
   }
 
+  Future<List<MediaRow>> getFavoritesMediaPage({
+    required int limit,
+    required int offset,
+  }) async {
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_favorite = 1
+        AND f.follow_status = 'HOME_FEED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+      ORDER BY m.date_modified DESC
+      LIMIT ? OFFSET ?
+      ''',
+      variables: [Variable.withInt(limit), Variable.withInt(offset)],
+      readsFrom: {mediaItems, folders},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
   Stream<List<MediaRow>> watchMediaInFolder(String folderPath) {
     return (select(mediaItems)
           ..where(
@@ -299,6 +377,20 @@ class AppDatabase extends _$AppDatabase {
           )
           ..orderBy([(m) => OrderingTerm.desc(m.dateModified)]))
         .watch();
+  }
+
+  Future<List<MediaRow>> getMediaInFolderPage(
+    String folderPath, {
+    required int limit,
+    required int offset,
+  }) async {
+    return (select(mediaItems)
+          ..where(
+            (m) => m.folderPath.equals(folderPath) & m.isTrashed.equals(false),
+          )
+          ..orderBy([(m) => OrderingTerm.desc(m.dateModified)])
+          ..limit(limit, offset: offset))
+        .get();
   }
 
   Future<void> setFavorite(int id, bool isFavorite) {
@@ -413,6 +505,49 @@ class AppDatabase extends _$AppDatabase {
     await syncMediaItems(items, preserveIds: const {});
   }
 
+  /// Lightweight fields needed to merge device sync with local favorites/trash/backup.
+  Future<Map<int, MediaSyncMergeState>> getMediaSyncMergeState() async {
+    final rows = await customSelect(
+      '''
+      SELECT id, is_favorite, is_trashed, trashed_at, original_path,
+             backup_state, last_sync_time, latitude, longitude
+      FROM media_items
+      ''',
+      readsFrom: {mediaItems},
+    ).get();
+    return {
+      for (final row in rows)
+        row.read<int>('id'): MediaSyncMergeState(
+          isFavorite: row.read<bool>('is_favorite'),
+          isTrashed: row.read<bool>('is_trashed'),
+          trashedAt: row.readNullable<int>('trashed_at'),
+          originalPath: row.readNullable<String>('original_path'),
+          backupState: row.read<int>('backup_state'),
+          lastSyncTime: row.readNullable<int>('last_sync_time'),
+          latitude: row.readNullable<double>('latitude'),
+          longitude: row.readNullable<double>('longitude'),
+        ),
+    };
+  }
+
+  Future<void> upsertMediaItemsChunk(List<MediaItemsCompanion> items) async {
+    if (items.isEmpty) return;
+    await batch((b) {
+      for (final row in items) {
+        b.insert(mediaItems, row, mode: InsertMode.insertOrReplace);
+      }
+    });
+  }
+
+  Future<void> deleteMediaNotIn(Set<int> keepIds) async {
+    if (keepIds.isEmpty) {
+      await delete(mediaItems).go();
+      return;
+    }
+    await (delete(mediaItems)..where((m) => m.id.isNotIn(keepIds.toList())))
+        .go();
+  }
+
   Future<void> syncMediaItems(
     List<MediaItemsCompanion> items, {
     required Set<int> preserveIds,
@@ -422,20 +557,19 @@ class AppDatabase extends _$AppDatabase {
       final keepIds = {...scannedIds, ...preserveIds};
 
       if (items.isNotEmpty) {
-        await batch((b) {
-          for (final row in items) {
-            b.insert(mediaItems, row, mode: InsertMode.insertOrReplace);
-          }
-        });
+        const chunkSize = 500;
+        for (var i = 0; i < items.length; i += chunkSize) {
+          final end = i + chunkSize > items.length ? items.length : i + chunkSize;
+          final chunk = items.sublist(i, end);
+          await batch((b) {
+            for (final row in chunk) {
+              b.insert(mediaItems, row, mode: InsertMode.insertOrReplace);
+            }
+          });
+        }
       }
 
-      if (keepIds.isEmpty) {
-        await delete(mediaItems).go();
-        return;
-      }
-
-      await (delete(mediaItems)..where((m) => m.id.isNotIn(keepIds.toList())))
-          .go();
+      await deleteMediaNotIn(keepIds);
     });
   }
 
@@ -549,6 +683,30 @@ class AppDatabase extends _$AppDatabase {
       ''',
       [path],
     );
+  }
+
+  /// Clears stale custom covers and refreshes auto covers for specific folders.
+  Future<void> repairFolderCoversForPaths(Iterable<String> paths) async {
+    final unique = paths.where((p) => p.isNotEmpty).toSet().toList();
+    if (unique.isEmpty) return;
+
+    for (final path in unique) {
+      await customStatement(
+        '''
+        UPDATE folders SET custom_cover_uri = NULL
+        WHERE path = ?
+          AND custom_cover_uri IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM media_items
+            WHERE media_items.folder_path = folders.path
+              AND media_items.uri = folders.custom_cover_uri
+              AND media_items.is_trashed = 0
+          )
+        ''',
+        [path],
+      );
+      await updateFolderAutoCover(path);
+    }
   }
 
   Future<void> setFolderCustomCover(String path, String? coverUri) async {
@@ -736,14 +894,54 @@ class AppDatabase extends _$AppDatabase {
   Future<void> moveMediaItems(
     List<int> ids,
     String targetFolderPath,
-    String targetFolderName,
-  ) async {
+    String targetFolderName, {
+    int? dateModifiedMs,
+  }) async {
     await (update(mediaItems)..where((m) => m.id.isIn(ids))).write(
       MediaItemsCompanion(
         folderPath: Value(targetFolderPath),
         folderName: Value(targetFolderName),
+        dateModified: dateModifiedMs != null
+            ? Value(dateModifiedMs)
+            : const Value.absent(),
       ),
     );
+    await updateFolderCounts();
+  }
+
+  /// Updates folder fields and optionally path-derived identity after a
+  /// filesystem rename (uri/id change).
+  Future<void> moveMediaItemWithUri({
+    required int id,
+    required String targetFolderPath,
+    required String targetFolderName,
+    required String newUri,
+    required int newId,
+    required int dateModifiedMs,
+  }) async {
+    if (newId == id) {
+      await (update(mediaItems)..where((m) => m.id.equals(id))).write(
+        MediaItemsCompanion(
+          folderPath: Value(targetFolderPath),
+          folderName: Value(targetFolderName),
+          uri: Value(newUri),
+          dateModified: Value(dateModifiedMs),
+        ),
+      );
+    } else {
+      await customStatement(
+        '''
+        UPDATE media_items
+        SET id = ?,
+            uri = ?,
+            folder_path = ?,
+            folder_name = ?,
+            date_modified = ?
+        WHERE id = ?
+        ''',
+        [newId, newUri, targetFolderPath, targetFolderName, dateModifiedMs, id],
+      );
+    }
     await updateFolderCounts();
   }
 

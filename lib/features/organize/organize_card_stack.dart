@@ -11,6 +11,8 @@ import 'package:social_gallery/features/organize/organize_folder_strip.dart';
 typedef OrganizeSwipeCallback = void Function(OrganizeSwipeDirection direction);
 typedef OrganizeFolderDropCallback = void Function(String folderPath);
 
+enum _OverlayBand { none, left, right, up, down }
+
 /// Draggable card stack for organize: swipe gestures and folder drop strip.
 class OrganizeCardStack extends ConsumerStatefulWidget {
   const OrganizeCardStack({
@@ -34,13 +36,24 @@ class OrganizeCardStack extends ConsumerStatefulWidget {
 
 class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
   final _folderStripKey = GlobalKey<OrganizeFolderStripState>();
-  Offset _dragOffset = Offset.zero;
-  Offset? _dragGlobalPosition;
-  String? _hoveredFolderPath;
+  final _dragOffset = ValueNotifier(Offset.zero);
+  final _dragGlobal = ValueNotifier<Offset?>(null);
+  final _hoveredFolder = ValueNotifier<String?>(null);
+  final _overlayBand = ValueNotifier(_OverlayBand.none);
   bool _isDraggingDown = false;
 
   static const _threshold = 80.0;
   static const _folderRevealThreshold = 28.0;
+  static const _colorThreshold = 30.0;
+
+  @override
+  void dispose() {
+    _dragOffset.dispose();
+    _dragGlobal.dispose();
+    _hoveredFolder.dispose();
+    _overlayBand.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +62,6 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
     }
 
     final visible = widget.cards.take(3).toList();
-    final dragColor = _overlayColor();
-
     final maxHeight = MediaQuery.sizeOf(context).height * 0.55;
     final motion = AppMotion.of(context, ref);
 
@@ -79,7 +90,7 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
                   alignment: Alignment.center,
                   children: [
                     for (var i = visible.length - 1; i >= 0; i--)
-                      _buildLayer(visible[i], i, dragColor),
+                      _buildLayer(visible[i], i),
                   ],
                 ),
               ),
@@ -102,8 +113,8 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
                 child: OrganizeFolderStrip(
                   key: _folderStripKey,
                   folders: widget.folders,
-                  hoveredFolderPath: _hoveredFolderPath,
-                  dragGlobalPosition: _dragGlobalPosition,
+                  dragGlobal: _dragGlobal,
+                  hoveredFolderPath: _hoveredFolder,
                 ),
               ),
             ),
@@ -113,50 +124,56 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
     );
   }
 
-  Color? _overlayColor() {
-    if (_isDraggingDown) return Colors.green.withValues(alpha: 0.25);
-    if (_dragOffset.dx < -30) return Colors.red.withValues(alpha: 0.35);
-    if (_dragOffset.dx > 30) return Colors.orange.withValues(alpha: 0.35);
-    if (_dragOffset.dy < -30) return Colors.blue.withValues(alpha: 0.35);
-    return null;
-  }
-
-  Widget _buildLayer(MediaItem item, int index, Color? dragColor) {
+  Widget _buildLayer(MediaItem item, int index) {
     final isTop = index == 0;
     final scale = 1.0 - (index * 0.04);
     final yOffset = index * 8.0;
 
-    Widget card = OrganizeCard(
-      item: item,
-      overlayColor: isTop ? dragColor : null,
-      playbackActive: isTop,
+    Widget card = RepaintBoundary(
+      child: OrganizeCard(
+        item: item,
+        playbackActive: isTop && !_isDraggingDown,
+      ),
     );
 
     if (isTop) {
-      card = GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            _dragOffset += details.delta;
-            _dragGlobalPosition = details.globalPosition;
-            final draggingDown = _dragOffset.dy > _folderRevealThreshold;
-            _setDraggingDown(draggingDown);
-            if (_isDraggingDown) {
-              _hoveredFolderPath = _folderStripKey.currentState
-                  ?.folderAt(details.globalPosition);
-            } else {
-              _hoveredFolderPath = null;
-            }
-          });
-        },
-        onPanEnd: (details) {
-          _handleRelease(details.velocity);
-        },
-        child: Transform.translate(
-          offset: _dragOffset,
-          child: Transform.rotate(
-            angle: _dragOffset.dx * 0.001,
-            child: card,
+      card = Stack(
+        fit: StackFit.expand,
+        children: [
+          card,
+          ValueListenableBuilder<_OverlayBand>(
+            valueListenable: _overlayBand,
+            builder: (context, band, _) {
+              final color = _colorForBand(band);
+              if (color == null) return const SizedBox.shrink();
+              return IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: color,
+                  ),
+                ),
+              );
+            },
           ),
+        ],
+      );
+
+      card = GestureDetector(
+        onPanUpdate: _onPanUpdate,
+        onPanEnd: (details) => _handleRelease(details.velocity),
+        child: ValueListenableBuilder<Offset>(
+          valueListenable: _dragOffset,
+          builder: (context, offset, child) {
+            return Transform.translate(
+              offset: offset,
+              child: Transform.rotate(
+                angle: offset.dx * 0.001,
+                child: child,
+              ),
+            );
+          },
+          child: card,
         ),
       );
     } else {
@@ -172,12 +189,55 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
     return Positioned.fill(child: card);
   }
 
+  void _onPanUpdate(DragUpdateDetails details) {
+    final next = _dragOffset.value + details.delta;
+    _dragOffset.value = next;
+    _dragGlobal.value = details.globalPosition;
+
+    final draggingDown = next.dy > _folderRevealThreshold;
+    _setDraggingDown(draggingDown);
+
+    if (draggingDown) {
+      final hovered = _folderStripKey.currentState?.folderAt(
+        details.globalPosition,
+      );
+      if (_hoveredFolder.value != hovered) {
+        _hoveredFolder.value = hovered;
+      }
+    } else if (_hoveredFolder.value != null) {
+      _hoveredFolder.value = null;
+    }
+
+    final band = _bandForOffset(next, draggingDown);
+    if (_overlayBand.value != band) {
+      _overlayBand.value = band;
+    }
+  }
+
+  _OverlayBand _bandForOffset(Offset offset, bool draggingDown) {
+    if (draggingDown) return _OverlayBand.down;
+    if (offset.dx < -_colorThreshold) return _OverlayBand.left;
+    if (offset.dx > _colorThreshold) return _OverlayBand.right;
+    if (offset.dy < -_colorThreshold) return _OverlayBand.up;
+    return _OverlayBand.none;
+  }
+
+  Color? _colorForBand(_OverlayBand band) {
+    return switch (band) {
+      _OverlayBand.none => null,
+      _OverlayBand.left => Colors.red.withValues(alpha: 0.35),
+      _OverlayBand.right => Colors.orange.withValues(alpha: 0.35),
+      _OverlayBand.up => Colors.blue.withValues(alpha: 0.35),
+      _OverlayBand.down => Colors.green.withValues(alpha: 0.25),
+    };
+  }
+
   void _handleRelease(Velocity velocity) {
-    final dx = _dragOffset.dx;
-    final dy = _dragOffset.dy;
+    final dx = _dragOffset.value.dx;
+    final dy = _dragOffset.value.dy;
 
     if (_isDraggingDown) {
-      final target = _hoveredFolderPath;
+      final target = _hoveredFolder.value;
       _resetDrag();
       if (target != null) {
         AppHaptics.medium();
@@ -203,16 +263,15 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
 
   void _setDraggingDown(bool draggingDown) {
     if (_isDraggingDown == draggingDown) return;
-    _isDraggingDown = draggingDown;
+    setState(() => _isDraggingDown = draggingDown);
     widget.onFolderDragChanged?.call(draggingDown);
   }
 
   void _resetDrag() {
     _setDraggingDown(false);
-    setState(() {
-      _dragOffset = Offset.zero;
-      _dragGlobalPosition = null;
-      _hoveredFolderPath = null;
-    });
+    _dragOffset.value = Offset.zero;
+    _dragGlobal.value = null;
+    _hoveredFolder.value = null;
+    _overlayBand.value = _OverlayBand.none;
   }
 }

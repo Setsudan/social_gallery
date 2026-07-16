@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
@@ -7,8 +9,10 @@ import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 
 /// Riverpod state for the organize swipe session (queue, undo, trash review).
 final organizeControllerProvider =
-    StateNotifierProvider<OrganizeController, OrganizeState>((ref) {
-  return OrganizeController(ref);
+    StateNotifierProvider.autoDispose<OrganizeController, OrganizeState>((ref) {
+  final controller = OrganizeController(ref);
+  ref.onDispose(controller.disposeController);
+  return controller;
 });
 
 /// Loads organize batches, handles swipes, undo, and trash review commits.
@@ -22,9 +26,16 @@ class OrganizeController extends StateNotifier<OrganizeState> {
   final _undoStack = <OrganizeUndoAction>[];
 
   List<MediaItem> _pool = [];
+  Future<void> _persistChain = Future<void>.value();
+  Timer? _feedRefreshTimer;
+  bool _feedsDirty = false;
 
   Future<void> _init() async {
     await loadBatch();
+  }
+
+  void disposeController() {
+    flushFeedRefresh();
   }
 
   Future<void> loadBatch() async {
@@ -68,26 +79,18 @@ class OrganizeController extends StateNotifier<OrganizeState> {
   Future<void> applySwipe(OrganizeSwipeDirection direction) async {
     final current = state.currentCard;
     if (current == null) return;
+    if (direction == OrganizeSwipeDirection.down) return;
 
     final organizeRepo = _ref.read(organizeRepositoryProvider);
     final mediaRepo = _ref.read(mediaRepositoryProvider);
+    final wasFavorite = current.isFavorite;
 
     switch (direction) {
       case OrganizeSwipeDirection.left:
-        await organizeRepo.addPendingTrash(current.id);
-        await organizeRepo.addProcessed(current.id);
         _undoStack.add(
           OrganizeUndoAction(type: OrganizeUndoType.trash, mediaId: current.id),
         );
-        await organizeRepo.updateStats(
-          organizeRepo.stats.copyWith(
-            processedCount: organizeRepo.stats.processedCount + 1,
-          ),
-        );
       case OrganizeSwipeDirection.right:
-        final wasFavorite = current.isFavorite;
-        await mediaRepo.setFavorite(current.id, true);
-        await organizeRepo.addProcessed(current.id);
         _undoStack.add(
           OrganizeUndoAction(
             type: OrganizeUndoType.like,
@@ -95,52 +98,145 @@ class OrganizeController extends StateNotifier<OrganizeState> {
             wasFavorite: wasFavorite,
           ),
         );
-        await organizeRepo.updateStats(
-          organizeRepo.stats.copyWith(
-            processedCount: organizeRepo.stats.processedCount + 1,
-            likedCount: organizeRepo.stats.likedCount + 1,
-          ),
-        );
       case OrganizeSwipeDirection.up:
-        await organizeRepo.addProcessed(current.id);
         _undoStack.add(
           OrganizeUndoAction(type: OrganizeUndoType.keep, mediaId: current.id),
-        );
-        await organizeRepo.updateStats(
-          organizeRepo.stats.copyWith(
-            processedCount: organizeRepo.stats.processedCount + 1,
-          ),
         );
       case OrganizeSwipeDirection.down:
         return;
     }
 
     _advanceCard();
+
+    _enqueuePersist(() async {
+      switch (direction) {
+        case OrganizeSwipeDirection.left:
+          await organizeRepo.addPendingTrash(current.id);
+          await organizeRepo.addProcessed(current.id);
+          await organizeRepo.updateStats(
+            organizeRepo.stats.copyWith(
+              processedCount: organizeRepo.stats.processedCount + 1,
+            ),
+          );
+          if (mounted) {
+            state = state.copyWith(
+              pendingTrashCount: organizeRepo.pendingTrashIds.length,
+              stats: organizeRepo.stats,
+            );
+          }
+        case OrganizeSwipeDirection.right:
+          await mediaRepo.setFavorite(current.id, true);
+          await organizeRepo.addProcessed(current.id);
+          await organizeRepo.updateStats(
+            organizeRepo.stats.copyWith(
+              processedCount: organizeRepo.stats.processedCount + 1,
+              likedCount: organizeRepo.stats.likedCount + 1,
+            ),
+          );
+          if (mounted) {
+            state = state.copyWith(stats: organizeRepo.stats);
+          }
+        case OrganizeSwipeDirection.up:
+          await organizeRepo.addProcessed(current.id);
+          await organizeRepo.updateStats(
+            organizeRepo.stats.copyWith(
+              processedCount: organizeRepo.stats.processedCount + 1,
+            ),
+          );
+          if (mounted) {
+            state = state.copyWith(stats: organizeRepo.stats);
+          }
+        case OrganizeSwipeDirection.down:
+          break;
+      }
+    });
   }
 
-  Future<void> moveToFolder(String targetFolderPath) async {
+  /// Advances the card immediately, then moves media in the background.
+  /// Returns `false` if the move failed and the card was restored.
+  Future<bool> moveToFolder(String targetFolderPath) async {
     final current = state.currentCard;
-    if (current == null) return;
+    if (current == null) return false;
 
-    final mediaRepo = _ref.read(mediaRepositoryProvider);
-    final organizeRepo = _ref.read(organizeRepositoryProvider);
-
-    await mediaRepo.moveMedia([current], targetFolderPath);
-    await organizeRepo.recordRecentFolder(targetFolderPath);
-    await organizeRepo.addProcessed(current.id);
-    _undoStack.add(
-      OrganizeUndoAction(
-        type: OrganizeUndoType.move,
-        mediaId: current.id,
-        sourceFolderPath: current.folderPath,
-        targetFolderPath: targetFolderPath,
-      ),
+    final undoAction = OrganizeUndoAction(
+      type: OrganizeUndoType.move,
+      mediaId: current.id,
+      sourceFolderPath: current.folderPath,
+      targetFolderPath: targetFolderPath,
     );
-    final newStats = organizeRepo.stats.copyWith(
-      processedCount: organizeRepo.stats.processedCount + 1,
-    );
-    await organizeRepo.updateStats(newStats);
+    _undoStack.add(undoAction);
     _advanceCard();
+
+    final completer = Completer<bool>();
+    _enqueuePersist(() async {
+      final mediaRepo = _ref.read(mediaRepositoryProvider);
+      final organizeRepo = _ref.read(organizeRepositoryProvider);
+      try {
+        final moved = await mediaRepo.moveMedia([current], targetFolderPath);
+        if (moved == 0) {
+          _rollbackFailedMove(current, undoAction);
+          completer.complete(false);
+          return;
+        }
+
+        await organizeRepo.recordRecentFolder(targetFolderPath);
+        await organizeRepo.addProcessed(current.id);
+        final newStats = organizeRepo.stats.copyWith(
+          processedCount: organizeRepo.stats.processedCount + 1,
+        );
+        await organizeRepo.updateStats(newStats);
+        if (mounted) {
+          state = state.copyWith(stats: organizeRepo.stats);
+        }
+        _scheduleFeedRefresh();
+        completer.complete(true);
+      } catch (_) {
+        _rollbackFailedMove(current, undoAction);
+        completer.complete(false);
+      }
+    });
+
+    return completer.future;
+  }
+
+  void _rollbackFailedMove(MediaItem item, OrganizeUndoAction undoAction) {
+    _undoStack.removeWhere(
+      (action) =>
+          action.mediaId == undoAction.mediaId &&
+          action.type == OrganizeUndoType.move &&
+          action.targetFolderPath == undoAction.targetFolderPath,
+    );
+
+    if (!mounted) return;
+    if (state.queue.any((m) => m.id == item.id)) return;
+
+    state = state.copyWith(
+      queue: [item, ...state.queue],
+      batchDone: state.batchDone > 0 ? state.batchDone - 1 : 0,
+    );
+  }
+
+  void _enqueuePersist(Future<void> Function() op) {
+    _persistChain = _persistChain.then((_) => op()).catchError((_) {});
+  }
+
+  void _scheduleFeedRefresh() {
+    _feedsDirty = true;
+    _feedRefreshTimer?.cancel();
+    // Short debounce so rapid drops coalesce, but gallery updates quickly.
+    _feedRefreshTimer = Timer(const Duration(milliseconds: 250), () {
+      _feedRefreshTimer = null;
+      if (!_feedsDirty) return;
+      _feedsDirty = false;
+      refreshFeedProvidersFromRef(_ref);
+    });
+  }
+
+  void flushFeedRefresh() {
+    _feedRefreshTimer?.cancel();
+    _feedRefreshTimer = null;
+    if (!_feedsDirty) return;
+    _feedsDirty = false;
     refreshFeedProvidersFromRef(_ref);
   }
 
@@ -156,6 +252,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
   }
 
   Future<void> undo() async {
+    await _persistChain;
     if (_undoStack.isEmpty) return;
     final action = _undoStack.removeLast();
     final organizeRepo = _ref.read(organizeRepositoryProvider);
@@ -174,6 +271,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
         final item = await mediaRepo.getMediaById(action.mediaId);
         if (item != null && action.sourceFolderPath != null) {
           await mediaRepo.moveMedia([item], action.sourceFolderPath!);
+          _scheduleFeedRefresh();
         }
     }
 
@@ -190,6 +288,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
   }
 
   Future<void> confirmTrash(List<int> selectedIds) async {
+    await _persistChain;
     final mediaRepo = _ref.read(mediaRepositoryProvider);
     final organizeRepo = _ref.read(organizeRepositoryProvider);
 

@@ -776,6 +776,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
         index == _initialIndex ? mediaHeroTag(item.id) : null;
 
+    final isActive = index == _currentIndex;
+
 
 
     if (usesFilesystemGallery) {
@@ -791,6 +793,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         videoFit: BoxFit.contain,
 
         imageFit: BoxFit.contain,
+
+        isActive: isActive,
 
       );
 
@@ -845,6 +849,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           videoFit: BoxFit.contain,
 
           imageFit: BoxFit.contain,
+
+          isActive: isActive,
 
         );
 

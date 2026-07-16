@@ -11,12 +11,10 @@ class OrganizeCard extends StatelessWidget {
   const OrganizeCard({
     super.key,
     required this.item,
-    this.overlayColor,
     this.playbackActive = false,
   });
 
   final MediaItem item;
-  final Color? overlayColor;
   final bool playbackActive;
 
   @override
@@ -40,11 +38,9 @@ class OrganizeCard extends StatelessWidget {
             MediaThumbnail(
               assetId: item.uri,
               fit: BoxFit.cover,
-              maxThumbnailEdge: 720,
+              maxThumbnailEdge: 480,
               showVideoBadge: item.isVideo,
             ),
-          if (overlayColor != null)
-            ColoredBox(color: overlayColor!),
           Positioned(
             left: 0,
             right: 0,

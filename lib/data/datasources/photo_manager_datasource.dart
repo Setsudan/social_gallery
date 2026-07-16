@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -26,10 +27,15 @@ class PhotoManagerDatasource {
   };
   static final _supportedExtensions = {..._imageExtensions, ..._videoExtensions};
 
-  List<File> _scanMediaFiles(String rootPath) {
+  List<AssetPathEntity>? _albumsCache;
+  DateTime? _albumsCacheAt;
+  static const _albumsCacheTtl = Duration(seconds: 30);
+  final _resolvedAlbumIds = <String, String>{};
+
+  List<File> _scanMediaFiles(String rootPath, {bool newestFirst = true}) {
     final dir = Directory(rootPath);
     if (!dir.existsSync()) return [];
-    
+
     final files = <File>[];
     try {
       final list = dir.listSync(recursive: true, followLinks: false);
@@ -44,18 +50,31 @@ class PhotoManagerDatasource {
         }
       }
     } catch (_) {}
+
+    if (newestFirst && files.length > 1) {
+      files.sort((a, b) {
+        try {
+          return b.statSync().modified.compareTo(a.statSync().modified);
+        } catch (_) {
+          return 0;
+        }
+      });
+    }
     return files;
   }
 
-  Future<List<MediaItemsCompanion>> _loadAllMediaWindows({
+  static const _syncChunkSize = 200;
+
+  Future<void> _scanAllMediaWindows({
     bool Function()? shouldCancel,
     GallerySyncProgressCallback? onProgress,
+    required Future<void> Function(List<MediaItemsCompanion> chunk) onChunk,
   }) async {
     final root = _preferences.desktopGalleryRootPath;
-    if (root == null || root.isEmpty) return [];
+    if (root == null || root.isEmpty) return;
 
     final files = _scanMediaFiles(root);
-    final companions = <MediaItemsCompanion>[];
+    final chunk = <MediaItemsCompanion>[];
     final total = files.length;
 
     onProgress?.call(
@@ -119,7 +138,7 @@ class PhotoManagerDatasource {
 
         dateTaken ??= dateModified;
 
-        companions.add(
+        chunk.add(
           MediaItemsCompanion.insert(
             id: Value(id),
             uri: filePath,
@@ -150,6 +169,10 @@ class PhotoManagerDatasource {
         );
       } catch (_) {}
       processed++;
+      if (chunk.length >= _syncChunkSize) {
+        await onChunk(List<MediaItemsCompanion>.from(chunk));
+        chunk.clear();
+      }
       if (processed % 25 == 0 || processed == total) {
         onProgress?.call(
           GallerySyncProgress(
@@ -161,8 +184,9 @@ class PhotoManagerDatasource {
         );
       }
     }
-
-    return companions;
+    if (chunk.isNotEmpty) {
+      await onChunk(chunk);
+    }
   }
 
   Future<List<FoldersCompanion>> _loadFoldersWindows(
@@ -221,36 +245,82 @@ class PhotoManagerDatasource {
     );
   }
 
-  Future<List<MediaItemsCompanion>> loadAllMedia({
+  Future<List<AssetPathEntity>> listAlbumsCached({
+    Duration maxAge = _albumsCacheTtl,
+  }) async {
+    if (usesFilesystemGallery) return const [];
+    final cached = _albumsCache;
+    final cachedAt = _albumsCacheAt;
+    if (cached != null &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt) < maxAge) {
+      return cached;
+    }
+    final albums = await listAlbums();
+    _albumsCache = albums;
+    _albumsCacheAt = DateTime.now();
+    return albums;
+  }
+
+  void invalidateAlbumsCache() {
+    _albumsCache = null;
+    _albumsCacheAt = null;
+    _resolvedAlbumIds.clear();
+  }
+
+  void _deferClearFileCache() {
+    unawaited(
+      Future<void>(() async {
+        try {
+          await PhotoManager.clearFileCache();
+        } catch (_) {}
+      }),
+    );
+  }
+
+  /// Scans the device library and delivers companions in bounded chunks.
+  Future<void> scanAllMedia({
     bool fastScan = false,
     bool Function()? shouldCancel,
     GallerySyncProgressCallback? onProgress,
+    required Future<void> Function(List<MediaItemsCompanion> chunk) onChunk,
   }) async {
     if (usesFilesystemGallery) {
-      return _loadAllMediaWindows(
+      await _scanAllMediaWindows(
         shouldCancel: shouldCancel,
         onProgress: onProgress,
+        onChunk: onChunk,
       );
+      return;
     }
 
     final albums = await listAlbums();
-    final scanAlbums = albums.where((album) => !album.isAll).toList();
+    final unsorted = albums.where((album) => !album.isAll).toList();
     var totalAssets = 0;
-    for (final album in scanAlbums) {
+    for (final album in unsorted) {
       totalAssets += await album.assetCountAsync;
     }
 
     onProgress?.call(
       GallerySyncProgress(
         phase: 'scanning',
-        detail: 'Found $totalAssets items in ${scanAlbums.length} albums',
+        detail: 'Found $totalAssets items in ${unsorted.length} albums',
         processed: 0,
         total: totalAssets,
       ),
     );
 
-    final companions = <MediaItemsCompanion>[];
+    // Newest albums first so gallery/home update with recent media early.
+    final scanAlbums = await _albumsNewestFirst(unsorted, shouldCancel);
+
+    final chunk = <MediaItemsCompanion>[];
     var processed = 0;
+
+    Future<void> flushChunk() async {
+      if (chunk.isEmpty) return;
+      await onChunk(List<MediaItemsCompanion>.from(chunk));
+      chunk.clear();
+    }
 
     for (final album in scanAlbums) {
       if (shouldCancel?.call() == true) break;
@@ -267,69 +337,107 @@ class PhotoManagerDatasource {
         ),
       );
 
-      final assets = await album.getAssetListRange(start: 0, end: count);
       final folderPath = album.id;
       final folderName = album.name;
 
-      for (var i = 0; i < assets.length; i++) {
+      for (var start = 0; start < count; start += _syncChunkSize) {
         if (shouldCancel?.call() == true) break;
-        if (i % 40 == 0) {
-          await Future<void>.delayed(Duration.zero);
-        }
+        final end = math.min(start + _syncChunkSize, count);
+        final assets = await album.getAssetListRange(start: start, end: end);
 
-        final asset = assets[i];
-        final kind = AssetMediaLoader.classify(asset);
-        final mimeType = fastScan
-            ? AssetMediaLoader.inferMimeTypeSync(asset)
-            : await AssetMediaLoader.inferMimeType(asset);
+        for (var i = 0; i < assets.length; i++) {
+          if (shouldCancel?.call() == true) break;
+          if (i % 40 == 0) {
+            await Future<void>.delayed(Duration.zero);
+          }
 
-        int size = 0;
-        if (!fastScan) {
-          final file = await asset.file;
-          size = await _assetSize(asset, file?.lengthSync());
-        }
+          final asset = assets[i];
+          final kind = AssetMediaLoader.classify(asset);
+          final mimeType = fastScan
+              ? AssetMediaLoader.inferMimeTypeSync(asset)
+              : await AssetMediaLoader.inferMimeType(asset);
 
-        final lat = asset.latitude;
-        final lng = asset.longitude;
+          int size = 0;
+          if (!fastScan) {
+            final file = await asset.file;
+            size = await _assetSize(asset, file?.lengthSync());
+          }
 
-        companions.add(
-          MediaItemsCompanion.insert(
-            id: Value(_stableId(asset)),
-            uri: asset.id,
-            displayName: asset.title ?? 'media_${asset.id}',
-            folderName: folderName,
-            folderPath: folderPath,
-            dateAdded: asset.createDateTime.millisecondsSinceEpoch,
-            dateModified: asset.modifiedDateTime.millisecondsSinceEpoch,
-            dateTaken: Value(asset.createDateTime.millisecondsSinceEpoch),
-            size: size,
-            mimeType: mimeType,
-            width: Value(asset.width),
-            height: Value(asset.height),
-            latitude: lat != null && lat != 0 ? Value(lat) : const Value(null),
-            longitude: lng != null && lng != 0 ? Value(lng) : const Value(null),
-            videoDuration: Value(
-              kind == AssetMediaKind.video ? asset.duration : null,
-            ),
-          ),
-        );
+          final lat = asset.latitude;
+          final lng = asset.longitude;
 
-        processed++;
-        final reportEvery = math.max(300, totalAssets ~/ 40);
-        if (processed % reportEvery == 0 || processed == totalAssets) {
-          onProgress?.call(
-            GallerySyncProgress(
-              phase: 'scanning',
-              detail: 'Indexed $processed of $totalAssets items',
-              processed: processed,
-              total: totalAssets,
+          chunk.add(
+            MediaItemsCompanion.insert(
+              id: Value(_stableId(asset)),
+              uri: asset.id,
+              displayName: asset.title ?? 'media_${asset.id}',
+              folderName: folderName,
+              folderPath: folderPath,
+              dateAdded: asset.createDateTime.millisecondsSinceEpoch,
+              dateModified: asset.modifiedDateTime.millisecondsSinceEpoch,
+              dateTaken: Value(asset.createDateTime.millisecondsSinceEpoch),
+              size: size,
+              mimeType: mimeType,
+              width: Value(asset.width),
+              height: Value(asset.height),
+              latitude: lat != null && lat != 0 ? Value(lat) : const Value(null),
+              longitude:
+                  lng != null && lng != 0 ? Value(lng) : const Value(null),
+              videoDuration: Value(
+                kind == AssetMediaKind.video ? asset.duration : null,
+              ),
             ),
           );
+
+          processed++;
+          if (chunk.length >= _syncChunkSize) {
+            await flushChunk();
+          }
+          final reportEvery = math.max(300, totalAssets ~/ 40);
+          if (processed % reportEvery == 0 || processed == totalAssets) {
+            onProgress?.call(
+              GallerySyncProgress(
+                phase: 'scanning',
+                detail: 'Indexed $processed of $totalAssets items',
+                processed: processed,
+                total: totalAssets,
+              ),
+            );
+          }
         }
       }
     }
 
-    return companions;
+    await flushChunk();
+  }
+
+  /// Orders albums by newest asset first so sync surfaces recent media early.
+  Future<List<AssetPathEntity>> _albumsNewestFirst(
+    List<AssetPathEntity> albums,
+    bool Function()? shouldCancel,
+  ) async {
+    if (albums.length <= 1) return albums;
+
+    final scored = <({AssetPathEntity album, int newestMs})>[];
+    for (final album in albums) {
+      if (shouldCancel?.call() == true) break;
+      try {
+        final count = await album.assetCountAsync;
+        if (count == 0) {
+          scored.add((album: album, newestMs: 0));
+          continue;
+        }
+        final newest = await album.getAssetListRange(start: 0, end: 1);
+        final ms =
+            newest.firstOrNull?.modifiedDateTime.millisecondsSinceEpoch ?? 0;
+        scored.add((album: album, newestMs: ms));
+      } catch (_) {
+        scored.add((album: album, newestMs: 0));
+      }
+    }
+
+    scored.sort((a, b) => b.newestMs.compareTo(a.newestMs));
+    return scored.map((e) => e.album).toList();
   }
 
   Future<List<FoldersCompanion>> loadFolders(
@@ -450,15 +558,26 @@ class PhotoManagerDatasource {
   Future<String?> resolveTargetAlbumId(String targetFolderPath) async {
     if (usesFilesystemGallery) return targetFolderPath;
 
-    final albums = await listAlbums();
-    final byId = albums.where((album) => album.id == targetFolderPath).firstOrNull;
-    if (byId != null) return byId.id;
+    final cached = _resolvedAlbumIds[targetFolderPath];
+    if (cached != null) return cached;
 
-    final relative = _absoluteToRelativePath(targetFolderPath) ?? targetFolderPath;
+    final albums = await listAlbumsCached();
+    final byId =
+        albums.where((album) => album.id == targetFolderPath).firstOrNull;
+    if (byId != null) {
+      _resolvedAlbumIds[targetFolderPath] = byId.id;
+      return byId.id;
+    }
+
+    final relative =
+        _absoluteToRelativePath(targetFolderPath) ?? targetFolderPath;
     for (final album in albums) {
       if (album.isAll) continue;
       final albumRelative = await album.relativePathAsync;
-      if (albumRelative == relative) return album.id;
+      if (albumRelative == relative) {
+        _resolvedAlbumIds[targetFolderPath] = album.id;
+        return album.id;
+      }
     }
 
     final name = relative.contains('/')
@@ -467,27 +586,33 @@ class PhotoManagerDatasource {
     final byName = albums
         .where((album) => !album.isAll && album.name == name)
         .firstOrNull;
-    return byName?.id;
+    final resolved = byName?.id;
+    if (resolved != null) {
+      _resolvedAlbumIds[targetFolderPath] = resolved;
+    }
+    return resolved;
   }
 
-  /// Moves [assetIds] to [targetFolderPath] and returns the IDs that were
-  /// actually moved successfully (a subset of [assetIds], not necessarily a
-  /// prefix, since individual assets can fail independently on some
-  /// platforms).
-  Future<List<String>> moveAssetsOnDisk(
+  /// Moves [assetIds] to [targetFolderPath].
+  ///
+  /// Returns a map of old asset id/path → new asset id/path for each success.
+  /// On mobile the id is usually unchanged; on filesystem gallery the path
+  /// (and therefore the id) changes after rename.
+  Future<Map<String, String>> moveAssetsOnDisk(
     List<String> assetIds,
     String targetFolderPath,
   ) async {
-    if (assetIds.isEmpty) return const [];
+    if (assetIds.isEmpty) return const {};
 
     if (usesFilesystemGallery) {
-      final movedIds = <String>[];
+      final moved = <String, String>{};
       for (final assetId in assetIds) {
-        if (await moveAssetOnDisk(assetId, targetFolderPath)) {
-          movedIds.add(assetId);
+        final newPath = await moveFilesystemAsset(assetId, targetFolderPath);
+        if (newPath != null) {
+          moved[assetId] = newPath;
         }
       }
-      return movedIds;
+      return moved;
     }
 
     final entities = <AssetEntity>[];
@@ -495,9 +620,9 @@ class PhotoManagerDatasource {
       final entity = await AssetEntity.fromId(assetId);
       if (entity != null) entities.add(entity);
     }
-    if (entities.isEmpty) return const [];
+    if (entities.isEmpty) return const {};
 
-    final albums = await listAlbums();
+    final albums = await listAlbumsCached();
     if (Platform.isAndroid) {
       final relativePath = await _resolveAndroidRelativePath(
         targetFolderPath,
@@ -505,7 +630,7 @@ class PhotoManagerDatasource {
       );
       if (relativePath == null) {
         debugPrint('moveAssetsOnDisk: could not resolve target path');
-        return const [];
+        return const {};
       }
 
       try {
@@ -514,8 +639,9 @@ class PhotoManagerDatasource {
           targetPath: relativePath,
         );
         if (moved) {
-          await PhotoManager.clearFileCache();
-          return entities.map((e) => e.id).toList();
+          invalidateAlbumsCache();
+          _deferClearFileCache();
+          return {for (final e in entities) e.id: e.id};
         }
       } catch (e) {
         debugPrint('moveAssetsToPath failed: $e');
@@ -533,58 +659,80 @@ class PhotoManagerDatasource {
               target: targetAlbum,
             );
             if (legacyMoved) {
-              await PhotoManager.clearFileCache();
-              return [entities.first.id];
+              invalidateAlbumsCache();
+              _deferClearFileCache();
+              return {entities.first.id: entities.first.id};
             }
           } catch (e) {
             debugPrint('moveAssetToAnother failed: $e');
           }
         }
       }
-      return const [];
+      return const {};
     }
 
     if (Platform.isIOS || Platform.isMacOS) {
       final targetAlbum = albums
           .where((album) => album.id == targetFolderPath)
           .firstOrNull;
-      if (targetAlbum == null) return const [];
+      if (targetAlbum == null) return const {};
 
-      final movedIds = <String>[];
+      final moved = <String, String>{};
       for (final entity in entities) {
         try {
           await PhotoManager.editor.copyAssetToPath(
             asset: entity,
             pathEntity: targetAlbum,
           );
-          movedIds.add(entity.id);
+          moved[entity.id] = entity.id;
         } catch (e) {
           debugPrint('copyAssetToPath failed: $e');
         }
       }
-      return movedIds;
+      if (moved.isNotEmpty) {
+        invalidateAlbumsCache();
+      }
+      return moved;
     }
 
-    return const [];
+    return const {};
+  }
+
+  /// Renames a filesystem gallery file into [targetFolderPath].
+  /// Returns the destination path on success.
+  Future<String?> moveFilesystemAsset(
+    String assetPath,
+    String targetFolderPath,
+  ) async {
+    try {
+      final file = File(assetPath);
+      if (!file.existsSync()) return null;
+      final destDir = Directory(targetFolderPath);
+      if (!destDir.existsSync()) {
+        destDir.createSync(recursive: true);
+      }
+      var destPath = p.join(targetFolderPath, p.basename(assetPath));
+      if (destPath == assetPath) return assetPath;
+      if (File(destPath).existsSync()) {
+        final stem = p.basenameWithoutExtension(assetPath);
+        final ext = p.extension(assetPath);
+        destPath = p.join(
+          targetFolderPath,
+          '${stem}_${DateTime.now().millisecondsSinceEpoch}$ext',
+        );
+      }
+      file.renameSync(destPath);
+      return destPath;
+    } catch (e) {
+      debugPrint('moveFilesystemAsset failed: $e');
+      return null;
+    }
   }
 
   Future<bool> moveAssetOnDisk(String assetId, String targetFolderPath) async {
     if (usesFilesystemGallery) {
-      try {
-        final file = File(assetId);
-        if (file.existsSync()) {
-          final destDir = Directory(targetFolderPath);
-          if (!destDir.existsSync()) {
-            destDir.createSync(recursive: true);
-          }
-          final destPath = p.join(targetFolderPath, p.basename(assetId));
-          file.renameSync(destPath);
-          return true;
-        }
-      } catch (e) {
-        debugPrint('moveAssetOnDisk windows failed: $e');
-      }
-      return false;
+      final moved = await moveFilesystemAsset(assetId, targetFolderPath);
+      return moved != null;
     }
 
     final moved = await moveAssetsOnDisk([assetId], targetFolderPath);

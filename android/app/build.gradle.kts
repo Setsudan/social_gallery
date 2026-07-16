@@ -31,6 +31,13 @@ android {
         versionName = flutter.versionName
     }
 
+    // Keep JNI libs uncompressed so ELF 16 KB LOAD alignment is preserved in the APK.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

@@ -14,6 +14,7 @@ import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/folder_lock_gate.dart';
 import 'package:social_gallery/core/animation/modal_sheet.dart';
 import 'package:social_gallery/shared/media/media_bulk_actions.dart';
+import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
@@ -49,11 +50,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _clearSelection() => setState(_selectedIds.clear);
 
+  void _refreshActiveFolderMedia() {
+    _clearSelection();
+    final path = ref.read(activeProfileFolderProvider);
+    if (path == null) return;
+    ref.read(folderMediaPaginatedProvider(path).notifier).loadMore(refresh: true);
+  }
+
   Future<void> _bulkDelete() => bulkTrash(
         ref,
         context,
         _selectedIds,
-        onDone: _clearSelection,
+        onDone: _refreshActiveFolderMedia,
         useHaptics: true,
       );
 
@@ -61,7 +69,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref,
         context,
         _selectedIds,
-        onDone: _clearSelection,
+        onDone: _refreshActiveFolderMedia,
         useHaptics: true,
       );
 
@@ -69,14 +77,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref,
         _selectedIds,
         favorite,
-        onDone: _clearSelection,
+        onDone: _refreshActiveFolderMedia,
         useHaptics: true,
       );
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onMediaScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _ensureActiveFolder());
+  }
+
+  void _onMediaScroll() {
+    if (!_scrollController.hasClients) return;
+    final path = ref.read(activeProfileFolderProvider);
+    if (path == null) return;
+    final paginated = ref.read(folderMediaPaginatedProvider(path));
+    handlePaginatedScroll(
+      _scrollController.position,
+      isLoading: paginated.isLoading,
+      hasMore: paginated.hasMore,
+      loadMore: () =>
+          ref.read(folderMediaPaginatedProvider(path).notifier).loadMore(),
+    );
   }
 
   @override
@@ -240,39 +263,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 if (folder == null) {
                   return EmptyState(title: l10n.errorFolderNotFound);
                 }
+                final paginated =
+                    ref.watch(folderMediaPaginatedProvider(activePath));
+                final items = paginated.items;
                 return FolderLockGate(
                   folder: folder,
-                  builder: (context) => ref
-                      .watch(folderMediaProvider(activePath))
-                      .when(
-                        data: (items) {
-                          if (items.isEmpty) {
-                            return EmptyState(
-                              title: l10n.profileNoMediaInFolder,
-                            );
-                          }
-                          return MediaGrid(
-                            controller: _scrollController,
-                            items: items,
-                            selectedIds: _selectedIds,
-                            onSelectToggle: _toggleSelect,
-                            onLongPress: _startSelection,
-                            onTap: (item) => openMediaViewer(
-                              context,
-                              ref,
-                              items: items,
-                              item: item,
-                            ),
-                          );
-                        },
-                        loading: () => const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                        error: (e, _) => EmptyState(
-                          title: l10n.profileErrorLoadFolder,
-                          message: e.toString(),
-                        ),
+                  builder: (context) {
+                    if (paginated.error != null && items.isEmpty) {
+                      return EmptyState(
+                        title: l10n.profileErrorLoadFolder,
+                        message: paginated.error,
+                      );
+                    }
+                    if (items.isEmpty && paginated.isLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (items.isEmpty) {
+                      return EmptyState(
+                        title: l10n.profileNoMediaInFolder,
+                      );
+                    }
+                    return MediaGrid(
+                      controller: _scrollController,
+                      items: items,
+                      isLoadingMore: paginated.isLoading && items.isNotEmpty,
+                      selectedIds: _selectedIds,
+                      onSelectToggle: _toggleSelect,
+                      onLongPress: _startSelection,
+                      onTap: (item) => openMediaViewer(
+                        context,
+                        ref,
+                        items: items,
+                        item: item,
                       ),
+                    );
+                  },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),

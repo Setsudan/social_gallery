@@ -130,67 +130,71 @@ class _AssetVideoPlayerState extends State<AssetVideoPlayer> {
     }
 
     final controller = _controller!;
-    return ValueListenableBuilder<VideoPlayerValue>(
-      valueListenable: controller,
-      builder: (context, value, child) {
-        if (!value.isInitialized) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          );
-        }
+    if (!controller.value.isInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
+    }
 
-        final position = value.position;
-        final duration = value.duration;
-        final maxMs = duration.inMilliseconds.clamp(1, 1 << 31);
-        final currentMs = _isScrubbing
-            ? _scrubValue.round()
-            : position.inMilliseconds.clamp(0, maxMs);
-        final displayPosition = Duration(milliseconds: currentMs);
+    final videoSize = controller.value.size;
+    final videoChild = SizedBox(
+      width: videoSize.width,
+      height: videoSize.height,
+      child: VideoPlayer(controller),
+    );
 
-        final videoSize = value.size;
-        final videoChild = SizedBox(
-          width: videoSize.width,
-          height: videoSize.height,
-          child: VideoPlayer(controller),
-        );
-
-        return ColoredBox(
-          color: Colors.black,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              FittedBox(
-                fit: widget.fit,
-                clipBehavior: Clip.hardEdge,
-                child: videoChild,
+    return ColoredBox(
+      color: Colors.black,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          FittedBox(
+            fit: widget.fit,
+            clipBehavior: Clip.hardEdge,
+            child: videoChild,
+          ),
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _togglePlayPause,
+              child: ValueListenableBuilder<VideoPlayerValue>(
+                valueListenable: controller,
+                builder: (context, value, _) {
+                  if (value.isPlaying) return const SizedBox.shrink();
+                  return Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: const Icon(
+                        Icons.play_arrow,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                    ),
+                  );
+                },
               ),
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: _togglePlayPause,
-                  child: !value.isPlaying
-                      ? Center(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            child: const Icon(
-                              Icons.play_arrow,
-                              color: Colors.white,
-                              size: 48,
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ),
-              Positioned(
-                left: 8,
-                right: 8,
-                bottom: 8,
-                child: Column(
+            ),
+          ),
+          Positioned(
+            left: 8,
+            right: 8,
+            bottom: 8,
+            child: ValueListenableBuilder<VideoPlayerValue>(
+              valueListenable: controller,
+              builder: (context, value, _) {
+                final position = value.position;
+                final duration = value.duration;
+                final maxMs = duration.inMilliseconds.clamp(1, 1 << 31);
+                final currentMs = _isScrubbing
+                    ? _scrubValue.round()
+                    : position.inMilliseconds.clamp(0, maxMs);
+                final displayPosition = Duration(milliseconds: currentMs);
+
+                return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SliderTheme(
@@ -247,12 +251,12 @@ class _AssetVideoPlayerState extends State<AssetVideoPlayer> {
                       ),
                     ),
                   ],
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

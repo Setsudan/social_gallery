@@ -32,7 +32,7 @@ class _AlbumCoverPickerSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final mediaAsync = ref.watch(folderMediaProvider(folder.path));
+    final mediaAsync = ref.watch(folderCoverCandidatesProvider(folder.path));
     final currentCover = folder.customCoverUri?.trim();
 
     return SafeArea(

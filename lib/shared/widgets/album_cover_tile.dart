@@ -66,10 +66,13 @@ class AlbumCoverTile extends StatelessWidget {
     if (cover != null && cover.isNotEmpty && !locked) {
       final file = File(cover);
       if (file.existsSync()) {
+        final dpr = MediaQuery.devicePixelRatioOf(context);
+        final cacheWidth = (200 * dpr).ceil().clamp(96, 800);
         return SizedBox.expand(
           child: Image.file(
             file,
             fit: BoxFit.cover,
+            cacheWidth: cacheWidth,
             gaplessPlayback: true,
             errorBuilder: (context, error, stackTrace) =>
                 MediaThumbnail(assetId: cover),

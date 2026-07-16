@@ -8,6 +8,7 @@ import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/shared/widgets/asset_video_player.dart';
+import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/unsupported_media_placeholder.dart';
 
 /// Edge-to-edge photo/video for post detail and media viewer routes.
@@ -20,6 +21,7 @@ class FullscreenMediaContent extends ConsumerWidget {
     this.videoFit = BoxFit.contain,
     this.imageFit = BoxFit.contain,
     this.enablePinchZoom = true,
+    this.isActive = true,
   });
 
   final AssetEntity? entity;
@@ -29,9 +31,18 @@ class FullscreenMediaContent extends ConsumerWidget {
   final BoxFit imageFit;
   final bool enablePinchZoom;
 
+  /// When false, videos show a poster instead of initializing a player.
+  final bool isActive;
+
+  int _decodeCacheWidth(BuildContext context, Size size) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return (size.shortestSide * dpr).ceil().clamp(720, 4096);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final size = MediaQuery.sizeOf(context);
+    final cacheWidth = _decodeCacheWidth(context, size);
 
     if (usesFilesystemGallery && assetPath != null) {
       final isWinVideo = assetPath!.toLowerCase().endsWith('.mp4') ||
@@ -41,12 +52,25 @@ class FullscreenMediaContent extends ConsumerWidget {
           assetPath!.toLowerCase().endsWith('.avi');
 
       if (isWinVideo) {
-        return AssetVideoPlayer(entity: null, assetPath: assetPath, fit: videoFit);
+        if (!isActive) {
+          return MediaThumbnail(
+            assetId: assetPath!,
+            showVideoBadge: true,
+            fit: BoxFit.contain,
+          );
+        }
+        return AssetVideoPlayer(
+          entity: null,
+          assetPath: assetPath,
+          fit: videoFit,
+        );
       }
 
       final Widget imageChild = Image.file(
         File(assetPath!),
         fit: imageFit,
+        cacheWidth: cacheWidth,
+        gaplessPlayback: true,
       );
 
       final Widget routedImage = heroTag != null
@@ -90,6 +114,13 @@ class FullscreenMediaContent extends ConsumerWidget {
     final kind = AssetMediaLoader.classify(nonNullEntity);
 
     if (kind == AssetMediaKind.video) {
+      if (!isActive) {
+        return MediaThumbnail(
+          assetId: nonNullEntity.id,
+          showVideoBadge: true,
+          fit: BoxFit.contain,
+        );
+      }
       return AssetVideoPlayer(entity: nonNullEntity, fit: videoFit);
     }
 
@@ -107,6 +138,7 @@ class FullscreenMediaContent extends ConsumerWidget {
       entity: nonNullEntity,
       fit: imageFit,
       heroTag: heroTag,
+      cacheWidth: cacheWidth,
     );
 
     final mediaChild = SizedBox(

@@ -4169,6 +4169,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $MediaAnalysisCacheTable(this);
   late final $LocationPlaceCacheTable locationPlaceCache =
       $LocationPlaceCacheTable(this);
+  late final Index foldersFollowBiometric = Index(
+    'folders_follow_biometric',
+    'CREATE INDEX folders_follow_biometric ON folders (follow_status, is_biometric_locked)',
+  );
+  late final Index mediaItemsFolderTrashedModified = Index(
+    'media_items_folder_trashed_modified',
+    'CREATE INDEX media_items_folder_trashed_modified ON media_items (folder_path, is_trashed, date_modified DESC)',
+  );
+  late final Index mediaItemsFavoriteTrashedModified = Index(
+    'media_items_favorite_trashed_modified',
+    'CREATE INDEX media_items_favorite_trashed_modified ON media_items (is_trashed, is_favorite, date_modified DESC)',
+  );
+  late final Index mediaItemsTrashedModified = Index(
+    'media_items_trashed_modified',
+    'CREATE INDEX media_items_trashed_modified ON media_items (is_trashed, date_modified DESC)',
+  );
+  late final Index mediaItemsBackupState = Index(
+    'media_items_backup_state',
+    'CREATE INDEX media_items_backup_state ON media_items (backup_state)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4179,6 +4199,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     travelModes,
     mediaAnalysisCache,
     locationPlaceCache,
+    foldersFollowBiometric,
+    mediaItemsFolderTrashedModified,
+    mediaItemsFavoriteTrashedModified,
+    mediaItemsTrashedModified,
+    mediaItemsBackupState,
   ];
 }
 

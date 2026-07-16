@@ -1898,6 +1898,12 @@ abstract class AppLocalizations {
   /// **'Sharing {name}'**
   String organizeSharingItem(String name);
 
+  /// No description provided for @organizeMoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t move this item. Try again.'**
+  String get organizeMoveFailed;
+
   /// No description provided for @organizeBatchComplete.
   ///
   /// In en, this message translates to:
@@ -2149,6 +2155,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move to trash'**
   String get tooltipMoveToTrash;
+
+  /// No description provided for @selectionActionMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get selectionActionMove;
+
+  /// No description provided for @selectionActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get selectionActionShare;
+
+  /// No description provided for @selectionActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get selectionActionDelete;
+
+  /// No description provided for @selectionActionMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get selectionActionMore;
+
+  /// No description provided for @selectionCopyToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard'**
+  String get selectionCopyToClipboard;
+
+  /// No description provided for @selectionSetAsWallpaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as wallpaper'**
+  String get selectionSetAsWallpaper;
+
+  /// No description provided for @snackbarSharedItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared {count, plural, =1{1 item} other{{count} items}}'**
+  String snackbarSharedItems(int count);
+
+  /// No description provided for @snackbarShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share selected items'**
+  String get snackbarShareFailed;
+
+  /// No description provided for @snackbarCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get snackbarCopiedToClipboard;
+
+  /// No description provided for @snackbarCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy to clipboard'**
+  String get snackbarCopyFailed;
+
+  /// No description provided for @snackbarCopyUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Only images can be copied to the clipboard'**
+  String get snackbarCopyUnsupported;
+
+  /// No description provided for @snackbarWallpaperSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper updated'**
+  String get snackbarWallpaperSet;
+
+  /// No description provided for @snackbarWallpaperFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not set wallpaper'**
+  String get snackbarWallpaperFailed;
+
+  /// No description provided for @snackbarWallpaperUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper is only available for images on Android'**
+  String get snackbarWallpaperUnsupported;
+
+  /// No description provided for @wallpaperConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as wallpaper?'**
+  String get wallpaperConfirmTitle;
+
+  /// No description provided for @wallpaperConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This image will be set as your home screen wallpaper.'**
+  String get wallpaperConfirmMessage;
+
+  /// No description provided for @wallpaperConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set wallpaper'**
+  String get wallpaperConfirmAction;
 
   /// No description provided for @trashDeletePermanentlyTitle.
   ///

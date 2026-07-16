@@ -24,6 +24,7 @@ class MediaGrid extends ConsumerWidget {
     this.onLongPress,
     this.onSelectToggle,
     this.staggerEntrance = true,
+    this.isLoadingMore = false,
   });
 
   final List<MediaItem> items;
@@ -35,6 +36,7 @@ class MediaGrid extends ConsumerWidget {
   final void Function(MediaItem item)? onLongPress;
   final void Function(MediaItem item)? onSelectToggle;
   final bool staggerEntrance;
+  final bool isLoadingMore;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,6 +57,8 @@ class MediaGrid extends ConsumerWidget {
         ? gridCrossAxisCountForWidth(MediaQuery.sizeOf(context).width)
         : crossAxisCount;
 
+    final footerCount = isLoadingMore ? 1 : 0;
+
     return GridView.builder(
       controller: controller,
       padding: padding,
@@ -64,9 +68,17 @@ class MediaGrid extends ConsumerWidget {
         crossAxisSpacing: 2,
         mainAxisSpacing: 2,
       ),
-      itemCount: items.length,
+      itemCount: items.length + footerCount,
       addRepaintBoundaries: true,
       itemBuilder: (context, index) {
+        if (index >= items.length) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(12),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
         final item = items[index];
         final isSelected = selectedIds.contains(item.id);
 

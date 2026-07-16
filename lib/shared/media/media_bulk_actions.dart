@@ -1,7 +1,14 @@
+import 'dart:io';
+
+import 'package:async_wallpaper/async_wallpaper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/core/platform/image_clipboard.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
@@ -176,4 +183,179 @@ Future<void> createAlbumAndMove(
   );
   refreshFeedProviders(ref);
   onDone?.call();
+}
+
+Future<File?> resolveMediaFile(MediaItem item) async {
+  if (usesFilesystemGallery) {
+    final file = File(item.uri);
+    if (await file.exists()) return file;
+    return null;
+  }
+  final entity = await AssetEntity.fromId(item.uri);
+  if (entity == null) return null;
+  final file = await entity.originFile ?? await entity.file;
+  if (file == null || !await file.exists()) return null;
+  return file;
+}
+
+Future<void> bulkShare(
+  WidgetRef ref,
+  BuildContext context,
+  Set<int> selectedIds, {
+  VoidCallback? onDone,
+}) async {
+  if (selectedIds.isEmpty) return;
+
+  final items = await resolveSelectedMedia(ref, selectedIds);
+  final files = <XFile>[];
+  for (final item in items) {
+    final file = await resolveMediaFile(item);
+    if (file != null) {
+      files.add(XFile(file.path, name: item.displayName));
+    }
+  }
+
+  if (!context.mounted) return;
+  if (files.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarShareFailed)),
+    );
+    return;
+  }
+
+  await Share.shareXFiles(files);
+  if (!context.mounted) return;
+  onDone?.call();
+}
+
+Future<void> copyMediaToClipboard(
+  WidgetRef ref,
+  BuildContext context,
+  Set<int> selectedIds,
+) async {
+  if (selectedIds.length != 1) return;
+
+  final items = await resolveSelectedMedia(ref, selectedIds);
+  if (items.isEmpty) return;
+  final item = items.first;
+
+  if (item.isVideo) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarCopyUnsupported)),
+    );
+    return;
+  }
+
+  if (!supportsImageClipboard) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarCopyFailed)),
+    );
+    return;
+  }
+
+  final file = await resolveMediaFile(item);
+  if (file == null) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarCopyFailed)),
+    );
+    return;
+  }
+
+  try {
+    final ok = await copyImageFileToClipboard(file);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? context.l10n.snackbarCopiedToClipboard
+              : context.l10n.snackbarCopyFailed,
+        ),
+      ),
+    );
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarCopyFailed)),
+    );
+  }
+}
+
+Future<void> setMediaAsWallpaper(
+  WidgetRef ref,
+  BuildContext context,
+  Set<int> selectedIds,
+) async {
+  if (selectedIds.length != 1) return;
+
+  final items = await resolveSelectedMedia(ref, selectedIds);
+  if (items.isEmpty) return;
+  final item = items.first;
+
+  if (item.isVideo || !Platform.isAndroid) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarWallpaperUnsupported)),
+    );
+    return;
+  }
+
+  if (!context.mounted) return;
+  final l10n = context.l10n;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.wallpaperConfirmTitle),
+      content: Text(l10n.wallpaperConfirmMessage),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(l10n.actionCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(l10n.wallpaperConfirmAction),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+
+  final file = await resolveMediaFile(item);
+  if (file == null) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarWallpaperFailed)),
+    );
+    return;
+  }
+
+  try {
+    final result = await AsyncWallpaper.setWallpaper(
+      WallpaperRequest(
+        target: WallpaperTarget.home,
+        sourceType: WallpaperSourceType.file,
+        source: file.path,
+        goToHome: false,
+      ),
+    );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.isSuccess
+              ? context.l10n.snackbarWallpaperSet
+              : context.l10n.snackbarWallpaperFailed,
+        ),
+      ),
+    );
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.snackbarWallpaperFailed)),
+    );
+  }
 }

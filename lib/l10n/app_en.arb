@@ -444,6 +444,7 @@
     }
   },
   "organizeSharingItem": "Sharing {name}",
+  "organizeMoveFailed": "Couldn't move this item. Try again.",
   "@organizeSharingItem": {
     "placeholders": {
       "name": {
@@ -562,6 +563,30 @@
   "tooltipCreateAlbumAndMove": "Create album and move",
   "tooltipSetAlbumCover": "Set as album cover",
   "tooltipMoveToTrash": "Move to trash",
+  "selectionActionMove": "Move",
+  "selectionActionShare": "Share",
+  "selectionActionDelete": "Delete",
+  "selectionActionMore": "More",
+  "selectionCopyToClipboard": "Copy to clipboard",
+  "selectionSetAsWallpaper": "Set as wallpaper",
+  "snackbarSharedItems": "Shared {count, plural, =1{1 item} other{{count} items}}",
+  "@snackbarSharedItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarShareFailed": "Could not share selected items",
+  "snackbarCopiedToClipboard": "Copied to clipboard",
+  "snackbarCopyFailed": "Could not copy to clipboard",
+  "snackbarCopyUnsupported": "Only images can be copied to the clipboard",
+  "snackbarWallpaperSet": "Wallpaper updated",
+  "snackbarWallpaperFailed": "Could not set wallpaper",
+  "snackbarWallpaperUnsupported": "Wallpaper is only available for images on Android",
+  "wallpaperConfirmTitle": "Set as wallpaper?",
+  "wallpaperConfirmMessage": "This image will be set as your home screen wallpaper.",
+  "wallpaperConfirmAction": "Set wallpaper",
   "trashDeletePermanentlyTitle": "Delete permanently",
   "trashDeletePermanentlyMessage": "Are you sure you want to permanently delete these {count} items from your device? This action cannot be undone.",
   "@trashDeletePermanentlyMessage": {

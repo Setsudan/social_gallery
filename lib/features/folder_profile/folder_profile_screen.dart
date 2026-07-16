@@ -74,6 +74,28 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
   final Set<int> _selectedIds = {};
 
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onMediaScroll);
+  }
+
+  void _onMediaScroll() {
+    if (!_scrollController.hasClients) return;
+    final paginated =
+        ref.read(folderMediaPaginatedProvider(widget.folderPath));
+    handlePaginatedScroll(
+      _scrollController.position,
+      isLoading: paginated.isLoading,
+      hasMore: paginated.hasMore,
+      loadMore: () => ref
+          .read(folderMediaPaginatedProvider(widget.folderPath).notifier)
+          .loadMore(),
+    );
+  }
+
 
 
   void _toggleSelect(MediaItem item) {
@@ -114,6 +136,13 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
   void _clearSelection() => setState(_selectedIds.clear);
 
+  void _refreshFolderMedia() {
+    _clearSelection();
+    ref
+        .read(folderMediaPaginatedProvider(widget.folderPath).notifier)
+        .loadMore(refresh: true);
+  }
+
 
 
   Future<void> _bulkDelete() => bulkTrash(
@@ -124,7 +153,7 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
         _selectedIds,
 
-        onDone: _clearSelection,
+        onDone: _refreshFolderMedia,
 
         useHaptics: true,
 
@@ -142,7 +171,7 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
         excludePaths: {widget.folderPath},
 
-        onDone: _clearSelection,
+        onDone: _refreshFolderMedia,
 
         useHaptics: true,
 
@@ -158,7 +187,7 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
         favorite,
 
-        onDone: _clearSelection,
+        onDone: _refreshFolderMedia,
 
         useHaptics: true,
 
@@ -256,23 +285,10 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
     if (_selectedIds.length != 1) return;
 
-    final items = await ref.read(folderMediaProvider(widget.folderPath).future);
-
     final id = _selectedIds.first;
 
-    MediaItem? selected;
-
-    for (final item in items) {
-
-      if (item.id == id) {
-
-        selected = item;
-
-        break;
-
-      }
-
-    }
+    final selected =
+        await ref.read(mediaRepositoryProvider).getMediaById(id);
 
     if (selected == null) return;
 
@@ -311,6 +327,8 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
   @override
 
   void dispose() {
+
+    _scrollController.dispose();
 
     _unlockStore?.lock(widget.folderPath);
 
@@ -476,59 +494,42 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
                   folder: folder,
 
-                  builder: (context) => ref
+                  builder: (context) {
 
-                      .watch(folderMediaProvider(folder.path))
+                    final paginated =
+                        ref.watch(folderMediaPaginatedProvider(folder.path));
+                    final items = paginated.items;
 
-                      .when(
+                    if (paginated.error != null && items.isEmpty) {
+                      return EmptyState(
+                        title: l10n.errorGeneric,
+                        message: paginated.error,
+                      );
+                    }
 
-                        data: (items) {
+                    if (items.isEmpty && paginated.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                          if (items.isEmpty) {
+                    if (items.isEmpty) {
+                      return EmptyState(title: l10n.folderNoMedia);
+                    }
 
-                            return EmptyState(title: l10n.folderNoMedia);
-
-                          }
-
-                          return MediaGrid(
-
-                            items: items,
-
-                            selectedIds: _selectedIds,
-
-                            onSelectToggle: _toggleSelect,
-
-                            onLongPress: _startSelection,
-
-                            onTap: (item) => openMediaViewer(
-
-                              context,
-
-                              ref,
-
-                              items: items,
-
-                              item: item,
-
-                            ),
-
-                          );
-
-                        },
-
-                        loading: () =>
-
-                            const Center(child: CircularProgressIndicator()),
-
-                        error: (e, _) => EmptyState(
-
-                          title: l10n.errorGeneric,
-
-                          message: e.toString(),
-
-                        ),
-
+                    return MediaGrid(
+                      controller: _scrollController,
+                      items: items,
+                      isLoadingMore: paginated.isLoading && items.isNotEmpty,
+                      selectedIds: _selectedIds,
+                      onSelectToggle: _toggleSelect,
+                      onLongPress: _startSelection,
+                      onTap: (item) => openMediaViewer(
+                        context,
+                        ref,
+                        items: items,
+                        item: item,
                       ),
+                    );
+                  },
 
                 ),
 

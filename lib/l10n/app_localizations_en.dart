@@ -1008,6 +1008,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get organizeMoveFailed => 'Couldn\'t move this item. Try again.';
+
+  @override
   String get organizeBatchComplete => 'Batch complete';
 
   @override
@@ -1171,6 +1174,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipMoveToTrash => 'Move to trash';
+
+  @override
+  String get selectionActionMove => 'Move';
+
+  @override
+  String get selectionActionShare => 'Share';
+
+  @override
+  String get selectionActionDelete => 'Delete';
+
+  @override
+  String get selectionActionMore => 'More';
+
+  @override
+  String get selectionCopyToClipboard => 'Copy to clipboard';
+
+  @override
+  String get selectionSetAsWallpaper => 'Set as wallpaper';
+
+  @override
+  String snackbarSharedItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return 'Shared $_temp0';
+  }
+
+  @override
+  String get snackbarShareFailed => 'Could not share selected items';
+
+  @override
+  String get snackbarCopiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get snackbarCopyFailed => 'Could not copy to clipboard';
+
+  @override
+  String get snackbarCopyUnsupported =>
+      'Only images can be copied to the clipboard';
+
+  @override
+  String get snackbarWallpaperSet => 'Wallpaper updated';
+
+  @override
+  String get snackbarWallpaperFailed => 'Could not set wallpaper';
+
+  @override
+  String get snackbarWallpaperUnsupported =>
+      'Wallpaper is only available for images on Android';
+
+  @override
+  String get wallpaperConfirmTitle => 'Set as wallpaper?';
+
+  @override
+  String get wallpaperConfirmMessage =>
+      'This image will be set as your home screen wallpaper.';
+
+  @override
+  String get wallpaperConfirmAction => 'Set wallpaper';
 
   @override
   String get trashDeletePermanentlyTitle => 'Delete permanently';

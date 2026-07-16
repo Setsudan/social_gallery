@@ -24,6 +24,9 @@ void notifyExploreSearchReset(WidgetRef ref) {
 /// True while the Explore full-screen search overlay is presented.
 final exploreSearchOverlayOpenProvider = StateProvider<bool>((ref) => false);
 
+/// True while Gallery multi-select mode is active (hides shell bottom nav).
+final gallerySelectionActiveProvider = StateProvider<bool>((ref) => false);
+
 Future<void> animateScrollControllerToTop(
   ScrollController controller,
   AppMotion motion,

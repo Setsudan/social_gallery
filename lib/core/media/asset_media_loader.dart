@@ -275,6 +275,7 @@ class AssetMediaLoader {
     required AssetEntity entity,
     BoxFit fit = BoxFit.contain,
     String? heroTag,
+    int? cacheWidth,
   }) {
     final kind = classify(entity);
     if (kind != AssetMediaKind.image) {
@@ -286,17 +287,29 @@ class AssetMediaLoader {
       );
     }
 
+    final edge = cacheWidth ?? 2048;
     final Widget imageChild;
     if (canUseAssetImageProvider(entity)) {
       imageChild = Image(
-        image: AssetEntityImageProvider(entity, isOriginal: true),
+        image: AssetEntityImageProvider(
+          entity,
+          isOriginal: false,
+          thumbnailSize: ThumbnailSize(edge, edge),
+        ),
         fit: fit,
         gaplessPlayback: true,
-        errorBuilder: (context, error, stackTrace) =>
-            _FileFullscreenImage(entity: entity, fit: fit),
+        errorBuilder: (context, error, stackTrace) => _FileFullscreenImage(
+          entity: entity,
+          fit: fit,
+          cacheWidth: edge,
+        ),
       );
     } else {
-      imageChild = _FileFullscreenImage(entity: entity, fit: fit);
+      imageChild = _FileFullscreenImage(
+        entity: entity,
+        fit: fit,
+        cacheWidth: edge,
+      );
     }
 
     if (heroTag == null) return imageChild;
@@ -367,10 +380,15 @@ class _FileThumbnail extends StatelessWidget {
 }
 
 class _FileFullscreenImage extends StatelessWidget {
-  const _FileFullscreenImage({required this.entity, required this.fit});
+  const _FileFullscreenImage({
+    required this.entity,
+    required this.fit,
+    this.cacheWidth,
+  });
 
   final AssetEntity entity;
   final BoxFit fit;
+  final int? cacheWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -390,7 +408,12 @@ class _FileFullscreenImage extends StatelessWidget {
             fit: fit,
           );
         }
-        return Image.file(file, fit: fit, gaplessPlayback: true);
+        return Image.file(
+          file,
+          fit: fit,
+          cacheWidth: cacheWidth,
+          gaplessPlayback: true,
+        );
       },
     );
   }

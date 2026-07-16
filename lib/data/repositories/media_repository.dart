@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/exif/exif_reader.dart';
+import 'package:social_gallery/core/media/asset_entity_cache.dart';
 import 'package:social_gallery/core/media/filesystem_image_loader.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/data/datasources/photo_manager_datasource.dart';
@@ -36,15 +37,11 @@ class MediaRepository {
     final existingFolders = await _db.select(_db.folders).get();
     final statusMap = {for (final f in existingFolders) f.path: f.followStatus};
 
-    final favoriteIds = <int>{};
-    final trashedIds = <int>{};
-    final existingById = <int, MediaRow>{};
-    final existingMedia = await _db.select(_db.mediaItems).get();
-    for (final row in existingMedia) {
-      existingById[row.id] = row;
-      if (row.isFavorite) favoriteIds.add(row.id);
-      if (row.isTrashed) trashedIds.add(row.id);
-    }
+    final existingById = await _db.getMediaSyncMergeState();
+    final trashedIds = <int>{
+      for (final entry in existingById.entries)
+        if (entry.value.isTrashed) entry.key,
+    };
 
     onProgress?.call(
       const GallerySyncProgress(
@@ -60,63 +57,72 @@ class MediaRepository {
     if (shouldCancel?.call() == true) return;
     await _db.upsertFolders(folderRows);
 
-    final mediaRows = await _photoManager.loadAllMedia(
+    final scannedIds = <int>{};
+    var savedCount = 0;
+
+    await _photoManager.scanAllMedia(
       fastScan: fastScan,
       shouldCancel: shouldCancel,
       onProgress: onProgress,
+      onChunk: (chunk) async {
+        if (shouldCancel?.call() == true) return;
+        final merged = chunk.map((row) {
+          final id = row.id.value;
+          scannedIds.add(id);
+          final existing = existingById[id];
+          var mergedRow = row;
+          if (existing != null && existing.isFavorite) {
+            mergedRow = mergedRow.copyWith(isFavorite: const Value(true));
+          }
+          if (existing != null) {
+            if (existing.isTrashed) {
+              mergedRow = mergedRow.copyWith(
+                isTrashed: const Value(true),
+                trashedAt: Value(existing.trashedAt),
+                originalPath: Value(existing.originalPath),
+              );
+            }
+            mergedRow = mergedRow.copyWith(
+              backupState: Value(existing.backupState),
+              lastSyncTime: Value(existing.lastSyncTime),
+            );
+            final incomingLat =
+                row.latitude.present ? row.latitude.value : null;
+            final incomingLng =
+                row.longitude.present ? row.longitude.value : null;
+            final hasIncomingLocation = incomingLat != null &&
+                incomingLng != null &&
+                incomingLat != 0 &&
+                incomingLng != 0;
+            final hasExistingLocation = existing.latitude != null &&
+                existing.longitude != null &&
+                existing.latitude != 0 &&
+                existing.longitude != 0;
+            if (!hasIncomingLocation && hasExistingLocation) {
+              mergedRow = mergedRow.copyWith(
+                latitude: Value(existing.latitude),
+                longitude: Value(existing.longitude),
+              );
+            }
+          }
+          return mergedRow;
+        }).toList();
+
+        await _db.upsertMediaItemsChunk(merged);
+        savedCount += merged.length;
+        onProgress?.call(
+          GallerySyncProgress(
+            phase: 'saving',
+            detail: 'Saving $savedCount items to your library',
+            processed: savedCount,
+            total: savedCount,
+          ),
+        );
+      },
     );
     if (shouldCancel?.call() == true) return;
 
-    onProgress?.call(
-      GallerySyncProgress(
-        phase: 'saving',
-        detail: 'Saving ${mediaRows.length} items to your library',
-        processed: 0,
-        total: mediaRows.length,
-      ),
-    );
-
-    final mergedMedia = mediaRows.map((row) {
-      final id = row.id.value;
-      final existing = existingById[id];
-      var merged = row;
-      if (favoriteIds.contains(id)) {
-        merged = merged.copyWith(isFavorite: const Value(true));
-      }
-      if (existing != null) {
-        if (existing.isTrashed) {
-          merged = merged.copyWith(
-            isTrashed: const Value(true),
-            trashedAt: Value(existing.trashedAt),
-            originalPath: Value(existing.originalPath),
-          );
-        }
-        merged = merged.copyWith(
-          backupState: Value(existing.backupState),
-          lastSyncTime: Value(existing.lastSyncTime),
-        );
-        final incomingLat =
-            row.latitude.present ? row.latitude.value : null;
-        final incomingLng =
-            row.longitude.present ? row.longitude.value : null;
-        final hasIncomingLocation = incomingLat != null &&
-            incomingLng != null &&
-            incomingLat != 0 &&
-            incomingLng != 0;
-        final hasExistingLocation = existing.latitude != null &&
-            existing.longitude != null &&
-            existing.latitude != 0 &&
-            existing.longitude != 0;
-        if (!hasIncomingLocation && hasExistingLocation) {
-          merged = merged.copyWith(
-            latitude: Value(existing.latitude),
-            longitude: Value(existing.longitude),
-          );
-        }
-      }
-      return merged;
-    }).toList();
-    await _db.syncMediaItems(mergedMedia, preserveIds: trashedIds);
+    await _db.deleteMediaNotIn({...scannedIds, ...trashedIds});
     await _db.updateFolderCounts();
     await _db.repairFolderCovers();
 
@@ -233,10 +239,30 @@ class MediaRepository {
     );
   }
 
+  Future<List<domain.MediaItem>> getFavoritesPage(int page) async {
+    final rows = await _db.getFavoritesMediaPage(
+      limit: pageSize,
+      offset: page * pageSize,
+    );
+    return rows.map(mediaItemFromRow).toList();
+  }
+
   Stream<List<domain.MediaItem>> watchFolderMedia(String folderPath) {
     return _db
         .watchMediaInFolder(folderPath)
         .map((rows) => rows.map(mediaItemFromRow).toList());
+  }
+
+  Future<List<domain.MediaItem>> getFolderMediaPage(
+    String folderPath,
+    int page,
+  ) async {
+    final rows = await _db.getMediaInFolderPage(
+      folderPath,
+      limit: pageSize,
+      offset: page * pageSize,
+    );
+    return rows.map(mediaItemFromRow).toList();
   }
 
   Future<void> setFavorite(int id, bool favorite) {
@@ -387,6 +413,11 @@ class MediaRepository {
   ) async {
     if (items.isEmpty) return 0;
 
+    final sourcePaths = {
+      for (final item in items)
+        if (item.folderPath.isNotEmpty) item.folderPath,
+    };
+
     final resolvedPath =
         await _photoManager.resolveTargetAlbumId(targetFolderPath) ??
             targetFolderPath;
@@ -396,30 +427,59 @@ class MediaRepository {
         .getSingleOrNull();
     final folderName = folder?.name ?? _folderNameFromPath(resolvedPath);
 
-    final movedUris = await _photoManager.moveAssetsOnDisk(
+    final movedByUri = await _photoManager.moveAssetsOnDisk(
       items.map((item) => item.uri).toList(),
       targetFolderPath,
     );
 
-    if (movedUris.isNotEmpty) {
-      final movedUriSet = movedUris.toSet();
-      final movedItems =
-          items.where((item) => movedUriSet.contains(item.uri)).toList();
-      await _db.moveMediaItems(
-        movedItems.map((item) => item.id).toList(),
-        resolvedPath,
-        folderName,
-      );
-      await _db.updateFolderCounts();
-      await _db.repairFolderCovers();
-    } else {
+    if (movedByUri.isEmpty) {
       debugPrint(
         'moveMedia: 0/${items.length} moved to $targetFolderPath '
         '(resolved: $resolvedPath)',
       );
+      return 0;
     }
 
-    return movedUris.length;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final byUri = {for (final item in items) item.uri: item};
+    var uriChanged = false;
+
+    for (final entry in movedByUri.entries) {
+      final item = byUri[entry.key];
+      if (item == null) continue;
+      final newUri = entry.value;
+      if (newUri != item.uri) {
+        uriChanged = true;
+        final newId = newUri.hashCode & 0x7FFFFFFF;
+        await _db.moveMediaItemWithUri(
+          id: item.id,
+          targetFolderPath: resolvedPath,
+          targetFolderName: folderName,
+          newUri: newUri,
+          newId: newId,
+          dateModifiedMs: now,
+        );
+      }
+    }
+
+    if (!uriChanged) {
+      final movedIds = [
+        for (final uri in movedByUri.keys)
+          if (byUri[uri] != null) byUri[uri]!.id,
+      ];
+      await _db.moveMediaItems(
+        movedIds,
+        resolvedPath,
+        folderName,
+        dateModifiedMs: now,
+      );
+    }
+
+    await _db.repairFolderCoversForPaths({...sourcePaths, resolvedPath});
+    for (final oldUri in movedByUri.keys) {
+      AssetEntityCache.evict(oldUri);
+    }
+    return movedByUri.length;
   }
 
   String _folderNameFromPath(String path) {

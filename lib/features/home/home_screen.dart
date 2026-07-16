@@ -69,10 +69,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _toggleFavorite(FeedItem item) async {
     AppHaptics.light();
-    final repo = ref.read(mediaRepositoryProvider);
     final next = !item.media.isFavorite;
-    await repo.setFavorite(item.media.id, next);
-    await _refresh();
+    ref
+        .read(homeFeedPaginatedProvider.notifier)
+        .setItemFavorite(item.media.id, next);
+    try {
+      await ref.read(mediaRepositoryProvider).setFavorite(item.media.id, next);
+    } catch (_) {
+      ref
+          .read(homeFeedPaginatedProvider.notifier)
+          .setItemFavorite(item.media.id, !next);
+    }
   }
 
   Future<void> _shareMedia(FeedItem item) async {
@@ -200,6 +207,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         final item = _items[feedIndex];
         return StaggeredEntrance(
+          key: ValueKey(item.media.id),
           index: feedIndex,
           playOnceKey: 'feed_${item.media.id}',
           child: FeedPostCard(

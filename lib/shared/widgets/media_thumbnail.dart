@@ -140,18 +140,28 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxEdge = _resolveMaxEdge(constraints);
-        final thumbnail = SizedBox.expand(
-          child: Image.file(
-            File(widget.assetId),
-            fit: widget.fit,
-            cacheWidth: maxEdge,
-            gaplessPlayback: true,
-            errorBuilder: (context, error, stackTrace) => ColoredBox(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh,
-              child: const Center(child: Icon(Icons.broken_image_outlined)),
+        final Widget thumbnail;
+        if (isWinVideo) {
+          thumbnail = ColoredBox(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            child: const Center(
+              child: Icon(Icons.videocam_outlined, size: 36),
             ),
-          ),
-        );
+          );
+        } else {
+          thumbnail = SizedBox.expand(
+            child: Image.file(
+              File(widget.assetId),
+              fit: widget.fit,
+              cacheWidth: maxEdge,
+              gaplessPlayback: true,
+              errorBuilder: (context, error, stackTrace) => ColoredBox(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                child: const Center(child: Icon(Icons.broken_image_outlined)),
+              ),
+            ),
+          );
+        }
 
         return Stack(
           fit: StackFit.expand,

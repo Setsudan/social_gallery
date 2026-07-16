@@ -134,6 +134,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
     try {
       final repo = _ref.read(mediaRepositoryProvider);
       final settings = _ref.read(settingsProvider);
+      var earlyFeedRefreshDone = false;
 
       await repo.cleanupExpiredTrash(settings.trashRetentionDays);
       if (_cancelRequested) {
@@ -160,6 +161,15 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
             total: progress.total,
             clearError: true,
           );
+
+          // Sync indexes newest media first; refresh gallery as soon as the
+          // first recent chunk lands so the UI is not blocked on a full scan.
+          if (!earlyFeedRefreshDone &&
+              progress.phase == 'saving' &&
+              progress.processed > 0) {
+            earlyFeedRefreshDone = true;
+            _refreshFeeds(background: true);
+          }
         },
       );
 

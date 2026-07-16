@@ -30,60 +30,68 @@ class OrganizeScreen extends ConsumerWidget {
         ref.read(organizeRepositoryProvider).recentFolderPaths;
     final sortedFolders = sortFoldersByRecent(allFolders, recentPaths);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) controller.flushFeedRefresh();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              controller.flushFeedRefresh();
+              context.pop();
+            },
+          ),
+          title: Text(
+            state.batchComplete
+                ? context.l10n.organizeTitle
+                : context.l10n.organizeProgress(
+                    state.batchDone,
+                    state.batchSize,
+                  ),
+          ),
+          actions: [
+            if (state.pendingTrashCount > 0)
+              IconButton(
+                icon: Badge(
+                  label: Text('${state.pendingTrashCount}'),
+                  child: const Icon(Icons.delete_outline),
+                ),
+                onPressed: () => _openTrashReview(context, ref, controller),
+              ),
+            IconButton(
+              icon: const Icon(Icons.bar_chart_outlined),
+              onPressed: () => OrganizeStatsSheet.show(context, state.stats),
+            ),
+          ],
         ),
-        title: Text(
-          state.batchComplete
-              ? context.l10n.organizeTitle
-              : context.l10n.organizeProgress(
-                  state.batchDone,
-                  state.batchSize,
+        body: SafeArea(
+          child: state.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : state.batchComplete
+              ? OrganizeEmptyState(
+                  remainingCount: state.remainingPoolCount,
+                  pendingTrashCount: state.pendingTrashCount,
+                  onNextBatch: controller.loadBatch,
+                  onViewTrash: () => _openTrashReview(context, ref, controller),
+                  onChangeFilter: () => _openFilter(context, ref, controller),
+                  onReleaseKept: controller.releaseKept,
+                )
+              : _OrganizeActiveBody(
+                  cards: state.queue,
+                  folders: sortedFolders,
+                  onSwipe: (dir) {
+                    AppHaptics.light();
+                    controller.applySwipe(dir);
+                  },
+                  onFolderDrop: (path) =>
+                      _handleFolderDrop(context, ref, controller, path),
+                  onShare: () => _shareCurrent(context, state),
+                  onFilter: () => _openFilter(context, ref, controller),
+                  onUndo: controller.undo,
                 ),
         ),
-        actions: [
-          if (state.pendingTrashCount > 0)
-            IconButton(
-              icon: Badge(
-                label: Text('${state.pendingTrashCount}'),
-                child: const Icon(Icons.delete_outline),
-              ),
-              onPressed: () => _openTrashReview(context, ref, controller),
-            ),
-          IconButton(
-            icon: const Icon(Icons.bar_chart_outlined),
-            onPressed: () => OrganizeStatsSheet.show(context, state.stats),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : state.batchComplete
-          ? OrganizeEmptyState(
-              remainingCount: state.remainingPoolCount,
-              pendingTrashCount: state.pendingTrashCount,
-              onNextBatch: controller.loadBatch,
-              onViewTrash: () => _openTrashReview(context, ref, controller),
-              onChangeFilter: () => _openFilter(context, ref, controller),
-              onReleaseKept: controller.releaseKept,
-            )
-          : _OrganizeActiveBody(
-              cards: state.queue,
-              folders: sortedFolders,
-              onSwipe: (dir) {
-                AppHaptics.light();
-                controller.applySwipe(dir);
-              },
-              onFolderDrop: (path) =>
-                  _handleFolderDrop(context, ref, controller, path),
-              onShare: () => _shareCurrent(context, state),
-              onFilter: () => _openFilter(context, ref, controller),
-              onUndo: controller.undo,
-            ),
       ),
     );
   }
@@ -106,7 +114,12 @@ class OrganizeScreen extends ConsumerWidget {
       final ok = await ensureFolderUnlocked(ref: ref, folder: folder);
       if (!ok) return;
     }
-    await controller.moveToFolder(folderPath);
+    final moved = await controller.moveToFolder(folderPath);
+    if (!moved && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.organizeMoveFailed)),
+      );
+    }
   }
 
   Future<void> _shareCurrent(BuildContext context, OrganizeState state) async {

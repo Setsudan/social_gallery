@@ -127,7 +127,8 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
 
     final overlayHeight = floatingNavOverlayHeight(context);
-    final hideBottomNav = ref.watch(exploreSearchOverlayOpenProvider);
+    final hideBottomNav = ref.watch(exploreSearchOverlayOpenProvider) ||
+        ref.watch(gallerySelectionActiveProvider);
 
     return Scaffold(
       extendBody: true,
