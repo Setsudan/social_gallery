@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social_gallery/app/app.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/core/widgets/widget_update_service.dart';
 import 'package:social_gallery/core/workers/trash_cleanup_worker.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -19,6 +20,17 @@ Future<void> main() async {
     await registerTrashCleanupWork();
   } catch (e) {
     debugPrint('Trash cleanup scheduling failed: $e');
+  }
+
+  try {
+    await registerWidgetRefreshWork();
+    if (WidgetUpdateService.isSupported) {
+      // Warm widgets once on launch.
+      // ignore: unawaited_futures
+      WidgetUpdateService.updateAll();
+    }
+  } catch (e) {
+    debugPrint('Widget refresh scheduling failed: $e');
   }
 
   runApp(

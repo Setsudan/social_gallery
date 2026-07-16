@@ -3,6 +3,7 @@ import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/follow_status.dart';
 import 'package:social_gallery/domain/models/backup_state.dart';
+import 'package:social_gallery/domain/models/media_content_kind.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
 domain.MediaItem _mediaItemFromFields({
@@ -34,6 +35,7 @@ domain.MediaItem _mediaItemFromFields({
   MediaBackupState backupState = MediaBackupState.pending,
   int? lastSyncTime,
   bool isVault = false,
+  MediaContentKind contentKind = MediaContentKind.photo,
 }) {
   return domain.MediaItem(
     id: id,
@@ -64,6 +66,7 @@ domain.MediaItem _mediaItemFromFields({
     backupState: backupState,
     lastSyncTime: lastSyncTime,
     isVault: isVault,
+    contentKind: contentKind,
   );
 }
 
@@ -97,6 +100,7 @@ domain.MediaItem mediaItemFromRow(MediaRow row) {
     originalPath: row.originalPath,
     backupState: MediaBackupState.fromValue(row.backupState),
     lastSyncTime: row.lastSyncTime,
+    contentKind: MediaContentKind.fromValue(row.contentKind),
   );
 }
 
@@ -130,6 +134,9 @@ domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
     originalPath: row.readNullable<String>('original_path'),
     backupState: MediaBackupState.fromValue(row.read<int>('backup_state')),
     lastSyncTime: row.readNullable<int>('last_sync_time'),
+    contentKind: MediaContentKind.fromValue(
+      row.readNullable<int>('content_kind') ?? MediaContentKind.photo.value,
+    ),
   );
 }
 

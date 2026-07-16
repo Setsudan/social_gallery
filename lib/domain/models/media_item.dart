@@ -1,4 +1,5 @@
 import 'package:social_gallery/domain/models/backup_state.dart';
+import 'package:social_gallery/domain/models/media_content_kind.dart';
 
 /// Indexed photo or video row mirrored from the device library.
 class MediaItem {
@@ -31,6 +32,7 @@ class MediaItem {
     this.backupState = MediaBackupState.pending,
     this.lastSyncTime,
     this.isVault = false,
+    this.contentKind = MediaContentKind.photo,
   });
 
   final int id;
@@ -61,6 +63,7 @@ class MediaItem {
   final MediaBackupState backupState;
   final int? lastSyncTime;
   final bool isVault;
+  final MediaContentKind contentKind;
 
   bool get isVideo => mimeType.startsWith('video/');
 
@@ -84,6 +87,7 @@ class MediaItem {
     MediaBackupState? backupState,
     int? lastSyncTime,
     bool? isVault,
+    MediaContentKind? contentKind,
   }) {
     return MediaItem(
       id: id,
@@ -114,6 +118,7 @@ class MediaItem {
       backupState: backupState ?? this.backupState,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       isVault: isVault ?? this.isVault,
+      contentKind: contentKind ?? this.contentKind,
     );
   }
 }

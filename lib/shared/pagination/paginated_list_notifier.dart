@@ -7,6 +7,7 @@ import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/explore_search_query.dart';
+import 'package:social_gallery/domain/models/media_content_kind.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/home/home_providers.dart';
 
@@ -407,4 +408,58 @@ class FolderMediaPaginatedNotifier extends AutoDisposeFamilyNotifier<
 final folderMediaPaginatedProvider = NotifierProvider.autoDispose
     .family<FolderMediaPaginatedNotifier, PaginatedListState<MediaItem>, String>(
   FolderMediaPaginatedNotifier.new,
+);
+
+class ContentKindPaginatedNotifier extends AutoDisposeFamilyNotifier<
+    PaginatedListState<MediaItem>, MediaContentKind> {
+  String _ocrQuery = '';
+
+  @override
+  PaginatedListState<MediaItem> build(MediaContentKind kind) {
+    Future.microtask(() => loadMore(refresh: true));
+    return const PaginatedListState();
+  }
+
+  Future<void> setOcrQuery(String query) async {
+    _ocrQuery = query.trim();
+    await loadMore(refresh: true);
+  }
+
+  Future<void> loadMore({bool refresh = false}) async {
+    if (state.isLoading && !refresh) return;
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      page: refresh ? 0 : null,
+      hasMore: refresh ? true : null,
+      items: refresh ? const [] : null,
+    );
+
+    try {
+      final pageToLoad = refresh ? 0 : state.page;
+      final page = await ref.read(mediaRepositoryProvider).getContentKindPage(
+            arg,
+            pageToLoad,
+            ocrQuery: _ocrQuery.isEmpty ? null : _ocrQuery,
+          );
+      final nextItems = refresh ? page : [...state.items, ...page];
+      state = PaginatedListState(
+        items: nextItems,
+        page: pageToLoad + 1,
+        isLoading: false,
+        hasMore: page.length >= MediaRepository.pageSize,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        hasMore: refresh ? false : state.hasMore,
+      );
+    }
+  }
+}
+
+final contentKindPaginatedProvider = NotifierProvider.autoDispose.family<
+    ContentKindPaginatedNotifier, PaginatedListState<MediaItem>, MediaContentKind>(
+  ContentKindPaginatedNotifier.new,
 );

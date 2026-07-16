@@ -33,6 +33,7 @@ class MediaSyncMergeState {
     required this.lastSyncTime,
     required this.latitude,
     required this.longitude,
+    required this.contentKind,
   });
 
   final bool isFavorite;
@@ -43,6 +44,7 @@ class MediaSyncMergeState {
   final int? lastSyncTime;
   final double? latitude;
   final double? longitude;
+  final int contentKind;
 }
 
 /// Local SQLite store for folders, media index, travel modes, and analysis cache.
@@ -61,7 +63,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -120,6 +122,18 @@ ON media_items (is_trashed, date_modified DESC)
           '''
 CREATE INDEX folders_follow_biometric
 ON folders (follow_status, is_biometric_locked)
+''',
+        ));
+      }
+      if (from < 8) {
+        await m.addColumn(mediaItems, mediaItems.contentKind);
+        await m.addColumn(mediaAnalysisCache, mediaAnalysisCache.ocrText);
+        await m.addColumn(mediaAnalysisCache, mediaAnalysisCache.ocrScannedAt);
+        await m.createIndex(Index(
+          'media_items_content_kind_trashed',
+          '''
+CREATE INDEX media_items_content_kind_trashed
+ON media_items (content_kind, is_trashed, date_modified DESC)
 ''',
         ));
       }
@@ -253,28 +267,74 @@ ON folders (follow_status, is_biometric_locked)
 
   Future<List<MediaRow>> searchExploreMediaFiltered({
     String text = '',
-    String? label,
+    List<String> labels = const [],
     String? color,
+    String? placeQuery,
+    int? dateFromMs,
+    int? dateToMs,
+    String? cameraMake,
+    String? cameraModel,
+    String contentFilter = 'all',
+    int? minFaceCount,
     required int limit,
     required int offset,
   }) async {
     final trimmedText = text.trim().toLowerCase();
-    final trimmedLabel = label?.trim().toLowerCase();
     final trimmedColor = color?.trim().toLowerCase();
+    final trimmedPlace = placeQuery?.trim().toLowerCase();
+    final trimmedMake = cameraMake?.trim().toLowerCase();
+    final trimmedModel = cameraModel?.trim().toLowerCase();
+    final labelList = labels
+        .map((l) => l.trim().toLowerCase())
+        .where((l) => l.isNotEmpty)
+        .toList();
 
     final textPattern = '%$trimmedText%';
-    final labelPattern = trimmedLabel == null || trimmedLabel.isEmpty
-        ? null
-        : '%$trimmedLabel%';
+    final placePattern = trimmedPlace == null || trimmedPlace.isEmpty
+        ? ''
+        : '%$trimmedPlace%';
+    final makePattern = trimmedMake == null || trimmedMake.isEmpty
+        ? ''
+        : '%$trimmedMake%';
+    final modelPattern = trimmedModel == null || trimmedModel.isEmpty
+        ? ''
+        : '%$trimmedModel%';
+
     final hasText = trimmedText.isNotEmpty;
-    final hasLabel = labelPattern != null;
     final hasColor = trimmedColor != null && trimmedColor.isNotEmpty;
+    final hasPlace = placePattern.isNotEmpty;
+    final hasMake = makePattern.isNotEmpty;
+    final hasModel = modelPattern.isNotEmpty;
+    final hasDateFrom = dateFromMs != null;
+    final hasDateTo = dateToMs != null;
+    final hasFaceMin = minFaceCount != null && minFaceCount > 0;
+
+    final labelClauses = <String>[];
+    final labelVars = <Variable>[];
+    for (final label in labelList) {
+      labelClauses.add('LOWER(a.labels_json) LIKE ?');
+      labelVars.add(Variable.withString('%$label%'));
+    }
+    final labelsSql = labelClauses.isEmpty
+        ? '1 = 1'
+        : labelClauses.join(' AND ');
+
+    final contentSql = switch (contentFilter) {
+      'screenshot' => 'm.content_kind = 2',
+      'document' => 'm.content_kind = 3',
+      'image' => "m.mime_type LIKE 'image/%'",
+      'video' => "m.mime_type LIKE 'video/%'",
+      _ => '1 = 1',
+    };
 
     final rows = await customSelect(
       '''
       SELECT m.* FROM media_items m
       INNER JOIN folders f ON m.folder_path = f.path
       LEFT JOIN media_analysis_cache a ON a.media_id = m.id
+      LEFT JOIN location_place_cache p ON p.place_key = (
+        printf('%.2f', m.latitude) || ',' || printf('%.2f', m.longitude)
+      )
       WHERE f.follow_status != 'UNFOLLOWED'
         AND f.is_biometric_locked = 0
         AND m.is_trashed = 0
@@ -286,15 +346,40 @@ ON folders (follow_status, is_biometric_locked)
           OR LOWER(m.folder_path) LIKE ?
           OR LOWER(m.mime_type) LIKE ?
           OR LOWER(a.labels_json) LIKE ?
+          OR LOWER(IFNULL(a.ocr_text, '')) LIKE ?
         )
-        AND (
-          ? = 0
-          OR LOWER(a.labels_json) LIKE ?
-        )
+        AND ($labelsSql)
         AND (
           ? = 0
           OR a.dominant_color = ?
         )
+        AND (
+          ? = 0
+          OR LOWER(IFNULL(p.locality, '')) LIKE ?
+          OR LOWER(IFNULL(p.admin_area, '')) LIKE ?
+          OR LOWER(IFNULL(p.country_name, '')) LIKE ?
+        )
+        AND (
+          ? = 0
+          OR LOWER(IFNULL(m.camera_make, '')) LIKE ?
+        )
+        AND (
+          ? = 0
+          OR LOWER(IFNULL(m.camera_model, '')) LIKE ?
+        )
+        AND (
+          ? = 0
+          OR IFNULL(m.date_taken, m.date_modified) >= ?
+        )
+        AND (
+          ? = 0
+          OR IFNULL(m.date_taken, m.date_modified) <= ?
+        )
+        AND (
+          ? = 0
+          OR IFNULL(a.face_count, 0) >= ?
+        )
+        AND ($contentSql)
       ORDER BY m.date_modified DESC
       LIMIT ? OFFSET ?
       ''',
@@ -306,16 +391,162 @@ ON folders (follow_status, is_biometric_locked)
         Variable.withString(textPattern),
         Variable.withString(textPattern),
         Variable.withString(textPattern),
-        Variable.withInt(hasLabel ? 1 : 0),
-        Variable.withString(labelPattern ?? ''),
+        Variable.withString(textPattern),
+        ...labelVars,
         Variable.withInt(hasColor ? 1 : 0),
         Variable.withString(trimmedColor ?? ''),
+        Variable.withInt(hasPlace ? 1 : 0),
+        Variable.withString(placePattern),
+        Variable.withString(placePattern),
+        Variable.withString(placePattern),
+        Variable.withInt(hasMake ? 1 : 0),
+        Variable.withString(makePattern),
+        Variable.withInt(hasModel ? 1 : 0),
+        Variable.withString(modelPattern),
+        Variable.withInt(hasDateFrom ? 1 : 0),
+        Variable.withInt(dateFromMs ?? 0),
+        Variable.withInt(hasDateTo ? 1 : 0),
+        Variable.withInt(dateToMs ?? 0),
+        Variable.withInt(hasFaceMin ? 1 : 0),
+        Variable.withInt(minFaceCount ?? 0),
+        Variable.withInt(limit),
+        Variable.withInt(offset),
+      ],
+      readsFrom: {
+        mediaItems,
+        folders,
+        mediaAnalysisCache,
+        locationPlaceCache,
+      },
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<List<MediaRow>> getMediaByContentKindPage({
+    required int contentKind,
+    required int limit,
+    required int offset,
+    String? ocrQuery,
+  }) async {
+    final trimmedOcr = ocrQuery?.trim().toLowerCase() ?? '';
+    final hasOcr = trimmedOcr.isNotEmpty;
+    final ocrPattern = '%$trimmedOcr%';
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      LEFT JOIN media_analysis_cache a ON a.media_id = m.id
+      WHERE f.follow_status != 'UNFOLLOWED'
+        AND f.is_biometric_locked = 0
+        AND m.is_trashed = 0
+        AND m.content_kind = ?
+        AND (
+          ? = 0
+          OR LOWER(IFNULL(a.ocr_text, '')) LIKE ?
+        )
+      ORDER BY m.date_modified DESC
+      LIMIT ? OFFSET ?
+      ''',
+      variables: [
+        Variable.withInt(contentKind),
+        Variable.withInt(hasOcr ? 1 : 0),
+        Variable.withString(ocrPattern),
         Variable.withInt(limit),
         Variable.withInt(offset),
       ],
       readsFrom: {mediaItems, folders, mediaAnalysisCache},
     ).get();
     return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<MediaRow?> pickFolderMedia({
+    required String folderPath,
+    required bool random,
+  }) async {
+    final order = random ? 'RANDOM()' : 'm.date_modified DESC';
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      WHERE m.folder_path = ?
+        AND m.is_trashed = 0
+        AND m.mime_type LIKE 'image/%'
+      ORDER BY $order
+      LIMIT 1
+      ''',
+      variables: [Variable.withString(folderPath)],
+      readsFrom: {mediaItems},
+    ).get();
+    if (rows.isEmpty) return null;
+    return _mediaFromQuery(rows.first);
+  }
+
+  Future<MediaRow?> pickFavoriteMedia({required bool random}) async {
+    final order = random ? 'RANDOM()' : 'm.date_modified DESC';
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_favorite = 1
+        AND m.is_trashed = 0
+        AND m.mime_type LIKE 'image/%'
+        AND f.is_biometric_locked = 0
+      ORDER BY $order
+      LIMIT 1
+      ''',
+      readsFrom: {mediaItems, folders},
+    ).get();
+    if (rows.isEmpty) return null;
+    return _mediaFromQuery(rows.first);
+  }
+
+  Future<MediaRow?> pickOnThisDayMedia({required bool random}) async {
+    final now = DateTime.now();
+    final order = random ? 'RANDOM()' : 'm.date_modified DESC';
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      INNER JOIN folders f ON m.folder_path = f.path
+      WHERE m.is_trashed = 0
+        AND m.mime_type LIKE 'image/%'
+        AND f.is_biometric_locked = 0
+        AND CAST(strftime('%m', IFNULL(m.date_taken, m.date_modified) / 1000, 'unixepoch', 'localtime') AS INTEGER) = ?
+        AND CAST(strftime('%d', IFNULL(m.date_taken, m.date_modified) / 1000, 'unixepoch', 'localtime') AS INTEGER) = ?
+      ORDER BY $order
+      LIMIT 1
+      ''',
+      variables: [
+        Variable.withInt(now.month),
+        Variable.withInt(now.day),
+      ],
+      readsFrom: {mediaItems, folders},
+    ).get();
+    if (rows.isEmpty) return null;
+    return _mediaFromQuery(rows.first);
+  }
+
+  Future<void> updateMediaContentKind(int mediaId, int contentKind) {
+    return (update(mediaItems)..where((m) => m.id.equals(mediaId))).write(
+      MediaItemsCompanion(contentKind: Value(contentKind)),
+    );
+  }
+
+  Future<int> backfillScreenshotContentKinds() async {
+    return customUpdate(
+      '''
+      UPDATE media_items
+      SET content_kind = 2
+      WHERE is_trashed = 0
+        AND mime_type LIKE 'image/%'
+        AND content_kind != 2
+        AND (
+          LOWER(display_name) LIKE '%screenshot%'
+          OR LOWER(folder_name) LIKE '%screenshot%'
+          OR LOWER(folder_path) LIKE '%screenshot%'
+          OR LOWER(display_name) LIKE 'screen%'
+        )
+      ''',
+      updates: {mediaItems},
+    );
   }
 
   Future<List<MediaRow>> getAllSearchableMedia() async {
@@ -510,7 +741,7 @@ ON folders (follow_status, is_biometric_locked)
     final rows = await customSelect(
       '''
       SELECT id, is_favorite, is_trashed, trashed_at, original_path,
-             backup_state, last_sync_time, latitude, longitude
+             backup_state, last_sync_time, latitude, longitude, content_kind
       FROM media_items
       ''',
       readsFrom: {mediaItems},
@@ -526,6 +757,7 @@ ON folders (follow_status, is_biometric_locked)
           lastSyncTime: row.readNullable<int>('last_sync_time'),
           latitude: row.readNullable<double>('latitude'),
           longitude: row.readNullable<double>('longitude'),
+          contentKind: row.readNullable<int>('content_kind') ?? 1,
         ),
     };
   }
@@ -791,6 +1023,7 @@ ON folders (follow_status, is_biometric_locked)
       isTrashed: row.read<bool>('is_trashed'),
       trashedAt: row.readNullable<int>('trashed_at'),
       originalPath: row.readNullable<String>('original_path'),
+      contentKind: row.readNullable<int>('content_kind') ?? 1,
     );
   }
 

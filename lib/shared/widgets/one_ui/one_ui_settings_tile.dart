@@ -80,6 +80,12 @@ class OneUiSettingsIcon {
     foreground: Color(0xFF546E7A),
   );
 
+  static const widgets = OneUiSettingsIcon(
+    icon: Icons.widgets_outlined,
+    background: Color(0xFFE3F2FD),
+    foreground: Color(0xFF1565C0),
+  );
+
   static const info = OneUiSettingsIcon(
     icon: Icons.info_outline_rounded,
     background: Color(0xFFE8EAF6),

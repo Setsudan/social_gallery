@@ -81,6 +81,22 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
       unawaited(syncNotifier.run());
     }
     if (!mounted) return;
+    final pending = ref.read(pendingDeepLinkLocationProvider);
+    if (pending != null && pending.isNotEmpty) {
+      ref.read(pendingDeepLinkLocationProvider.notifier).state = null;
+      final isShellTab =
+          pending == '/home' || pending == '/explore' || pending == '/discover';
+      if (isShellTab) {
+        context.go(pending);
+      } else {
+        context.go('/home');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.push(pending);
+        });
+      }
+      return;
+    }
     context.go('/home');
   }
 

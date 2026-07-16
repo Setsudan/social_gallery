@@ -141,6 +141,28 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   onTap: () => context.push('/duplicates'),
                 ),
               ),
+              const SizedBox(height: 8),
+              StaggeredEntrance(
+                index: 71,
+                playOnceKey: 'discover_71',
+                child: DiscoverHubCard(
+                  leading: const Icon(Icons.screenshot_outlined),
+                  title: l10n.discoverScreenshotsTitle,
+                  subtitle: l10n.discoverScreenshotsSubtitle,
+                  onTap: () => context.push('/discover/screenshots'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              StaggeredEntrance(
+                index: 72,
+                playOnceKey: 'discover_72',
+                child: DiscoverHubCard(
+                  leading: const Icon(Icons.description_outlined),
+                  title: l10n.discoverDocumentsTitle,
+                  subtitle: l10n.discoverDocumentsSubtitle,
+                  onTap: () => context.push('/discover/documents'),
+                ),
+              ),
               const SizedBox(height: OneUiSpacing.sectionGap),
               OneUiSectionHeader(l10n.discoverSectionExplore),
               const SizedBox(height: OneUiSpacing.sm),

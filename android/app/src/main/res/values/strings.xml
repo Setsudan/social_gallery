@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_folder_description">Show photos from an album</string>
+    <string name="widget_favorites_description">Show favorite photos</string>
+    <string name="widget_on_this_day_description">Photos from this day in past years</string>
+    <string name="widget_organize_description">Unprocessed photo count</string>
+</resources>

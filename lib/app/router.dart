@@ -11,9 +11,11 @@ import 'package:social_gallery/features/discover/duplicate_review_screen.dart';
 
 import 'package:social_gallery/features/discover/duplicates_screen.dart';
 
+import 'package:social_gallery/features/discover/content_kind_browse_screen.dart';
 import 'package:social_gallery/features/discover/discover_stub_screen.dart';
 import 'package:social_gallery/features/discover/locations_screen.dart';
 import 'package:social_gallery/features/discover/place_media_screen.dart';
+import 'package:social_gallery/domain/models/media_content_kind.dart';
 
 import 'package:social_gallery/features/albums/locked_albums_screen.dart';
 import 'package:social_gallery/features/shell/explore_branch_screen.dart';
@@ -48,6 +50,7 @@ import 'package:social_gallery/features/trash/trash_screen.dart';
 
 import 'package:social_gallery/features/story_viewer/story_viewer_screen.dart';
 
+import 'package:social_gallery/features/widgets/folder_widget_config_screen.dart';
 import 'package:social_gallery/features/travel_mode/travel_mode_editor_screen.dart';
 
 import 'package:social_gallery/features/travel_mode/travel_mode_list_screen.dart';
@@ -75,6 +78,39 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
 
     initialLocation: '/startup',
+
+    redirect: (context, state) {
+      // Default error "Go home" and some platform links land on `/`.
+      if (state.uri.path == '/' || state.uri.path.isEmpty) {
+        return '/home';
+      }
+      return null;
+    },
+
+    errorBuilder: (context, state) {
+      return Scaffold(
+        appBar: AppBar(title: Text(context.l10n.appTitle)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  state.error?.toString() ?? 'Page not found',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => context.go('/home'),
+                  child: Text(context.l10n.navHome),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
 
     routes: [
       GoRoute(
@@ -232,6 +268,45 @@ final routerProvider = Provider<GoRouter>((ref) {
           state,
           const LocationsScreen(),
         ),
+      ),
+
+      GoRoute(
+        path: '/discover/screenshots',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _page(
+          context,
+          ref,
+          state,
+          const ContentKindBrowseScreen(kind: MediaContentKind.screenshot),
+        ),
+      ),
+
+      GoRoute(
+        path: '/discover/documents',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _page(
+          context,
+          ref,
+          state,
+          const ContentKindBrowseScreen(kind: MediaContentKind.document),
+        ),
+      ),
+
+      GoRoute(
+        path: '/widgets/folder-config',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final widgetId = int.tryParse(
+                state.uri.queryParameters['widgetId'] ?? '',
+              ) ??
+              0;
+          return _page(
+            context,
+            ref,
+            state,
+            FolderWidgetConfigScreen(widgetId: widgetId),
+          );
+        },
       ),
 
       GoRoute(

@@ -15,6 +15,8 @@ class MediaAnalysisCache extends Table {
   TextColumn get labelsJson => text().nullable()();
   TextColumn get dominantColor => text().nullable()();
   IntColumn get scannedAt => integer()();
+  TextColumn get ocrText => text().nullable()();
+  IntColumn get ocrScannedAt => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {mediaId};

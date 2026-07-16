@@ -1348,6 +1348,91 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverLocationsSubtitle => 'Photos grouped by place';
 
   @override
+  String get discoverScreenshotsTitle => 'Screenshots';
+
+  @override
+  String get discoverScreenshotsSubtitle => 'Browse and clean up screenshots';
+
+  @override
+  String get discoverScreenshotsEmptyTitle => 'No screenshots';
+
+  @override
+  String get discoverScreenshotsEmptyMessage =>
+      'Screenshots detected by name or album will show up here.';
+
+  @override
+  String get discoverDocumentsTitle => 'Documents & text';
+
+  @override
+  String get discoverDocumentsSubtitle =>
+      'Receipts, notes, and text-heavy photos';
+
+  @override
+  String get discoverDocumentsEmptyTitle => 'No documents yet';
+
+  @override
+  String get discoverDocumentsEmptyMessage =>
+      'Run text indexing to find receipts, notes, and scanned pages.';
+
+  @override
+  String get discoverDocumentsSearchHint => 'Search text in photos';
+
+  @override
+  String get discoverOcrIndexAction => 'Index text';
+
+  @override
+  String discoverOcrIndexProgress(int scanned, int total) {
+    return 'OCR $scanned/$total';
+  }
+
+  @override
+  String get settingsWidgetsTitle => 'Home screen widgets';
+
+  @override
+  String get settingsWidgetsSubtitle =>
+      'Add album slideshows and glances on Android';
+
+  @override
+  String get settingsWidgetsHelpBody =>
+      'Long-press your home screen, choose Widgets, then pick Social Gallery. Configure the album, refresh interval, and unlock refresh in the widget settings.';
+
+  @override
+  String get widgetConfigTitle => 'Folder widget';
+
+  @override
+  String get widgetConfigFolder => 'Album';
+
+  @override
+  String get widgetConfigInterval => 'Change every';
+
+  @override
+  String get widgetConfigInterval10m => '10 minutes';
+
+  @override
+  String get widgetConfigInterval30m => '30 minutes';
+
+  @override
+  String get widgetConfigInterval1h => '1 hour';
+
+  @override
+  String get widgetConfigIntervalCustom => 'Custom (minutes)';
+
+  @override
+  String get widgetConfigRefreshOnUnlock => 'Change on unlock';
+
+  @override
+  String get widgetConfigPickMode => 'Photo order';
+
+  @override
+  String get widgetConfigPickRandom => 'Random';
+
+  @override
+  String get widgetConfigPickRecent => 'Most recent';
+
+  @override
+  String get widgetConfigSave => 'Save';
+
+  @override
   String get deepOrganizeTitle => 'Deep organize';
 
   @override

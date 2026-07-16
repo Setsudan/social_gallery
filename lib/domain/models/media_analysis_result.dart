@@ -1,4 +1,4 @@
-/// Cached on-device analysis for one image (dHash, blur, exposure, faces).
+/// Cached on-device analysis for one image (dHash, blur, exposure, faces, OCR).
 class MediaAnalysisResult {
   const MediaAnalysisResult({
     required this.mediaId,
@@ -10,6 +10,8 @@ class MediaAnalysisResult {
     this.hasClosedEyes = false,
     this.labels = const [],
     this.dominantColor,
+    this.ocrText,
+    this.ocrScannedAt,
     required this.scannedAt,
   });
 
@@ -22,10 +24,43 @@ class MediaAnalysisResult {
   final bool hasClosedEyes;
   final List<String> labels;
   final String? dominantColor;
+  final String? ocrText;
+  final int? ocrScannedAt;
   final int scannedAt;
 
   bool get isFullyTaggedForSearch =>
       dominantColor != null && dominantColor!.isNotEmpty;
+
+  bool get hasOcr => ocrScannedAt != null;
+
+  MediaAnalysisResult copyWith({
+    String? dHash,
+    double? blurScore,
+    double? exposureScore,
+    bool? isSolidColor,
+    int? faceCount,
+    bool? hasClosedEyes,
+    List<String>? labels,
+    String? dominantColor,
+    String? ocrText,
+    int? ocrScannedAt,
+    int? scannedAt,
+  }) {
+    return MediaAnalysisResult(
+      mediaId: mediaId,
+      dHash: dHash ?? this.dHash,
+      blurScore: blurScore ?? this.blurScore,
+      exposureScore: exposureScore ?? this.exposureScore,
+      isSolidColor: isSolidColor ?? this.isSolidColor,
+      faceCount: faceCount ?? this.faceCount,
+      hasClosedEyes: hasClosedEyes ?? this.hasClosedEyes,
+      labels: labels ?? this.labels,
+      dominantColor: dominantColor ?? this.dominantColor,
+      ocrText: ocrText ?? this.ocrText,
+      ocrScannedAt: ocrScannedAt ?? this.ocrScannedAt,
+      scannedAt: scannedAt ?? this.scannedAt,
+    );
+  }
 }
 
 /// Burst-like cluster from [FindSimilarGroups]; [representativeId] is the suggested keeper.

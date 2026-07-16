@@ -187,6 +187,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       invalidateLocationProvidersFromRef(_ref);
       _ref.read(locationIndexControllerProvider.notifier).scheduleAfterLibrarySync();
       _ref.read(mediaTaggingControllerProvider.notifier).scheduleAfterLibrarySync();
+      unawaited(_ref.read(mediaRepositoryProvider).backfillScreenshotContentKinds());
       await _ref
           .read(preferencesRepositoryProvider)
           .setLastGallerySyncAt(DateTime.now());

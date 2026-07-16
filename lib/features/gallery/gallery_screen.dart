@@ -537,7 +537,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                     onClear: _handleSearchBack,
                     onTapQuery: _openSearch,
                     onRemoveLabel: () => _applySearch(
-                      _searchQuery.copyWith(clearLabel: true),
+                      _searchQuery.copyWith(clearLabels: true),
                     ),
                     onRemoveColor: () => _applySearch(
                       _searchQuery.copyWith(clearColor: true),

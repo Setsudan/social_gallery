@@ -859,6 +859,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 showChevron: false,
               ),
+              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
+                OneUiSettingsTile(
+                  icon: OneUiSettingsIcon.widgets,
+                  title: l10n.settingsWidgetsTitle,
+                  subtitle: l10n.settingsWidgetsSubtitle,
+                  showDivider: true,
+                  onTap: () {
+                    AppHaptics.light();
+                    showDialog<void>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(l10n.settingsWidgetsTitle),
+                        content: Text(l10n.settingsWidgetsHelpBody),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(l10n.actionCancel),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),

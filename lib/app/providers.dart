@@ -387,6 +387,9 @@ final pairingServiceProvider = Provider((ref) {
 final pendingBackupPairProvider =
     StateProvider<BackupPairingParams?>((ref) => null);
 
+/// Queued in-app location from a widget / deep link, consumed after startup.
+final pendingDeepLinkLocationProvider = StateProvider<String?>((ref) => null);
+
 final desktopDiscoveryServiceProvider = Provider((ref) {
   return DesktopDiscoveryService();
 });

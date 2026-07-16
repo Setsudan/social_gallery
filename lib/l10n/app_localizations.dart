@@ -2426,6 +2426,162 @@ abstract class AppLocalizations {
   /// **'Photos grouped by place'**
   String get discoverLocationsSubtitle;
 
+  /// No description provided for @discoverScreenshotsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots'**
+  String get discoverScreenshotsTitle;
+
+  /// No description provided for @discoverScreenshotsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and clean up screenshots'**
+  String get discoverScreenshotsSubtitle;
+
+  /// No description provided for @discoverScreenshotsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No screenshots'**
+  String get discoverScreenshotsEmptyTitle;
+
+  /// No description provided for @discoverScreenshotsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots detected by name or album will show up here.'**
+  String get discoverScreenshotsEmptyMessage;
+
+  /// No description provided for @discoverDocumentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents & text'**
+  String get discoverDocumentsTitle;
+
+  /// No description provided for @discoverDocumentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts, notes, and text-heavy photos'**
+  String get discoverDocumentsSubtitle;
+
+  /// No description provided for @discoverDocumentsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No documents yet'**
+  String get discoverDocumentsEmptyTitle;
+
+  /// No description provided for @discoverDocumentsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Run text indexing to find receipts, notes, and scanned pages.'**
+  String get discoverDocumentsEmptyMessage;
+
+  /// No description provided for @discoverDocumentsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search text in photos'**
+  String get discoverDocumentsSearchHint;
+
+  /// No description provided for @discoverOcrIndexAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Index text'**
+  String get discoverOcrIndexAction;
+
+  /// No description provided for @discoverOcrIndexProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'OCR {scanned}/{total}'**
+  String discoverOcrIndexProgress(int scanned, int total);
+
+  /// No description provided for @settingsWidgetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widgets'**
+  String get settingsWidgetsTitle;
+
+  /// No description provided for @settingsWidgetsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add album slideshows and glances on Android'**
+  String get settingsWidgetsSubtitle;
+
+  /// No description provided for @settingsWidgetsHelpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press your home screen, choose Widgets, then pick Social Gallery. Configure the album, refresh interval, and unlock refresh in the widget settings.'**
+  String get settingsWidgetsHelpBody;
+
+  /// No description provided for @widgetConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder widget'**
+  String get widgetConfigTitle;
+
+  /// No description provided for @widgetConfigFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get widgetConfigFolder;
+
+  /// No description provided for @widgetConfigInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Change every'**
+  String get widgetConfigInterval;
+
+  /// No description provided for @widgetConfigInterval10m.
+  ///
+  /// In en, this message translates to:
+  /// **'10 minutes'**
+  String get widgetConfigInterval10m;
+
+  /// No description provided for @widgetConfigInterval30m.
+  ///
+  /// In en, this message translates to:
+  /// **'30 minutes'**
+  String get widgetConfigInterval30m;
+
+  /// No description provided for @widgetConfigInterval1h.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get widgetConfigInterval1h;
+
+  /// No description provided for @widgetConfigIntervalCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom (minutes)'**
+  String get widgetConfigIntervalCustom;
+
+  /// No description provided for @widgetConfigRefreshOnUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Change on unlock'**
+  String get widgetConfigRefreshOnUnlock;
+
+  /// No description provided for @widgetConfigPickMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo order'**
+  String get widgetConfigPickMode;
+
+  /// No description provided for @widgetConfigPickRandom.
+  ///
+  /// In en, this message translates to:
+  /// **'Random'**
+  String get widgetConfigPickRandom;
+
+  /// No description provided for @widgetConfigPickRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Most recent'**
+  String get widgetConfigPickRecent;
+
+  /// No description provided for @widgetConfigSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get widgetConfigSave;
+
   /// No description provided for @deepOrganizeTitle.
   ///
   /// In en, this message translates to:

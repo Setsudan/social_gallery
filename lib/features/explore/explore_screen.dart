@@ -299,7 +299,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   onClear: _handleSearchBack,
                   onTapQuery: _openSearchOverlay,
                   onRemoveLabel: () => _applySearch(
-                    _searchQuery.copyWith(clearLabel: true),
+                    _searchQuery.copyWith(clearLabels: true),
                   ),
                   onRemoveColor: () => _applySearch(
                     _searchQuery.copyWith(clearColor: true),

@@ -21,11 +21,30 @@ class MediaAnalysisRepository {
   }
 
   Future<void> saveResult(MediaAnalysisResult result) async {
-    await _db.upsertAnalysisRow(_toCompanion(result));
+    final existing = await getForMedia(result.mediaId);
+    final merged = existing == null
+        ? result
+        : result.copyWith(
+            ocrText: result.ocrText ?? existing.ocrText,
+            ocrScannedAt: result.ocrScannedAt ?? existing.ocrScannedAt,
+            // Prefer newer labels/colors from [result]; keep OCR from either.
+          );
+    // If OCR pass omitted labels, keep prior labels/hash metrics.
+    final finalResult = existing != null &&
+            result.dHash == null &&
+            result.ocrScannedAt != null
+        ? existing.copyWith(
+            ocrText: result.ocrText,
+            ocrScannedAt: result.ocrScannedAt,
+          )
+        : merged;
+    await _db.upsertAnalysisRow(_toCompanion(finalResult));
   }
 
   Future<void> saveResults(List<MediaAnalysisResult> results) async {
-    await _db.upsertAnalysisRows(results.map(_toCompanion).toList());
+    for (final result in results) {
+      await saveResult(result);
+    }
   }
 
   Future<int> getCachedCount() => _db.getAnalysisCount();
@@ -49,6 +68,8 @@ class MediaAnalysisRepository {
       hasClosedEyes: row.hasClosedEyes,
       labels: labels,
       dominantColor: row.dominantColor,
+      ocrText: row.ocrText,
+      ocrScannedAt: row.ocrScannedAt,
       scannedAt: row.scannedAt,
     );
   }
@@ -66,6 +87,8 @@ class MediaAnalysisRepository {
         result.labels.isEmpty ? null : jsonEncode(result.labels),
       ),
       dominantColor: Value(result.dominantColor),
+      ocrText: Value(result.ocrText),
+      ocrScannedAt: Value(result.ocrScannedAt),
       scannedAt: Value(result.scannedAt),
     );
   }

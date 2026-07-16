@@ -14,6 +14,7 @@ import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/domain/models/explore_search_query.dart';
+import 'package:social_gallery/domain/models/media_content_kind.dart';
 import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
 /// Single entry point for indexed media: sync, queries, favorites, trash, and device I/O.
@@ -102,6 +103,15 @@ class MediaRepository {
               mergedRow = mergedRow.copyWith(
                 latitude: Value(existing.latitude),
                 longitude: Value(existing.longitude),
+              );
+            }
+            // Preserve document classification from OCR; screenshots re-derived.
+            if (existing.contentKind == MediaContentKind.document.value &&
+                (!mergedRow.contentKind.present ||
+                    mergedRow.contentKind.value !=
+                        MediaContentKind.screenshot.value)) {
+              mergedRow = mergedRow.copyWith(
+                contentKind: const Value(3),
               );
             }
           }
@@ -220,12 +230,66 @@ class MediaRepository {
     }
     final rows = await _db.searchExploreMediaFiltered(
       text: query.text,
-      label: query.label,
+      labels: query.labels,
       color: query.color,
+      placeQuery: query.placeQuery,
+      dateFromMs: query.dateFromMs,
+      dateToMs: query.dateToMs,
+      cameraMake: query.cameraMake,
+      cameraModel: query.cameraModel,
+      contentFilter: query.contentFilter.name,
+      minFaceCount: query.minFaceCount,
       limit: pageSize,
       offset: page * pageSize,
     );
     return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<List<domain.MediaItem>> getContentKindPage(
+    MediaContentKind kind,
+    int page, {
+    String? ocrQuery,
+  }) async {
+    final rows = await _db.getMediaByContentKindPage(
+      contentKind: kind.value,
+      limit: pageSize,
+      offset: page * pageSize,
+      ocrQuery: ocrQuery,
+    );
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<domain.MediaItem?> pickFolderWidgetMedia(
+    String folderPath, {
+    bool random = true,
+  }) async {
+    final row = await _db.pickFolderMedia(
+      folderPath: folderPath,
+      random: random,
+    );
+    return row == null ? null : mediaItemFromRow(row);
+  }
+
+  Future<domain.MediaItem?> pickFavoriteWidgetMedia({
+    bool random = true,
+  }) async {
+    final row = await _db.pickFavoriteMedia(random: random);
+    return row == null ? null : mediaItemFromRow(row);
+  }
+
+  Future<domain.MediaItem?> pickOnThisDayWidgetMedia({
+    bool random = true,
+  }) async {
+    final row = await _db.pickOnThisDayMedia(random: random);
+    return row == null ? null : mediaItemFromRow(row);
+  }
+
+  Future<void> updateContentKind(int mediaId, MediaContentKind kind) {
+    return _db.updateMediaContentKind(mediaId, kind.value);
+  }
+
+  Future<int> backfillScreenshotContentKinds() {
+    return _db.backfillScreenshotContentKinds();
   }
 
   Future<List<domain.MediaItem>> getAllSearchableMedia() async {

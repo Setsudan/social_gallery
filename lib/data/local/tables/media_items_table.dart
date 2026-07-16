@@ -47,6 +47,9 @@ class MediaItems extends Table {
   IntColumn get trashedAt => integer().nullable()();
   TextColumn get originalPath => text().nullable()();
 
+  /// See [MediaContentKind]: unknown=0, photo=1, screenshot=2, document=3.
+  IntColumn get contentKind => integer().withDefault(const Constant(1))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

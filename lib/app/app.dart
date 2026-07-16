@@ -38,21 +38,93 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initBackupDeepLinks();
+    _initDeepLinks();
   }
 
-  Future<void> _initBackupDeepLinks() async {
+  Future<void> _initDeepLinks() async {
     final initial = await _appLinks.getInitialLink();
     if (initial != null) {
-      _handleBackupDeepLink(initial);
+      _handleDeepLink(initial);
     }
-    _linkSubscription = _appLinks.uriLinkStream.listen(_handleBackupDeepLink);
+    _linkSubscription = _appLinks.uriLinkStream.listen(_handleDeepLink);
+  }
+
+  /// Maps `socialgallery://…` hosts to real go_router locations.
+  String? _locationForWidgetDeepLink(Uri uri) {
+    switch (uri.host) {
+      case 'widgets':
+        final widgetId =
+            int.tryParse(uri.queryParameters['widgetId'] ?? '') ?? 0;
+        // Path may be /folder-config when URI is socialgallery://widgets/folder-config
+        if (uri.path.contains('folder-config') ||
+            uri.pathSegments.contains('folder-config')) {
+          return '/widgets/folder-config?widgetId=$widgetId';
+        }
+        return '/widgets/folder-config?widgetId=$widgetId';
+      case 'organize':
+        return '/organize';
+      case 'favorites':
+        return '/discover/likes-review';
+      case 'gallery':
+        return '/explore';
+      case 'folder':
+        final path = uri.queryParameters['path'];
+        if (path != null && path.isNotEmpty) {
+          return folderProfileLocation(path);
+        }
+        return '/home';
+      case 'home':
+        return '/home';
+      default:
+        return null;
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    if (uri.scheme != 'socialgallery') return;
+
+    if (uri.host == 'pair') {
+      _handleBackupDeepLink(uri);
+      return;
+    }
+
+    final location = _locationForWidgetDeepLink(uri);
+    if (location == null) return;
+
+    ref.read(pendingDeepLinkLocationProvider.notifier).state = location;
+    _tryConsumePendingDeepLink();
   }
 
   void _handleBackupDeepLink(Uri uri) {
     final params = BackupDeepLink.parse(uri);
     if (params == null) return;
     ref.read(pendingBackupPairProvider.notifier).state = params;
+  }
+
+  void _tryConsumePendingDeepLink() {
+    final location = ref.read(pendingDeepLinkLocationProvider);
+    if (location == null) return;
+
+    final router = ref.read(routerProvider);
+    final currentPath = router.routerDelegate.currentConfiguration.uri.path;
+    if (currentPath == '/startup' || currentPath.isEmpty) {
+      // Startup / onboarding still owns navigation; keep queued.
+      return;
+    }
+
+    ref.read(pendingDeepLinkLocationProvider.notifier).state = null;
+
+    final isShellTab =
+        location == '/home' || location == '/explore' || location == '/discover';
+    if (isShellTab) {
+      router.go(location);
+    } else {
+      // Ensure a shell tab is under the modal stack.
+      if (currentPath == '/startup') {
+        router.go('/home');
+      }
+      router.push(location);
+    }
   }
 
   Future<void> _consumePendingBackupPair() async {
@@ -91,6 +163,10 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
     if (state == AppLifecycleState.resumed) {
       refreshFeedProviders(ref);
       unawaited(ref.read(gallerySyncProvider.notifier).run());
+      // Cold-start deep links may arrive before shell is ready.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _tryConsumePendingDeepLink();
+      });
     }
 
     if (state == AppLifecycleState.detached ||
@@ -117,6 +193,14 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
     ref.listen<BackupPairingParams?>(pendingBackupPairProvider, (previous, next) {
       if (next != null) {
         unawaited(_consumePendingBackupPair());
+      }
+    });
+
+    ref.listen<String?>(pendingDeepLinkLocationProvider, (previous, next) {
+      if (next != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _tryConsumePendingDeepLink();
+        });
       }
     });
 

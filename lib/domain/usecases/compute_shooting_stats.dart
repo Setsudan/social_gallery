@@ -1,4 +1,6 @@
+import 'package:social_gallery/core/media/content_kind_classifier.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';
+import 'package:social_gallery/domain/models/media_content_kind.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
 /// Aggregates photo/video counts, favorites, folders, and daily activity for a month.
@@ -29,7 +31,14 @@ class ComputeShootingStats {
         videoDuration += item.videoDuration ?? 0;
       } else {
         photos++;
-        if (_isScreenshot(item)) screenshots++;
+        if (item.contentKind == MediaContentKind.screenshot ||
+            ContentKindClassifier.looksLikeScreenshot(
+              displayName: item.displayName,
+              folderName: item.folderName,
+              folderPath: item.folderPath,
+            )) {
+          screenshots++;
+        }
       }
 
       final date = DateTime.fromMillisecondsSinceEpoch(item.sortDate);
@@ -58,13 +67,5 @@ class ComputeShootingStats {
       mostActiveDay: mostActiveDay,
       mostActiveDayCount: mostActiveCount,
     );
-  }
-
-  bool _isScreenshot(MediaItem item) {
-    final name = item.displayName.toLowerCase();
-    final path = item.folderPath.toLowerCase();
-    return name.contains('screenshot') ||
-        path.contains('screenshot') ||
-        name.startsWith('screen');
   }
 }

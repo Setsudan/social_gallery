@@ -1367,6 +1367,93 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoverLocationsSubtitle => 'Photos regroupees par lieu';
 
   @override
+  String get discoverScreenshotsTitle => 'Captures d\'ecran';
+
+  @override
+  String get discoverScreenshotsSubtitle =>
+      'Parcourir et nettoyer les captures';
+
+  @override
+  String get discoverScreenshotsEmptyTitle => 'Aucune capture';
+
+  @override
+  String get discoverScreenshotsEmptyMessage =>
+      'Les captures detectees par nom ou album apparaitront ici.';
+
+  @override
+  String get discoverDocumentsTitle => 'Documents et texte';
+
+  @override
+  String get discoverDocumentsSubtitle =>
+      'Recus, notes et photos riches en texte';
+
+  @override
+  String get discoverDocumentsEmptyTitle => 'Aucun document';
+
+  @override
+  String get discoverDocumentsEmptyMessage =>
+      'Lancez l\'indexation du texte pour trouver recus, notes et pages scannees.';
+
+  @override
+  String get discoverDocumentsSearchHint =>
+      'Rechercher du texte dans les photos';
+
+  @override
+  String get discoverOcrIndexAction => 'Indexer le texte';
+
+  @override
+  String discoverOcrIndexProgress(int scanned, int total) {
+    return 'OCR $scanned/$total';
+  }
+
+  @override
+  String get settingsWidgetsTitle => 'Widgets ecran d\'accueil';
+
+  @override
+  String get settingsWidgetsSubtitle =>
+      'Ajoutez des diaporamas d\'albums sur Android';
+
+  @override
+  String get settingsWidgetsHelpBody =>
+      'Appuyez longuement sur l\'ecran d\'accueil, choisissez Widgets, puis Social Gallery. Configurez l\'album, l\'intervalle et le rafraichissement au deverrouillage.';
+
+  @override
+  String get widgetConfigTitle => 'Widget dossier';
+
+  @override
+  String get widgetConfigFolder => 'Album';
+
+  @override
+  String get widgetConfigInterval => 'Changer toutes les';
+
+  @override
+  String get widgetConfigInterval10m => '10 minutes';
+
+  @override
+  String get widgetConfigInterval30m => '30 minutes';
+
+  @override
+  String get widgetConfigInterval1h => '1 heure';
+
+  @override
+  String get widgetConfigIntervalCustom => 'Personnalise (minutes)';
+
+  @override
+  String get widgetConfigRefreshOnUnlock => 'Changer au deverrouillage';
+
+  @override
+  String get widgetConfigPickMode => 'Ordre des photos';
+
+  @override
+  String get widgetConfigPickRandom => 'Aleatoire';
+
+  @override
+  String get widgetConfigPickRecent => 'Plus recentes';
+
+  @override
+  String get widgetConfigSave => 'Enregistrer';
+
+  @override
   String get deepOrganizeTitle => 'Organisation approfondie';
 
   @override

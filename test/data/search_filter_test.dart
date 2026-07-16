@@ -67,7 +67,7 @@ void main() {
     );
 
     final catResults = await db.searchExploreMediaFiltered(
-      label: 'cat',
+      labels: ['cat'],
       limit: 10,
       offset: 0,
     );

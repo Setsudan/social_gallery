@@ -37,6 +37,8 @@ dependencies:
   flutter_image_compress: ^2.4.0
   google_mlkit_image_labeling: ^0.14.1
   google_mlkit_face_detection: ^0.13.1
+  google_mlkit_text_recognition: ^0.15.0
+  home_widget: ^0.7.0
   exif: ^3.3.0
   intl: ^0.20.2
   flutter_local_notifications: ^22.0.1

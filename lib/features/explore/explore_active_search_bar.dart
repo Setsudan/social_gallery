@@ -34,7 +34,7 @@ class ExploreActiveSearchBar extends StatelessWidget {
     );
 
     return Material(
-      color: colorScheme.surfaceContainerLow,
+      color: colorScheme.surface,
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -50,83 +50,108 @@ class ExploreActiveSearchBar extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
                     tooltip: l10n.tooltipClearSearch,
                     onPressed: onBack,
                   ),
                   Expanded(
-                    child: InkWell(
-                      onTap: onTapQuery,
-                      borderRadius: BorderRadius.circular(OneUiRadii.pill),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: OneUiSpacing.md,
-                          vertical: OneUiSpacing.sm,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(OneUiRadii.pill),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.search,
-                              size: 20,
-                              color: colorScheme.onSurfaceVariant,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onTapQuery,
+                        borderRadius: BorderRadius.circular(OneUiRadii.pill),
+                        child: Ink(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest,
+                            borderRadius:
+                                BorderRadius.circular(OneUiRadii.pill),
+                            border: Border.all(
+                              color:
+                                  colorScheme.outline.withValues(alpha: 0.22),
                             ),
-                            const SizedBox(width: OneUiSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                summary,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyLarge,
-                              ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: OneUiSpacing.md,
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 20),
-                              tooltip: l10n.tooltipClearSearch,
-                              onPressed: onClear,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
-                              ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.search_rounded,
+                                  size: 22,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: OneUiSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    summary,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyLarge,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                  ),
+                                  tooltip: l10n.tooltipClearSearch,
+                                  onPressed: onClear,
+                                  style: IconButton.styleFrom(
+                                    backgroundColor:
+                                        colorScheme.surfaceContainer,
+                                    foregroundColor:
+                                        colorScheme.onSurfaceVariant,
+                                    minimumSize: const Size(32, 32),
+                                    maximumSize: const Size(32, 32),
+                                    padding: EdgeInsets.zero,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-              if (query.label != null || query.color != null) ...[
+              if (query.labels.isNotEmpty || query.color != null) ...[
                 const SizedBox(height: OneUiSpacing.sm),
-                Wrap(
-                  spacing: OneUiSpacing.sm,
-                  children: [
-                    if (query.label != null)
-                      InputChip(
-                        label: Text(
-                          _localize(context, exploreSearchLabelKey(query.label!)),
-                        ),
-                        onDeleted: onRemoveLabel,
-                      ),
-                    if (query.color != null)
-                      InputChip(
-                        avatar: CircleAvatar(
-                          backgroundColor: kColorBucketColors[query.color!],
-                          radius: 8,
-                        ),
-                        label: Text(
-                          _localize(
-                            context,
-                            exploreSearchColorKey(query.color!),
+                Padding(
+                  padding: const EdgeInsets.only(left: 48),
+                  child: Wrap(
+                    spacing: OneUiSpacing.sm,
+                    runSpacing: OneUiSpacing.sm,
+                    children: [
+                      for (final label in query.labels)
+                        InputChip(
+                          label: Text(
+                            _localize(context, exploreSearchLabelKey(label)),
                           ),
+                          onDeleted: onRemoveLabel,
+                          visualDensity: VisualDensity.compact,
                         ),
-                        onDeleted: onRemoveColor,
-                      ),
-                  ],
+                      if (query.color != null)
+                        InputChip(
+                          avatar: CircleAvatar(
+                            backgroundColor:
+                                kColorBucketColors[query.color!],
+                            radius: 8,
+                          ),
+                          label: Text(
+                            _localize(
+                              context,
+                              exploreSearchColorKey(query.color!),
+                            ),
+                          ),
+                          onDeleted: onRemoveColor,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ],

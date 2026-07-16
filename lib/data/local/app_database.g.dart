@@ -1165,6 +1165,18 @@ class $MediaItemsTable extends MediaItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _contentKindMeta = const VerificationMeta(
+    'contentKind',
+  );
+  @override
+  late final GeneratedColumn<int> contentKind = GeneratedColumn<int>(
+    'content_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1196,6 +1208,7 @@ class $MediaItemsTable extends MediaItems
     isTrashed,
     trashedAt,
     originalPath,
+    contentKind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1429,6 +1442,15 @@ class $MediaItemsTable extends MediaItems
         ),
       );
     }
+    if (data.containsKey('content_kind')) {
+      context.handle(
+        _contentKindMeta,
+        contentKind.isAcceptableOrUnknown(
+          data['content_kind']!,
+          _contentKindMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1554,6 +1576,10 @@ class $MediaItemsTable extends MediaItems
         DriftSqlType.string,
         data['${effectivePrefix}original_path'],
       ),
+      contentKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}content_kind'],
+      )!,
     );
   }
 
@@ -1593,6 +1619,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
   final bool isTrashed;
   final int? trashedAt;
   final String? originalPath;
+
+  /// See [MediaContentKind]: unknown=0, photo=1, screenshot=2, document=3.
+  final int contentKind;
   const MediaRow({
     required this.id,
     required this.uri,
@@ -1623,6 +1652,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     required this.isTrashed,
     this.trashedAt,
     this.originalPath,
+    required this.contentKind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1690,6 +1720,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     if (!nullToAbsent || originalPath != null) {
       map['original_path'] = Variable<String>(originalPath);
     }
+    map['content_kind'] = Variable<int>(contentKind);
     return map;
   }
 
@@ -1756,6 +1787,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       originalPath: originalPath == null && nullToAbsent
           ? const Value.absent()
           : Value(originalPath),
+      contentKind: Value(contentKind),
     );
   }
 
@@ -1794,6 +1826,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       isTrashed: serializer.fromJson<bool>(json['isTrashed']),
       trashedAt: serializer.fromJson<int?>(json['trashedAt']),
       originalPath: serializer.fromJson<String?>(json['originalPath']),
+      contentKind: serializer.fromJson<int>(json['contentKind']),
     );
   }
   @override
@@ -1829,6 +1862,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       'isTrashed': serializer.toJson<bool>(isTrashed),
       'trashedAt': serializer.toJson<int?>(trashedAt),
       'originalPath': serializer.toJson<String?>(originalPath),
+      'contentKind': serializer.toJson<int>(contentKind),
     };
   }
 
@@ -1862,6 +1896,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     bool? isTrashed,
     Value<int?> trashedAt = const Value.absent(),
     Value<String?> originalPath = const Value.absent(),
+    int? contentKind,
   }) => MediaRow(
     id: id ?? this.id,
     uri: uri ?? this.uri,
@@ -1894,6 +1929,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     isTrashed: isTrashed ?? this.isTrashed,
     trashedAt: trashedAt.present ? trashedAt.value : this.trashedAt,
     originalPath: originalPath.present ? originalPath.value : this.originalPath,
+    contentKind: contentKind ?? this.contentKind,
   );
   MediaRow copyWithCompanion(MediaItemsCompanion data) {
     return MediaRow(
@@ -1956,6 +1992,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       originalPath: data.originalPath.present
           ? data.originalPath.value
           : this.originalPath,
+      contentKind: data.contentKind.present
+          ? data.contentKind.value
+          : this.contentKind,
     );
   }
 
@@ -1990,7 +2029,8 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           ..write('lastSyncTime: $lastSyncTime, ')
           ..write('isTrashed: $isTrashed, ')
           ..write('trashedAt: $trashedAt, ')
-          ..write('originalPath: $originalPath')
+          ..write('originalPath: $originalPath, ')
+          ..write('contentKind: $contentKind')
           ..write(')'))
         .toString();
   }
@@ -2026,6 +2066,7 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     isTrashed,
     trashedAt,
     originalPath,
+    contentKind,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -2059,7 +2100,8 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           other.lastSyncTime == this.lastSyncTime &&
           other.isTrashed == this.isTrashed &&
           other.trashedAt == this.trashedAt &&
-          other.originalPath == this.originalPath);
+          other.originalPath == this.originalPath &&
+          other.contentKind == this.contentKind);
 }
 
 class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
@@ -2092,6 +2134,7 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
   final Value<bool> isTrashed;
   final Value<int?> trashedAt;
   final Value<String?> originalPath;
+  final Value<int> contentKind;
   const MediaItemsCompanion({
     this.id = const Value.absent(),
     this.uri = const Value.absent(),
@@ -2122,6 +2165,7 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.isTrashed = const Value.absent(),
     this.trashedAt = const Value.absent(),
     this.originalPath = const Value.absent(),
+    this.contentKind = const Value.absent(),
   });
   MediaItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -2153,6 +2197,7 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.isTrashed = const Value.absent(),
     this.trashedAt = const Value.absent(),
     this.originalPath = const Value.absent(),
+    this.contentKind = const Value.absent(),
   }) : uri = Value(uri),
        displayName = Value(displayName),
        folderName = Value(folderName),
@@ -2191,6 +2236,7 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Expression<bool>? isTrashed,
     Expression<int>? trashedAt,
     Expression<String>? originalPath,
+    Expression<int>? contentKind,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2222,6 +2268,7 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       if (isTrashed != null) 'is_trashed': isTrashed,
       if (trashedAt != null) 'trashed_at': trashedAt,
       if (originalPath != null) 'original_path': originalPath,
+      if (contentKind != null) 'content_kind': contentKind,
     });
   }
 
@@ -2255,6 +2302,7 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Value<bool>? isTrashed,
     Value<int?>? trashedAt,
     Value<String?>? originalPath,
+    Value<int>? contentKind,
   }) {
     return MediaItemsCompanion(
       id: id ?? this.id,
@@ -2286,6 +2334,7 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       isTrashed: isTrashed ?? this.isTrashed,
       trashedAt: trashedAt ?? this.trashedAt,
       originalPath: originalPath ?? this.originalPath,
+      contentKind: contentKind ?? this.contentKind,
     );
   }
 
@@ -2379,6 +2428,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     if (originalPath.present) {
       map['original_path'] = Variable<String>(originalPath.value);
     }
+    if (contentKind.present) {
+      map['content_kind'] = Variable<int>(contentKind.value);
+    }
     return map;
   }
 
@@ -2413,7 +2465,8 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
           ..write('lastSyncTime: $lastSyncTime, ')
           ..write('isTrashed: $isTrashed, ')
           ..write('trashedAt: $trashedAt, ')
-          ..write('originalPath: $originalPath')
+          ..write('originalPath: $originalPath, ')
+          ..write('contentKind: $contentKind')
           ..write(')'))
         .toString();
   }
@@ -3119,6 +3172,28 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _ocrTextMeta = const VerificationMeta(
+    'ocrText',
+  );
+  @override
+  late final GeneratedColumn<String> ocrText = GeneratedColumn<String>(
+    'ocr_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ocrScannedAtMeta = const VerificationMeta(
+    'ocrScannedAt',
+  );
+  @override
+  late final GeneratedColumn<int> ocrScannedAt = GeneratedColumn<int>(
+    'ocr_scanned_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     mediaId,
@@ -3131,6 +3206,8 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
     labelsJson,
     dominantColor,
     scannedAt,
+    ocrText,
+    ocrScannedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3218,6 +3295,21 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
     } else if (isInserting) {
       context.missing(_scannedAtMeta);
     }
+    if (data.containsKey('ocr_text')) {
+      context.handle(
+        _ocrTextMeta,
+        ocrText.isAcceptableOrUnknown(data['ocr_text']!, _ocrTextMeta),
+      );
+    }
+    if (data.containsKey('ocr_scanned_at')) {
+      context.handle(
+        _ocrScannedAtMeta,
+        ocrScannedAt.isAcceptableOrUnknown(
+          data['ocr_scanned_at']!,
+          _ocrScannedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3267,6 +3359,14 @@ class $MediaAnalysisCacheTable extends MediaAnalysisCache
         DriftSqlType.int,
         data['${effectivePrefix}scanned_at'],
       )!,
+      ocrText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ocr_text'],
+      ),
+      ocrScannedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ocr_scanned_at'],
+      ),
     );
   }
 
@@ -3288,6 +3388,8 @@ class MediaAnalysisRow extends DataClass
   final String? labelsJson;
   final String? dominantColor;
   final int scannedAt;
+  final String? ocrText;
+  final int? ocrScannedAt;
   const MediaAnalysisRow({
     required this.mediaId,
     this.dHash,
@@ -3299,6 +3401,8 @@ class MediaAnalysisRow extends DataClass
     this.labelsJson,
     this.dominantColor,
     required this.scannedAt,
+    this.ocrText,
+    this.ocrScannedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3323,6 +3427,12 @@ class MediaAnalysisRow extends DataClass
       map['dominant_color'] = Variable<String>(dominantColor);
     }
     map['scanned_at'] = Variable<int>(scannedAt);
+    if (!nullToAbsent || ocrText != null) {
+      map['ocr_text'] = Variable<String>(ocrText);
+    }
+    if (!nullToAbsent || ocrScannedAt != null) {
+      map['ocr_scanned_at'] = Variable<int>(ocrScannedAt);
+    }
     return map;
   }
 
@@ -3348,6 +3458,12 @@ class MediaAnalysisRow extends DataClass
           ? const Value.absent()
           : Value(dominantColor),
       scannedAt: Value(scannedAt),
+      ocrText: ocrText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ocrText),
+      ocrScannedAt: ocrScannedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ocrScannedAt),
     );
   }
 
@@ -3367,6 +3483,8 @@ class MediaAnalysisRow extends DataClass
       labelsJson: serializer.fromJson<String?>(json['labelsJson']),
       dominantColor: serializer.fromJson<String?>(json['dominantColor']),
       scannedAt: serializer.fromJson<int>(json['scannedAt']),
+      ocrText: serializer.fromJson<String?>(json['ocrText']),
+      ocrScannedAt: serializer.fromJson<int?>(json['ocrScannedAt']),
     );
   }
   @override
@@ -3383,6 +3501,8 @@ class MediaAnalysisRow extends DataClass
       'labelsJson': serializer.toJson<String?>(labelsJson),
       'dominantColor': serializer.toJson<String?>(dominantColor),
       'scannedAt': serializer.toJson<int>(scannedAt),
+      'ocrText': serializer.toJson<String?>(ocrText),
+      'ocrScannedAt': serializer.toJson<int?>(ocrScannedAt),
     };
   }
 
@@ -3397,6 +3517,8 @@ class MediaAnalysisRow extends DataClass
     Value<String?> labelsJson = const Value.absent(),
     Value<String?> dominantColor = const Value.absent(),
     int? scannedAt,
+    Value<String?> ocrText = const Value.absent(),
+    Value<int?> ocrScannedAt = const Value.absent(),
   }) => MediaAnalysisRow(
     mediaId: mediaId ?? this.mediaId,
     dHash: dHash.present ? dHash.value : this.dHash,
@@ -3412,6 +3534,8 @@ class MediaAnalysisRow extends DataClass
         ? dominantColor.value
         : this.dominantColor,
     scannedAt: scannedAt ?? this.scannedAt,
+    ocrText: ocrText.present ? ocrText.value : this.ocrText,
+    ocrScannedAt: ocrScannedAt.present ? ocrScannedAt.value : this.ocrScannedAt,
   );
   MediaAnalysisRow copyWithCompanion(MediaAnalysisCacheCompanion data) {
     return MediaAnalysisRow(
@@ -3435,6 +3559,10 @@ class MediaAnalysisRow extends DataClass
           ? data.dominantColor.value
           : this.dominantColor,
       scannedAt: data.scannedAt.present ? data.scannedAt.value : this.scannedAt,
+      ocrText: data.ocrText.present ? data.ocrText.value : this.ocrText,
+      ocrScannedAt: data.ocrScannedAt.present
+          ? data.ocrScannedAt.value
+          : this.ocrScannedAt,
     );
   }
 
@@ -3450,7 +3578,9 @@ class MediaAnalysisRow extends DataClass
           ..write('hasClosedEyes: $hasClosedEyes, ')
           ..write('labelsJson: $labelsJson, ')
           ..write('dominantColor: $dominantColor, ')
-          ..write('scannedAt: $scannedAt')
+          ..write('scannedAt: $scannedAt, ')
+          ..write('ocrText: $ocrText, ')
+          ..write('ocrScannedAt: $ocrScannedAt')
           ..write(')'))
         .toString();
   }
@@ -3467,6 +3597,8 @@ class MediaAnalysisRow extends DataClass
     labelsJson,
     dominantColor,
     scannedAt,
+    ocrText,
+    ocrScannedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -3481,7 +3613,9 @@ class MediaAnalysisRow extends DataClass
           other.hasClosedEyes == this.hasClosedEyes &&
           other.labelsJson == this.labelsJson &&
           other.dominantColor == this.dominantColor &&
-          other.scannedAt == this.scannedAt);
+          other.scannedAt == this.scannedAt &&
+          other.ocrText == this.ocrText &&
+          other.ocrScannedAt == this.ocrScannedAt);
 }
 
 class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
@@ -3495,6 +3629,8 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
   final Value<String?> labelsJson;
   final Value<String?> dominantColor;
   final Value<int> scannedAt;
+  final Value<String?> ocrText;
+  final Value<int?> ocrScannedAt;
   const MediaAnalysisCacheCompanion({
     this.mediaId = const Value.absent(),
     this.dHash = const Value.absent(),
@@ -3506,6 +3642,8 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     this.labelsJson = const Value.absent(),
     this.dominantColor = const Value.absent(),
     this.scannedAt = const Value.absent(),
+    this.ocrText = const Value.absent(),
+    this.ocrScannedAt = const Value.absent(),
   });
   MediaAnalysisCacheCompanion.insert({
     this.mediaId = const Value.absent(),
@@ -3518,6 +3656,8 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     this.labelsJson = const Value.absent(),
     this.dominantColor = const Value.absent(),
     required int scannedAt,
+    this.ocrText = const Value.absent(),
+    this.ocrScannedAt = const Value.absent(),
   }) : scannedAt = Value(scannedAt);
   static Insertable<MediaAnalysisRow> custom({
     Expression<int>? mediaId,
@@ -3530,6 +3670,8 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     Expression<String>? labelsJson,
     Expression<String>? dominantColor,
     Expression<int>? scannedAt,
+    Expression<String>? ocrText,
+    Expression<int>? ocrScannedAt,
   }) {
     return RawValuesInsertable({
       if (mediaId != null) 'media_id': mediaId,
@@ -3542,6 +3684,8 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
       if (labelsJson != null) 'labels_json': labelsJson,
       if (dominantColor != null) 'dominant_color': dominantColor,
       if (scannedAt != null) 'scanned_at': scannedAt,
+      if (ocrText != null) 'ocr_text': ocrText,
+      if (ocrScannedAt != null) 'ocr_scanned_at': ocrScannedAt,
     });
   }
 
@@ -3556,6 +3700,8 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     Value<String?>? labelsJson,
     Value<String?>? dominantColor,
     Value<int>? scannedAt,
+    Value<String?>? ocrText,
+    Value<int?>? ocrScannedAt,
   }) {
     return MediaAnalysisCacheCompanion(
       mediaId: mediaId ?? this.mediaId,
@@ -3568,6 +3714,8 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
       labelsJson: labelsJson ?? this.labelsJson,
       dominantColor: dominantColor ?? this.dominantColor,
       scannedAt: scannedAt ?? this.scannedAt,
+      ocrText: ocrText ?? this.ocrText,
+      ocrScannedAt: ocrScannedAt ?? this.ocrScannedAt,
     );
   }
 
@@ -3604,6 +3752,12 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
     if (scannedAt.present) {
       map['scanned_at'] = Variable<int>(scannedAt.value);
     }
+    if (ocrText.present) {
+      map['ocr_text'] = Variable<String>(ocrText.value);
+    }
+    if (ocrScannedAt.present) {
+      map['ocr_scanned_at'] = Variable<int>(ocrScannedAt.value);
+    }
     return map;
   }
 
@@ -3619,7 +3773,9 @@ class MediaAnalysisCacheCompanion extends UpdateCompanion<MediaAnalysisRow> {
           ..write('hasClosedEyes: $hasClosedEyes, ')
           ..write('labelsJson: $labelsJson, ')
           ..write('dominantColor: $dominantColor, ')
-          ..write('scannedAt: $scannedAt')
+          ..write('scannedAt: $scannedAt, ')
+          ..write('ocrText: $ocrText, ')
+          ..write('ocrScannedAt: $ocrScannedAt')
           ..write(')'))
         .toString();
   }
@@ -4619,6 +4775,7 @@ typedef $$MediaItemsTableCreateCompanionBuilder =
       Value<bool> isTrashed,
       Value<int?> trashedAt,
       Value<String?> originalPath,
+      Value<int> contentKind,
     });
 typedef $$MediaItemsTableUpdateCompanionBuilder =
     MediaItemsCompanion Function({
@@ -4651,6 +4808,7 @@ typedef $$MediaItemsTableUpdateCompanionBuilder =
       Value<bool> isTrashed,
       Value<int?> trashedAt,
       Value<String?> originalPath,
+      Value<int> contentKind,
     });
 
 class $$MediaItemsTableFilterComposer
@@ -4804,6 +4962,11 @@ class $$MediaItemsTableFilterComposer
 
   ColumnFilters<String> get originalPath => $composableBuilder(
     column: $table.originalPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get contentKind => $composableBuilder(
+    column: $table.contentKind,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4961,6 +5124,11 @@ class $$MediaItemsTableOrderingComposer
     column: $table.originalPath,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get contentKind => $composableBuilder(
+    column: $table.contentKind,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MediaItemsTableAnnotationComposer
@@ -5088,6 +5256,11 @@ class $$MediaItemsTableAnnotationComposer
     column: $table.originalPath,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get contentKind => $composableBuilder(
+    column: $table.contentKind,
+    builder: (column) => column,
+  );
 }
 
 class $$MediaItemsTableTableManager
@@ -5147,6 +5320,7 @@ class $$MediaItemsTableTableManager
                 Value<bool> isTrashed = const Value.absent(),
                 Value<int?> trashedAt = const Value.absent(),
                 Value<String?> originalPath = const Value.absent(),
+                Value<int> contentKind = const Value.absent(),
               }) => MediaItemsCompanion(
                 id: id,
                 uri: uri,
@@ -5177,6 +5351,7 @@ class $$MediaItemsTableTableManager
                 isTrashed: isTrashed,
                 trashedAt: trashedAt,
                 originalPath: originalPath,
+                contentKind: contentKind,
               ),
           createCompanionCallback:
               ({
@@ -5209,6 +5384,7 @@ class $$MediaItemsTableTableManager
                 Value<bool> isTrashed = const Value.absent(),
                 Value<int?> trashedAt = const Value.absent(),
                 Value<String?> originalPath = const Value.absent(),
+                Value<int> contentKind = const Value.absent(),
               }) => MediaItemsCompanion.insert(
                 id: id,
                 uri: uri,
@@ -5239,6 +5415,7 @@ class $$MediaItemsTableTableManager
                 isTrashed: isTrashed,
                 trashedAt: trashedAt,
                 originalPath: originalPath,
+                contentKind: contentKind,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -5554,6 +5731,8 @@ typedef $$MediaAnalysisCacheTableCreateCompanionBuilder =
       Value<String?> labelsJson,
       Value<String?> dominantColor,
       required int scannedAt,
+      Value<String?> ocrText,
+      Value<int?> ocrScannedAt,
     });
 typedef $$MediaAnalysisCacheTableUpdateCompanionBuilder =
     MediaAnalysisCacheCompanion Function({
@@ -5567,6 +5746,8 @@ typedef $$MediaAnalysisCacheTableUpdateCompanionBuilder =
       Value<String?> labelsJson,
       Value<String?> dominantColor,
       Value<int> scannedAt,
+      Value<String?> ocrText,
+      Value<int?> ocrScannedAt,
     });
 
 class $$MediaAnalysisCacheTableFilterComposer
@@ -5625,6 +5806,16 @@ class $$MediaAnalysisCacheTableFilterComposer
 
   ColumnFilters<int> get scannedAt => $composableBuilder(
     column: $table.scannedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ocrText => $composableBuilder(
+    column: $table.ocrText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ocrScannedAt => $composableBuilder(
+    column: $table.ocrScannedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5687,6 +5878,16 @@ class $$MediaAnalysisCacheTableOrderingComposer
     column: $table.scannedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get ocrText => $composableBuilder(
+    column: $table.ocrText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ocrScannedAt => $composableBuilder(
+    column: $table.ocrScannedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MediaAnalysisCacheTableAnnotationComposer
@@ -5737,6 +5938,14 @@ class $$MediaAnalysisCacheTableAnnotationComposer
 
   GeneratedColumn<int> get scannedAt =>
       $composableBuilder(column: $table.scannedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get ocrText =>
+      $composableBuilder(column: $table.ocrText, builder: (column) => column);
+
+  GeneratedColumn<int> get ocrScannedAt => $composableBuilder(
+    column: $table.ocrScannedAt,
+    builder: (column) => column,
+  );
 }
 
 class $$MediaAnalysisCacheTableTableManager
@@ -5789,6 +5998,8 @@ class $$MediaAnalysisCacheTableTableManager
                 Value<String?> labelsJson = const Value.absent(),
                 Value<String?> dominantColor = const Value.absent(),
                 Value<int> scannedAt = const Value.absent(),
+                Value<String?> ocrText = const Value.absent(),
+                Value<int?> ocrScannedAt = const Value.absent(),
               }) => MediaAnalysisCacheCompanion(
                 mediaId: mediaId,
                 dHash: dHash,
@@ -5800,6 +6011,8 @@ class $$MediaAnalysisCacheTableTableManager
                 labelsJson: labelsJson,
                 dominantColor: dominantColor,
                 scannedAt: scannedAt,
+                ocrText: ocrText,
+                ocrScannedAt: ocrScannedAt,
               ),
           createCompanionCallback:
               ({
@@ -5813,6 +6026,8 @@ class $$MediaAnalysisCacheTableTableManager
                 Value<String?> labelsJson = const Value.absent(),
                 Value<String?> dominantColor = const Value.absent(),
                 required int scannedAt,
+                Value<String?> ocrText = const Value.absent(),
+                Value<int?> ocrScannedAt = const Value.absent(),
               }) => MediaAnalysisCacheCompanion.insert(
                 mediaId: mediaId,
                 dHash: dHash,
@@ -5824,6 +6039,8 @@ class $$MediaAnalysisCacheTableTableManager
                 labelsJson: labelsJson,
                 dominantColor: dominantColor,
                 scannedAt: scannedAt,
+                ocrText: ocrText,
+                ocrScannedAt: ocrScannedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

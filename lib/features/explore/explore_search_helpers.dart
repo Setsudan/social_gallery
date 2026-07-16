@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:social_gallery/core/analysis/image_metrics.dart';
 import 'package:social_gallery/domain/models/explore_search_query.dart';
+import 'package:social_gallery/domain/models/media_content_kind.dart';
 
 const kColorBucketColors = <String, Color>{
   'red': Color(0xFFE53935),
@@ -59,11 +60,31 @@ String exploreSearchSummary({
   if (query.text.trim().isNotEmpty) {
     parts.add(query.text.trim());
   }
-  if (query.label != null && query.label!.isNotEmpty) {
-    parts.add(localize(exploreSearchLabelKey(query.label!)));
+  for (final label in query.labels) {
+    parts.add(localize(exploreSearchLabelKey(label)));
   }
   if (query.color != null && query.color!.isNotEmpty) {
     parts.add(localize(exploreSearchColorKey(query.color!)));
+  }
+  if (query.placeQuery != null && query.placeQuery!.isNotEmpty) {
+    parts.add(query.placeQuery!);
+  }
+  if (query.cameraMake != null && query.cameraMake!.isNotEmpty) {
+    final cam = [
+      query.cameraMake,
+      if (query.cameraModel != null && query.cameraModel!.isNotEmpty)
+        query.cameraModel,
+    ].join(' ');
+    parts.add(cam);
+  }
+  if (query.contentFilter != ExploreContentFilter.all) {
+    parts.add(query.contentFilter.name);
+  }
+  if (query.dateFromMs != null || query.dateToMs != null) {
+    parts.add('dated');
+  }
+  if (query.minFaceCount != null) {
+    parts.add('faces');
   }
   return parts.join(' · ');
 }

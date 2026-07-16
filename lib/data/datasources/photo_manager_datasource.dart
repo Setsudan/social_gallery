@@ -7,6 +7,7 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/exif/exif_reader.dart';
+import 'package:social_gallery/core/media/content_kind_classifier.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/media/filesystem_image_loader.dart';
 import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
@@ -138,6 +139,13 @@ class PhotoManagerDatasource {
 
         dateTaken ??= dateModified;
 
+        final contentKind = ContentKindClassifier.classifyAtSync(
+          displayName: fileName,
+          folderName: folderName,
+          folderPath: folderPath,
+          isVideo: isVideo,
+        );
+
         chunk.add(
           MediaItemsCompanion.insert(
             id: Value(id),
@@ -165,6 +173,7 @@ class PhotoManagerDatasource {
                 focalLength != null ? Value(focalLength) : const Value(null),
             aperture: aperture != null ? Value(aperture) : const Value(null),
             videoDuration: const Value(null),
+            contentKind: Value(contentKind.value),
           ),
         );
       } catch (_) {}
@@ -365,12 +374,19 @@ class PhotoManagerDatasource {
 
           final lat = asset.latitude;
           final lng = asset.longitude;
+          final displayName = asset.title ?? 'media_${asset.id}';
+          final contentKind = ContentKindClassifier.classifyAtSync(
+            displayName: displayName,
+            folderName: folderName,
+            folderPath: folderPath,
+            isVideo: kind == AssetMediaKind.video,
+          );
 
           chunk.add(
             MediaItemsCompanion.insert(
               id: Value(_stableId(asset)),
               uri: asset.id,
-              displayName: asset.title ?? 'media_${asset.id}',
+              displayName: displayName,
               folderName: folderName,
               folderPath: folderPath,
               dateAdded: asset.createDateTime.millisecondsSinceEpoch,
@@ -386,6 +402,7 @@ class PhotoManagerDatasource {
               videoDuration: Value(
                 kind == AssetMediaKind.video ? asset.duration : null,
               ),
+              contentKind: Value(contentKind.value),
             ),
           );
 
