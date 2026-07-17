@@ -6,6 +6,7 @@ import 'package:social_gallery/core/utils/media_hero.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/core/media/thumbnail_decode.dart';
 import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
@@ -36,72 +37,84 @@ class FeedPostCard extends ConsumerWidget {
         : ref.watch(desktopBackupProvider.select((s) => s.syncingMediaId));
     final borderSide = BorderSide(color: theme.dividerColor);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: OneUiSpacing.sm),
-      child: DecoratedBox(
-        decoration: BoxDecoration(border: Border(top: borderSide)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-          PressableScale(
-            onTap: onFolderTap,
-            child: ListTile(
-              leading: FolderAvatar(name: item.folderName),
-              title: Text(
-                item.folderName,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          AspectRatio(
-            aspectRatio: 1,
-            child: PressableScale(
-              onTap: onMediaTap,
-              onDoubleTap: onFavoriteTap,
-              child: MediaThumbnail(
-                assetId: media.uri,
-                showVideoBadge: media.isVideo,
-                heroTag: mediaHeroTag(media.id),
-                backupState: visibleBackupState(
-                  media,
-                  syncingMediaId: syncingMediaId,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              children: [
-                PressableScale(
-                  scale: 0.88,
-                  onTap: onFavoriteTap,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      media.isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: media.isFavorite ? Colors.red : null,
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: OneUiSpacing.sm),
+        child: DecoratedBox(
+          decoration: BoxDecoration(border: Border(top: borderSide)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PressableScale(
+                animatePress: false,
+                onTap: onFolderTap,
+                child: ListTile(
+                  leading: FolderAvatar(name: item.folderName),
+                  title: Text(
+                    item.folderName,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                PressableScale(
-                  scale: 0.88,
-                  onTap: onShareTap,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.share_outlined,
-                      color: theme.colorScheme.onSurface,
+              ),
+              AspectRatio(
+                aspectRatio: 1,
+                child: PressableScale(
+                  animatePress: false,
+                  onTap: onMediaTap,
+                  onDoubleTap: onFavoriteTap,
+                  child: MediaThumbnail(
+                    assetId: media.uri,
+                    showVideoBadge: media.isVideo,
+                    maxThumbnailEdge: thumbnailDecodeEdge(
+                      logicalWidth: MediaQuery.sizeOf(context).width,
+                      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                      minEdge: 320,
+                      maxEdge: 720,
+                    ),
+                    heroTag: mediaHeroTag(media.id),
+                    backupState: visibleBackupState(
+                      media,
+                      syncingMediaId: syncingMediaId,
                     ),
                   ),
                 ),
-                const Spacer(),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    PressableScale(
+                      scale: 0.88,
+                      onTap: onFavoriteTap,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          media.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: media.isFavorite ? Colors.red : null,
+                        ),
+                      ),
+                    ),
+                    PressableScale(
+                      scale: 0.88,
+                      onTap: onShareTap,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.share_outlined,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+              ),
+            ],
           ),
-          ],
         ),
       ),
     );

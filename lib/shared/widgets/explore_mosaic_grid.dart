@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/media/thumbnail_decode.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
+import 'package:social_gallery/shared/media/thumbnail_prefetch.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
+import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
-import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 
 /// Pinterest-style explore grid: groups of 3 with alternating big-left / 3-up / big-right.
 class ExploreMosaicGrid extends ConsumerWidget {
@@ -46,92 +48,139 @@ class ExploreMosaicGrid extends ConsumerWidget {
     final padding = FloatingNavInsets.scrollPadding(
       context,
     ).add(EdgeInsets.all(spacing));
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final contentWidth =
+        MediaQuery.sizeOf(context).width - padding.horizontal;
+    final smallLogical = (contentWidth - spacing * 2) / 3;
+    final bigLogical = smallLogical * 2 + spacing;
+    final smallThumbEdge = thumbnailDecodeEdge(
+      logicalWidth: smallLogical,
+      devicePixelRatio: dpr,
+      maxEdge: 256,
+    );
+    final bigThumbEdge = thumbnailDecodeEdge(
+      logicalWidth: bigLogical,
+      devicePixelRatio: dpr,
+      maxEdge: 384,
+    );
+    // Prefetch at the larger edge so big tiles stay sharp.
+    final prefetchEdge = bigThumbEdge;
+
     final blockCount = (items.length + 2) ~/ 3;
-
     final listItemCount = blockCount + (showLoadingFooter ? 1 : 0);
+    final assetIds = List<String>.generate(
+      items.length,
+      (i) => items[i].uri,
+      growable: false,
+    );
 
-    return ListView.builder(
-      controller: controller,
-      padding: padding,
-      cacheExtent: 600,
-      itemCount: listItemCount,
-      itemBuilder: (context, blockIndex) {
-        if (blockIndex >= blockCount) {
-          return const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          );
+    // Average mosaic block height ~ big tile (covers big+small and 3-up rows).
+    final approxBlockExtent = bigLogical + spacing;
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.axis != Axis.vertical) return false;
+        if (notification is! ScrollUpdateNotification &&
+            notification is! ScrollEndNotification) {
+          return false;
         }
-
-        final baseIndex = blockIndex * 3;
-        final media0 = items[baseIndex];
-        final media1 = baseIndex + 1 < items.length
-            ? items[baseIndex + 1]
-            : null;
-        final media2 = baseIndex + 2 < items.length
-            ? items[baseIndex + 2]
-            : null;
-
-        return StaggeredEntrance(
-          index: blockIndex,
-          playOnceKey: 'mosaic_$baseIndex',
-          child: Padding(
-            padding: EdgeInsets.only(bottom: spacing),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final smallSize = (constraints.maxWidth - spacing * 2) / 3;
-                final bigSize = smallSize * 2 + spacing;
-
-                switch (blockIndex % 4) {
-                  case 0:
-                    return _MosaicBigBlock(
-                      bigOnLeft: true,
-                      spacing: spacing,
-                      bigSize: bigSize,
-                      smallSize: smallSize,
-                      mediaBig: media0,
-                      mediaSmallTop: media1,
-                      mediaSmallBottom: media2,
-                      onTap: onTap,
-                      selectedIds: selectedIds,
-                      onLongPress: onLongPress,
-                      onSelectToggle: onSelectToggle,
-                      syncingMediaId: syncingMediaId,
-                    );
-                  case 3:
-                    return _MosaicBigBlock(
-                      bigOnLeft: false,
-                      spacing: spacing,
-                      bigSize: bigSize,
-                      smallSize: smallSize,
-                      mediaBig: media0,
-                      mediaSmallTop: media1,
-                      mediaSmallBottom: media2,
-                      onTap: onTap,
-                      selectedIds: selectedIds,
-                      onLongPress: onLongPress,
-                      onSelectToggle: onSelectToggle,
-                      syncingMediaId: syncingMediaId,
-                    );
-                  default:
-                    return _MosaicSmallRow(
-                      spacing: spacing,
-                      cellSize: smallSize,
-                      media0: media0,
-                      media1: media1,
-                      media2: media2,
-                      onTap: onTap,
-                      selectedIds: selectedIds,
-                      onLongPress: onLongPress,
-                      onSelectToggle: onSelectToggle,
-                      syncingMediaId: syncingMediaId,
-                    );
-                }
-              },
-            ),
-          ),
+        ThumbnailPrefetcher.instance.scheduleForGrid(
+          metrics: notification.metrics,
+          assetIds: assetIds,
+          crossAxisCount: 3,
+          mainAxisExtent: approxBlockExtent,
+          thumbnailEdge: prefetchEdge,
+          context: context,
+          aheadCount: 48,
         );
+        return false;
       },
+      child: ListView.builder(
+        controller: controller,
+        padding: padding,
+        cacheExtent: kMediaGridCacheExtent,
+        addAutomaticKeepAlives: false,
+        itemCount: listItemCount,
+        itemBuilder: (context, blockIndex) {
+          if (blockIndex >= blockCount) {
+            return const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final baseIndex = blockIndex * 3;
+          final media0 = items[baseIndex];
+          final media1 = baseIndex + 1 < items.length
+              ? items[baseIndex + 1]
+              : null;
+          final media2 = baseIndex + 2 < items.length
+              ? items[baseIndex + 2]
+              : null;
+
+          // Sizes come from MediaQuery above — avoid per-block LayoutBuilder
+          // so scroll only lays out fixed geometry.
+          switch (blockIndex % 4) {
+            case 0:
+              return Padding(
+                padding: EdgeInsets.only(bottom: spacing),
+                child: _MosaicBigBlock(
+                  bigOnLeft: true,
+                  spacing: spacing,
+                  bigSize: bigLogical,
+                  smallSize: smallLogical,
+                  mediaBig: media0,
+                  mediaSmallTop: media1,
+                  mediaSmallBottom: media2,
+                  onTap: onTap,
+                  selectedIds: selectedIds,
+                  onLongPress: onLongPress,
+                  onSelectToggle: onSelectToggle,
+                  syncingMediaId: syncingMediaId,
+                  bigThumbEdge: bigThumbEdge,
+                  smallThumbEdge: smallThumbEdge,
+                ),
+              );
+            case 3:
+              return Padding(
+                padding: EdgeInsets.only(bottom: spacing),
+                child: _MosaicBigBlock(
+                  bigOnLeft: false,
+                  spacing: spacing,
+                  bigSize: bigLogical,
+                  smallSize: smallLogical,
+                  mediaBig: media0,
+                  mediaSmallTop: media1,
+                  mediaSmallBottom: media2,
+                  onTap: onTap,
+                  selectedIds: selectedIds,
+                  onLongPress: onLongPress,
+                  onSelectToggle: onSelectToggle,
+                  syncingMediaId: syncingMediaId,
+                  bigThumbEdge: bigThumbEdge,
+                  smallThumbEdge: smallThumbEdge,
+                ),
+              );
+            default:
+              return Padding(
+                padding: EdgeInsets.only(bottom: spacing),
+                child: _MosaicSmallRow(
+                  spacing: spacing,
+                  cellSize: smallLogical,
+                  media0: media0,
+                  media1: media1,
+                  media2: media2,
+                  onTap: onTap,
+                  selectedIds: selectedIds,
+                  onLongPress: onLongPress,
+                  onSelectToggle: onSelectToggle,
+                  syncingMediaId: syncingMediaId,
+                  thumbEdge: smallThumbEdge,
+                ),
+              );
+          }
+        },
+      ),
     );
   }
 }
@@ -147,6 +196,8 @@ class _MosaicBigBlock extends StatelessWidget {
     required this.mediaSmallBottom,
     required this.onTap,
     required this.selectedIds,
+    required this.bigThumbEdge,
+    required this.smallThumbEdge,
     this.onLongPress,
     this.onSelectToggle,
     this.syncingMediaId,
@@ -164,6 +215,8 @@ class _MosaicBigBlock extends StatelessWidget {
   final void Function(MediaItem item)? onLongPress;
   final void Function(MediaItem item)? onSelectToggle;
   final int? syncingMediaId;
+  final int bigThumbEdge;
+  final int smallThumbEdge;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +228,7 @@ class _MosaicBigBlock extends StatelessWidget {
       onLongPress: onLongPress,
       onSelectToggle: onSelectToggle,
       syncingMediaId: syncingMediaId,
+      maxThumbnailEdge: bigThumbEdge,
     );
     final column = Column(
       mainAxisSize: MainAxisSize.min,
@@ -187,6 +241,7 @@ class _MosaicBigBlock extends StatelessWidget {
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
           syncingMediaId: syncingMediaId,
+          maxThumbnailEdge: smallThumbEdge,
         ),
         SizedBox(height: spacing),
         _MosaicTile(
@@ -197,6 +252,7 @@ class _MosaicBigBlock extends StatelessWidget {
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
           syncingMediaId: syncingMediaId,
+          maxThumbnailEdge: smallThumbEdge,
         ),
       ],
     );
@@ -227,6 +283,7 @@ class _MosaicSmallRow extends StatelessWidget {
     required this.media2,
     required this.onTap,
     required this.selectedIds,
+    required this.thumbEdge,
     this.onLongPress,
     this.onSelectToggle,
     this.syncingMediaId,
@@ -242,6 +299,7 @@ class _MosaicSmallRow extends StatelessWidget {
   final void Function(MediaItem item)? onLongPress;
   final void Function(MediaItem item)? onSelectToggle;
   final int? syncingMediaId;
+  final int thumbEdge;
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +314,7 @@ class _MosaicSmallRow extends StatelessWidget {
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
           syncingMediaId: syncingMediaId,
+          maxThumbnailEdge: thumbEdge,
         ),
         SizedBox(width: spacing),
         _MosaicTile(
@@ -266,6 +325,7 @@ class _MosaicSmallRow extends StatelessWidget {
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
           syncingMediaId: syncingMediaId,
+          maxThumbnailEdge: thumbEdge,
         ),
         SizedBox(width: spacing),
         _MosaicTile(
@@ -276,6 +336,7 @@ class _MosaicSmallRow extends StatelessWidget {
           onLongPress: onLongPress,
           onSelectToggle: onSelectToggle,
           syncingMediaId: syncingMediaId,
+          maxThumbnailEdge: thumbEdge,
         ),
       ],
     );
@@ -288,6 +349,7 @@ class _MosaicTile extends StatelessWidget {
     required this.item,
     required this.onTap,
     required this.selectedIds,
+    required this.maxThumbnailEdge,
     this.onLongPress,
     this.onSelectToggle,
     this.syncingMediaId,
@@ -300,6 +362,7 @@ class _MosaicTile extends StatelessWidget {
   final void Function(MediaItem item)? onLongPress;
   final void Function(MediaItem item)? onSelectToggle;
   final int? syncingMediaId;
+  final int maxThumbnailEdge;
 
   @override
   Widget build(BuildContext context) {
@@ -315,6 +378,7 @@ class _MosaicTile extends StatelessWidget {
       height: size,
       child: RepaintBoundary(
         child: PressableScale(
+          animatePress: false,
           onTap: () {
             if (inSelectionMode && onSelectToggle != null) {
               onSelectToggle!(item!);
@@ -333,6 +397,7 @@ class _MosaicTile extends StatelessWidget {
             child: MediaThumbnail(
               assetId: item!.uri,
               showVideoBadge: item!.isVideo,
+              maxThumbnailEdge: maxThumbnailEdge,
               backupState: visibleBackupState(
                 item!,
                 syncingMediaId: syncingMediaId,
@@ -344,3 +409,4 @@ class _MosaicTile extends StatelessWidget {
     );
   }
 }
+

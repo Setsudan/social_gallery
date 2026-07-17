@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_entity_cache.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/media/thumbnail_decode.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
@@ -25,6 +27,9 @@ class MediaThumbnail extends StatefulWidget {
   final bool showVideoBadge;
   final bool locked;
   final String? heroTag;
+
+  /// Optional ceiling for decode size. When set, still respects layout width
+  /// so small cells do not decode oversized bitmaps.
   final int? maxThumbnailEdge;
   final MediaBackupState? backupState;
 
@@ -33,20 +38,32 @@ class MediaThumbnail extends StatefulWidget {
 }
 
 class _MediaThumbnailState extends State<MediaThumbnail> {
-  late Future<AssetEntity?> _entityFuture;
+  Future<AssetEntity?>? _entityFuture;
+  AssetEntity? _resolvedEntity;
 
   @override
   void initState() {
     super.initState();
-    _entityFuture = AssetEntityCache.resolve(widget.assetId);
+    _bindAsset(widget.assetId);
   }
 
   @override
   void didUpdateWidget(MediaThumbnail oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.assetId != widget.assetId) {
-      _entityFuture = AssetEntityCache.resolve(widget.assetId);
+      _bindAsset(widget.assetId);
     }
+  }
+
+  void _bindAsset(String assetId) {
+    final peeked = AssetEntityCache.peek(assetId);
+    if (peeked != null) {
+      _resolvedEntity = peeked;
+      _entityFuture = null;
+      return;
+    }
+    _resolvedEntity = null;
+    _entityFuture = AssetEntityCache.resolve(assetId);
   }
 
   List<Widget> _overlayBadges({required bool isVideo}) {
@@ -63,15 +80,47 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
   }
 
   int _resolveMaxEdge(BoxConstraints constraints) {
-    if (widget.maxThumbnailEdge != null) {
-      return widget.maxThumbnailEdge!;
-    }
     final width = constraints.maxWidth;
-    if (!width.isFinite || width <= 0) {
-      return 320;
-    }
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    return (width * dpr).ceil().clamp(96, 1200);
+    final fromLayout = (!width.isFinite || width <= 0)
+        ? 256
+        : (width * dpr).ceil();
+    final capped = widget.maxThumbnailEdge == null
+        ? fromLayout.clamp(96, 512)
+        : math.min(fromLayout, widget.maxThumbnailEdge!).clamp(96, 1080);
+    return snapThumbnailEdge(capped);
+  }
+
+  Widget _buildEntityThumb(AssetEntity entity) {
+    final isVideo = widget.showVideoBadge || AssetMediaLoader.isVideo(entity);
+    final placeholder =
+        Theme.of(context).colorScheme.surfaceContainerHigh;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxEdge = _resolveMaxEdge(constraints);
+        final thumbnail = AssetMediaLoader.buildThumbnail(
+          entity: entity,
+          fit: widget.fit,
+          thumbnailSize: AssetMediaLoader.thumbnailSizeForEntity(
+            entity,
+            maxEdge: maxEdge,
+          ),
+        );
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // Stable underlay so decode completion paints over instead of popping.
+            ColoredBox(color: placeholder),
+            widget.heroTag != null
+                ? Hero(tag: widget.heroTag!, child: thumbnail)
+                : thumbnail,
+            ..._overlayBadges(isVideo: isVideo),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -87,6 +136,11 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
       return _buildWindowsThumbnail(context);
     }
 
+    final syncEntity = _resolvedEntity ?? AssetEntityCache.peek(widget.assetId);
+    if (syncEntity != null) {
+      return _buildEntityThumb(syncEntity);
+    }
+
     return FutureBuilder<AssetEntity?>(
       future: _entityFuture,
       builder: (context, snapshot) {
@@ -100,31 +154,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
           );
         }
 
-        final isVideo = widget.showVideoBadge || AssetMediaLoader.isVideo(entity);
-
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final maxEdge = _resolveMaxEdge(constraints);
-            final thumbnail = AssetMediaLoader.buildThumbnail(
-              entity: entity,
-              fit: widget.fit,
-              thumbnailSize: AssetMediaLoader.thumbnailSizeForEntity(
-                entity,
-                maxEdge: maxEdge,
-              ),
-            );
-
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                widget.heroTag != null
-                    ? Hero(tag: widget.heroTag!, child: thumbnail)
-                    : thumbnail,
-                ..._overlayBadges(isVideo: isVideo),
-              ],
-            );
-          },
-        );
+        return _buildEntityThumb(entity);
       },
     );
   }
@@ -154,6 +184,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
               File(widget.assetId),
               fit: widget.fit,
               cacheWidth: maxEdge,
+              filterQuality: FilterQuality.low,
               gaplessPlayback: true,
               errorBuilder: (context, error, stackTrace) => ColoredBox(
                 color: Theme.of(context).colorScheme.surfaceContainerHigh,

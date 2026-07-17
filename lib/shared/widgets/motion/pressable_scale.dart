@@ -12,6 +12,7 @@ class PressableScale extends ConsumerStatefulWidget {
     this.onLongPress,
     this.scale = 0.96,
     this.enabled = true,
+    this.animatePress = true,
   });
 
   final Widget child;
@@ -20,6 +21,9 @@ class PressableScale extends ConsumerStatefulWidget {
   final VoidCallback? onLongPress;
   final double scale;
   final bool enabled;
+
+  /// When false, uses [Transform.scale] instead of [AnimatedScale] (grid tiles).
+  final bool animatePress;
 
   @override
   ConsumerState<PressableScale> createState() => _PressableScaleState();
@@ -32,6 +36,15 @@ class _PressableScaleState extends ConsumerState<PressableScale> {
   Widget build(BuildContext context) {
     final motion = AppMotion.of(context, ref);
     final targetScale = _pressed && motion.enabled ? widget.scale : 1.0;
+
+    final scaledChild = widget.animatePress
+        ? AnimatedScale(
+            scale: targetScale,
+            duration: motion.fadeFast,
+            curve: motion.enterCurve,
+            child: widget.child,
+          )
+        : Transform.scale(scale: targetScale, child: widget.child);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -47,12 +60,7 @@ class _PressableScaleState extends ConsumerState<PressableScale> {
       onTap: widget.enabled ? widget.onTap : null,
       onDoubleTap: widget.enabled ? widget.onDoubleTap : null,
       onLongPress: widget.enabled ? widget.onLongPress : null,
-      child: AnimatedScale(
-        scale: targetScale,
-        duration: motion.fadeFast,
-        curve: motion.enterCurve,
-        child: widget.child,
-      ),
+      child: scaledChild,
     );
   }
 }

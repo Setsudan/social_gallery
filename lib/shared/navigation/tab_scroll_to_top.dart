@@ -58,10 +58,10 @@ final tabScrollOffsetProvider = StateProvider.family<double, int>(
 );
 
 /// Scroll past this offset to hide nav labels (with hysteresis).
-const double kShellNavLabelHideScrollOffset = 48;
+const double kShellNavLabelHideScrollOffset = 72;
 
 /// Scroll below this offset to show nav labels again.
-const double kShellNavLabelShowScrollOffset = 12;
+const double kShellNavLabelShowScrollOffset = 8;
 
 bool shellNavLabelsExpandedForOffset(
   double offset, {

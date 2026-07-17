@@ -8,6 +8,8 @@ import 'package:social_gallery/shared/widgets/async_tab_body.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/shared/navigation/shell_nav_config.dart';
+import 'package:social_gallery/shared/navigation/shell_tab_visibility.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
@@ -49,7 +51,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       motion: motion,
     );
 
-    return Scaffold(
+    return DeferredShellTab(
+      tabIndex: kShellTabDiscover,
+      child: Scaffold(
       extendBody: true,
       body: hubAsync.when(
         loading: () => const AsyncTabBody(
@@ -204,6 +208,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

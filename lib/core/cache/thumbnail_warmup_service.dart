@@ -9,7 +9,7 @@ import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 /// Pre-decodes recent thumbnails so the gallery feels instant on reopen.
 class ThumbnailWarmupService {
   static const defaultWarmCount = 48;
-  static const _thumbnailEdge = 240;
+  static const _thumbnailEdge = 256;
 
   Future<void> warmAssetIds(
     Iterable<String> assetIds, {
@@ -29,9 +29,11 @@ class ThumbnailWarmupService {
         if (entity == null || !AssetMediaLoader.canUseAssetImageProvider(entity)) {
           continue;
         }
-        await entity.thumbnailDataWithSize(
-          ThumbnailSize.square(_thumbnailEdge),
+        final size = AssetMediaLoader.thumbnailSizeForEntity(
+          entity,
+          maxEdge: _thumbnailEdge,
         );
+        await entity.thumbnailDataWithSize(size);
       } catch (_) {}
       await Future<void>.delayed(Duration.zero);
     }

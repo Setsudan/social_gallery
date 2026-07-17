@@ -212,12 +212,12 @@ class AssetMediaLoader {
 
   static ThumbnailSize thumbnailSizeForEntity(
     AssetEntity entity, {
-    int maxEdge = 800,
+    int maxEdge = 256,
   }) {
     final w = entity.width;
     final h = entity.height;
     if (w <= 0 || h <= 0) {
-      return const ThumbnailSize.square(800);
+      return ThumbnailSize.square(maxEdge);
     }
     if (w >= h) {
       return ThumbnailSize(maxEdge, (maxEdge * h / w).round().clamp(1, maxEdge));
@@ -247,6 +247,7 @@ class AssetMediaLoader {
             thumbnailSize: resolvedSize,
           ),
           fit: fit,
+          filterQuality: FilterQuality.low,
           gaplessPlayback: true,
           errorBuilder: (context, error, stackTrace) =>
               UnsupportedMediaPlaceholder(kind: kind, entity: entity, fit: fit),
@@ -365,6 +366,7 @@ class _FileThumbnail extends StatelessWidget {
             file,
             fit: fit,
             cacheWidth: cacheWidth,
+            filterQuality: FilterQuality.low,
             gaplessPlayback: true,
             errorBuilder: (context, error, stackTrace) =>
                 UnsupportedMediaPlaceholder(

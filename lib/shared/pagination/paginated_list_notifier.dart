@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/core/media/asset_entity_cache.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/data/repositories/media_repository.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
@@ -10,6 +12,7 @@ import 'package:social_gallery/domain/models/explore_search_query.dart';
 import 'package:social_gallery/domain/models/media_content_kind.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/features/home/home_providers.dart';
+import 'package:social_gallery/shared/media/thumbnail_prefetch.dart';
 
 const _feedRefreshDebounce = Duration(milliseconds: 300);
 
@@ -112,7 +115,11 @@ void refreshFeedProviders(WidgetRef ref) {
   }
 }
 
-const paginatedLoadMoreThresholdPx = 400.0;
+/// Absolute floor for load-more look-ahead (also scaled by viewport below).
+const paginatedLoadMoreThresholdPx = 1200.0;
+
+/// How many viewports ahead to start loading the next page.
+const paginatedLoadMoreViewportFraction = 1.5;
 
 /// Shared state for infinite-scroll lists (home feed, gallery, explore).
 class PaginatedListState<T> {
@@ -149,6 +156,10 @@ class PaginatedListState<T> {
 }
 
 /// Triggers [loadMore] when the scroll position nears the bottom.
+///
+/// Uses the larger of [threshold] and
+/// `viewportDimension * [paginatedLoadMoreViewportFraction]` so fast
+/// flings still get the next page before empty rows appear.
 void handlePaginatedScroll(
   ScrollPosition position, {
   required bool isLoading,
@@ -157,11 +168,32 @@ void handlePaginatedScroll(
   double threshold = paginatedLoadMoreThresholdPx,
 }) {
   if (!position.hasContentDimensions) return;
-  if (position.pixels >= position.maxScrollExtent - threshold &&
-      !isLoading &&
-      hasMore) {
+  if (isLoading || !hasMore) return;
+
+  final viewportLookahead =
+      position.viewportDimension * paginatedLoadMoreViewportFraction;
+  final effectiveThreshold =
+      threshold > viewportLookahead ? threshold : viewportLookahead;
+
+  if (position.pixels >= position.maxScrollExtent - effectiveThreshold) {
     loadMore();
   }
+}
+
+/// Resolve + warm OS thumbs for a freshly fetched page (idle priority).
+void warmPaginatedMediaUris(Iterable<String> uris, {int limit = 36}) {
+  final ids = uris.take(limit).toList(growable: false);
+  if (ids.isEmpty) return;
+  if (!usesFilesystemGallery) {
+    for (final id in ids) {
+      unawaited(AssetEntityCache.resolve(id));
+    }
+  }
+  // Defer image precache to the next event-loop turn so the page insert
+  // frame is not competing with decode work.
+  scheduleMicrotask(() {
+    ThumbnailPrefetcher.instance.warm(ids, limit: limit, thumbnailEdge: 256);
+  });
 }
 
 /// Paginated home feed backed by [MediaRepository.getHomeFeedPage].
@@ -195,6 +227,7 @@ class HomeFeedPaginatedNotifier
         isLoading: false,
         hasMore: page.length >= MediaRepository.pageSize,
       );
+      warmPaginatedMediaUris(page.map((e) => e.media.uri), limit: 12);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -257,6 +290,7 @@ class GalleryPaginatedNotifier
         isLoading: false,
         hasMore: page.length >= MediaRepository.pageSize,
       );
+      warmPaginatedMediaUris(page.map((e) => e.uri));
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -303,6 +337,7 @@ class ExplorePaginatedNotifier
         isLoading: false,
         hasMore: page.length >= MediaRepository.pageSize,
       );
+      warmPaginatedMediaUris(page.map((e) => e.uri));
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -349,6 +384,7 @@ class FavoritesPaginatedNotifier
         isLoading: false,
         hasMore: page.length >= MediaRepository.pageSize,
       );
+      warmPaginatedMediaUris(page.map((e) => e.uri));
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -395,6 +431,7 @@ class FolderMediaPaginatedNotifier extends AutoDisposeFamilyNotifier<
         isLoading: false,
         hasMore: page.length >= MediaRepository.pageSize,
       );
+      warmPaginatedMediaUris(page.map((e) => e.uri));
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -449,6 +486,7 @@ class ContentKindPaginatedNotifier extends AutoDisposeFamilyNotifier<
         isLoading: false,
         hasMore: page.length >= MediaRepository.pageSize,
       );
+      warmPaginatedMediaUris(page.map((e) => e.uri));
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

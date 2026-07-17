@@ -26,7 +26,10 @@ import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/floating_selection_chrome.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
+import 'package:social_gallery/core/media/thumbnail_decode.dart';
+import 'package:social_gallery/shared/media/thumbnail_prefetch.dart';
 import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
+import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
@@ -448,7 +451,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients) return;
+    if (!mounted || !_scrollController.hasClients) return;
     final paginated = _isSearching
         ? ref.read(explorePaginatedProvider(_searchQuery))
         : ref.read(galleryPaginatedProvider);
@@ -465,6 +468,24 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
           ref.read(galleryPaginatedProvider.notifier).loadMore();
         }
       },
+    );
+
+    final columns = _columnCount(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final cellLogical = (width - 4) / columns;
+    final thumbEdge = thumbnailDecodeEdge(
+      logicalWidth: cellLogical,
+      devicePixelRatio: dpr,
+      maxEdge: 320,
+    );
+    ThumbnailPrefetcher.instance.scheduleForGrid(
+      metrics: _scrollController.position,
+      assetIds: _items.map((e) => e.uri).toList(growable: false),
+      crossAxisCount: columns,
+      mainAxisExtent: cellLogical + 2,
+      thumbnailEdge: thumbEdge,
+      context: context,
     );
   }
 
@@ -690,7 +711,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
     Widget scrollContent = CustomScrollView(
       controller: _scrollController,
-      cacheExtent: 800,
+      cacheExtent: kMediaGridCacheExtent,
       physics: _dragSelecting
           ? const NeverScrollableScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
@@ -738,7 +759,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }) {
     Widget scrollContent = CustomScrollView(
       controller: _scrollController,
-      cacheExtent: 800,
+      cacheExtent: kMediaGridCacheExtent,
       physics: _dragSelecting
           ? const NeverScrollableScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
@@ -896,10 +917,20 @@ class _GalleryTile extends ConsumerWidget {
     final syncingMediaId = usesFilesystemGallery
         ? null
         : ref.watch(desktopBackupProvider.select((s) => s.syncingMediaId));
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    // Approximate cell from screen; LayoutBuilder inside MediaThumbnail
+    // still clamps to the real painted width.
+    final approxCell = MediaQuery.sizeOf(context).width / 3;
+    final thumbEdge = thumbnailDecodeEdge(
+      logicalWidth: approxCell,
+      devicePixelRatio: dpr,
+      maxEdge: 320,
+    );
 
     return RepaintBoundary(
       child: PressableScale(
         enabled: onTap != null || onLongPress != null,
+        animatePress: false,
         onTap: onTap,
         onLongPress: onLongPress,
         child: MediaSelectionOverlay(
@@ -908,6 +939,7 @@ class _GalleryTile extends ConsumerWidget {
           child: MediaThumbnail(
             assetId: item.uri,
             showVideoBadge: item.isVideo,
+            maxThumbnailEdge: thumbEdge,
             backupState: visibleBackupState(
               item,
               syncingMediaId: syncingMediaId,

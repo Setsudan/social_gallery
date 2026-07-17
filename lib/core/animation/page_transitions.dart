@@ -83,9 +83,10 @@ CustomTransitionPage<T> appTransitionPage<T>({
           );
       }
 
-      if (secondaryAnimation.status != AnimationStatus.dismissed) {
+      if (secondaryAnimation.status != AnimationStatus.dismissed &&
+          kind != AppPageTransitionKind.fade) {
         return FadeTransition(
-          opacity: Tween<double>(begin: 1, end: 0.92).animate(
+          opacity: Tween<double>(begin: 1, end: 0.96).animate(
             CurvedAnimation(
               parent: secondaryAnimation,
               curve: motion.exitCurve,

@@ -11,6 +11,9 @@ import 'package:window_manager/window_manager.dart';
 /// Application entry: SharedPreferences override, background workers, ProviderScope.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Keep more decoded thumbs while flinging / reversing grids.
+  PaintingBinding.instance.imageCache.maximumSize = 400;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 160 << 20;
   if (usesFilesystemGallery) {
     await windowManager.ensureInitialized();
   }
@@ -25,9 +28,10 @@ Future<void> main() async {
   try {
     await registerWidgetRefreshWork();
     if (WidgetUpdateService.isSupported) {
-      // Warm widgets once on launch.
-      // ignore: unawaited_futures
-      WidgetUpdateService.updateAll();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // ignore: unawaited_futures
+        WidgetUpdateService.updateAll();
+      });
     }
   } catch (e) {
     debugPrint('Widget refresh scheduling failed: $e');

@@ -97,7 +97,7 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
   GallerySyncController(this._ref) : super(const GallerySyncState());
 
   static const _minSyncInterval = Duration(minutes: 5);
-  static const _backgroundStartDelay = Duration(seconds: 2);
+  static const _backgroundStartDelay = Duration(milliseconds: 800);
 
   final Ref _ref;
   bool _cancelRequested = false;

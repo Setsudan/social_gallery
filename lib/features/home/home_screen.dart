@@ -15,12 +15,13 @@ import 'package:social_gallery/domain/models/folder_with_stories.dart';
 import 'package:social_gallery/features/home/home_providers.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
 import 'package:social_gallery/shared/widgets/feed_post_card.dart';
-import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
-import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/shared/navigation/media_viewer_session.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
+import 'package:social_gallery/shared/media/thumbnail_prefetch.dart';
+import 'package:social_gallery/core/media/thumbnail_decode.dart';
+import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/stories_row.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -51,7 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients) return;
+    if (!mounted || !_scrollController.hasClients) return;
     final paginated = ref.read(homeFeedPaginatedProvider);
     handlePaginatedScroll(
       _scrollController.position,
@@ -59,6 +60,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       hasMore: paginated.hasMore,
       loadMore: () =>
           ref.read(homeFeedPaginatedProvider.notifier).loadMore(),
+    );
+
+    final items = paginated.items;
+    if (items.isEmpty) return;
+    final width = MediaQuery.sizeOf(context).width;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final thumbEdge = thumbnailDecodeEdge(
+      logicalWidth: width,
+      devicePixelRatio: dpr,
+      minEdge: 320,
+      maxEdge: 720,
+    );
+    // Feed cards are ~full-width squares; estimate index from scroll pixels.
+    final cardExtent = width + 96;
+    final firstIndex =
+        (_scrollController.position.pixels / cardExtent).floor().clamp(
+              0,
+              items.length,
+            );
+    ThumbnailPrefetcher.instance.scheduleFromScroll(
+      assetIds: items.map((e) => e.media.uri).toList(growable: false),
+      firstVisibleIndex: firstIndex,
+      thumbnailEdge: thumbEdge,
+      context: context,
+      aheadCount: 8,
     );
   }
 
@@ -190,7 +216,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: listPadding,
-      cacheExtent: 600,
+      cacheExtent: 1200,
+      addAutomaticKeepAlives: false,
       itemCount: headerCount + _items.length + (_paginated.hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -206,12 +233,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
 
         final item = _items[feedIndex];
-        return StaggeredEntrance(
+        return FeedPostCard(
           key: ValueKey(item.media.id),
-          index: feedIndex,
-          playOnceKey: 'feed_${item.media.id}',
-          child: FeedPostCard(
-            item: item,
+          item: item,
             onFolderTap: () =>
                 context.push(folderProfileLocation(item.folderPath)),
             onMediaTap: () => openMediaViewer(
@@ -222,8 +246,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             onFavoriteTap: () => _toggleFavorite(item),
             onShareTap: () => _shareMedia(item),
-          ),
-        );
+          );
       },
     );
   }

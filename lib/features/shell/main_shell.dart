@@ -7,6 +7,8 @@ import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/shared/navigation/shell_nav_config.dart';
+import 'package:social_gallery/shared/navigation/shell_scroll_nav.dart';
+import 'package:social_gallery/shared/navigation/shell_tab_visibility.dart';
 import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/floating_bottom_nav.dart';
 import 'package:social_gallery/shared/widgets/gradient_loading_screen.dart';
@@ -23,50 +25,21 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   void _onBranchSelected(WidgetRef ref, int branchIndex) {
-    final isReselect = branchIndex == widget.navigationShell.currentIndex;
-    if (isReselect) {
-      notifyTabScrollToTop(ref, branchIndex);
-      ref.read(tabScrollOffsetProvider(branchIndex).notifier).state = 0;
-      ref.read(shellNavLabelsExpandedProvider.notifier).state = true;
-    }
-    widget.navigationShell.goBranch(branchIndex, initialLocation: isReselect);
+    ref.read(activeShellTabProvider.notifier).state = branchIndex;
+    widget.navigationShell.goBranch(branchIndex);
     if (branchIndex == kShellTabExplore) {
       notifyExploreSearchReset(ref);
     }
-    final offset = ref.read(tabScrollOffsetProvider(branchIndex));
-    ref.read(shellNavLabelsExpandedProvider.notifier).state =
-        shellNavLabelsExpandedFromStoredOffset(offset);
   }
 
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical) return false;
-    if (notification is! ScrollUpdateNotification &&
-        notification is! ScrollEndNotification) {
-      return false;
-    }
-    // Ignore small nested scrollables (chips, strips) so only main content drives collapse.
-    if (notification.metrics.maxScrollExtent < 96) return false;
-
-    final branchIndex = widget.navigationShell.currentIndex;
-    final offset = notification.metrics.pixels;
-    ref.read(tabScrollOffsetProvider(branchIndex).notifier).state = offset;
-
-    final currentlyExpanded = ref.read(shellNavLabelsExpandedProvider);
-    final expanded = shellNavLabelsExpandedForOffset(
-      offset,
-      currentlyExpanded: currentlyExpanded,
-    );
-    if (expanded != currentlyExpanded) {
-      ref.read(shellNavLabelsExpandedProvider.notifier).state = expanded;
-    }
-    return false;
-  }
-
-  Widget _wrapShellContent(Widget child) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: _handleScrollNotification,
-      child: child,
-    );
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(activeShellTabProvider.notifier).state =
+          widget.navigationShell.currentIndex;
+    });
   }
 
   @override
@@ -126,51 +99,18 @@ class _MainShellState extends ConsumerState<MainShell> {
       );
     }
 
-    final overlayHeight = floatingNavOverlayHeight(context);
-    final hideBottomNav = ref.watch(exploreSearchOverlayOpenProvider) ||
-        ref.watch(gallerySelectionActiveProvider);
-
-    return Scaffold(
-      extendBody: true,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          SafeArea(
-            bottom: false,
-            child: FloatingNavInsets(
-              overlayHeight: overlayHeight,
-              child: _wrapShellContent(widget.navigationShell),
-            ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ShellScrollNavHost(
+          navigationShell: widget.navigationShell,
+          galleryViewMode: galleryViewMode,
+        ),
+        if (sync.showOverlay)
+          Positioned.fill(
+            child: _SyncOverlayFade(sync: sync, ref: ref),
           ),
-          if (!hideBottomNav)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Consumer(
-                builder: (context, ref, _) {
-                  return FloatingBottomNav(
-                    labelsExpanded: ref.watch(shellNavLabelsExpandedProvider),
-                    selectedBranchIndex: widget.navigationShell.currentIndex,
-                    galleryViewMode: galleryViewMode,
-                    onBranchSelected: (index) => _onBranchSelected(ref, index),
-                    onSettingsPressed: () => context.push('/settings'),
-                    onAlbumsLongPress: galleryViewMode
-                        ? () {
-                            AppHaptics.medium();
-                            context.push(lockedAlbumsLocation);
-                          }
-                        : null,
-                  );
-                },
-              ),
-            ),
-          if (sync.showOverlay)
-            Positioned.fill(
-              child: _SyncOverlayFade(sync: sync, ref: ref),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }
