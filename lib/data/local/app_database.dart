@@ -1042,9 +1042,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     return rows.map(_mediaFromQuery).toList();
   }
 
-  Future<List<MediaRow>> getAllHomeFeedMedia() async {
-    return getOrganizeMediaPool();
-  }
+  Future<List<MediaRow>> getAllHomeFeedMedia() => getOrganizeMediaPool();
 
   Future<List<MediaRow>> getFavoriteMediaList() async {
     final rows = await customSelect(

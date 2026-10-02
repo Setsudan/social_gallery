@@ -55,11 +55,6 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
       case 'widgets':
         final widgetId =
             int.tryParse(uri.queryParameters['widgetId'] ?? '') ?? 0;
-        // Path may be /folder-config when URI is socialgallery://widgets/folder-config
-        if (uri.path.contains('folder-config') ||
-            uri.pathSegments.contains('folder-config')) {
-          return '/widgets/folder-config?widgetId=$widgetId';
-        }
         return '/widgets/folder-config?widgetId=$widgetId';
       case 'organize':
         return '/organize';

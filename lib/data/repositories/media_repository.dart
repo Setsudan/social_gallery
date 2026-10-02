@@ -607,10 +607,6 @@ class MediaRepository {
     return _db.repairFolderCovers();
   }
 
-  Future<void> refreshFolderAutoCovers() {
-    return _db.repairFolderCovers();
-  }
-
   Future<void> cleanupExpiredTrash(int retentionDays) async {
     final retentionMs = retentionDays * 24 * 60 * 60 * 1000;
     final beforeTimestamp = DateTime.now().millisecondsSinceEpoch - retentionMs;
