@@ -689,7 +689,7 @@ abstract class AppLocalizations {
   /// No description provided for @gridSizeStandard.
   ///
   /// In en, this message translates to:
-  /// **'Standard'**
+  /// **'Comfortable'**
   String get gridSizeStandard;
 
   /// No description provided for @gridSizeLarge.
@@ -707,7 +707,7 @@ abstract class AppLocalizations {
   /// No description provided for @gridSizeStandardSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Balanced layout'**
+  /// **'Comfortable thumbnail size'**
   String get gridSizeStandardSubtitle;
 
   /// No description provided for @gridSizeLargeSubtitle.
@@ -3859,6 +3859,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 item} other{{count} items}}'**
   String desktopArchiveItemCount(int count);
+
+  /// No description provided for @settingsOrganizeGestures.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize swipe actions'**
+  String get settingsOrganizeGestures;
+
+  /// No description provided for @settingsOrganizeGesturesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remap left, right, up, and down swipes'**
+  String get settingsOrganizeGesturesSubtitle;
+
+  /// No description provided for @settingsOrganizeGesturesReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to defaults'**
+  String get settingsOrganizeGesturesReset;
+
+  /// No description provided for @organizeActionTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get organizeActionTrash;
+
+  /// No description provided for @organizeActionFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get organizeActionFavorite;
+
+  /// No description provided for @organizeActionKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get organizeActionKeep;
+
+  /// No description provided for @organizeActionMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get organizeActionMove;
+
+  /// No description provided for @organizeDirectionLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left'**
+  String get organizeDirectionLeft;
+
+  /// No description provided for @organizeDirectionRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe right'**
+  String get organizeDirectionRight;
+
+  /// No description provided for @organizeDirectionUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up'**
+  String get organizeDirectionUp;
+
+  /// No description provided for @organizeDirectionDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe down'**
+  String get organizeDirectionDown;
+
+  /// No description provided for @organizeCardSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} from {folder}'**
+  String organizeCardSemanticLabel(String name, String folder);
+
+  /// No description provided for @organizeSwipeHintLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left to {action}'**
+  String organizeSwipeHintLeft(String action);
+
+  /// No description provided for @organizeSwipeHintRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe right to {action}'**
+  String organizeSwipeHintRight(String action);
+
+  /// No description provided for @organizeSwipeHintUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up to {action}'**
+  String organizeSwipeHintUp(String action);
+
+  /// No description provided for @organizeSwipeHintDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe down to {action}'**
+  String organizeSwipeHintDown(String action);
+
+  /// No description provided for @mediaKindPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get mediaKindPhoto;
+
+  /// No description provided for @feedPostSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Post from {folder}, {kind} {name}'**
+  String feedPostSemanticLabel(String folder, String kind, String name);
+
+  /// No description provided for @feedPostOpenFolderSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Open album {folder}'**
+  String feedPostOpenFolderSemanticLabel(String folder);
+
+  /// No description provided for @feedPostOpenMediaSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {kind}'**
+  String feedPostOpenMediaSemanticLabel(String kind);
+
+  /// No description provided for @feedPostDoubleTapFavoriteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Double tap to favorite'**
+  String get feedPostDoubleTapFavoriteHint;
 }
 
 class _AppLocalizationsDelegate

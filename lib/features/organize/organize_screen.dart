@@ -11,6 +11,7 @@ import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/features/organize/organize_card_stack.dart';
+import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/features/organize/organize_controller.dart';
 import 'package:social_gallery/features/organize/organize_empty_state.dart';
 import 'package:social_gallery/features/organize/organize_filter_sheet.dart';
@@ -83,7 +84,7 @@ class OrganizeScreen extends ConsumerWidget {
                   folders: sortedFolders,
                   onSwipe: (dir) {
                     AppHaptics.light();
-                    controller.applySwipe(dir);
+                    _handleSwipe(context, ref, controller, dir);
                   },
                   onFolderDrop: (path) =>
                       _handleFolderDrop(context, ref, controller, path),
@@ -94,6 +95,27 @@ class OrganizeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleSwipe(
+    BuildContext context,
+    WidgetRef ref,
+    OrganizeController controller,
+    OrganizeSwipeDirection direction,
+  ) async {
+    final action = await controller.applySwipe(direction);
+    if (action != OrganizeSwipeAction.move || !context.mounted) return;
+
+    final allFolders = ref.read(allFoldersProvider).valueOrNull ?? [];
+    final recentPaths = ref.read(organizeRepositoryProvider).recentFolderPaths;
+    final sortedFolders = sortFoldersByRecent(allFolders, recentPaths);
+    final path = await showFolderPickerSheet(
+      context: context,
+      ref: ref,
+      folders: sortedFolders,
+    );
+    if (path == null || !context.mounted) return;
+    await _handleFolderDrop(context, ref, controller, path);
   }
 
   Future<void> _handleFolderDrop(

@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -328,7 +329,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gridSizeCompact => 'Compact';
 
   @override
-  String get gridSizeStandard => 'Standard';
+  String get gridSizeStandard => 'Comfortable';
 
   @override
   String get gridSizeLarge => 'Large';
@@ -337,7 +338,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gridSizeCompactSubtitle => 'Smaller thumbnails, more columns';
 
   @override
-  String get gridSizeStandardSubtitle => 'Balanced layout';
+  String get gridSizeStandardSubtitle => 'Comfortable thumbnail size';
 
   @override
   String get gridSizeLargeSubtitle => 'Bigger thumbnails, fewer columns';
@@ -2239,4 +2240,84 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get settingsOrganizeGestures => 'Organize swipe actions';
+
+  @override
+  String get settingsOrganizeGesturesSubtitle =>
+      'Remap left, right, up, and down swipes';
+
+  @override
+  String get settingsOrganizeGesturesReset => 'Reset to defaults';
+
+  @override
+  String get organizeActionTrash => 'Trash';
+
+  @override
+  String get organizeActionFavorite => 'Favorite';
+
+  @override
+  String get organizeActionKeep => 'Keep';
+
+  @override
+  String get organizeActionMove => 'Move';
+
+  @override
+  String get organizeDirectionLeft => 'Swipe left';
+
+  @override
+  String get organizeDirectionRight => 'Swipe right';
+
+  @override
+  String get organizeDirectionUp => 'Swipe up';
+
+  @override
+  String get organizeDirectionDown => 'Swipe down';
+
+  @override
+  String organizeCardSemanticLabel(String name, String folder) {
+    return '$name from $folder';
+  }
+
+  @override
+  String organizeSwipeHintLeft(String action) {
+    return 'Swipe left to $action';
+  }
+
+  @override
+  String organizeSwipeHintRight(String action) {
+    return 'Swipe right to $action';
+  }
+
+  @override
+  String organizeSwipeHintUp(String action) {
+    return 'Swipe up to $action';
+  }
+
+  @override
+  String organizeSwipeHintDown(String action) {
+    return 'Swipe down to $action';
+  }
+
+  @override
+  String get mediaKindPhoto => 'Photo';
+
+  @override
+  String feedPostSemanticLabel(String folder, String kind, String name) {
+    return 'Post from $folder, $kind $name';
+  }
+
+  @override
+  String feedPostOpenFolderSemanticLabel(String folder) {
+    return 'Open album $folder';
+  }
+
+  @override
+  String feedPostOpenMediaSemanticLabel(String kind) {
+    return 'Open $kind';
+  }
+
+  @override
+  String get feedPostDoubleTapFavoriteHint => 'Double tap to favorite';
 }

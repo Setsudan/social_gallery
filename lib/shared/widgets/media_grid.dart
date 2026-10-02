@@ -60,9 +60,13 @@ class MediaGrid extends ConsumerWidget {
 
     final mediaSize = MediaQuery.sizeOf(context);
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final columns = crossAxisCount == 3
+    final gridDensity = ref.watch(
+      settingsProvider.select((s) => s.desktopGalleryGridSize),
+    );
+    final baseColumns = crossAxisCount == 3
         ? gridCrossAxisCountForWidth(mediaSize.width)
         : crossAxisCount;
+    final columns = gridDensity.adjustColumnCount(baseColumns);
     final cellLogical =
         (mediaSize.width - padding.horizontal - (columns - 1) * 2) / columns;
     final thumbEdge = thumbnailDecodeEdge(

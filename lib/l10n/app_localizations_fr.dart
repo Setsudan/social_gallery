@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -332,7 +333,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gridSizeCompact => 'Compact';
 
   @override
-  String get gridSizeStandard => 'Standard';
+  String get gridSizeStandard => 'Confortable';
 
   @override
   String get gridSizeLarge => 'Grand';
@@ -342,7 +343,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Miniatures plus petites, plus de colonnes';
 
   @override
-  String get gridSizeStandardSubtitle => 'Disposition equilibree';
+  String get gridSizeStandardSubtitle => 'Taille de miniature confortable';
 
   @override
   String get gridSizeLargeSubtitle =>
@@ -2270,4 +2271,85 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get settingsOrganizeGestures => 'Gestes d\'organisation';
+
+  @override
+  String get settingsOrganizeGesturesSubtitle =>
+      'Reassigner les glissements gauche, droite, haut et bas';
+
+  @override
+  String get settingsOrganizeGesturesReset => 'Reinitialiser';
+
+  @override
+  String get organizeActionTrash => 'Corbeille';
+
+  @override
+  String get organizeActionFavorite => 'Favori';
+
+  @override
+  String get organizeActionKeep => 'Garder';
+
+  @override
+  String get organizeActionMove => 'Deplacer';
+
+  @override
+  String get organizeDirectionLeft => 'Glisser a gauche';
+
+  @override
+  String get organizeDirectionRight => 'Glisser a droite';
+
+  @override
+  String get organizeDirectionUp => 'Glisser vers le haut';
+
+  @override
+  String get organizeDirectionDown => 'Glisser vers le bas';
+
+  @override
+  String organizeCardSemanticLabel(String name, String folder) {
+    return '$name de $folder';
+  }
+
+  @override
+  String organizeSwipeHintLeft(String action) {
+    return 'Glisser a gauche pour $action';
+  }
+
+  @override
+  String organizeSwipeHintRight(String action) {
+    return 'Glisser a droite pour $action';
+  }
+
+  @override
+  String organizeSwipeHintUp(String action) {
+    return 'Glisser vers le haut pour $action';
+  }
+
+  @override
+  String organizeSwipeHintDown(String action) {
+    return 'Glisser vers le bas pour $action';
+  }
+
+  @override
+  String get mediaKindPhoto => 'Photo';
+
+  @override
+  String feedPostSemanticLabel(String folder, String kind, String name) {
+    return 'Publication de $folder, $kind $name';
+  }
+
+  @override
+  String feedPostOpenFolderSemanticLabel(String folder) {
+    return 'Ouvrir l\'album $folder';
+  }
+
+  @override
+  String feedPostOpenMediaSemanticLabel(String kind) {
+    return 'Ouvrir $kind';
+  }
+
+  @override
+  String get feedPostDoubleTapFavoriteHint =>
+      'Appuyer deux fois pour ajouter aux favoris';
 }

@@ -1,4 +1,7 @@
-/// Thumbnail density for the desktop gallery grid.
+/// Thumbnail density for Gallery and Explore grids (compact / comfortable / large).
+///
+/// Storage key remains `settings_desktop_gallery_grid_size` for compatibility.
+/// [standard] is shown in the UI as "Comfortable".
 enum DesktopGalleryGridSize {
   compact,
   standard,

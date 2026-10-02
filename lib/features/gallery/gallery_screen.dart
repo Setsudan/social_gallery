@@ -826,9 +826,6 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   int _columnCount(BuildContext context) {
     final base = _period.crossAxisCountForWidth(MediaQuery.sizeOf(context).width);
-    if (!usesFilesystemGallery) {
-      return base;
-    }
     final gridSize = ref.watch(
       settingsProvider.select((s) => s.desktopGalleryGridSize),
     );

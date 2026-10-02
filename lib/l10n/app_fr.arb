@@ -140,10 +140,10 @@
   "accentPink": "Rose",
   "accentTeal": "Sarcelle",
   "gridSizeCompact": "Compact",
-  "gridSizeStandard": "Standard",
+  "gridSizeStandard": "Confortable",
   "gridSizeLarge": "Grand",
   "gridSizeCompactSubtitle": "Miniatures plus petites, plus de colonnes",
-  "gridSizeStandardSubtitle": "Disposition equilibree",
+  "gridSizeStandardSubtitle": "Taille de miniature confortable",
   "gridSizeLargeSubtitle": "Miniatures plus grandes, moins de colonnes",
   "fontSizeSmall": "Petit",
   "fontSizeNormal": "Normal",
@@ -1277,5 +1277,71 @@
   "backupCloseBlockedTitle": "Sauvegarde en cours",
   "backupCloseBlockedMessage": "Votre telephone envoie encore des photos. Quitter maintenant peut interrompre la sauvegarde.",
   "backupCloseWait": "Attendre la fin",
-  "backupCloseQuitAnyway": "Quitter quand meme"
+  "backupCloseQuitAnyway": "Quitter quand meme",
+  "settingsOrganizeGestures": "Gestes d'organisation",
+  "settingsOrganizeGesturesSubtitle": "Reassigner les glissements gauche, droite, haut et bas",
+  "settingsOrganizeGesturesReset": "Reinitialiser",
+  "organizeActionTrash": "Corbeille",
+  "organizeActionFavorite": "Favori",
+  "organizeActionKeep": "Garder",
+  "organizeActionMove": "Deplacer",
+  "organizeDirectionLeft": "Glisser a gauche",
+  "organizeDirectionRight": "Glisser a droite",
+  "organizeDirectionUp": "Glisser vers le haut",
+  "organizeDirectionDown": "Glisser vers le bas",
+  "organizeCardSemanticLabel": "{name} de {folder}",
+  "@organizeCardSemanticLabel": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "folder": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintLeft": "Glisser a gauche pour {action}",
+  "@organizeSwipeHintLeft": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintRight": "Glisser a droite pour {action}",
+  "@organizeSwipeHintRight": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintUp": "Glisser vers le haut pour {action}",
+  "@organizeSwipeHintUp": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintDown": "Glisser vers le bas pour {action}",
+  "@organizeSwipeHintDown": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "mediaKindPhoto": "Photo",
+  "mediaKindVideo": "Video",
+  "feedPostSemanticLabel": "Publication de {folder}, {kind} {name}",
+  "@feedPostSemanticLabel": {
+    "placeholders": {
+      "folder": {"type": "String"},
+      "kind": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+  "feedPostOpenFolderSemanticLabel": "Ouvrir l'album {folder}",
+  "@feedPostOpenFolderSemanticLabel": {
+    "placeholders": {
+      "folder": {"type": "String"}
+    }
+  },
+  "feedPostOpenMediaSemanticLabel": "Ouvrir {kind}",
+  "@feedPostOpenMediaSemanticLabel": {
+    "placeholders": {
+      "kind": {"type": "String"}
+    }
+  },
+  "feedPostDoubleTapFavoriteHint": "Appuyer deux fois pour ajouter aux favoris"
+
 }

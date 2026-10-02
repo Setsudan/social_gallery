@@ -20,6 +20,7 @@ import 'package:social_gallery/data/repositories/travel_mode_repository.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/desktop_gallery_grid_size.dart';
+import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart' as domain;
 import 'package:social_gallery/core/analysis/media_analysis_service.dart';
 import 'package:social_gallery/data/repositories/media_analysis_repository.dart';
@@ -245,6 +246,7 @@ class AppSettings {
   final bool autoClearCacheOnClose;
   final bool galleryViewMode;
   final DesktopGalleryGridSize desktopGalleryGridSize;
+  final OrganizeGestureMapping organizeGestureMapping;
   final AppLocalePreference localePreference;
 
   const AppSettings({
@@ -257,6 +259,7 @@ class AppSettings {
     required this.autoClearCacheOnClose,
     required this.galleryViewMode,
     required this.desktopGalleryGridSize,
+    required this.organizeGestureMapping,
     required this.localePreference,
   });
 
@@ -270,6 +273,7 @@ class AppSettings {
     bool? autoClearCacheOnClose,
     bool? galleryViewMode,
     DesktopGalleryGridSize? desktopGalleryGridSize,
+    OrganizeGestureMapping? organizeGestureMapping,
     AppLocalePreference? localePreference,
   }) {
     return AppSettings(
@@ -284,6 +288,8 @@ class AppSettings {
       galleryViewMode: galleryViewMode ?? this.galleryViewMode,
       desktopGalleryGridSize:
           desktopGalleryGridSize ?? this.desktopGalleryGridSize,
+      organizeGestureMapping:
+          organizeGestureMapping ?? this.organizeGestureMapping,
       localePreference: localePreference ?? this.localePreference,
     );
   }
@@ -306,6 +312,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
       autoClearCacheOnClose: prefs.autoClearCacheOnClose,
       galleryViewMode: prefs.galleryViewMode,
       desktopGalleryGridSize: prefs.desktopGalleryGridSize,
+      organizeGestureMapping: prefs.organizeGestureMapping,
       localePreference: prefs.localePreference,
     );
   }
@@ -354,6 +361,11 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   Future<void> setDesktopGalleryGridSize(DesktopGalleryGridSize size) async {
     state = state.copyWith(desktopGalleryGridSize: size);
     await _prefs.setDesktopGalleryGridSize(size);
+  }
+
+  Future<void> setOrganizeGestureMapping(OrganizeGestureMapping mapping) async {
+    state = state.copyWith(organizeGestureMapping: mapping);
+    await _prefs.setOrganizeGestureMapping(mapping);
   }
 
   Future<void> setLocalePreference(AppLocalePreference preference) async {

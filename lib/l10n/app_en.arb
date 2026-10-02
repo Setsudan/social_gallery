@@ -140,10 +140,10 @@
   "accentPink": "Pink",
   "accentTeal": "Teal",
   "gridSizeCompact": "Compact",
-  "gridSizeStandard": "Standard",
+  "gridSizeStandard": "Comfortable",
   "gridSizeLarge": "Large",
   "gridSizeCompactSubtitle": "Smaller thumbnails, more columns",
-  "gridSizeStandardSubtitle": "Balanced layout",
+  "gridSizeStandardSubtitle": "Comfortable thumbnail size",
   "gridSizeLargeSubtitle": "Bigger thumbnails, fewer columns",
   "fontSizeSmall": "Small",
   "fontSizeNormal": "Normal",
@@ -1311,5 +1311,71 @@
         "type": "int"
       }
     }
-  }
+  },
+  "settingsOrganizeGestures": "Organize swipe actions",
+  "settingsOrganizeGesturesSubtitle": "Remap left, right, up, and down swipes",
+  "settingsOrganizeGesturesReset": "Reset to defaults",
+  "organizeActionTrash": "Trash",
+  "organizeActionFavorite": "Favorite",
+  "organizeActionKeep": "Keep",
+  "organizeActionMove": "Move",
+  "organizeDirectionLeft": "Swipe left",
+  "organizeDirectionRight": "Swipe right",
+  "organizeDirectionUp": "Swipe up",
+  "organizeDirectionDown": "Swipe down",
+  "organizeCardSemanticLabel": "{name} from {folder}",
+  "@organizeCardSemanticLabel": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "folder": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintLeft": "Swipe left to {action}",
+  "@organizeSwipeHintLeft": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintRight": "Swipe right to {action}",
+  "@organizeSwipeHintRight": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintUp": "Swipe up to {action}",
+  "@organizeSwipeHintUp": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "organizeSwipeHintDown": "Swipe down to {action}",
+  "@organizeSwipeHintDown": {
+    "placeholders": {
+      "action": {"type": "String"}
+    }
+  },
+  "mediaKindPhoto": "Photo",
+  "mediaKindVideo": "Video",
+  "feedPostSemanticLabel": "Post from {folder}, {kind} {name}",
+  "@feedPostSemanticLabel": {
+    "placeholders": {
+      "folder": {"type": "String"},
+      "kind": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+  "feedPostOpenFolderSemanticLabel": "Open album {folder}",
+  "@feedPostOpenFolderSemanticLabel": {
+    "placeholders": {
+      "folder": {"type": "String"}
+    }
+  },
+  "feedPostOpenMediaSemanticLabel": "Open {kind}",
+  "@feedPostOpenMediaSemanticLabel": {
+    "placeholders": {
+      "kind": {"type": "String"}
+    }
+  },
+  "feedPostDoubleTapFavoriteHint": "Double tap to favorite"
+
 }

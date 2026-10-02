@@ -627,6 +627,112 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _pickOrganizeGestures(OrganizeGestureMapping current) async {
+    final l10n = context.l10n;
+    var draft = current;
+    final saved = await showOneUiSettingsSheet<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            Widget directionTile(OrganizeSwipeDirection direction) {
+              final action = draft.actionFor(direction);
+              return OneUiSettingsTile(
+                icon: OneUiSettingsIcon.organize,
+                title: organizeSwipeDirectionLabel(l10n, direction),
+                value: organizeSwipeActionLabel(l10n, action),
+                showDivider: direction != OrganizeSwipeDirection.down,
+                onTap: () async {
+                  final picked =
+                      await showOneUiSettingsPicker<OrganizeSwipeAction>(
+                    context: context,
+                    title: organizeSwipeDirectionLabel(l10n, direction),
+                    selected: action,
+                    options: [
+                      for (final value in OrganizeSwipeAction.values)
+                        OneUiPickerOption(
+                          value: value,
+                          label: organizeSwipeActionLabel(l10n, value),
+                        ),
+                    ],
+                  );
+                  if (picked == null || picked == action) return;
+                  setSheetState(() {
+                    draft = draft.remap(direction, picked);
+                  });
+                },
+              );
+            }
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    OneUiSpacing.pageHorizontal,
+                    OneUiSpacing.sm,
+                    OneUiSpacing.pageHorizontal,
+                    OneUiSpacing.sm,
+                  ),
+                  child: Text(
+                    l10n.settingsOrganizeGestures,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    OneUiSpacing.pageHorizontal,
+                    0,
+                    OneUiSpacing.pageHorizontal,
+                    OneUiSpacing.sm,
+                  ),
+                  child: Text(
+                    l10n.settingsOrganizeGesturesSubtitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+                directionTile(OrganizeSwipeDirection.left),
+                directionTile(OrganizeSwipeDirection.right),
+                directionTile(OrganizeSwipeDirection.up),
+                directionTile(OrganizeSwipeDirection.down),
+                const SizedBox(height: OneUiSpacing.md),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: OneUiSpacing.pageHorizontal,
+                  ),
+                  child: Row(
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          setSheetState(() {
+                            draft = OrganizeGestureMapping.defaults;
+                          });
+                        },
+                        child: Text(l10n.settingsOrganizeGesturesReset),
+                      ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text(l10n.actionSave),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: OneUiSpacing.md),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (saved == true && draft != current && mounted) {
+      AppHaptics.medium();
+      await ref.read(settingsProvider.notifier).setOrganizeGestureMapping(draft);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -713,23 +819,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: galleryRootDisplayValue(galleryRootPath, l10n),
                   onTap: _pickGalleryRoot,
                 ),
-              if (usesFilesystemGallery)
-                OneUiSettingsTile(
-                  icon: OneUiSettingsIcon.gallery,
-                  title: l10n.settingsGalleryGridSize,
-                  subtitle: desktopGalleryGridSizeSubtitle(
-                    l10n,
-                    settings.desktopGalleryGridSize,
-                  ),
-                  value: desktopGalleryGridSizeLabel(
-                    l10n,
-                    settings.desktopGalleryGridSize,
-                  ),
-                  showDivider: true,
-                  onTap: () => _pickDesktopGalleryGridSize(
-                    settings.desktopGalleryGridSize,
-                  ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.gallery,
+                title: l10n.settingsGalleryGridSize,
+                subtitle: desktopGalleryGridSizeSubtitle(
+                  l10n,
+                  settings.desktopGalleryGridSize,
                 ),
+                value: desktopGalleryGridSizeLabel(
+                  l10n,
+                  settings.desktopGalleryGridSize,
+                ),
+                showDivider: true,
+                onTap: () => _pickDesktopGalleryGridSize(
+                  settings.desktopGalleryGridSize,
+                ),
+              ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.gallery,
                 title: l10n.settingsGalleryViewMode,
@@ -791,6 +896,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     : l10n.queueOrderChronological,
                 showDivider: true,
                 onTap: () => _pickQueueOrder(repo.queueOrder),
+              ),
+              OneUiSettingsTile(
+                icon: OneUiSettingsIcon.organize,
+                title: l10n.settingsOrganizeGestures,
+                subtitle: l10n.settingsOrganizeGesturesSubtitle,
+                value: organizeGestureMappingSummary(
+                  l10n,
+                  settings.organizeGestureMapping,
+                ),
+                showDivider: true,
+                onTap: () =>
+                    _pickOrganizeGestures(settings.organizeGestureMapping),
               ),
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,

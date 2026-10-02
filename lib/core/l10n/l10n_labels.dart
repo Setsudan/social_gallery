@@ -3,6 +3,7 @@ import 'package:social_gallery/core/l10n/app_locale_preference.dart';
 import 'package:social_gallery/core/theme/accent_presets.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
 import 'package:social_gallery/domain/models/desktop_gallery_grid_size.dart';
+import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/l10n/app_localizations.dart';
 
 String appThemeVariantLabel(AppLocalizations l10n, AppThemeVariant variant) {
@@ -74,4 +75,42 @@ String appLocalePreferenceLabel(
     AppLocalePreference.en => l10n.settingsLanguageEnglish,
     AppLocalePreference.fr => l10n.settingsLanguageFrench,
   };
+}
+
+
+String organizeSwipeActionLabel(
+  AppLocalizations l10n,
+  OrganizeSwipeAction action,
+) {
+  return switch (action) {
+    OrganizeSwipeAction.trash => l10n.organizeActionTrash,
+    OrganizeSwipeAction.favorite => l10n.organizeActionFavorite,
+    OrganizeSwipeAction.keep => l10n.organizeActionKeep,
+    OrganizeSwipeAction.move => l10n.organizeActionMove,
+  };
+}
+
+String organizeSwipeDirectionLabel(
+  AppLocalizations l10n,
+  OrganizeSwipeDirection direction,
+) {
+  return switch (direction) {
+    OrganizeSwipeDirection.left => l10n.organizeDirectionLeft,
+    OrganizeSwipeDirection.right => l10n.organizeDirectionRight,
+    OrganizeSwipeDirection.up => l10n.organizeDirectionUp,
+    OrganizeSwipeDirection.down => l10n.organizeDirectionDown,
+  };
+}
+
+String organizeGestureMappingSummary(
+  AppLocalizations l10n,
+  OrganizeGestureMapping mapping,
+) {
+  final parts = [
+    organizeSwipeActionLabel(l10n, mapping.left),
+    organizeSwipeActionLabel(l10n, mapping.right),
+    organizeSwipeActionLabel(l10n, mapping.up),
+    organizeSwipeActionLabel(l10n, mapping.down),
+  ];
+  return parts.join(' · ');
 }

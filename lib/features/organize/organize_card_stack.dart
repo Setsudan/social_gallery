@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/core/l10n/l10n_labels.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
@@ -159,7 +162,17 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
         ],
       );
 
-      card = GestureDetector(
+      final l10n = context.l10n;
+      final mapping = _mapping;
+      final semanticHint =
+          '${l10n.organizeSwipeHintLeft(organizeSwipeActionLabel(l10n, mapping.left))}. '
+          '${l10n.organizeSwipeHintRight(organizeSwipeActionLabel(l10n, mapping.right))}. '
+          '${l10n.organizeSwipeHintUp(organizeSwipeActionLabel(l10n, mapping.up))}. '
+          '${l10n.organizeSwipeHintDown(organizeSwipeActionLabel(l10n, mapping.down))}';
+      card = Semantics(
+        label: l10n.organizeCardSemanticLabel(item.displayName, item.folderName),
+        hint: semanticHint,
+        child: GestureDetector(
         onPanUpdate: _onPanUpdate,
         onPanEnd: (details) => _handleRelease(details.velocity),
         child: ValueListenableBuilder<Offset>(
@@ -175,6 +188,7 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
           },
           child: card,
         ),
+      ),
       );
     } else {
       card = Transform.scale(
@@ -194,7 +208,7 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
     _dragOffset.value = next;
     _dragGlobal.value = details.globalPosition;
 
-    final draggingDown = next.dy > _folderRevealThreshold;
+    final draggingDown = _downIsMove && next.dy > _folderRevealThreshold;
     _setDraggingDown(draggingDown);
 
     if (draggingDown) {
@@ -222,21 +236,38 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
     return _OverlayBand.none;
   }
 
-  Color? _colorForBand(_OverlayBand band) {
-    return switch (band) {
-      _OverlayBand.none => null,
-      _OverlayBand.left => Colors.red.withValues(alpha: 0.35),
-      _OverlayBand.right => Colors.orange.withValues(alpha: 0.35),
-      _OverlayBand.up => Colors.blue.withValues(alpha: 0.35),
-      _OverlayBand.down => Colors.green.withValues(alpha: 0.25),
+  OrganizeGestureMapping get _mapping =>
+      ref.read(settingsProvider).organizeGestureMapping;
+
+  bool get _downIsMove =>
+      _mapping.down == OrganizeSwipeAction.move;
+
+  Color? _colorForAction(OrganizeSwipeAction action) {
+    return switch (action) {
+      OrganizeSwipeAction.trash => Colors.red.withValues(alpha: 0.35),
+      OrganizeSwipeAction.favorite => Colors.orange.withValues(alpha: 0.35),
+      OrganizeSwipeAction.keep => Colors.blue.withValues(alpha: 0.35),
+      OrganizeSwipeAction.move => Colors.green.withValues(alpha: 0.25),
     };
+  }
+
+  Color? _colorForBand(_OverlayBand band) {
+    if (band == _OverlayBand.none) return null;
+    final direction = switch (band) {
+      _OverlayBand.left => OrganizeSwipeDirection.left,
+      _OverlayBand.right => OrganizeSwipeDirection.right,
+      _OverlayBand.up => OrganizeSwipeDirection.up,
+      _OverlayBand.down => OrganizeSwipeDirection.down,
+      _OverlayBand.none => OrganizeSwipeDirection.down,
+    };
+    return _colorForAction(_mapping.actionFor(direction));
   }
 
   void _handleRelease(Velocity velocity) {
     final dx = _dragOffset.value.dx;
     final dy = _dragOffset.value.dy;
 
-    if (_isDraggingDown) {
+    if (_isDraggingDown && _downIsMove) {
       final target = _hoveredFolder.value;
       _resetDrag();
       if (target != null) {
@@ -252,6 +283,9 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
       if (dx > _threshold) direction = OrganizeSwipeDirection.right;
     } else {
       if (dy < -_threshold) direction = OrganizeSwipeDirection.up;
+      if (dy > _threshold && !_downIsMove) {
+        direction = OrganizeSwipeDirection.down;
+      }
     }
 
     if (direction != null) {

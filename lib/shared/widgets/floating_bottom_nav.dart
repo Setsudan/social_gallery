@@ -288,41 +288,46 @@ class _NavItemButton extends StatelessWidget {
           : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
     );
 
-    return PressableScale(
-      scale: 0.9,
-      onTap: onPressed,
-      onLongPress: onLongPress,
-      child: SizedBox(
-        width: itemWidth,
-        height: itemHeight,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              selected && filledWhenSelected ? selectedIcon : unselectedIcon,
-              size: _navIconSize,
-              color: iconColor,
-            ),
-            ClipRect(
-              child: Align(
-                alignment: Alignment.topCenter,
-                heightFactor: expandT.clamp(0.001, 1.0),
-                child: Opacity(
-                  opacity: expandT,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 1),
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: labelStyle,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: PressableScale(
+        scale: 0.9,
+        onTap: onPressed,
+        onLongPress: onLongPress,
+        child: SizedBox(
+          width: itemWidth,
+          height: itemHeight,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                selected && filledWhenSelected ? selectedIcon : unselectedIcon,
+                size: _navIconSize,
+                color: iconColor,
+              ),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: expandT.clamp(0.001, 1.0),
+                  child: Opacity(
+                    opacity: expandT,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: labelStyle,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

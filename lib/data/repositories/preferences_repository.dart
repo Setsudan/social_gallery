@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social_gallery/core/l10n/app_locale_preference.dart';
 import 'package:social_gallery/domain/models/desktop_gallery_grid_size.dart';
+import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/domain/models/recent_search.dart';
 
 /// App settings and onboarding flags stored in SharedPreferences.
@@ -23,6 +24,7 @@ class PreferencesRepository {
   static const _autoClearCacheKey = 'settings_auto_clear_cache_on_close';
   static const _galleryViewModeKey = 'settings_gallery_view_mode';
   static const _desktopGalleryGridSizeKey = 'settings_desktop_gallery_grid_size';
+  static const _organizeGestureMappingKey = 'settings_organize_gesture_mapping';
   static const _localeKey = 'settings_locale';
   static const _lastGallerySyncAtKey = 'last_gallery_sync_at_ms';
   static const _recentSearchesKey = 'explore_recent_searches';
@@ -121,6 +123,31 @@ class PreferencesRepository {
   Future<void> setDesktopGalleryGridSize(DesktopGalleryGridSize size) async {
     await _prefs.setString(_desktopGalleryGridSizeKey, size.storageValue);
   }
+
+  OrganizeGestureMapping get organizeGestureMapping {
+    final raw = _prefs.getString(_organizeGestureMappingKey);
+    if (raw == null) return OrganizeGestureMapping.defaults;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return OrganizeGestureMapping.fromJson(decoded);
+      }
+      if (decoded is Map) {
+        return OrganizeGestureMapping.fromJson(
+          decoded.map((k, v) => MapEntry(k.toString(), v)),
+        );
+      }
+    } catch (_) {}
+    return OrganizeGestureMapping.defaults;
+  }
+
+  Future<void> setOrganizeGestureMapping(OrganizeGestureMapping mapping) async {
+    await _prefs.setString(
+      _organizeGestureMappingKey,
+      jsonEncode(mapping.toJson()),
+    );
+  }
+
 
   AppLocalePreference get localePreference =>
       AppLocalePreference.fromStorage(_prefs.getString(_localeKey));
