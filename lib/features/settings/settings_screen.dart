@@ -653,6 +653,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         OneUiPickerOption(
                           value: value,
                           label: organizeSwipeActionLabel(l10n, value),
+                          subtitle: () {
+                            if (value == action) {
+                              return null;
+                            }
+                            final owner = draft.directionFor(value);
+                            if (owner == null || owner == direction) {
+                              return null;
+                            }
+                            return l10n.settingsOrganizeGesturesSwapHint(
+                              organizeSwipeDirectionLabel(l10n, owner),
+                            );
+                          }(),
                         ),
                     ],
                   );
@@ -693,6 +705,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                   ),
                 ),
+                if (!draft.isBijective)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      OneUiSpacing.pageHorizontal,
+                      0,
+                      OneUiSpacing.pageHorizontal,
+                      OneUiSpacing.sm,
+                    ),
+                    child: Text(
+                      l10n.settingsOrganizeGesturesDuplicateError,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                  ),
                 directionTile(OrganizeSwipeDirection.left),
                 directionTile(OrganizeSwipeDirection.right),
                 directionTile(OrganizeSwipeDirection.up),
@@ -714,7 +741,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       const Spacer(),
                       FilledButton(
-                        onPressed: () => Navigator.of(context).pop(true),
+                        onPressed: draft.isBijective
+                            ? () => Navigator.of(context).pop(true)
+                            : null,
                         child: Text(l10n.actionSave),
                       ),
                     ],
@@ -727,7 +756,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       },
     );
-    if (saved == true && draft != current && mounted) {
+    if (saved == true &&
+        draft != current &&
+        draft.isBijective &&
+        mounted) {
       AppHaptics.medium();
       await ref.read(settingsProvider.notifier).setOrganizeGestureMapping(draft);
     }

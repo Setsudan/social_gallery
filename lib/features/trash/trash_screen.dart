@@ -175,8 +175,13 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 )
               : Builder(
                   builder: (context) {
-                    final columns = gridCrossAxisCountForWidth(
-                      MediaQuery.sizeOf(context).width,
+                    final gridDensity = ref.watch(
+                      settingsProvider.select((s) => s.desktopGalleryGridSize),
+                    );
+                    final columns = gridDensity.adjustColumnCount(
+                      gridCrossAxisCountForWidth(
+                        MediaQuery.sizeOf(context).width,
+                      ),
                     );
 
                     return GridView.builder(

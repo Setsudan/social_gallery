@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2250,6 +2249,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsOrganizeGesturesReset => 'Reset to defaults';
+
+  @override
+  String settingsOrganizeGesturesSwapHint(String direction) {
+    return 'Swaps with $direction';
+  }
+
+  @override
+  String get settingsOrganizeGesturesDuplicateError =>
+      'Each swipe direction must use a unique action';
 
   @override
   String get organizeActionTrash => 'Trash';

@@ -142,9 +142,10 @@ class PreferencesRepository {
   }
 
   Future<void> setOrganizeGestureMapping(OrganizeGestureMapping mapping) async {
+    final safe = OrganizeGestureMapping.ensureBijective(mapping);
     await _prefs.setString(
       _organizeGestureMappingKey,
-      jsonEncode(mapping.toJson()),
+      jsonEncode(safe.toJson()),
     );
   }
 

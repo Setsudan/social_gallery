@@ -404,7 +404,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final gridDensity = ref.watch(
       settingsProvider.select((s) => s.desktopGalleryGridSize),
     );
-    // Uniform grid respects density; mosaic stays the comfortable mobile default.
+    // Density applies via [MediaGrid] on desktop and whenever the user picks
+    // compact/large. Mosaic is the intentional mobile "comfortable" layout and
+    // only used while density stays at the standard/comfortable setting.
     final useUniformGrid =
         isDesktop || gridDensity != DesktopGalleryGridSize.standard;
 

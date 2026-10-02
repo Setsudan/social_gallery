@@ -50,6 +50,7 @@ class FeedPostCard extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: OneUiSpacing.sm),
         child: Semantics(
           container: true,
+          explicitChildNodes: true,
           label: cardLabel,
           child: DecoratedBox(
             decoration: BoxDecoration(border: Border(top: borderSide)),

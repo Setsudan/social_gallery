@@ -1281,6 +1281,13 @@
   "settingsOrganizeGestures": "Gestes d'organisation",
   "settingsOrganizeGesturesSubtitle": "Reassigner les glissements gauche, droite, haut et bas",
   "settingsOrganizeGesturesReset": "Reinitialiser",
+  "settingsOrganizeGesturesSwapHint": "Echange avec {direction}",
+  "@settingsOrganizeGesturesSwapHint": {
+    "placeholders": {
+      "direction": {"type": "String"}
+    }
+  },
+  "settingsOrganizeGesturesDuplicateError": "Chaque direction doit avoir une action unique",
   "organizeActionTrash": "Corbeille",
   "organizeActionFavorite": "Favori",
   "organizeActionKeep": "Garder",

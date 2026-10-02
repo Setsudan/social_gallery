@@ -3878,6 +3878,18 @@ abstract class AppLocalizations {
   /// **'Reset to defaults'**
   String get settingsOrganizeGesturesReset;
 
+  /// No description provided for @settingsOrganizeGesturesSwapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swaps with {direction}'**
+  String settingsOrganizeGesturesSwapHint(String direction);
+
+  /// No description provided for @settingsOrganizeGesturesDuplicateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Each swipe direction must use a unique action'**
+  String get settingsOrganizeGesturesDuplicateError;
+
   /// No description provided for @organizeActionTrash.
   ///
   /// In en, this message translates to:

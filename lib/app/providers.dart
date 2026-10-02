@@ -364,8 +364,9 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   }
 
   Future<void> setOrganizeGestureMapping(OrganizeGestureMapping mapping) async {
-    state = state.copyWith(organizeGestureMapping: mapping);
-    await _prefs.setOrganizeGestureMapping(mapping);
+    final safe = OrganizeGestureMapping.ensureBijective(mapping);
+    state = state.copyWith(organizeGestureMapping: safe);
+    await _prefs.setOrganizeGestureMapping(safe);
   }
 
   Future<void> setLocalePreference(AppLocalePreference preference) async {

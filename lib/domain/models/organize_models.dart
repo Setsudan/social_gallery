@@ -207,6 +207,19 @@ class OrganizeGestureMapping {
     down: OrganizeSwipeAction.move,
   );
 
+  /// True when each swipe direction maps to a distinct action.
+  bool get isBijective {
+    final actions = {left, right, up, down};
+    return actions.length == OrganizeSwipeAction.values.length;
+  }
+
+  /// Returns [mapping] when bijective, otherwise [defaults].
+  static OrganizeGestureMapping ensureBijective(
+    OrganizeGestureMapping mapping,
+  ) {
+    return mapping.isBijective ? mapping : defaults;
+  }
+
   OrganizeSwipeAction actionFor(OrganizeSwipeDirection direction) {
     return switch (direction) {
       OrganizeSwipeDirection.left => left,
@@ -274,11 +287,13 @@ class OrganizeGestureMapping {
 
   static OrganizeGestureMapping fromJson(Map<String, dynamic>? json) {
     if (json == null) return defaults;
-    return OrganizeGestureMapping(
-      left: OrganizeSwipeActionStorage.fromStorage(json['left'] as String?),
-      right: OrganizeSwipeActionStorage.fromStorage(json['right'] as String?),
-      up: OrganizeSwipeActionStorage.fromStorage(json['up'] as String?),
-      down: OrganizeSwipeActionStorage.fromStorage(json['down'] as String?),
+    return ensureBijective(
+      OrganizeGestureMapping(
+        left: OrganizeSwipeActionStorage.fromStorage(json['left'] as String?),
+        right: OrganizeSwipeActionStorage.fromStorage(json['right'] as String?),
+        up: OrganizeSwipeActionStorage.fromStorage(json['up'] as String?),
+        down: OrganizeSwipeActionStorage.fromStorage(json['down'] as String?),
+      ),
     );
   }
 

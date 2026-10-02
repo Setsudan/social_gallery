@@ -1315,6 +1315,13 @@
   "settingsOrganizeGestures": "Organize swipe actions",
   "settingsOrganizeGesturesSubtitle": "Remap left, right, up, and down swipes",
   "settingsOrganizeGesturesReset": "Reset to defaults",
+  "settingsOrganizeGesturesSwapHint": "Swaps with {direction}",
+  "@settingsOrganizeGesturesSwapHint": {
+    "placeholders": {
+      "direction": {"type": "String"}
+    }
+  },
+  "settingsOrganizeGesturesDuplicateError": "Each swipe direction must use a unique action",
   "organizeActionTrash": "Trash",
   "organizeActionFavorite": "Favorite",
   "organizeActionKeep": "Keep",

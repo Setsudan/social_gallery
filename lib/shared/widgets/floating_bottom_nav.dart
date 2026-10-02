@@ -292,6 +292,7 @@ class _NavItemButton extends StatelessWidget {
       button: true,
       selected: selected,
       label: label,
+      excludeSemantics: true,
       child: PressableScale(
         scale: 0.9,
         onTap: onPressed,
