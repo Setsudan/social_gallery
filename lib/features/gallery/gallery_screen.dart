@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
@@ -30,12 +31,15 @@ import 'package:social_gallery/core/media/thumbnail_decode.dart';
 import 'package:social_gallery/shared/media/thumbnail_prefetch.dart';
 import 'package:social_gallery/shared/widgets/media_backup_badge.dart';
 import 'package:social_gallery/shared/widgets/media_grid.dart';
+import 'package:social_gallery/features/gallery/gallery_scroll_layout.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
+
 // Wider thresholds so one deliberate pinch maps to one period step.
 const _pinchZoomInThreshold = 0.78;
 const _pinchZoomOutThreshold = 1.22;
+
 /// Min horizontal movement before drag-select wins over scroll.
 const _dragSelectThresholdPx = 12.0;
 
@@ -50,6 +54,15 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   final _scrollController = ScrollController();
   final _groupMedia = GroupMediaByPeriod();
   GalleryGroupingPeriod _period = GalleryGroupingPeriod.day;
+  List<MediaItem>? _groupedItems;
+  GalleryGroupingPeriod? _groupedPeriod;
+  List<MediaPeriodGroup> _cachedGroups = const [];
+  GalleryTimelineLayout? _timeline;
+  List<String> _prefetchIds = const [];
+  int _prefetchStamp = 0;
+  int _thumbEdge = 256;
+  int _columns = 3;
+  double _searchStride = 1;
 
   final Set<int> _selectedIds = {};
   final Map<int, GlobalKey> _tileKeys = {};
@@ -118,12 +131,18 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   void _exitSelectionMode() {
     setState(() {
       _selectedIds.clear();
+      _tileKeys.clear();
       _resetDragSelectState();
     });
     _syncGallerySelectionActive();
   }
 
-  GlobalKey _tileKeyFor(int id) => _tileKeys.putIfAbsent(id, GlobalKey.new);
+  /// GlobalKeys are only needed for drag-select hit testing. Keeping one on
+  /// every tile disables element recycling and makes scrolling janky.
+  Key _tileKeyFor(int id) {
+    if (!_inSelectionMode) return ValueKey<int>(id);
+    return _tileKeys.putIfAbsent(id, GlobalKey.new);
+  }
 
   void _pruneTileKeys(Iterable<int> liveIds) {
     final live = liveIds is Set<int> ? liveIds : liveIds.toSet();
@@ -228,45 +247,25 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   Future<void> _bulkTrash() async {
     final ids = _takeSelection();
     if (ids.isEmpty) return;
-    await bulkTrash(
-      ref,
-      context,
-      ids,
-      onDone: _refreshMediaLists,
-    );
+    await bulkTrash(ref, context, ids, onDone: _refreshMediaLists);
   }
 
   Future<void> _bulkMove() async {
     final ids = _takeSelection();
     if (ids.isEmpty) return;
-    await bulkMove(
-      ref,
-      context,
-      ids,
-      onDone: _refreshMediaLists,
-    );
+    await bulkMove(ref, context, ids, onDone: _refreshMediaLists);
   }
 
   Future<void> _createAlbumAndMove() async {
     final ids = _takeSelection();
     if (ids.isEmpty) return;
-    await createAlbumAndMove(
-      ref,
-      context,
-      ids,
-      onDone: _refreshMediaLists,
-    );
+    await createAlbumAndMove(ref, context, ids, onDone: _refreshMediaLists);
   }
 
   Future<void> _bulkFavorite(bool favorite) async {
     final ids = _takeSelection();
     if (ids.isEmpty) return;
-    await bulkFavorite(
-      ref,
-      ids,
-      favorite,
-      onDone: _refreshMediaLists,
-    );
+    await bulkFavorite(ref, ids, favorite, onDone: _refreshMediaLists);
   }
 
   Future<void> _bulkShare() async {
@@ -375,10 +374,9 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       localize: (key) => _localizeSearchKey(key),
     );
     if (recentLabel.isNotEmpty) {
-      await ref.read(recentSearchesProvider.notifier).add(
-            recentLabel,
-            thumbnailUri: thumbnailUri,
-          );
+      await ref
+          .read(recentSearchesProvider.notifier)
+          .add(recentLabel, thumbnailUri: thumbnailUri);
     }
   }
 
@@ -461,31 +459,77 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       hasMore: paginated.hasMore,
       loadMore: () {
         if (_isSearching) {
-          ref
-              .read(explorePaginatedProvider(_searchQuery).notifier)
-              .loadMore();
+          ref.read(explorePaginatedProvider(_searchQuery).notifier).loadMore();
         } else {
           ref.read(galleryPaginatedProvider.notifier).loadMore();
         }
       },
     );
 
-    final columns = _columnCount(context);
-    final width = MediaQuery.sizeOf(context).width;
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    final cellLogical = (width - 4) / columns;
-    final thumbEdge = thumbnailDecodeEdge(
-      logicalWidth: cellLogical,
-      devicePixelRatio: dpr,
-      maxEdge: 320,
-    );
+    final timeline = _timeline;
+    if (!_isSearching && timeline != null) {
+      ThumbnailPrefetcher.instance.scheduleFromScroll(
+        assetIds: _prefetchIds,
+        firstVisibleIndex: timeline.flatIndexAt(
+          _scrollController.position.pixels,
+        ),
+        thumbnailEdge: _thumbEdge,
+        context: context,
+      );
+      return;
+    }
+
     ThumbnailPrefetcher.instance.scheduleForGrid(
       metrics: _scrollController.position,
-      assetIds: _items.map((e) => e.uri).toList(growable: false),
-      crossAxisCount: columns,
-      mainAxisExtent: cellLogical + 2,
-      thumbnailEdge: thumbEdge,
+      assetIds: _prefetchIds,
+      crossAxisCount: _columns,
+      mainAxisExtent: _searchStride,
+      thumbnailEdge: _thumbEdge,
       context: context,
+    );
+  }
+
+  List<MediaPeriodGroup> _groupsFor(List<MediaItem> items) {
+    if (identical(items, _groupedItems) && _groupedPeriod == _period) {
+      return _cachedGroups;
+    }
+    _groupedItems = items;
+    _groupedPeriod = _period;
+    _cachedGroups = _groupMedia(items: items, period: _period);
+    return _cachedGroups;
+  }
+
+  void _syncPrefetchIds(List<MediaItem> items) {
+    final stamp = identityHashCode(items);
+    if (stamp == _prefetchStamp && _prefetchIds.length == items.length) {
+      return;
+    }
+    _prefetchStamp = stamp;
+    _prefetchIds = List<String>.generate(
+      items.length,
+      (index) => items[index].uri,
+      growable: false,
+    );
+  }
+
+  double _headerExtent(BuildContext context, ThemeData theme) {
+    final style = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+    final painter = TextPainter(
+      text: TextSpan(text: 'Ag', style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    return OneUiSpacing.md + painter.height + OneUiSpacing.sm;
+  }
+
+  int _thumbEdgeFor(BuildContext context, double cellLogical) {
+    return thumbnailDecodeEdge(
+      logicalWidth: cellLogical,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+      maxEdge: 320,
     );
   }
 
@@ -535,137 +579,136 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
         return false;
       },
       child: PopScope(
-      canPop: !_inSelectionMode && !_isSearching,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _inSelectionMode) {
-          _exitSelectionMode();
-        } else if (!didPop && _isSearching) {
-          _handleSearchBack();
-        }
-      },
-      child: Scaffold(
-        extendBody: true,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!inSelectionMode && _isSearching)
-                  ExploreActiveSearchBar(
-                    query: _searchQuery,
-                    onBack: _handleSearchBack,
-                    onClear: _handleSearchBack,
-                    onTapQuery: _openSearch,
-                    onRemoveLabel: () => _applySearch(
-                      _searchQuery.copyWith(clearLabels: true),
+        canPop: !_inSelectionMode && !_isSearching,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && _inSelectionMode) {
+            _exitSelectionMode();
+          } else if (!didPop && _isSearching) {
+            _handleSearchBack();
+          }
+        },
+        child: Scaffold(
+          extendBody: true,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!inSelectionMode && _isSearching)
+                    ExploreActiveSearchBar(
+                      query: _searchQuery,
+                      onBack: _handleSearchBack,
+                      onClear: _handleSearchBack,
+                      onTapQuery: _openSearch,
+                      onRemoveLabel: () => _applySearch(
+                        _searchQuery.copyWith(clearLabels: true),
+                      ),
+                      onRemoveColor: () =>
+                          _applySearch(_searchQuery.copyWith(clearColor: true)),
                     ),
-                    onRemoveColor: () => _applySearch(
-                      _searchQuery.copyWith(clearColor: true),
+                  if (!inSelectionMode && _folderSuggestions.isNotEmpty)
+                    SizedBox(
+                      height: 56,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: _folderSuggestions.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final folder = _folderSuggestions[index];
+                          return ActionChip(
+                            avatar: FolderAvatar(
+                              name: folder.name,
+                              size: 28,
+                              coverUri: folder.isLockedAccount
+                                  ? null
+                                  : folder.displayCoverUri,
+                              locked: folder.isLockedAccount,
+                            ),
+                            label: Text(folder.name),
+                            onPressed: () => _openFolderProfile(folder),
+                          );
+                        },
+                      ),
+                    ),
+                  Expanded(
+                    child: _GalleryPinchPeriodListener(
+                      enabled: !inSelectionMode && !_isSearching,
+                      onPinchZoomIn: _handlePinchZoomIn,
+                      onPinchZoomOut: _handlePinchZoomOut,
+                      child: _buildBody(theme, motion),
                     ),
                   ),
-                if (!inSelectionMode && _folderSuggestions.isNotEmpty)
-                  SizedBox(
-                    height: 56,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      itemCount: _folderSuggestions.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final folder = _folderSuggestions[index];
-                        return ActionChip(
-                          avatar: FolderAvatar(
-                            name: folder.name,
-                            size: 28,
-                            coverUri: folder.isLockedAccount
-                                ? null
-                                : folder.displayCoverUri,
-                            locked: folder.isLockedAccount,
-                          ),
-                          label: Text(folder.name),
-                          onPressed: () => _openFolderProfile(folder),
-                        );
-                      },
+                ],
+              ),
+              if (!inSelectionMode && !_isSearching)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: OneUiSpacing.sm,
+                        right: OneUiSpacing.pageHorizontal,
+                      ),
+                      child: FloatingActionButton.small(
+                        heroTag: 'gallery_search',
+                        tooltip: l10n.tooltipSearchGallery,
+                        onPressed: _openSearch,
+                        child: const Icon(Icons.search),
+                      ),
                     ),
                   ),
-                Expanded(
-                  child: _GalleryPinchPeriodListener(
-                    enabled: !inSelectionMode && !_isSearching,
-                    onPinchZoomIn: _handlePinchZoomIn,
-                    onPinchZoomOut: _handlePinchZoomOut,
-                    child: _buildBody(theme, motion),
+                ),
+              if (inSelectionMode) ...[
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: OneUiSpacing.sm,
+                        left: OneUiSpacing.pageHorizontal,
+                      ),
+                      child: FloatingSelectionCountPill(
+                        count: _selectedIds.length,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: OneUiSpacing.sm,
+                        right: OneUiSpacing.pageHorizontal,
+                      ),
+                      child: FloatingSelectionCancelButton(
+                        onPressed: _exitSelectionMode,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: FloatingSelectionActionBar(
+                    onMove: _bulkMove,
+                    onShare: _bulkShare,
+                    onDelete: _bulkTrash,
+                    onMore: _showMoreActions,
                   ),
                 ),
               ],
-            ),
-            if (!inSelectionMode && !_isSearching)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: OneUiSpacing.sm,
-                      right: OneUiSpacing.pageHorizontal,
-                    ),
-                    child: FloatingActionButton.small(
-                      heroTag: 'gallery_search',
-                      tooltip: l10n.tooltipSearchGallery,
-                      onPressed: _openSearch,
-                      child: const Icon(Icons.search),
-                    ),
-                  ),
-                ),
-              ),
-            if (inSelectionMode) ...[
-              Positioned(
-                top: 0,
-                left: 0,
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: OneUiSpacing.sm,
-                      left: OneUiSpacing.pageHorizontal,
-                    ),
-                    child: FloatingSelectionCountPill(
-                      count: _selectedIds.length,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: OneUiSpacing.sm,
-                      right: OneUiSpacing.pageHorizontal,
-                    ),
-                    child: FloatingSelectionCancelButton(
-                      onPressed: _exitSelectionMode,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: FloatingSelectionActionBar(
-                  onMove: _bulkMove,
-                  onShare: _bulkShare,
-                  onDelete: _bulkTrash,
-                  onMore: _showMoreActions,
-                ),
-              ),
             ],
-          ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -686,69 +729,139 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     if (_items.isEmpty) {
       return EmptyState(
         icon: Icons.photo_library_outlined,
-        title: _isSearching ? l10n.galleryEmptySearchTitle : l10n.galleryEmptyTitle,
+        title: _isSearching
+            ? l10n.galleryEmptySearchTitle
+            : l10n.galleryEmptyTitle,
         message: _isSearching
             ? l10n.galleryEmptySearchMessage
             : l10n.galleryEmptyMessage,
       );
     }
 
+    final columns = _columns = _columnCount(context);
     final navPadding = FloatingNavInsets.scrollPadding(context);
-    final columns = _columnCount(context);
     final loadingMore = _paginated.isLoading && _paginated.hasMore;
     final inSelectionMode = _inSelectionMode;
+    _syncPrefetchIds(_items);
 
-    if (_isSearching) {
-      return _buildSearchGrid(
-        navPadding: navPadding,
-        columns: columns,
-        loadingMore: loadingMore,
-        inSelectionMode: inSelectionMode,
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportWidth = constraints.maxWidth;
 
-    final groups = _groupMedia(items: _items, period: _period);
-
-    Widget scrollContent = CustomScrollView(
-      controller: _scrollController,
-      cacheExtent: kMediaGridCacheExtent,
-      physics: _dragSelecting
-          ? const NeverScrollableScrollPhysics()
-          : const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        for (var groupIndex = 0; groupIndex < groups.length; groupIndex++)
-          ..._groupSlivers(
-            theme: theme,
-            group: groups[groupIndex],
+        if (_isSearching) {
+          _timeline = null;
+          final cell = GalleryTimelineLayout.cellExtentFor(
+            viewportWidth: viewportWidth,
             columns: columns,
+          );
+          _searchStride = cell + GalleryTimelineLayout.tileGap;
+          _thumbEdge = _thumbEdgeFor(context, cell);
+          return _buildSearchGrid(
             navPadding: navPadding,
+            columns: columns,
+            loadingMore: loadingMore,
             inSelectionMode: inSelectionMode,
+            thumbEdge: _thumbEdge,
+          );
+        }
+
+        final timeline = GalleryTimelineLayout.build(
+          groups: _groupsFor(_items),
+          columns: columns,
+          viewportWidth: viewportWidth,
+          headerExtent: _headerExtent(context, theme),
+          showLoader: loadingMore,
+        );
+        _timeline = timeline;
+        _searchStride = timeline.cellExtent + GalleryTimelineLayout.tileGap;
+        _thumbEdge = _thumbEdgeFor(context, timeline.cellExtent);
+
+        Widget scrollContent = ListView.builder(
+          controller: _scrollController,
+          scrollCacheExtent: const ScrollCacheExtent.pixels(
+            kMediaGridCacheExtent,
           ),
-        if (loadingMore)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ),
-        SliverPadding(
+          physics: _dragSelecting
+              ? const NeverScrollableScrollPhysics()
+              : const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.only(bottom: navPadding.bottom),
-        ),
-      ],
+          itemCount: timeline.rows.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
+          findChildIndexCallback: (key) {
+            if (key is! ValueKey<String>) return null;
+            return timeline.indexForKey(key.value);
+          },
+          itemExtentBuilder: (index, dimensions) {
+            if (index < 0 || index >= timeline.rows.length) return null;
+            // Extents were computed for [viewportWidth]. If the sliver's
+            // cross-axis matches, reuse them; otherwise recompute the row.
+            if ((dimensions.crossAxisExtent - viewportWidth).abs() < 0.5) {
+              return timeline.extentAt(index);
+            }
+            final row = timeline.rows[index];
+            final cell = GalleryTimelineLayout.cellExtentFor(
+              viewportWidth: dimensions.crossAxisExtent,
+              columns: columns,
+            );
+            switch (row.kind) {
+              case GalleryTimelineRowKind.header:
+                return timeline.headerExtent;
+              case GalleryTimelineRowKind.tiles:
+                return cell + row.bottomGap;
+              case GalleryTimelineRowKind.loader:
+                return GalleryTimelineLayout.loaderExtent;
+            }
+          },
+          itemBuilder: (context, index) {
+            final row = timeline.rows[index];
+            switch (row.kind) {
+              case GalleryTimelineRowKind.header:
+                return _GallerySectionHeader(
+                  key: ValueKey(row.rowKey),
+                  label: row.label ?? '',
+                  extent: timeline.headerExtent,
+                );
+              case GalleryTimelineRowKind.loader:
+                return const SizedBox(
+                  key: ValueKey('loader'),
+                  height: GalleryTimelineLayout.loaderExtent,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              case GalleryTimelineRowKind.tiles:
+                return _GalleryTileRow(
+                  key: ValueKey(row.rowKey),
+                  items: row.items,
+                  cellExtent: timeline.cellExtent,
+                  bottomGap: row.bottomGap,
+                  inSelectionMode: inSelectionMode,
+                  thumbEdge: _thumbEdge,
+                  tileKeyFor: _tileKeyFor,
+                  selectedIds: _selectedIds,
+                  onTap: (item) =>
+                      inSelectionMode ? _toggleSelect(item) : _openMedia(item),
+                  onLongPress: inSelectionMode
+                      ? null
+                      : (item) => _startSelection(item),
+                );
+            }
+          },
+        );
+
+        if (inSelectionMode) {
+          scrollContent = Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: _handleSelectionPointerDown,
+            onPointerMove: _handleSelectionPointerMove,
+            onPointerUp: _handleSelectionPointerUp,
+            onPointerCancel: _handleSelectionPointerUp,
+            child: scrollContent,
+          );
+        }
+
+        return scrollContent;
+      },
     );
-
-    if (inSelectionMode) {
-      scrollContent = Listener(
-        behavior: HitTestBehavior.translucent,
-        onPointerDown: _handleSelectionPointerDown,
-        onPointerMove: _handleSelectionPointerMove,
-        onPointerUp: _handleSelectionPointerUp,
-        onPointerCancel: _handleSelectionPointerUp,
-        child: scrollContent,
-      );
-    }
-
-    return scrollContent;
   }
 
   Widget _buildSearchGrid({
@@ -756,10 +869,11 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     required int columns,
     required bool loadingMore,
     required bool inSelectionMode,
+    required int thumbEdge,
   }) {
     Widget scrollContent = CustomScrollView(
       controller: _scrollController,
-      cacheExtent: kMediaGridCacheExtent,
+      scrollCacheExtent: const ScrollCacheExtent.pixels(kMediaGridCacheExtent),
       physics: _dragSelecting
           ? const NeverScrollableScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
@@ -785,15 +899,26 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                   item: item,
                   selected: _selectedIds.contains(item.id),
                   inSelectionMode: inSelectionMode,
+                  thumbEdge: thumbEdge,
                   onTap: inSelectionMode
                       ? () => _toggleSelect(item)
                       : () => _openMedia(item),
-                  onLongPress:
-                      inSelectionMode ? null : () => _startSelection(item),
+                  onLongPress: inSelectionMode
+                      ? null
+                      : () => _startSelection(item),
                 );
               },
               childCount: _items.length,
+              addAutomaticKeepAlives: false,
               addRepaintBoundaries: true,
+              findChildIndexCallback: (key) {
+                if (key is! ValueKey<int>) return null;
+                final id = key.value;
+                for (var i = 0; i < _items.length; i++) {
+                  if (_items[i].id == id) return i;
+                }
+                return null;
+              },
             ),
           ),
         ),
@@ -804,9 +929,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
               child: Center(child: CircularProgressIndicator()),
             ),
           ),
-        SliverPadding(
-          padding: EdgeInsets.only(bottom: navPadding.bottom),
-        ),
+        SliverPadding(padding: EdgeInsets.only(bottom: navPadding.bottom)),
       ],
     );
 
@@ -825,71 +948,114 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   }
 
   int _columnCount(BuildContext context) {
-    final base = _period.crossAxisCountForWidth(MediaQuery.sizeOf(context).width);
+    final base = _period.crossAxisCountForWidth(
+      MediaQuery.sizeOf(context).width,
+    );
     final gridSize = ref.watch(
       settingsProvider.select((s) => s.desktopGalleryGridSize),
     );
     return gridSize.adjustColumnCount(base);
   }
+}
 
-  List<Widget> _groupSlivers({
-    required ThemeData theme,
-    required MediaPeriodGroup group,
-    required int columns,
-    required EdgeInsets navPadding,
-    required bool inSelectionMode,
-  }) {
-    return [
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            OneUiSpacing.pageHorizontal,
-            OneUiSpacing.md,
-            OneUiSpacing.pageHorizontal,
-            OneUiSpacing.sm,
-          ),
+class _GallerySectionHeader extends StatelessWidget {
+  const _GallerySectionHeader({
+    super.key,
+    required this.label,
+    required this.extent,
+  });
+
+  final String label;
+  final double extent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: extent,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          OneUiSpacing.pageHorizontal,
+          OneUiSpacing.md,
+          OneUiSpacing.pageHorizontal,
+          OneUiSpacing.sm,
+        ),
+        child: Align(
+          alignment: Alignment.centerLeft,
           child: Text(
-            group.label,
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
       ),
-      SliverPadding(
+    );
+  }
+}
+
+class _GalleryTileRow extends StatelessWidget {
+  const _GalleryTileRow({
+    super.key,
+    required this.items,
+    required this.cellExtent,
+    required this.bottomGap,
+    required this.inSelectionMode,
+    required this.thumbEdge,
+    required this.tileKeyFor,
+    required this.selectedIds,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  final List<MediaItem> items;
+  final double cellExtent;
+  final double bottomGap;
+  final bool inSelectionMode;
+  final int thumbEdge;
+  final Key Function(int id) tileKeyFor;
+  final Set<int> selectedIds;
+  final void Function(MediaItem item) onTap;
+  final void Function(MediaItem item)? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: cellExtent + bottomGap,
+      child: Padding(
         padding: EdgeInsets.fromLTRB(
-          navPadding.left + 2,
+          GalleryTimelineLayout.horizontalInset,
           0,
-          navPadding.right + 2,
-          OneUiSpacing.sm,
+          GalleryTimelineLayout.horizontalInset,
+          bottomGap,
         ),
-        sliver: SliverGrid(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: 2,
-            mainAxisSpacing: 2,
-          ),
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final item = group.items[index];
-              return _GalleryTile(
-                key: _tileKeyFor(item.id),
-                item: item,
-                selected: _selectedIds.contains(item.id),
-                inSelectionMode: inSelectionMode,
-                onTap: inSelectionMode
-                    ? () => _toggleSelect(item)
-                    : () => _openMedia(item),
-                onLongPress:
-                    inSelectionMode ? null : () => _startSelection(item),
-              );
-            },
-            childCount: group.items.length,
-            addRepaintBoundaries: true,
-          ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < items.length; i++) ...[
+              if (i > 0) const SizedBox(width: GalleryTimelineLayout.tileGap),
+              SizedBox(
+                width: cellExtent,
+                height: cellExtent,
+                child: _GalleryTile(
+                  key: tileKeyFor(items[i].id),
+                  item: items[i],
+                  selected: selectedIds.contains(items[i].id),
+                  inSelectionMode: inSelectionMode,
+                  thumbEdge: thumbEdge,
+                  onTap: () => onTap(items[i]),
+                  onLongPress: onLongPress == null
+                      ? null
+                      : () => onLongPress!(items[i]),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
-    ];
+    );
   }
 }
 
@@ -899,6 +1065,7 @@ class _GalleryTile extends ConsumerWidget {
     required this.item,
     required this.selected,
     required this.inSelectionMode,
+    required this.thumbEdge,
     required this.onTap,
     this.onLongPress,
   });
@@ -906,6 +1073,7 @@ class _GalleryTile extends ConsumerWidget {
   final MediaItem item;
   final bool selected;
   final bool inSelectionMode;
+  final int thumbEdge;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -914,16 +1082,6 @@ class _GalleryTile extends ConsumerWidget {
     final syncingMediaId = usesFilesystemGallery
         ? null
         : ref.watch(desktopBackupProvider.select((s) => s.syncingMediaId));
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    // Approximate cell from screen; LayoutBuilder inside MediaThumbnail
-    // still clamps to the real painted width.
-    final approxCell = MediaQuery.sizeOf(context).width / 3;
-    final thumbEdge = thumbnailDecodeEdge(
-      logicalWidth: approxCell,
-      devicePixelRatio: dpr,
-      maxEdge: 320,
-    );
-
     return RepaintBoundary(
       child: PressableScale(
         enabled: onTap != null || onLongPress != null,
@@ -1000,9 +1158,7 @@ class _GalleryPinchPeriodListenerState
     if (_periodChangedThisGesture) return;
 
     final startDistance = _pinchStartDistance;
-    if (_pointers.length < 2 ||
-        startDistance == null ||
-        startDistance <= 0) {
+    if (_pointers.length < 2 || startDistance == null || startDistance <= 0) {
       return;
     }
 
