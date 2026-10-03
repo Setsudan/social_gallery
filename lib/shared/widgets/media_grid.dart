@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
@@ -101,9 +102,8 @@ class MediaGrid extends ConsumerWidget {
         return false;
       },
       child: GridView.builder(
-        controller: controller,
+        scrollCacheExtent: ScrollCacheExtent.pixels(kMediaGridCacheExtent), controller: controller,
         padding: padding,
-        cacheExtent: kMediaGridCacheExtent,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
           crossAxisSpacing: 2,
