@@ -92,7 +92,7 @@ class ExploreMosaicGrid extends ConsumerWidget {
           mainAxisExtent: approxBlockExtent,
           thumbnailEdge: prefetchEdge,
           context: context,
-          aheadCount: 48,
+          aheadCount: 20,
         );
         return false;
       },

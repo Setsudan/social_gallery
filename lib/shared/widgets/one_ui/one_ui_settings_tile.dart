@@ -174,6 +174,8 @@ class OneUiSettingsTile extends StatelessWidget {
 
     Widget? trailingWidget = trailing;
     if (trailingWidget == null && (value != null || (showChevron && canTap))) {
+      // Do not put Flexible inside a mainAxisSize.min Row: with no bounded
+      // flex budget the value Text gets maxWidth 0 and stacks characters.
       trailingWidget = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -221,6 +223,7 @@ class OneUiSettingsTile extends StatelessWidget {
                 const SizedBox(width: 14),
               ],
               Expanded(
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -245,7 +248,15 @@ class OneUiSettingsTile extends StatelessWidget {
               ),
               if (trailingWidget != null) ...[
                 const SizedBox(width: 8),
-                trailingWidget,
+                // Give the trailing row a bounded max width so long values
+                // (e.g. gesture mapping summaries) ellipsize horizontally.
+                Flexible(
+                  flex: 2,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: trailingWidget,
+                  ),
+                ),
               ],
             ],
           ),

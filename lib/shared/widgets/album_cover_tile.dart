@@ -6,7 +6,8 @@ import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 
 /// Session cache so album grids do not `stat` the same cover on every rebuild
-/// while scrolling. iOS photo ids are not file paths, so a miss is remembered too.
+/// while scrolling. Only local filesystem paths are checked; photo-manager
+/// asset ids are never treated as files.
 const int _kAlbumCoverExistsCacheLimit = 512;
 final Map<String, bool> _albumCoverExistsCache = <String, bool>{};
 
@@ -15,10 +16,25 @@ void debugResetAlbumCoverExistsCache() {
   _albumCoverExistsCache.clear();
 }
 
+String? albumCoverLocalFilePath(String uri) {
+  final trimmed = uri.trim();
+  if (trimmed.isEmpty) return null;
+
+  final path = trimmed.startsWith('file://')
+      ? Uri.parse(trimmed).toFilePath()
+      : trimmed;
+  final looksLikeFilePath =
+      path.startsWith('/') || (path.length > 2 && path[1] == ':');
+  if (!looksLikeFilePath) return null;
+  return path;
+}
+
 bool albumCoverUriIsLocalFile(String uri) {
   final cached = _albumCoverExistsCache[uri];
   if (cached != null) return cached;
-  final exists = File(uri).existsSync();
+
+  final path = albumCoverLocalFilePath(uri);
+  final exists = path != null && File(path).existsSync();
   if (_albumCoverExistsCache.length >= _kAlbumCoverExistsCacheLimit) {
     _albumCoverExistsCache.remove(_albumCoverExistsCache.keys.first);
   }
@@ -85,13 +101,13 @@ class AlbumCoverTile extends StatelessWidget {
   Widget _buildCover(BuildContext context) {
     final cover = coverUri?.trim();
     if (cover != null && cover.isNotEmpty && !locked) {
-      final file = File(cover);
-      if (albumCoverUriIsLocalFile(cover)) {
+      final localPath = albumCoverLocalFilePath(cover);
+      if (localPath != null && albumCoverUriIsLocalFile(cover)) {
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final cacheWidth = (200 * dpr).ceil().clamp(96, 800);
         return SizedBox.expand(
           child: Image.file(
-            file,
+            File(localPath),
             fit: BoxFit.cover,
             cacheWidth: cacheWidth,
             filterQuality: FilterQuality.low,
@@ -102,7 +118,9 @@ class AlbumCoverTile extends StatelessWidget {
         );
       }
 
-      return MediaThumbnail(assetId: cover);
+      // Photo-manager asset ids (and any non-file URI) must use MediaThumbnail.
+      // Never call File.existsSync on those — it is sync IO and can false-cache.
+      return SizedBox.expand(child: MediaThumbnail(assetId: cover));
     }
 
     return ColoredBox(

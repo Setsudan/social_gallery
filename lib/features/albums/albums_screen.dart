@@ -166,7 +166,9 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                       );
                     },
                     childCount: albums.length,
-                    addAutomaticKeepAlives: false,
+                    // Album counts are small; keep tiles alive so cover
+                    // MediaThumbnail futures are not cancelled while scrolling.
+                    addAutomaticKeepAlives: true,
                     addRepaintBoundaries: true,
                   ),
                 ),

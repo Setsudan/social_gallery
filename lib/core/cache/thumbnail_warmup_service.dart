@@ -7,7 +7,7 @@ import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 /// Pre-decodes recent thumbnails so the gallery feels instant on reopen.
 class ThumbnailWarmupService {
-  static const defaultWarmCount = 48;
+  static const defaultWarmCount = 24;
   static const _thumbnailEdge = 256;
 
   Future<void> warmAssetIds(
@@ -41,10 +41,9 @@ class ThumbnailWarmupService {
   Future<void> _warmWindowsFiles(List<String> paths) async {
     for (final path in paths) {
       try {
-        final file = File(path);
-        if (!file.existsSync()) continue;
+        final bytes = await File(path).readAsBytes();
         final codec = await ui.instantiateImageCodec(
-          await file.readAsBytes(),
+          bytes,
           targetWidth: _thumbnailEdge,
         );
         codec.dispose();

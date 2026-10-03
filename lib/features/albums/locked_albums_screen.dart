@@ -120,7 +120,7 @@ class LockedAlbumsScreen extends ConsumerWidget {
                       );
                     },
                     childCount: albums.length,
-                    addAutomaticKeepAlives: false,
+                    addAutomaticKeepAlives: true,
                     addRepaintBoundaries: true,
                   ),
                 ),

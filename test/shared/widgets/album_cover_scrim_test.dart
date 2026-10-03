@@ -41,4 +41,20 @@ void main() {
     file.writeAsStringSync('y');
     expect(albumCoverUriIsLocalFile(file.path), isFalse);
   });
+
+  test('photo-manager asset ids are never treated as local files', () {
+    debugResetAlbumCoverExistsCache();
+    addTearDown(debugResetAlbumCoverExistsCache);
+
+    expect(albumCoverLocalFilePath('1000000123'), isNull);
+    expect(albumCoverUriIsLocalFile('1000000123'), isFalse);
+    expect(
+      albumCoverLocalFilePath('ABCDEF12-3456-7890-ABCD-EF1234567890/L0/001'),
+      isNull,
+    );
+    expect(
+      albumCoverUriIsLocalFile('ABCDEF12-3456-7890-ABCD-EF1234567890/L0/001'),
+      isFalse,
+    );
+  });
 }

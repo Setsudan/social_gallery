@@ -450,11 +450,12 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 
   void _onScroll() {
     if (!mounted || !_scrollController.hasClients) return;
+    final position = _scrollController.position;
     final paginated = _isSearching
         ? ref.read(explorePaginatedProvider(_searchQuery))
         : ref.read(galleryPaginatedProvider);
     handlePaginatedScroll(
-      _scrollController.position,
+      position,
       isLoading: paginated.isLoading,
       hasMore: paginated.hasMore,
       loadMore: () {
@@ -466,26 +467,28 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       },
     );
 
+    // Prefetch is internally throttled; skip while the pointer is idle-settling
+    // micro-jitter near the same pixels to cut schedule churn.
     final timeline = _timeline;
     if (!_isSearching && timeline != null) {
       ThumbnailPrefetcher.instance.scheduleFromScroll(
         assetIds: _prefetchIds,
-        firstVisibleIndex: timeline.flatIndexAt(
-          _scrollController.position.pixels,
-        ),
+        firstVisibleIndex: timeline.flatIndexAt(position.pixels),
         thumbnailEdge: _thumbEdge,
         context: context,
+        aheadCount: 20,
       );
       return;
     }
 
     ThumbnailPrefetcher.instance.scheduleForGrid(
-      metrics: _scrollController.position,
+      metrics: position,
       assetIds: _prefetchIds,
       crossAxisCount: _columns,
       mainAxisExtent: _searchStride,
       thumbnailEdge: _thumbEdge,
       context: context,
+      aheadCount: 20,
     );
   }
 
