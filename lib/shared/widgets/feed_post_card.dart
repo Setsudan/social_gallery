@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
@@ -31,89 +32,120 @@ class FeedPostCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final media = item.media;
     final syncingMediaId = usesFilesystemGallery
         ? null
         : ref.watch(desktopBackupProvider.select((s) => s.syncingMediaId));
     final borderSide = BorderSide(color: theme.dividerColor);
+    final mediaKind = media.isVideo ? l10n.mediaKindVideo : l10n.mediaKindPhoto;
+    final cardLabel = l10n.feedPostSemanticLabel(
+      item.folderName,
+      mediaKind,
+      media.displayName,
+    );
 
     return RepaintBoundary(
       child: Padding(
         padding: const EdgeInsets.only(bottom: OneUiSpacing.sm),
-        child: DecoratedBox(
-          decoration: BoxDecoration(border: Border(top: borderSide)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PressableScale(
-                animatePress: false,
-                onTap: onFolderTap,
-                child: ListTile(
-                  leading: FolderAvatar(name: item.folderName),
-                  title: Text(
-                    item.folderName,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              AspectRatio(
-                aspectRatio: 1,
-                child: PressableScale(
-                  animatePress: false,
-                  onTap: onMediaTap,
-                  onDoubleTap: onFavoriteTap,
-                  child: MediaThumbnail(
-                    assetId: media.uri,
-                    showVideoBadge: media.isVideo,
-                    maxThumbnailEdge: thumbnailDecodeEdge(
-                      logicalWidth: MediaQuery.sizeOf(context).width,
-                      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-                      minEdge: 320,
-                      maxEdge: 720,
-                    ),
-                    heroTag: mediaHeroTag(media.id),
-                    backupState: visibleBackupState(
-                      media,
-                      syncingMediaId: syncingMediaId,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  children: [
-                    PressableScale(
-                      scale: 0.88,
-                      onTap: onFavoriteTap,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          media.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: media.isFavorite ? Colors.red : null,
+        child: Semantics(
+          container: true,
+          explicitChildNodes: true,
+          label: cardLabel,
+          child: DecoratedBox(
+            decoration: BoxDecoration(border: Border(top: borderSide)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Semantics(
+                  button: true,
+                  label: l10n.feedPostOpenFolderSemanticLabel(item.folderName),
+                  child: PressableScale(
+                    animatePress: false,
+                    onTap: onFolderTap,
+                    child: ListTile(
+                      leading: FolderAvatar(name: item.folderName),
+                      title: Text(
+                        item.folderName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    PressableScale(
-                      scale: 0.88,
-                      onTap: onShareTap,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.share_outlined,
-                          color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: Semantics(
+                    button: true,
+                    label: l10n.feedPostOpenMediaSemanticLabel(mediaKind),
+                    hint: l10n.feedPostDoubleTapFavoriteHint,
+                    child: PressableScale(
+                      animatePress: false,
+                      onTap: onMediaTap,
+                      onDoubleTap: onFavoriteTap,
+                      child: MediaThumbnail(
+                        assetId: media.uri,
+                        showVideoBadge: media.isVideo,
+                        maxThumbnailEdge: thumbnailDecodeEdge(
+                          logicalWidth: MediaQuery.sizeOf(context).width,
+                          devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                          minEdge: 320,
+                          maxEdge: 720,
+                        ),
+                        heroTag: mediaHeroTag(media.id),
+                        backupState: visibleBackupState(
+                          media,
+                          syncingMediaId: syncingMediaId,
                         ),
                       ),
                     ),
-                    const Spacer(),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    children: [
+                      Semantics(
+                        button: true,
+                        label: media.isFavorite
+                            ? l10n.tooltipUnfavoriteSelected
+                            : l10n.tooltipFavorite,
+                        child: PressableScale(
+                          scale: 0.88,
+                          onTap: onFavoriteTap,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              media.isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: media.isFavorite ? Colors.red : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Semantics(
+                        button: true,
+                        label: l10n.tooltipShare,
+                        child: PressableScale(
+                          scale: 0.88,
+                          onTap: onShareTap,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.share_outlined,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

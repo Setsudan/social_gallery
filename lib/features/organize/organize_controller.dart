@@ -76,21 +76,32 @@ class OrganizeController extends StateNotifier<OrganizeState> {
     }
   }
 
-  Future<void> applySwipe(OrganizeSwipeDirection direction) async {
+  /// Applies the user-mapped action for [direction].
+  ///
+  /// Returns [OrganizeSwipeAction.move] when the UI should open a folder
+  /// picker (non-strip move). Returns `null` when nothing was applied.
+  Future<OrganizeSwipeAction?> applySwipe(OrganizeSwipeDirection direction) async {
     final current = state.currentCard;
-    if (current == null) return;
-    if (direction == OrganizeSwipeDirection.down) return;
+    if (current == null) return null;
+
+    final mapping = _ref.read(settingsProvider).organizeGestureMapping;
+    final action = mapping.actionFor(direction);
+    if (action == OrganizeSwipeAction.move) {
+      // Folder-strip drop handles move for the mapped move direction when
+      // that direction is down; other directions need a folder picker.
+      return OrganizeSwipeAction.move;
+    }
 
     final organizeRepo = _ref.read(organizeRepositoryProvider);
     final mediaRepo = _ref.read(mediaRepositoryProvider);
     final wasFavorite = current.isFavorite;
 
-    switch (direction) {
-      case OrganizeSwipeDirection.left:
+    switch (action) {
+      case OrganizeSwipeAction.trash:
         _undoStack.add(
           OrganizeUndoAction(type: OrganizeUndoType.trash, mediaId: current.id),
         );
-      case OrganizeSwipeDirection.right:
+      case OrganizeSwipeAction.favorite:
         _undoStack.add(
           OrganizeUndoAction(
             type: OrganizeUndoType.like,
@@ -98,19 +109,19 @@ class OrganizeController extends StateNotifier<OrganizeState> {
             wasFavorite: wasFavorite,
           ),
         );
-      case OrganizeSwipeDirection.up:
+      case OrganizeSwipeAction.keep:
         _undoStack.add(
           OrganizeUndoAction(type: OrganizeUndoType.keep, mediaId: current.id),
         );
-      case OrganizeSwipeDirection.down:
-        return;
+      case OrganizeSwipeAction.move:
+        return OrganizeSwipeAction.move;
     }
 
     _advanceCard();
 
     _enqueuePersist(() async {
-      switch (direction) {
-        case OrganizeSwipeDirection.left:
+      switch (action) {
+        case OrganizeSwipeAction.trash:
           await organizeRepo.addPendingTrash(current.id);
           await organizeRepo.addProcessed(current.id);
           await organizeRepo.updateStats(
@@ -124,7 +135,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
               stats: organizeRepo.stats,
             );
           }
-        case OrganizeSwipeDirection.right:
+        case OrganizeSwipeAction.favorite:
           await mediaRepo.setFavorite(current.id, true);
           await organizeRepo.addProcessed(current.id);
           await organizeRepo.updateStats(
@@ -136,7 +147,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
           if (mounted) {
             state = state.copyWith(stats: organizeRepo.stats);
           }
-        case OrganizeSwipeDirection.up:
+        case OrganizeSwipeAction.keep:
           await organizeRepo.addProcessed(current.id);
           await organizeRepo.updateStats(
             organizeRepo.stats.copyWith(
@@ -146,10 +157,11 @@ class OrganizeController extends StateNotifier<OrganizeState> {
           if (mounted) {
             state = state.copyWith(stats: organizeRepo.stats);
           }
-        case OrganizeSwipeDirection.down:
+        case OrganizeSwipeAction.move:
           break;
       }
     });
+    return action;
   }
 
   /// Advances the card immediately, then moves media in the background.

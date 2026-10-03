@@ -165,3 +165,147 @@ class OrganizeState {
     );
   }
 }
+
+/// Action performed when the user completes an organize swipe.
+enum OrganizeSwipeAction { trash, favorite, keep, move }
+
+extension OrganizeSwipeActionStorage on OrganizeSwipeAction {
+  String get storageValue => name;
+
+  static OrganizeSwipeAction fromStorage(String? value) {
+    return switch (value) {
+      'trash' => OrganizeSwipeAction.trash,
+      'favorite' => OrganizeSwipeAction.favorite,
+      'keep' => OrganizeSwipeAction.keep,
+      'move' => OrganizeSwipeAction.move,
+      _ => OrganizeSwipeAction.trash,
+    };
+  }
+}
+
+/// User-configurable mapping from swipe direction to organize action.
+///
+/// Defaults match historical behavior: left trash, right favorite, up keep,
+/// down move (folder strip).
+class OrganizeGestureMapping {
+  const OrganizeGestureMapping({
+    required this.left,
+    required this.right,
+    required this.up,
+    required this.down,
+  });
+
+  final OrganizeSwipeAction left;
+  final OrganizeSwipeAction right;
+  final OrganizeSwipeAction up;
+  final OrganizeSwipeAction down;
+
+  static const defaults = OrganizeGestureMapping(
+    left: OrganizeSwipeAction.trash,
+    right: OrganizeSwipeAction.favorite,
+    up: OrganizeSwipeAction.keep,
+    down: OrganizeSwipeAction.move,
+  );
+
+  /// True when each swipe direction maps to a distinct action.
+  bool get isBijective {
+    final actions = {left, right, up, down};
+    return actions.length == OrganizeSwipeAction.values.length;
+  }
+
+  /// Returns [mapping] when bijective, otherwise [defaults].
+  static OrganizeGestureMapping ensureBijective(
+    OrganizeGestureMapping mapping,
+  ) {
+    return mapping.isBijective ? mapping : defaults;
+  }
+
+  OrganizeSwipeAction actionFor(OrganizeSwipeDirection direction) {
+    return switch (direction) {
+      OrganizeSwipeDirection.left => left,
+      OrganizeSwipeDirection.right => right,
+      OrganizeSwipeDirection.up => up,
+      OrganizeSwipeDirection.down => down,
+    };
+  }
+
+  OrganizeSwipeDirection? directionFor(OrganizeSwipeAction action) {
+    if (left == action) return OrganizeSwipeDirection.left;
+    if (right == action) return OrganizeSwipeDirection.right;
+    if (up == action) return OrganizeSwipeDirection.up;
+    if (down == action) return OrganizeSwipeDirection.down;
+    return null;
+  }
+
+  OrganizeGestureMapping copyWith({
+    OrganizeSwipeAction? left,
+    OrganizeSwipeAction? right,
+    OrganizeSwipeAction? up,
+    OrganizeSwipeAction? down,
+  }) {
+    return OrganizeGestureMapping(
+      left: left ?? this.left,
+      right: right ?? this.right,
+      up: up ?? this.up,
+      down: down ?? this.down,
+    );
+  }
+
+  /// Remap [direction] to [action], swapping if [action] was already assigned.
+  OrganizeGestureMapping remap(
+    OrganizeSwipeDirection direction,
+    OrganizeSwipeAction action,
+  ) {
+    final current = actionFor(direction);
+    if (current == action) return this;
+
+    var next = copyWith();
+    final previousOwner = directionFor(action);
+    next = switch (direction) {
+      OrganizeSwipeDirection.left => next.copyWith(left: action),
+      OrganizeSwipeDirection.right => next.copyWith(right: action),
+      OrganizeSwipeDirection.up => next.copyWith(up: action),
+      OrganizeSwipeDirection.down => next.copyWith(down: action),
+    };
+    if (previousOwner != null && previousOwner != direction) {
+      next = switch (previousOwner) {
+        OrganizeSwipeDirection.left => next.copyWith(left: current),
+        OrganizeSwipeDirection.right => next.copyWith(right: current),
+        OrganizeSwipeDirection.up => next.copyWith(up: current),
+        OrganizeSwipeDirection.down => next.copyWith(down: current),
+      };
+    }
+    return next;
+  }
+
+  Map<String, String> toJson() => {
+        'left': left.storageValue,
+        'right': right.storageValue,
+        'up': up.storageValue,
+        'down': down.storageValue,
+      };
+
+  static OrganizeGestureMapping fromJson(Map<String, dynamic>? json) {
+    if (json == null) return defaults;
+    return ensureBijective(
+      OrganizeGestureMapping(
+        left: OrganizeSwipeActionStorage.fromStorage(json['left'] as String?),
+        right: OrganizeSwipeActionStorage.fromStorage(json['right'] as String?),
+        up: OrganizeSwipeActionStorage.fromStorage(json['up'] as String?),
+        down: OrganizeSwipeActionStorage.fromStorage(json['down'] as String?),
+      ),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is OrganizeGestureMapping &&
+        other.left == left &&
+        other.right == right &&
+        other.up == up &&
+        other.down == down;
+  }
+
+  @override
+  int get hashCode => Object.hash(left, right, up, down);
+}

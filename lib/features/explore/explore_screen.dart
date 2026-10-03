@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/domain/models/desktop_gallery_grid_size.dart';
 import 'package:social_gallery/app/router.dart';
 import 'package:social_gallery/core/analysis/media_tagging_controller.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
@@ -400,8 +401,16 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
     final width = MediaQuery.sizeOf(context).width;
     final isDesktop = width > 800 || usesFilesystemGallery;
+    final gridDensity = ref.watch(
+      settingsProvider.select((s) => s.desktopGalleryGridSize),
+    );
+    // Density applies via [MediaGrid] on desktop and whenever the user picks
+    // compact/large. Mosaic is the intentional mobile "comfortable" layout and
+    // only used while density stays at the standard/comfortable setting.
+    final useUniformGrid =
+        isDesktop || gridDensity != DesktopGalleryGridSize.standard;
 
-    final Widget grid = isDesktop
+    final Widget grid = useUniformGrid
         ? MediaGrid(
             controller: _scrollController,
             items: _items,
