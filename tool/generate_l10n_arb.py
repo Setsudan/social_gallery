@@ -1062,6 +1062,15 @@ def build_arb(strings: dict, locale: str | None = None) -> dict:
     return arb
 
 
+def _restore_french_accents() -> None:
+    """FR_STRINGS are historically ASCII-folded; restore accents after write."""
+    import runpy
+
+    tool_dir = Path(__file__).resolve().parent
+    runpy.run_path(str(tool_dir / "fix_fr_accents.py"), run_name="__main__")
+    runpy.run_path(str(tool_dir / "fix_fr_accents_pass2.py"), run_name="__main__")
+
+
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     en_arb = build_arb(EN_STRINGS, "en")
@@ -1075,8 +1084,11 @@ def main():
         print("WARNING: missing FR keys:", missing_fr)
     with open(ROOT / "app_en.arb", "w", encoding="utf-8") as f:
         json.dump(en_arb, f, ensure_ascii=False, indent=2)
+        f.write("\n")
     with open(ROOT / "app_fr.arb", "w", encoding="utf-8") as f:
         json.dump(fr_arb, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    _restore_french_accents()
     print(f"Generated {len(EN_STRINGS)} keys")
 
 

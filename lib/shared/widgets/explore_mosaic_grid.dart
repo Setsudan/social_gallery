@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/media/thumbnail_decode.dart';
@@ -91,14 +92,13 @@ class ExploreMosaicGrid extends ConsumerWidget {
           mainAxisExtent: approxBlockExtent,
           thumbnailEdge: prefetchEdge,
           context: context,
-          aheadCount: 48,
+          aheadCount: 20,
         );
         return false;
       },
       child: ListView.builder(
-        controller: controller,
+        scrollCacheExtent: ScrollCacheExtent.pixels(kMediaGridCacheExtent), controller: controller,
         padding: padding,
-        cacheExtent: kMediaGridCacheExtent,
         addAutomaticKeepAlives: false,
         itemCount: listItemCount,
         itemBuilder: (context, blockIndex) {

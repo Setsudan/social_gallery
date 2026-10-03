@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
@@ -18,10 +17,12 @@ class ThumbnailPrefetcher {
 
   static final ThumbnailPrefetcher instance = ThumbnailPrefetcher._();
 
-  static const int defaultAheadCount = 36;
-  static const int defaultBehindCount = 12;
-  static const Duration _throttle = Duration(milliseconds: 80);
-  static const int _warmedCap = 512;
+  // Keep ahead windows modest: larger values decode far off-screen thumbs on
+  // the UI isolate and compete with visible tiles during flings.
+  static const int defaultAheadCount = 16;
+  static const int defaultBehindCount = 6;
+  static const Duration _throttle = Duration(milliseconds: 120);
+  static const int _warmedCap = 384;
 
   bool _running = false;
   Timer? _throttleTimer;
@@ -143,14 +144,13 @@ class ThumbnailPrefetcher {
           if (_warmed.contains(key)) continue;
 
           try {
-            await _warmOne(id, edge: edge, context: context);
+            // Re-read pending context each item; it may be cleared after awaits.
+            await _warmOne(id, edge: edge, context: _pendingContext ?? context);
             _markWarmed(key);
           } catch (_) {}
 
-          // Yield every other item so input stays responsive.
-          if (i.isOdd) {
-            await Future<void>.delayed(Duration.zero);
-          }
+          // Yield after every item so scroll input stays responsive.
+          await Future<void>.delayed(Duration.zero);
         }
       }
     } finally {
@@ -177,8 +177,6 @@ class ThumbnailPrefetcher {
     BuildContext? context,
   }) async {
     if (usesFilesystemGallery) {
-      final file = File(assetId);
-      if (!file.existsSync()) return;
       final lower = assetId.toLowerCase();
       if (lower.endsWith('.mp4') ||
           lower.endsWith('.mov') ||
@@ -187,10 +185,11 @@ class ThumbnailPrefetcher {
           lower.endsWith('.avi')) {
         return;
       }
+      // Avoid existsSync on the UI isolate during scroll-driven warm.
       final provider = ResizeImage.resizeIfNeeded(
         edge,
         null,
-        FileImage(file),
+        FileImage(File(assetId)),
       );
       if (context != null && context.mounted) {
         await precacheImage(provider, context);

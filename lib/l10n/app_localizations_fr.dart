@@ -27,25 +27,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get actionApply => 'Appliquer';
 
   @override
-  String get actionReset => 'Reinitialiser';
+  String get actionReset => 'Réinitialiser';
 
   @override
   String get actionKeep => 'Conserver';
 
   @override
-  String get actionUnlock => 'Deverrouiller';
+  String get actionUnlock => 'Déverrouiller';
 
   @override
   String get actionClear => 'Effacer';
 
   @override
-  String get actionOpenSettings => 'Ouvrir les parametres';
+  String get actionOpenSettings => 'Ouvrir les paramètres';
 
   @override
   String get actionGoBack => 'Retour';
 
   @override
-  String get valueNotSet => 'Non defini';
+  String get valueNotSet => 'Non défini';
 
   @override
   String get errorGeneric => 'Erreur';
@@ -54,7 +54,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get errorCouldNotLoad => 'Impossible de charger';
 
   @override
-  String get errorMediaNotFound => 'Media introuvable';
+  String get errorMediaNotFound => 'Média introuvable';
 
   @override
   String get errorFolderNotFound => 'Dossier introuvable';
@@ -64,7 +64,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String errorFailedToSelectFolder(String error) {
-    return 'Echec de la selection du dossier : $error';
+    return 'Échec de la sélection du dossier : $error';
   }
 
   @override
@@ -88,16 +88,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navAlbums => 'Albums';
 
   @override
-  String get navDiscover => 'Decouvrir';
+  String get navDiscover => 'Découvrir';
 
   @override
-  String get navLockedAlbums => 'Albums verrouilles';
+  String get navLockedAlbums => 'Albums verrouillés';
 
   @override
-  String get navSettings => 'Parametres';
+  String get navSettings => 'Paramètres';
 
   @override
-  String get settingsTitle => 'Parametres';
+  String get settingsTitle => 'Paramètres';
 
   @override
   String get settingsSectionAppearance => 'Apparence';
@@ -115,29 +115,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsSectionStorage => 'Stockage';
 
   @override
-  String get settingsSectionAbout => 'A propos';
+  String get settingsSectionAbout => 'À propos';
 
   @override
   String get settingsLanguage => 'Langue';
 
   @override
-  String get settingsLanguageSystem => 'Langue du systeme';
+  String get settingsLanguageSystem => 'Langue du système';
 
   @override
   String get settingsLanguageEnglish => 'Anglais';
 
   @override
-  String get settingsLanguageFrench => 'Francais';
+  String get settingsLanguageFrench => 'Français';
 
   @override
-  String get settingsTheme => 'Theme';
+  String get settingsTheme => 'Thème';
 
   @override
   String get settingsAccentColor => 'Couleur d\'accent';
 
   @override
   String get settingsAccentColorDescription =>
-      'Choisissez la couleur utilisee pour les boutons, liens et surlignages.';
+      'Choisissez la couleur utilisée pour les boutons, liens et surlignages.';
 
   @override
   String get settingsFontSize => 'Taille du texte';
@@ -151,14 +151,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsAnimationSpeedDescription =>
-      'Previsualisez la vitesse des transitions dans l\'application.';
+      'Prévisualisez la vitesse des transitions dans l\'application.';
 
   @override
   String get settingsGalleryRootFolder => 'Dossier racine de la galerie';
 
   @override
   String get settingsGalleryRootFolderEmptySubtitle =>
-      'Choisissez un dossier a analyser pour les photos et videos';
+      'Choisissez un dossier à analyser pour les photos et vidéos';
 
   @override
   String get settingsGalleryGridSize => 'Taille de la grille';
@@ -171,18 +171,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Onglet galerie avec pincement au lieu d\'Accueil et Explorer';
 
   @override
-  String get settingsManageContent => 'Gerer le contenu';
+  String get settingsManageContent => 'Gérer le contenu';
 
   @override
   String get settingsManageContentSubtitle =>
-      'Dossiers, fil d\'accueil et visibilite';
+      'Dossiers, fil d\'accueil et visibilité';
 
   @override
   String get settingsTravelMode => 'Mode voyage';
 
   @override
   String get settingsTravelModeSubtitle =>
-      'Voyages et organisation par periode';
+      'Voyages et organisation par période';
 
   @override
   String get settingsBatchSize => 'Taille du lot';
@@ -200,18 +200,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsQueueOrder => 'Ordre de la file';
 
   @override
-  String get settingsReleaseKeptPhotos => 'Remettre les photos conservees';
+  String get settingsReleaseKeptPhotos => 'Remettre les photos conservées';
 
   @override
   String get settingsReleaseKeptPhotosSubtitle =>
       'Remettre les photos traitees dans la file d\'organisation';
 
   @override
-  String get settingsTrashRetention => 'Retention de la corbeille';
+  String get settingsTrashRetention => 'Rétention de la corbeille';
 
   @override
   String get settingsTrashRetentionDescription =>
-      'Les elements de la corbeille sont supprimes definitivement apres cette periode.';
+      'Les éléments de la corbeille sont supprimés définitivement après cette période.';
 
   @override
   String settingsTrashRetentionDays(int days) {
@@ -219,7 +219,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get settingsDeletedItems => 'Elements supprimes';
+  String get settingsDeletedItems => 'Éléments supprimés';
 
   @override
   String get settingsDeletedItemsSubtitle =>
@@ -233,7 +233,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsCacheSizeLimitDescription =>
-      'Stockage maximal utilise par les miniatures et fichiers temporaires.';
+      'Stockage maximal utilisé par les miniatures et fichiers temporaires.';
 
   @override
   String settingsCacheSizeLimitValue(int limitMb) {
@@ -241,17 +241,17 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get settingsAutoClearOnClose => 'Effacer a la fermeture';
+  String get settingsAutoClearOnClose => 'Effacer à la fermeture';
 
   @override
   String get settingsAutoClearOnCloseSubtitle =>
-      'Effacer le cache lorsque l\'application est fermee';
+      'Effacer le cache lorsque l\'application est fermée';
 
   @override
   String get settingsVersion => 'Version';
 
   @override
-  String get settingsPrivacyPolicy => 'Politique de confidentialite';
+  String get settingsPrivacyPolicy => 'Politique de confidentialité';
 
   @override
   String get settingsOpenSourceLicenses => 'Licences open source';
@@ -261,7 +261,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsShareAppMessage =>
-      'Decouvrez Social Gallery - une galerie photo locale.';
+      'Découvrez Social Gallery - une galerie photo locale.';
 
   @override
   String get dialogClearCacheTitle => 'Effacer le cache';
@@ -272,18 +272,18 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get snackbarCacheCleared => 'Cache efface';
+  String get snackbarCacheCleared => 'Cache effacé';
 
   @override
-  String get snackbarReleasedKeptPhotos => 'Photos conservees remises en file';
+  String get snackbarReleasedKeptPhotos => 'Photos conservées remises en file';
 
   @override
   String get snackbarGalleryRootUpdated =>
-      'Dossier racine mis a jour. Reanalyse de la bibliotheque.';
+      'Dossier racine mis à jour. Réanalyse de la bibliothèque.';
 
   @override
   String get dialogSelectRootGalleryFolder =>
-      'Selectionner le dossier racine de la galerie';
+      'Sélectionner le dossier racine de la galerie';
 
   @override
   String get debugBuildTitle => 'Version de debug';
@@ -293,7 +293,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce n\'est pas une version de production et elle peut contenir des erreurs.';
 
   @override
-  String get themeSystemDefault => 'Systeme';
+  String get themeSystemDefault => 'Système';
 
   @override
   String get themeLight => 'Clair';
@@ -358,10 +358,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fontSizeLarge => 'Grand';
 
   @override
-  String get fontSizeExtraLarge => 'Tres grand';
+  String get fontSizeExtraLarge => 'Très grand';
 
   @override
-  String get animationSpeedInstant => 'Instantane';
+  String get animationSpeedInstant => 'Instantané';
 
   @override
   String get animationSpeedFast => 'Rapide';
@@ -373,7 +373,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get animationSpeedSlow => 'Lent';
 
   @override
-  String get queueOrderRandom => 'Aleatoire';
+  String get queueOrderRandom => 'Aléatoire';
 
   @override
   String get queueOrderChronological => 'Chronologique';
@@ -392,60 +392,60 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingWelcomeBody =>
-      'Vos photos restent sur votre appareil. Configurez quelques preferences et nous indexerons votre bibliotheque en arriere-plan.';
+      'Vos photos restent sur votre appareil. Configurez quelques préférences et nous indexerons votre bibliothèque en arrière-plan.';
 
   @override
   String get onboardingPermissionsHeader => 'Autorisations';
 
   @override
   String get onboardingPermissionsSubtitle =>
-      'Autorisez l\'acces pour analyser vos albums.';
+      'Autorisez l\'accès pour analyser vos albums.';
 
   @override
   String get onboardingSelectGalleryFolderTitle =>
-      'Selectionner le dossier de la galerie';
+      'Sélectionner le dossier de la galerie';
 
   @override
   String get onboardingSelectGalleryFolderMessage =>
-      'Choisissez un dossier sur votre ordinateur pour analyser les photos et videos.';
+      'Choisissez un dossier sur votre ordinateur pour analyser les photos et vidéos.';
 
   @override
   String get onboardingChooseFolder => 'Choisir un dossier';
 
   @override
   String get onboardingAllFilesAccessTitle =>
-      'Acces a tous les fichiers (optionnel)';
+      'Accès à tous les fichiers (optionnel)';
 
   @override
   String get onboardingAllFilesAccessMessage =>
-      'Sur Android 11+, accordez l\'acces a tous les fichiers pour deplacer ou supprimer des elements entre albums. Vous pouvez passer et l\'accorder plus tard.';
+      'Sur Android 11+, accordez l\'accès à tous les fichiers pour déplacer ou supprimer des éléments entre albums. Vous pouvez passer et l\'accorder plus tard.';
 
   @override
-  String get onboardingGrantAccess => 'Accorder l\'acces';
+  String get onboardingGrantAccess => 'Accorder l\'accès';
 
   @override
   String get onboardingContinueWithout => 'Continuer sans';
 
   @override
-  String get onboardingPhotosAccessTitle => 'Acces aux photos requis';
+  String get onboardingPhotosAccessTitle => 'Accès aux photos requis';
 
   @override
   String get onboardingPhotosAccessMessage =>
-      'Social Gallery a besoin d\'acceder a vos photos et videos pour construire votre bibliotheque.';
+      'Social Gallery a besoin d\'accéder à vos photos et vidéos pour construire votre bibliothèque.';
 
   @override
   String get onboardingGrantPermission => 'Accorder l\'autorisation';
 
   @override
-  String get onboardingAccessGrantedTitle => 'Acces accorde';
+  String get onboardingAccessGrantedTitle => 'Accès accordé';
 
   @override
   String get onboardingAccessGrantedLimitedMessage =>
-      'Acces photo limite active. Votre bibliotheque s\'indexe en arriere-plan.';
+      'Accès photo limité activé. Votre bibliothèque s\'indexé en arrière-plan.';
 
   @override
   String get onboardingAccessGrantedFullMessage =>
-      'Votre bibliotheque s\'indexe en arriere-plan pendant que vous terminez la configuration.';
+      'Votre bibliothèque s\'indexé en arrière-plan pendant que vous terminez la configuration.';
 
   @override
   String get onboardingGallerySyncRunning =>
@@ -453,14 +453,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingLocationScanRunning =>
-      'Indexation des lieux photo en arriere-plan';
+      'Indexation des lieux photo en arrière-plan';
 
   @override
   String get onboardingChooseLanguageTitle => 'Choisir votre langue';
 
   @override
   String get onboardingChooseLanguageSubtitle =>
-      'Selectionnez la langue utilisee dans Social Gallery. Vous pourrez la modifier plus tard dans les parametres.';
+      'Sélectionnez la langue utilisée dans Social Gallery. Vous pourrez la modifier plus tard dans les paramètres.';
 
   @override
   String get onboardingChooseThemeTitle => 'Choisir un theme';
@@ -474,14 +474,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingAccentAndTextSubtitle =>
-      'Ajustez les couleurs et la lisibilite.';
+      'Ajustez les couleurs et la lisibilité.';
 
   @override
   String get onboardingViewModeTitle => 'Galerie ou social ?';
 
   @override
   String get onboardingViewModeSubtitle =>
-      'Choisissez votre style de navigation par defaut.';
+      'Choisissez votre style de navigation par défaut.';
 
   @override
   String get onboardingSocialStyleTitle => 'Style social';
@@ -499,30 +499,30 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingViewModeHint =>
-      'Vous pouvez changer de mode a tout moment dans les Parametres.';
+      'Vous pouvez changer de mode à tout moment dans les Paramètres.';
 
   @override
   String get onboardingYourFoldersTitle => 'Vos dossiers';
 
   @override
   String get onboardingYourFoldersSubtitleIndexing =>
-      'L\'indexation est en cours. Vous pourrez ajuster les dossiers plus tard dans les Parametres.';
+      'L\'indexation est en cours. Vous pourrez ajuster les dossiers plus tard dans les Paramètres.';
 
   @override
   String get onboardingYourFoldersSubtitleChoose =>
-      'Choisissez ce qui apparait sur le fil d\'accueil, en compte uniquement ou masque.';
+      'Choisissez ce qui apparaît sur le fil d\'accueil, en compte uniquement ou masqué.';
 
   @override
   String get onboardingNoFoldersYet =>
-      'Aucun dossier trouve. Appuyez sur Commencer pour entrer dans l\'application pendant la synchronisation.';
+      'Aucun dossier trouvé. Appuyez sur Commencer pour entrer dans l\'application pendant la synchronisation.';
 
   @override
   String folderItemCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count elements',
-      one: '1 element',
+      other: '$count éléments',
+      one: '1 élément',
     );
     return '$_temp0';
   }
@@ -546,31 +546,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get folderVisibilityAccountOnly => 'Compte uniquement';
 
   @override
-  String get folderVisibilityAccountLocked => 'Compte uniquement (verrouille)';
+  String get folderVisibilityAccountLocked => 'Compte uniquement (verrouillé)';
 
   @override
-  String get folderVisibilityHidden => 'Masque';
+  String get folderVisibilityHidden => 'Masqué';
 
   @override
   String get discoverBurstsTitle => 'Rafales';
 
   @override
   String get discoverBurstsMessage =>
-      'La detection de rafales n\'est pas encore disponible. Cet ecran regroupera les prises en rafale.';
+      'La détection de rafales n\'est pas encore disponible. Cet écran regroupera les prises en rafale.';
 
   @override
   String get discoverSuggestionsTitle => 'Suggestions intelligentes';
 
   @override
   String get discoverSuggestionsMessage =>
-      'Les suggestions mettront en avant des albums et des idees de nettoyage selon votre bibliotheque.';
+      'Les suggestions mettront en avant des albums et des idées de nettoyage selon votre bibliothèque.';
 
   @override
   String get discoverLocationsTitle => 'Lieux';
 
   @override
   String get discoverLocationsMessage =>
-      'Parcourez vos photos regroupees par lieu sur une carte ou en albums.';
+      'Parcourez vos photos regroupées par lieu sur une carte ou en albums.';
 
   @override
   String get locationsTabPlaces => 'Lieux';
@@ -585,7 +585,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get locationsIndexingPreparing =>
-      'Preparation de l\'index des lieux...';
+      'Préparation de l\'index des lieux...';
 
   @override
   String get locationsBackfillPreparing => 'Lecture du GPS des photos...';
@@ -596,11 +596,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get locationsEmptyTitle => 'Aucune photo geolocalisee';
+  String get locationsEmptyTitle => 'Aucune photo géolocalisée';
 
   @override
   String get locationsEmptyMessage =>
-      'Les photos avec des donnees GPS de votre appareil photo apparaitront ici apres la prochaine synchronisation.';
+      'Les photos avec des données GPS de votre appareil photo apparaîtront ici après la prochaine synchronisation.';
 
   @override
   String locationsPhotoCount(int count) {
@@ -615,7 +615,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String locationsGeotaggedBadge(int count) {
-    return '$count geolocalisees';
+    return '$count géolocalisées';
   }
 
   @override
@@ -623,7 +623,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get locationsErrorMessage =>
-      'Un probleme est survenu lors de la resolution des lieux de vos photos. Reessayez plus tard.';
+      'Un problème est survenu lors de la résolution des lieux de vos photos. Réessayez plus tard.';
 
   @override
   String get homeErrorLoadFeed => 'Impossible de charger le fil';
@@ -633,23 +633,23 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeEmptyMessage =>
-      'Ajoutez des dossiers au fil d\'accueil dans Gerer le contenu.';
+      'Ajoutez des dossiers au fil d\'accueil dans Gérer le contenu.';
 
   @override
   String get snackbarCameraCaptureComingSoon =>
-      'Capture photo bientot disponible';
+      'Capture photo bientôt disponible';
 
   @override
-  String get tooltipSearchGallery => 'Rechercher photos et videos';
+  String get tooltipSearchGallery => 'Rechercher photos et vidéos';
 
   @override
   String get galleryErrorLoad => 'Impossible de charger la galerie';
 
   @override
-  String get galleryEmptySearchTitle => 'Aucun media trouve';
+  String get galleryEmptySearchTitle => 'Aucun média trouvé';
 
   @override
-  String get galleryEmptyTitle => 'Aucun media';
+  String get galleryEmptyTitle => 'Aucun média';
 
   @override
   String get galleryEmptySearchMessage =>
@@ -657,16 +657,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get galleryEmptyMessage =>
-      'Synchronisez votre bibliotheque pour voir vos photos et videos ici.';
+      'Synchronisez votre bibliothèque pour voir vos photos et vidéos ici.';
 
   @override
   String get tooltipSearch => 'Rechercher';
 
   @override
-  String get exploreErrorLoad => 'Impossible de charger la bibliotheque';
+  String get exploreErrorLoad => 'Impossible de charger la bibliothèque';
 
   @override
-  String get exploreEmptyTitle => 'Aucun media trouve';
+  String get exploreEmptyTitle => 'Aucun média trouvé';
 
   @override
   String get exploreEmptyMessageNoSearch =>
@@ -684,13 +684,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun album correspondant. Essayez un nom de photo ou de dossier.';
 
   @override
-  String get searchRecentSearches => 'Recherches recentes';
+  String get searchRecentSearches => 'Recherches récentes';
 
   @override
   String get searchClearAll => 'Tout effacer';
 
   @override
-  String get searchHint => 'Rechercher photos, videos, objets ou couleurs';
+  String get searchHint => 'Rechercher photos, vidéos, objets ou couleurs';
 
   @override
   String get searchObjectsAndAnimals => 'Objets et animaux';
@@ -705,7 +705,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get exploreEmptyMessageIndexing =>
-      'Les photos sont encore indexees pour la recherche. Reessayez dans un instant.';
+      'Les photos sont encore indexées pour la recherche. Réessayez dans un instant.';
 
   @override
   String get searchChipCat => 'Chat';
@@ -787,7 +787,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tooltipClearSearch => 'Effacer la recherche';
 
   @override
-  String get tooltipLockedAlbums => 'Albums verrouilles';
+  String get tooltipLockedAlbums => 'Albums verrouillés';
 
   @override
   String get albumsErrorLoad => 'Impossible de charger les albums';
@@ -800,17 +800,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get albumsEmptyMessage =>
-      'Synchronisez votre bibliotheque pour voir les albums de votre appareil.';
+      'Synchronisez votre bibliothèque pour voir les albums de votre appareil.';
 
   @override
-  String get lockedAlbumsTitle => 'Albums verrouilles';
+  String get lockedAlbumsTitle => 'Albums verrouillés';
 
   @override
-  String get lockedAlbumsEmptyTitle => 'Aucun album verrouille';
+  String get lockedAlbumsEmptyTitle => 'Aucun album verrouillé';
 
   @override
   String get lockedAlbumsEmptyMessage =>
-      'Les albums proteges par biometrie apparaitront ici.';
+      'Les albums protégés par biométrie apparaîtront ici.';
 
   @override
   String get favoritesEmptyTitle => 'Aucun favori';
@@ -820,44 +820,44 @@ class AppLocalizationsFr extends AppLocalizations {
       'Double-appuyez sur une publication pour l\'ajouter aux favoris.';
 
   @override
-  String get storageAllFilesAccessTitle => 'Acces a tous les fichiers';
+  String get storageAllFilesAccessTitle => 'Accès à tous les fichiers';
 
   @override
   String get storageAllFilesAccessGranted =>
-      'Accorde. Vous pouvez deplacer et supprimer des elements entre albums.';
+      'Accordé. Vous pouvez déplacer et supprimer des éléments entre albums.';
 
   @override
   String get storageAllFilesAccessRequired =>
-      'Requis sur Android 11+ pour deplacer ou supprimer des elements entre albums.';
+      'Requis sur Android 11+ pour déplacer ou supprimer des éléments entre albums.';
 
   @override
-  String get storageGrantInSettings => 'Accorder dans les parametres';
+  String get storageGrantInSettings => 'Accorder dans les paramètres';
 
   @override
   String get storageAllFilesAccessDialogMessage =>
-      'La suppression ou le deplacement d\'elements entre albums sur Android 11+ necessite l\'acces a tous les fichiers dans les parametres systeme.';
+      'La suppression ou le déplacement d\'éléments entre albums sur Android 11+ nécessite l\'accès à tous les fichiers dans les paramètres système.';
 
   @override
-  String get profileSelectFolder => 'Selectionner un dossier';
+  String get profileSelectFolder => 'Sélectionner un dossier';
 
   @override
-  String get tooltipFileAccess => 'Acces aux fichiers';
+  String get tooltipFileAccess => 'Accès aux fichiers';
 
   @override
-  String get tooltipManageContent => 'Gerer le contenu';
+  String get tooltipManageContent => 'Gérer le contenu';
 
   @override
-  String get tooltipSettings => 'Parametres';
+  String get tooltipSettings => 'Paramètres';
 
   @override
-  String get profileNoFolderSelected => 'Aucun dossier selectionne';
+  String get profileNoFolderSelected => 'Aucun dossier sélectionné';
 
   @override
   String get profileNoFolderSelectedMessage =>
-      'Synchronisez votre bibliotheque ou choisissez un dossier.';
+      'Synchronisez votre bibliothèque ou choisissez un dossier.';
 
   @override
-  String get profileNoMediaInFolder => 'Aucun media dans ce dossier';
+  String get profileNoMediaInFolder => 'Aucun média dans ce dossier';
 
   @override
   String get profileErrorLoadFolder => 'Impossible de charger le dossier';
@@ -867,26 +867,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String selectionCount(int count) {
-    return '$count selectionne(s)';
+    return '$count sélectionné(s)';
   }
 
   @override
-  String get folderManagementNoFolders => 'Aucun dossier trouve.';
+  String get folderManagementNoFolders => 'Aucun dossier trouvé.';
 
   @override
   String get folderShowInStories => 'Afficher dans Stories';
 
   @override
-  String get folderSecureLock => 'Verrouillage securise';
+  String get folderSecureLock => 'Verrouillage sécurisé';
 
   @override
   String get folderChangeCover => 'Changer la couverture';
 
   @override
-  String get folderUseLatestPhoto => 'Utiliser la derniere photo';
+  String get folderUseLatestPhoto => 'Utiliser la dernière photo';
 
   @override
-  String get folderVisibilityTitle => 'Visibilite du dossier';
+  String get folderVisibilityTitle => 'Visibilité du dossier';
 
   @override
   String get folderBiographyTitle => 'Biographie';
@@ -895,13 +895,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get folderAddBiography => 'Ajouter une biographie';
 
   @override
-  String get folderNoMedia => 'Aucun media';
+  String get folderNoMedia => 'Aucun média';
 
   @override
   String get tooltipAlbumOptions => 'Options de l\'album';
 
   @override
-  String get folderPickerDefaultTitle => 'Deplacer les elements vers...';
+  String get folderPickerDefaultTitle => 'Déplacer les éléments vers...';
 
   @override
   String get folderPickerSearchHint => 'Rechercher des dossiers';
@@ -918,37 +918,37 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get albumCoverNoPhotos =>
-      'Cet album n\'a pas de photos a utiliser comme couverture.';
+      'Cet album n\'a pas de photos à utiliser comme couverture.';
 
   @override
-  String get folderLockedTitle => 'Ce dossier est verrouille';
+  String get folderLockedTitle => 'Ce dossier est verrouillé';
 
   @override
   String folderLockedMessage(String folderName) {
-    return 'Utilisez la biometrie pour voir $folderName.';
+    return 'Utilisez la biométrie pour voir $folderName.';
   }
 
   @override
   String folderUnlockReason(String folderName) {
-    return 'Deverrouiller $folderName';
+    return 'Déverrouiller $folderName';
   }
 
   @override
   String get folderBiometricsUnavailable =>
-      'La biometrie n\'est pas disponible. Enregistrez une empreinte ou un visage dans les parametres de l\'appareil.';
+      'La biométrie n\'est pas disponible. Enregistrez une empreinte ou un visage dans les paramètres de l\'appareil.';
 
   @override
-  String get folderAuthFailed => 'Authentification echouee ou annulee.';
+  String get folderAuthFailed => 'Authentification échouée ou annulée.';
 
   @override
-  String get postMoveToTrash => 'Deplacer vers la corbeille';
+  String get postMoveToTrash => 'Déplacer vers la corbeille';
 
   @override
   String get postMoveToTrashMessage =>
-      'Cet element sera deplace vers la corbeille et pourra etre restaure depuis les Parametres.';
+      'Cet élément sera déplacé vers la corbeille et pourra être restauré depuis les Paramètres.';
 
   @override
-  String get tooltipDetails => 'Details';
+  String get tooltipDetails => 'Détails';
 
   @override
   String get tooltipShare => 'Partager';
@@ -968,7 +968,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d\'ouvrir l\'emplacement du fichier';
 
   @override
-  String get metadataTitle => 'Details';
+  String get metadataTitle => 'Détails';
 
   @override
   String get metadataFilename => 'Nom du fichier';
@@ -997,7 +997,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get mediaKindVideo => 'Video';
+  String get mediaKindVideo => 'Vidéo';
 
   @override
   String get mediaKindAudio => 'Audio';
@@ -1026,39 +1026,39 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de déplacer cet élément. Réessayez.';
 
   @override
-  String get organizeBatchComplete => 'Lot termine';
+  String get organizeBatchComplete => 'Lot terminé';
 
   @override
-  String get organizeAllCaughtUp => 'Tout est a jour';
+  String get organizeAllCaughtUp => 'Tout est à jour';
 
   @override
   String organizeRemainingItems(int count) {
-    return '$count elements correspondent encore a vos filtres.';
+    return '$count éléments correspondent encore à vos filtres.';
   }
 
   @override
   String get organizeNoMoreItems =>
-      'Plus aucun element ne correspond aux filtres actuels.';
+      'Plus aucun élément ne correspond aux filtres actuels.';
 
   @override
   String get organizeLoadNextBatch => 'Charger le lot suivant';
 
   @override
   String organizeReviewTrash(int count) {
-    return 'Verifier la corbeille ($count)';
+    return 'Vérifier la corbeille ($count)';
   }
 
   @override
   String get organizeChangeFilter => 'Changer le filtre';
 
   @override
-  String get organizeReleaseKeptPhotos => 'Remettre les photos conservees';
+  String get organizeReleaseKeptPhotos => 'Remettre les photos conservées';
 
   @override
   String get organizeFiltersTitle => 'Filtres';
 
   @override
-  String get organizeMediaType => 'Type de media';
+  String get organizeMediaType => 'Type de média';
 
   @override
   String get organizeMediaAll => 'Tous';
@@ -1067,7 +1067,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get organizeMediaImage => 'Image';
 
   @override
-  String get organizeMediaVideo => 'Video';
+  String get organizeMediaVideo => 'Vidéo';
 
   @override
   String get organizeFilterFolder => 'Dossier';
@@ -1082,37 +1082,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get organizeStatsTitle => 'Statistiques d\'organisation';
 
   @override
-  String get organizeStatProcessed => 'Traites';
+  String get organizeStatProcessed => 'Traités';
 
   @override
-  String get organizeStatDeleted => 'Supprimes';
+  String get organizeStatDeleted => 'Supprimés';
 
   @override
-  String get organizeStatLiked => 'Aimes';
+  String get organizeStatLiked => 'Aimés';
 
   @override
-  String get organizeStatSpaceSaved => 'Espace economise';
+  String get organizeStatSpaceSaved => 'Espace économisé';
 
   @override
   String organizeTrashReviewTitle(int count) {
-    return 'Verifier la corbeille ($count)';
+    return 'Vérifier la corbeille ($count)';
   }
 
   @override
   String get organizeTrashReviewMessage =>
-      'Les elements selectionnes seront supprimes definitivement de votre appareil.';
+      'Les éléments sélectionnés seront supprimés définitivement de votre appareil.';
 
   @override
   String organizeTrashDeleteCount(int count) {
-    return 'Supprimer $count elements';
+    return 'Supprimer $count éléments';
   }
 
   @override
-  String get bulkMoveToTrashTitle => 'Deplacer vers la corbeille';
+  String get bulkMoveToTrashTitle => 'Déplacer vers la corbeille';
 
   @override
   String bulkMoveToTrashMessage(int count) {
-    return 'Deplacer $count elements vers la corbeille ? Vous pourrez les restaurer depuis les Parametres.';
+    return 'Déplacer $count éléments vers la corbeille ? Vous pourrez les restaurer depuis les Paramètres.';
   }
 
   @override
@@ -1120,8 +1120,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count elements deplaces',
-      one: '1 element deplace',
+      other: '$count éléments déplacés',
+      one: '1 élément déplacé',
     );
     return '$_temp0 vers la corbeille';
   }
@@ -1131,47 +1131,47 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       moved,
       locale: localeName,
-      other: '$moved elements deplaces',
-      one: '1 element deplace',
+      other: '$moved éléments déplacés',
+      one: '1 élément déplacé',
     );
     return '$_temp0';
   }
 
   @override
   String get snackbarMoveFailed =>
-      'Impossible de deplacer les elements. Approuvez la demande systeme si affichee, ou verifiez l\'acces au stockage dans les Parametres.';
+      'Impossible de déplacer les éléments. Approuvez la demande système si affichée, ou vérifiez l\'accès au stockage dans les Paramètres.';
 
   @override
   String snackbarMovedPartial(int moved, int total) {
-    return '$moved sur $total elements deplaces';
+    return '$moved sur $total éléments déplacés';
   }
 
   @override
-  String get bulkCreateAlbumTitle => 'Creer un album';
+  String get bulkCreateAlbumTitle => 'Créer un album';
 
   @override
   String get bulkAlbumNameLabel => 'Nom de l\'album';
 
   @override
-  String get bulkCreateAndMove => 'Creer et deplacer';
+  String get bulkCreateAndMove => 'Créer et déplacer';
 
   @override
   String snackbarAlbumCreatedAndMoved(String albumName, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count elements deplaces',
-      one: '1 element deplace',
+      other: '$count éléments déplacés',
+      one: '1 élément déplacé',
     );
-    return 'Album \"$albumName\" cree et $_temp0';
+    return 'Album \"$albumName\" créé et $_temp0';
   }
 
   @override
   String get snackbarAlbumCreateFailed =>
-      'Impossible de creer l\'album. Verifiez l\'acces au stockage.';
+      'Impossible de créer l\'album. Vérifiez l\'accès au stockage.';
 
   @override
-  String get tooltipCancelSelection => 'Annuler la selection';
+  String get tooltipCancelSelection => 'Annuler la sélection';
 
   @override
   String get tooltipFavoriteSelected => 'Ajouter aux favoris';
@@ -1180,19 +1180,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tooltipUnfavoriteSelected => 'Retirer des favoris';
 
   @override
-  String get tooltipMoveSelected => 'Deplacer la selection';
+  String get tooltipMoveSelected => 'Déplacer la sélection';
 
   @override
-  String get tooltipCreateAlbumAndMove => 'Creer un album et deplacer';
+  String get tooltipCreateAlbumAndMove => 'Créer un album et déplacer';
 
   @override
-  String get tooltipSetAlbumCover => 'Definir comme couverture';
+  String get tooltipSetAlbumCover => 'Définir comme couverture';
 
   @override
-  String get tooltipMoveToTrash => 'Deplacer vers la corbeille';
+  String get tooltipMoveToTrash => 'Déplacer vers la corbeille';
 
   @override
-  String get selectionActionMove => 'Deplacer';
+  String get selectionActionMove => 'Déplacer';
 
   @override
   String get selectionActionShare => 'Partager';
@@ -1207,21 +1207,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectionCopyToClipboard => 'Copier dans le presse-papiers';
 
   @override
-  String get selectionSetAsWallpaper => 'Definir comme fond d\'ecran';
+  String get selectionSetAsWallpaper => 'Définir comme fond d\'écran';
 
   @override
   String snackbarSharedItems(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count elements partages',
-      one: '1 element partage',
+      other: '$count éléments partagés',
+      one: '1 élément partagé',
     );
     return '$_temp0';
   }
 
   @override
-  String get snackbarShareFailed => 'Impossible de partager la selection';
+  String get snackbarShareFailed => 'Impossible de partager la sélection';
 
   @override
   String get snackbarCopiedToClipboard => 'Copie dans le presse-papiers';
@@ -1232,47 +1232,47 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get snackbarCopyUnsupported =>
-      'Seules les images peuvent etre copiees';
+      'Seules les images peuvent être copiees';
 
   @override
-  String get snackbarWallpaperSet => 'Fond d\'ecran mis a jour';
+  String get snackbarWallpaperSet => 'Fond d\'écran mis à jour';
 
   @override
   String get snackbarWallpaperFailed =>
-      'Impossible de definir le fond d\'ecran';
+      'Impossible de définir le fond d\'écran';
 
   @override
   String get snackbarWallpaperUnsupported =>
-      'Le fond d\'ecran est disponible uniquement pour les images sur Android';
+      'Le fond d\'écran est disponible uniquement pour les images sur Android';
 
   @override
-  String get wallpaperConfirmTitle => 'Definir comme fond d\'ecran ?';
+  String get wallpaperConfirmTitle => 'Définir comme fond d\'écran ?';
 
   @override
   String get wallpaperConfirmMessage =>
-      'Cette image sera definie comme fond d\'ecran de l\'ecran d\'accueil.';
+      'Cette image sera définie comme fond d\'écran de l\'écran d\'accueil.';
 
   @override
-  String get wallpaperConfirmAction => 'Definir';
+  String get wallpaperConfirmAction => 'Définir';
 
   @override
-  String get trashDeletePermanentlyTitle => 'Supprimer definitivement';
+  String get trashDeletePermanentlyTitle => 'Supprimer définitivement';
 
   @override
   String trashDeletePermanentlyMessage(int count) {
-    return 'Voulez-vous vraiment supprimer definitivement ces $count elements de votre appareil ? Cette action est irreversible.';
+    return 'Voulez-vous vraiment supprimer définitivement ces $count éléments de votre appareil ? Cette action est irreversible.';
   }
 
   @override
-  String get trashDeletePermanentlyAction => 'Supprimer definitivement';
+  String get trashDeletePermanentlyAction => 'Supprimer définitivement';
 
   @override
   String snackbarRestoredItems(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count elements restaures',
-      one: '1 element restaure',
+      other: '$count éléments restaurés',
+      one: '1 élément restauré',
     );
     return '$_temp0';
   }
@@ -1282,24 +1282,24 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count elements supprimes',
-      one: '1 element supprime',
+      other: '$count éléments supprimés',
+      one: '1 élément supprimé',
     );
-    return '$_temp0 definitivement';
+    return '$_temp0 définitivement';
   }
 
   @override
-  String get tooltipRestoreSelected => 'Restaurer la selection';
+  String get tooltipRestoreSelected => 'Restaurer la sélection';
 
   @override
-  String get tooltipDeletePermanently => 'Supprimer definitivement';
+  String get tooltipDeletePermanently => 'Supprimer définitivement';
 
   @override
   String get trashEmptyTitle => 'Corbeille vide';
 
   @override
   String get trashEmptyMessage =>
-      'Les fichiers supprimes restent ici pour recuperation jusqu\'a expiration.';
+      'Les fichiers supprimés restent ici pour recuperation jusqu\'a expiration.';
 
   @override
   String get trashExpiresToday => 'Expire aujourd\'hui';
@@ -1325,21 +1325,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoverSectionExplore => 'Explorer';
 
   @override
-  String get discoverErrorLoad => 'Impossible de charger Decouvrir';
+  String get discoverErrorLoad => 'Impossible de charger Découvrir';
 
   @override
   String get discoverDeepOrganize => 'Organisation approfondie';
 
   @override
   String get discoverDeepOrganizeSubtitle =>
-      'Analyse, photos similaires, basse qualite, compression';
+      'Analyse, photos similaires, basse qualité, compression';
 
   @override
   String get discoverShootingStats => 'Statistiques photo';
 
   @override
   String discoverShootingStatsSubtitle(int count) {
-    return '$count elements organises jusqu\'ici';
+    return '$count éléments organises jusqu\'ici';
   }
 
   @override
@@ -1364,10 +1364,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoverSuggestionsSubtitle => 'Idees d\'albums et de nettoyage';
 
   @override
-  String get discoverLocationsSubtitle => 'Photos regroupees par lieu';
+  String get discoverLocationsSubtitle => 'Photos regroupées par lieu';
 
   @override
-  String get discoverScreenshotsTitle => 'Captures d\'ecran';
+  String get discoverScreenshotsTitle => 'Captures d\'écran';
 
   @override
   String get discoverScreenshotsSubtitle =>
@@ -1378,7 +1378,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get discoverScreenshotsEmptyMessage =>
-      'Les captures detectees par nom ou album apparaitront ici.';
+      'Les captures detectees par nom ou album apparaîtront ici.';
 
   @override
   String get discoverDocumentsTitle => 'Documents et texte';
@@ -1407,7 +1407,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get settingsWidgetsTitle => 'Widgets ecran d\'accueil';
+  String get settingsWidgetsTitle => 'Widgets écran d\'accueil';
 
   @override
   String get settingsWidgetsSubtitle =>
@@ -1415,7 +1415,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsWidgetsHelpBody =>
-      'Appuyez longuement sur l\'ecran d\'accueil, choisissez Widgets, puis Social Gallery. Configurez l\'album, l\'intervalle et le rafraichissement au deverrouillage.';
+      'Appuyez longuement sur l\'écran d\'accueil, choisissez Widgets, puis Social Gallery. Configurez l\'album, l\'intervalle et le rafraîchissement au déverrouillage.';
 
   @override
   String get widgetConfigTitle => 'Widget dossier';
@@ -1436,19 +1436,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get widgetConfigInterval1h => '1 heure';
 
   @override
-  String get widgetConfigIntervalCustom => 'Personnalise (minutes)';
+  String get widgetConfigIntervalCustom => 'Personnalisé (minutes)';
 
   @override
-  String get widgetConfigRefreshOnUnlock => 'Changer au deverrouillage';
+  String get widgetConfigRefreshOnUnlock => 'Changer au déverrouillage';
 
   @override
   String get widgetConfigPickMode => 'Ordre des photos';
 
   @override
-  String get widgetConfigPickRandom => 'Aleatoire';
+  String get widgetConfigPickRandom => 'Aléatoire';
 
   @override
-  String get widgetConfigPickRecent => 'Plus recentes';
+  String get widgetConfigPickRecent => 'Plus récentes';
 
   @override
   String get widgetConfigSave => 'Enregistrer';
@@ -1458,7 +1458,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deepOrganizeSubtitle =>
-      'Analysez votre bibliotheque sur l\'appareil pour trouver des photos similaires et de basse qualite.';
+      'Analysez votre bibliothèque sur l\'appareil pour trouver des photos similaires et de basse qualité.';
 
   @override
   String deepOrganizeScanProgress(int scanned, int total) {
@@ -1487,11 +1487,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get deepOrganizeLowQuality => 'Basse qualite';
+  String get deepOrganizeLowQuality => 'Basse qualité';
 
   @override
   String deepOrganizeLowQualityCount(int count) {
-    return '$count elements signales';
+    return '$count éléments signales';
   }
 
   @override
@@ -1510,7 +1510,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String similarPhotosGroupCount(int count) {
-    return '$count elements similaires';
+    return '$count éléments similaires';
   }
 
   @override
@@ -1522,18 +1522,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String similarPhotosDeleteMessage(String name, int count) {
-    return 'Conserver \"$name\" et supprimer $count elements similaires ?';
+    return 'Conserver \"$name\" et supprimer $count éléments similaires ?';
   }
 
   @override
-  String get lowQualityReviewTitle => 'Revue basse qualite';
+  String get lowQualityReviewTitle => 'Revue basse qualité';
 
   @override
   String get lowQualityReviewSubtitle =>
-      'Verifiez les prises signalees et supprimez ce dont vous n\'avez pas besoin.';
+      'Vérifiez les prises signalees et supprimez ce dont vous n\'avez pas besoin.';
 
   @override
-  String get lowQualityEmptyTitle => 'Aucun element de basse qualite';
+  String get lowQualityEmptyTitle => 'Aucun élément de basse qualité';
 
   @override
   String lowQualityProgress(int index, int total) {
@@ -1556,7 +1556,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String compressionResult(int done, int mb) {
-    return '$done images compressees, $mb Mo economises';
+    return '$done images compressées, $mb Mo économisés';
   }
 
   @override
@@ -1569,7 +1569,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String compressionCompressSelected(int count) {
-    return 'Compresser $count selectionne(s)';
+    return 'Compresser $count sélectionné(s)';
   }
 
   @override
@@ -1577,7 +1577,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Glissez vers la droite dans Organiser pour ajouter aux favoris.';
 
   @override
-  String get likesReviewEmptyTitle => 'Aucun element aime';
+  String get likesReviewEmptyTitle => 'Aucun élément aime';
 
   @override
   String get likesReviewSubtitle => 'Parcourez vos favoris.';
@@ -1595,19 +1595,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shootingStatsPhotos => 'Photos';
 
   @override
-  String get shootingStatsVideos => 'Videos';
+  String get shootingStatsVideos => 'Vidéos';
 
   @override
-  String get shootingStatsScreenshots => 'Captures d\'ecran';
+  String get shootingStatsScreenshots => 'Captures d\'écran';
 
   @override
-  String get shootingStatsLiked => 'Aimes';
+  String get shootingStatsLiked => 'Aimés';
 
   @override
   String get shootingStatsFolders => 'Dossiers';
 
   @override
-  String get shootingStatsVideoDuration => 'Duree video';
+  String get shootingStatsVideoDuration => 'Duree vidéo';
 
   @override
   String durationMinutes(int minutes) {
@@ -1628,10 +1628,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get shootingStatsHeatmap => 'Carte d\'activite';
+  String get shootingStatsHeatmap => 'Carte d\'activité';
 
   @override
-  String get shootingStatsNoActivity => 'Aucune activite ce mois-ci.';
+  String get shootingStatsNoActivity => 'Aucune activité ce mois-ci.';
 
   @override
   String shootingStatsHeatmapTooltip(String date, int count) {
@@ -1645,14 +1645,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get duplicateScanPreparing =>
-      'Preparation de l\'analyse des doublons...';
+      'Préparation de l\'analyse des doublons...';
 
   @override
   String get duplicatesEmptyTitle => 'Aucun groupe de doublons';
 
   @override
   String get duplicatesEmptyMessage =>
-      'Aucune photo quasi identique trouvee. Les doublons sont detectes par similarite visuelle, pas seulement par taille de fichier.';
+      'Aucune photo quasi identique trouvée. Les doublons sont detectes par similarite visuelle, pas seulement par taille de fichier.';
 
   @override
   String duplicatesGroupBadge(int count) {
@@ -1660,14 +1660,14 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get duplicatesKeepBestAndReview => 'Garder la meilleure et verifier';
+  String get duplicatesKeepBestAndReview => 'Garder la meilleure et vérifier';
 
   @override
-  String get duplicateReviewTitle => 'Verifier les doublons';
+  String get duplicateReviewTitle => 'Vérifier les doublons';
 
   @override
   String get duplicateReviewSubtitle =>
-      'La meilleure est preselectionnee. Appuyez sur les elements pour modifier ce qui sera supprime.';
+      'La meilleure est présélectionnée. Appuyez sur les éléments pour modifier ce qui sera supprimé.';
 
   @override
   String get duplicateReviewGroupNotFound => 'Groupe introuvable';
@@ -1682,22 +1682,22 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count doublons supprimes',
-      one: '1 doublon supprime',
+      other: '$count doublons supprimés',
+      one: '1 doublon supprimé',
     );
     return '$_temp0.';
   }
 
   @override
   String get snackbarDuplicatesRemoveFailed =>
-      'Impossible de supprimer certains elements. Verifiez les autorisations.';
+      'Impossible de supprimer certains éléments. Vérifiez les autorisations.';
 
   @override
   String get travelModeEmptyTitle => 'Aucun voyage';
 
   @override
   String get travelModeEmptyMessage =>
-      'Creez un mode voyage pour organiser automatiquement les photos d\'une periode.';
+      'Creez un mode voyage pour organiser automatiquement les photos d\'une période.';
 
   @override
   String get travelModeStatusActive => 'Actif';
@@ -1706,7 +1706,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get travelModeStatusUpcoming => 'A venir';
 
   @override
-  String get travelModeStatusCompleted => 'Termine';
+  String get travelModeStatusCompleted => 'Terminé';
 
   @override
   String travelModeListSubtitle(String start, String end, String folder) {
@@ -1724,7 +1724,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get travelModeTargetFolderHelper =>
-      'Nom de l\'album pour les medias deplaces automatiquement (sans coffre)';
+      'Nom de l\'album pour les médias déplacés automatiquement (sans coffre)';
 
   @override
   String get travelModeStart => 'Debut';
@@ -1752,7 +1752,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get travelModeDeleteMessage => 'Cette action est irreversible.';
 
   @override
-  String get storyNoStoriesFound => 'Aucune story recente dans ce dossier.';
+  String get storyNoStoriesFound => 'Aucune story récente dans ce dossier.';
 
   @override
   String get backupSectionTitle => 'Sauvegarde bureau';
@@ -1785,11 +1785,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Arreter d\'accepter les sauvegardes de ce telephone';
 
   @override
-  String get backupRefreshLibrary => 'Actualiser la bibliotheque';
+  String get backupRefreshLibrary => 'Actualiser la bibliothèque';
 
   @override
   String get backupRefreshLibrarySubtitle =>
-      'Reanalyser les dossiers apres de nouvelles sauvegardes';
+      'Reanalyser les dossiers après de nouvelles sauvegardes';
 
   @override
   String get backupBackUpToDesktop => 'Sauvegarder vers le bureau';
@@ -1819,7 +1819,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupPairSheetDescription =>
-      'Sur votre ordinateur, activez Recevoir les sauvegardes dans les Parametres et entrez le PIN affiche.';
+      'Sur votre ordinateur, activez Recevoir les sauvegardes dans les Paramètres et entrez le PIN affiché.';
 
   @override
   String get backupDesktopAddress => 'Adresse du bureau';
@@ -1834,29 +1834,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backupScanPairingQr => 'Scanner le QR d\'appairage';
 
   @override
-  String get backupFindOnNetwork => 'Rechercher sur le reseau';
+  String get backupFindOnNetwork => 'Rechercher sur le réseau';
 
   @override
   String get backupPair => 'Apparier';
 
   @override
   String get backupErrorNoDesktopFound =>
-      'Aucun bureau trouve. Entrez l\'adresse affichee sur votre ordinateur.';
+      'Aucun bureau trouvé. Entrez l\'adresse affichée sur votre ordinateur.';
 
   @override
   String get backupErrorEnterHostPortPin =>
-      'Entrez l\'hote, le port et le PIN a 6 chiffres du bureau.';
+      'Entrez l\'hôte, le port et le PIN a 6 chiffres du bureau.';
 
   @override
   String get backupErrorPairingFailed =>
-      'Echec de l\'appairage. Verifiez le PIN et reessayez.';
+      'Échec de l\'appairage. Vérifiez le PIN et réessayez.';
 
   @override
   String get backupErrorInvalidQr =>
-      'Le QR code n\'est pas un lien d\'appairage valide.';
+      'Le QR code n\'est pas un lien d\'appairage validé.';
 
   @override
-  String get backupPairingSuccessTitle => 'Appairage reussi';
+  String get backupPairingSuccessTitle => 'Appairage réussi';
 
   @override
   String backupPairingSuccessMessage(String deviceName) {
@@ -1873,7 +1873,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupQrInstructions =>
-      'Scannez avec l\'appareil photo ou utilisez Scanner le QR dans Parametres > Sauvegarde bureau.';
+      'Scannez avec l\'appareil photo ou utilisez Scanner le QR dans Paramètres > Sauvegarde bureau.';
 
   @override
   String get backupScanPairingQrTitle => 'Scanner le QR d\'appairage';
@@ -1884,7 +1884,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get backupStatusOff => 'Desactive';
+  String get backupStatusOff => 'Désactivé';
 
   @override
   String get backupStatusWaitingForDesktop => 'En attente du bureau';
@@ -1894,11 +1894,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String backupStatusLastBackup(String relativeTime) {
-    return 'Derniere sauvegarde $relativeTime';
+    return 'Dernière sauvegarde $relativeTime';
   }
 
   @override
-  String get backupStatusUpToDate => 'A jour';
+  String get backupStatusUpToDate => 'À jour';
 
   @override
   String backupStatusError(String detail) {
@@ -1909,7 +1909,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backupStatusIdle => 'Inactif';
 
   @override
-  String get timeJustNow => 'a l\'instant';
+  String get timeJustNow => 'à l\'instant';
 
   @override
   String timeMinutesAgo(int n) {
@@ -1927,21 +1927,21 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get backupNotificationPreparing => 'Preparation de la sauvegarde...';
+  String get backupNotificationPreparing => 'Préparation de la sauvegarde...';
 
   @override
   String get backupNotificationInProgress => 'Sauvegarde en cours';
 
   @override
   String backupNotificationProgress(int processed, int total) {
-    return '$processed / $total elements sauvegardes';
+    return '$processed / $total éléments sauvegardes';
   }
 
   @override
   String get backupNotificationComplete => 'Sauvegarde terminee';
 
   @override
-  String get backupNotificationFailed => 'Echec de la sauvegarde';
+  String get backupNotificationFailed => 'Échec de la sauvegarde';
 
   @override
   String get backupNotificationPaused => 'Sauvegarde en pause';
@@ -1958,7 +1958,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationDuplicateScanPreparing =>
-      'Preparation de l\'analyse des doublons...';
+      'Préparation de l\'analyse des doublons...';
 
   @override
   String notificationDuplicateScanProgress(int scanned, int total) {
@@ -1966,11 +1966,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get notificationDuplicateScanNoneTitle => 'Aucun doublon trouve';
+  String get notificationDuplicateScanNoneTitle => 'Aucun doublon trouvé';
 
   @override
   String get notificationDuplicateScanNoneBody =>
-      'Aucune photo quasi identique trouvee dans votre bibliotheque.';
+      'Aucune photo quasi identique trouvée dans votre bibliothèque.';
 
   @override
   String get notificationDuplicateScanCompleteTitle =>
@@ -1981,7 +1981,7 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count groupes de doublons trouves',
+      other: '$count groupes de doublons trouvés',
       one: '1 groupe de doublons trouve',
     );
     return '$_temp0';
@@ -1989,11 +1989,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationDuplicateScanFailedTitle =>
-      'Echec de l\'analyse des doublons';
+      'Échec de l\'analyse des doublons';
 
   @override
   String get notificationDuplicateScanFailedBody =>
-      'Impossible de terminer l\'analyse. Ouvrez Doublons pour reessayer.';
+      'Impossible de terminer l\'analyse. Ouvrez Doublons pour réessayer.';
 
   @override
   String get notificationChannelDesktopBackup => 'Sauvegarde bureau';
@@ -2030,11 +2030,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String backupDetailFoundDesktop(String name) {
-    return '$name trouve';
+    return '$name trouvé';
   }
 
   @override
-  String get backupDetailNoDesktopFound => 'Aucun bureau trouve sur le reseau';
+  String get backupDetailNoDesktopFound => 'Aucun bureau trouvé sur le réseau';
 
   @override
   String get backupDetailNotPaired => 'Non apparie';
@@ -2054,7 +2054,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String backupDetailReconcilingItems(int count) {
-    return 'Reconciliation de $count elements';
+    return 'Reconciliation de $count éléments';
   }
 
   @override
@@ -2062,11 +2062,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String backupDetailBackingUpItems(int count) {
-    return 'Sauvegarde de $count elements';
+    return 'Sauvegarde de $count éléments';
   }
 
   @override
-  String get backupDetailCheckingItems => 'Recherche d\'elements a sauvegarder';
+  String get backupDetailCheckingItems => 'Recherche d\'éléments a sauvegarder';
 
   @override
   String get backupDetailDesktopDisconnected => 'Bureau devenu indisponible';
@@ -2077,7 +2077,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String backupDetailFoundMoreItems(int count) {
-    return '$count elements supplementaires a sauvegarder';
+    return '$count éléments supplementaires a sauvegarder';
   }
 
   @override
@@ -2085,12 +2085,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String backupDetailBackedUpItems(int count) {
-    return '$count elements sauvegardes';
+    return '$count éléments sauvegardes';
   }
 
   @override
   String backupDetailBackingUpBatch(int batch, int count) {
-    return 'Sauvegarde du lot $batch ($count elements)';
+    return 'Sauvegarde du lot $batch ($count éléments)';
   }
 
   @override
@@ -2099,23 +2099,23 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get backupDetailBackupFailed => 'Echec de la sauvegarde';
+  String get backupDetailBackupFailed => 'Échec de la sauvegarde';
 
   @override
   String backupDetailReconcilingProgress(int count) {
-    return 'Reconciliation de $count elements...';
+    return 'Reconciliation de $count éléments...';
   }
 
   @override
-  String get backupDetailReconcileFailed => 'Echec de la reconciliation';
+  String get backupDetailReconcileFailed => 'Échec de la reconciliation';
 
   @override
   String backupDetailVerifyingItems(int count) {
-    return 'Verification de $count elements sauvegardes...';
+    return 'Verification de $count éléments sauvegardes...';
   }
 
   @override
-  String get backupDetailVerifyFailed => 'Echec de la verification';
+  String get backupDetailVerifyFailed => 'Échec de la verification';
 
   @override
   String get backupDetailDesktopDisconnectedDuringReconcile =>
@@ -2127,7 +2127,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backupDetailDesktopDisconnectedDuringBackup =>
-      'Bureau deconnecte pendant la sauvegarde';
+      'Bureau déconnecté pendant la sauvegarde';
 
   @override
   String get backupDetailDesktopDoesNotUpload =>
@@ -2153,7 +2153,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get backupPhasePreparing => 'Preparation du fichier...';
+  String get backupPhasePreparing => 'Préparation du fichier...';
 
   @override
   String get backupPhaseUploading => 'Envoi en cours...';
@@ -2183,7 +2183,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String backupDetailBackedUpWithFailures(int succeeded, int failed) {
-    return '$succeeded elements sauvegardes, $failed en echec';
+    return '$succeeded éléments sauvegardes, $failed en échec';
   }
 
   @override
@@ -2279,7 +2279,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Reassigner les glissements gauche, droite, haut et bas';
 
   @override
-  String get settingsOrganizeGesturesReset => 'Reinitialiser';
+  String get settingsOrganizeGesturesReset => 'Réinitialiser';
 
   @override
   String settingsOrganizeGesturesSwapHint(String direction) {
@@ -2300,7 +2300,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get organizeActionKeep => 'Garder';
 
   @override
-  String get organizeActionMove => 'Deplacer';
+  String get organizeActionMove => 'Déplacer';
 
   @override
   String get organizeDirectionLeft => 'Glisser a gauche';

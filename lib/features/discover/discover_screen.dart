@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
@@ -73,8 +74,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         data: (hub) => RefreshIndicator(
           onRefresh: () => ref.read(discoverHubProvider.notifier).refresh(),
           child: ListView(
-            controller: _scrollController,
-            cacheExtent: 400,
+            scrollCacheExtent: ScrollCacheExtent.pixels(400), controller: _scrollController,
             padding: FloatingNavInsets.scrollPadding(
               context,
             ).add(const EdgeInsets.all(16)),

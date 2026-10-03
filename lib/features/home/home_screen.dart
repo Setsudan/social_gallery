@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
@@ -214,9 +215,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const headerCount = 1;
 
     return ListView.builder(
-      controller: _scrollController,
+      scrollCacheExtent: ScrollCacheExtent.pixels(1200), controller: _scrollController,
       padding: listPadding,
-      cacheExtent: 1200,
       addAutomaticKeepAlives: false,
       itemCount: headerCount + _items.length + (_paginated.hasMore ? 1 : 0),
       itemBuilder: (context, index) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
@@ -13,8 +14,8 @@ import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
 import 'package:social_gallery/shared/widgets/motion/selection_chrome.dart';
 import 'package:social_gallery/shared/widgets/motion/staggered_entrance.dart';
 
-/// Look-ahead for grid builders (~1.5 screens of tiles).
-const double kMediaGridCacheExtent = 900;
+/// Look-ahead for grid builders (~1 screen of tiles).
+const double kMediaGridCacheExtent = 720;
 
 /// Responsive thumbnail grid with optional selection mode and staggered entrance.
 class MediaGrid extends ConsumerWidget {
@@ -101,9 +102,8 @@ class MediaGrid extends ConsumerWidget {
         return false;
       },
       child: GridView.builder(
-        controller: controller,
+        scrollCacheExtent: ScrollCacheExtent.pixels(kMediaGridCacheExtent), controller: controller,
         padding: padding,
-        cacheExtent: kMediaGridCacheExtent,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
           crossAxisSpacing: 2,

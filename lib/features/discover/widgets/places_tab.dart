@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/router.dart';
@@ -87,8 +88,7 @@ class _CountryGrid extends StatelessWidget {
     const columns = 2;
 
     return CustomScrollView(
-      cacheExtent: 600,
-      slivers: [
+      scrollCacheExtent: ScrollCacheExtent.pixels(600), slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -160,8 +160,7 @@ class _CityGrid extends StatelessWidget {
     const columns = 2;
 
     return CustomScrollView(
-      cacheExtent: 600,
-      slivers: [
+      scrollCacheExtent: ScrollCacheExtent.pixels(600), slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(

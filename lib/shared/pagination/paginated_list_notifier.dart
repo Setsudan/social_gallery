@@ -181,7 +181,7 @@ void handlePaginatedScroll(
 }
 
 /// Resolve + warm OS thumbs for a freshly fetched page (idle priority).
-void warmPaginatedMediaUris(Iterable<String> uris, {int limit = 36}) {
+void warmPaginatedMediaUris(Iterable<String> uris, {int limit = 16}) {
   final ids = uris.take(limit).toList(growable: false);
   if (ids.isEmpty) return;
   if (!usesFilesystemGallery) {

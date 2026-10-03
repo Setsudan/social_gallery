@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:social_gallery/app/providers.dart';
@@ -83,13 +84,17 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
           message: error.toString(),
         ),
         data: (folders) {
-          final albums = folders
-              .where(
-                (folder) =>
-                    folder.mediaCount > 0 && !folder.isLockedAccount,
-              )
-              .toList()
-            ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+          final albums =
+              folders
+                  .where(
+                    (folder) =>
+                        folder.mediaCount > 0 && !folder.isLockedAccount,
+                  )
+                  .toList()
+                ..sort(
+                  (a, b) =>
+                      a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+                );
 
           if (albums.isEmpty) {
             return CustomScrollView(
@@ -124,7 +129,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
 
           return CustomScrollView(
             controller: _scrollController,
-            cacheExtent: 600,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(600),
             slivers: [
               SliverToBoxAdapter(
                 child: OneUiPageHeader(
@@ -144,19 +149,26 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final folder = albums[index];
+                      final tile = AlbumCoverTile(
+                        title: folder.name,
+                        coverUri: folder.displayCoverUri,
+                        locked: folder.isLockedAccount,
+                        itemCount: folder.mediaCount,
+                        onTap: () => _openAlbum(folder),
+                      );
+                      // Entrance tickers past the cap are pure overhead while
+                      // scrolling; the widget already no-ops those indexes.
+                      if (index >= AppMotion.maxStaggerItems) return tile;
                       return StaggeredEntrance(
                         index: index,
                         playOnceKey: 'album_${folder.path}',
-                        child: AlbumCoverTile(
-                          title: folder.name,
-                          coverUri: folder.displayCoverUri,
-                          locked: folder.isLockedAccount,
-                          itemCount: folder.mediaCount,
-                          onTap: () => _openAlbum(folder),
-                        ),
+                        child: tile,
                       );
                     },
                     childCount: albums.length,
+                    // Album counts are small; keep tiles alive so cover
+                    // MediaThumbnail futures are not cancelled while scrolling.
+                    addAutomaticKeepAlives: true,
                     addRepaintBoundaries: true,
                   ),
                 ),
