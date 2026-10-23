@@ -2200,73 +2200,74 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backupCloseQuitAnyway => 'Quitter quand meme';
 
   @override
-  String get vaultPasswordSetTitle => 'Set vault backup password';
+  String get vaultPasswordSetTitle => 'Definir le mot de passe du coffre';
 
   @override
   String get vaultPasswordSetDescription =>
-      'Locked albums are encrypted on your desktop as AES-256 protected archives. Choose a password you will use to browse them later.';
+      'Les albums verrouilles sont chiffres sur votre bureau sous forme d\'archives protegees AES-256. Choisissez un mot de passe pour les consulter plus tard.';
 
   @override
-  String get vaultPasswordEnterTitle => 'Enter vault password';
+  String get vaultPasswordEnterTitle => 'Entrer le mot de passe du coffre';
 
   @override
   String get vaultPasswordEnterDescription =>
-      'Enter your vault password to access encrypted backups on desktop.';
+      'Entrez le mot de passe du coffre pour acceder aux sauvegardes chiffrees sur le bureau.';
 
   @override
-  String get vaultPasswordLabel => 'Password';
+  String get vaultPasswordLabel => 'Mot de passe';
 
   @override
-  String get vaultPasswordConfirmLabel => 'Confirm password';
+  String get vaultPasswordConfirmLabel => 'Confirmer le mot de passe';
 
   @override
-  String get vaultPasswordChangeTitle => 'Vault backup password';
+  String get vaultPasswordChangeTitle => 'Mot de passe de sauvegarde du coffre';
 
   @override
   String get vaultPasswordChangeSubtitle =>
-      'Change the password used for encrypted locked-album backups';
+      'Modifier le mot de passe utilise pour les sauvegardes chiffrees des albums verrouilles';
 
   @override
-  String get backupVaultStorageTitle => 'Encrypted vault storage';
+  String get backupVaultStorageTitle => 'Stockage coffre chiffre';
 
   @override
   String backupVaultStorageCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count encrypted files',
-      one: '1 encrypted file',
-      zero: 'No encrypted files',
+      other: '$count fichiers chiffres',
+      one: '1 fichier chiffre',
+      zero: 'Aucun fichier chiffre',
     );
     return '$_temp0';
   }
 
   @override
-  String get desktopArchiveTitle => 'Home archive';
+  String get desktopArchiveTitle => 'Archive maison';
 
   @override
-  String get desktopArchiveBrowseTitle => 'Browse home archive';
+  String get desktopArchiveBrowseTitle => 'Parcourir l\'archive maison';
 
   @override
   String get desktopArchiveBrowseSubtitle =>
-      'View photos and videos stored on your desktop over Wi-Fi';
+      'Voir les photos et videos stockees sur votre bureau via Wi-Fi';
 
   @override
-  String get desktopArchiveEmpty => 'No archived media found';
+  String get desktopArchiveEmpty => 'Aucun media archive trouve';
 
   @override
-  String get desktopArchiveLoadFailed => 'Could not load desktop archive';
+  String get desktopArchiveLoadFailed =>
+      'Impossible de charger l\'archive bureau';
 
   @override
-  String get desktopArchiveStreamFailed => 'Could not stream this file';
+  String get desktopArchiveStreamFailed => 'Impossible de lire ce fichier';
 
   @override
   String desktopArchiveItemCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count éléments',
+      one: '1 élément',
     );
     return '$_temp0';
   }

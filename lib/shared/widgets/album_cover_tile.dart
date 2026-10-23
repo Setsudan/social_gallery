@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 import 'package:social_gallery/shared/widgets/motion/pressable_scale.dart';
@@ -106,8 +107,8 @@ class AlbumCoverTile extends StatelessWidget {
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final cacheWidth = (200 * dpr).ceil().clamp(96, 800);
         return SizedBox.expand(
-          child: Image.file(
-            File(localPath),
+          child: buildFilesystemImage(
+            file: File(localPath),
             fit: BoxFit.cover,
             cacheWidth: cacheWidth,
             filterQuality: FilterQuality.low,

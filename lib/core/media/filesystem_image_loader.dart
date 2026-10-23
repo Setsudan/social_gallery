@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:social_gallery/core/media/jxl_codec.dart';
+
 class FilesystemImageDimensions {
   const FilesystemImageDimensions({
     required this.width,
@@ -40,7 +42,7 @@ Future<FilesystemImageDimensions?> readFilesystemImageDimensions(
       final fromPrefix = await _dimensionsFromBytes(prefix);
       if (fromPrefix != null) return fromPrefix;
     }
-    return _dimensionsFromBytes(await file.readAsBytes());
+    return await _dimensionsFromBytes(await file.readAsBytes());
   } catch (_) {
     return null;
   }
@@ -48,6 +50,14 @@ Future<FilesystemImageDimensions?> readFilesystemImageDimensions(
 
 Future<FilesystemImageDimensions?> _dimensionsFromBytes(Uint8List bytes) async {
   if (bytes.isEmpty) return null;
+
+  if (isJxlBytes(bytes)) {
+    final dims = readJxlDimensions(bytes);
+    if (dims != null) {
+      return FilesystemImageDimensions(width: dims.width, height: dims.height);
+    }
+    return null;
+  }
 
   ui.Codec? codec;
   try {
@@ -83,7 +93,7 @@ Future<Uint8List?> readFilesystemThumbnailBytes(
 
     ui.Codec? codec;
     try {
-      codec = await ui.instantiateImageCodec(
+      codec = await instantiateRasterCodec(
         bytes,
         targetWidth: maxEdge,
         targetHeight: maxEdge,

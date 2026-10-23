@@ -1286,6 +1286,37 @@
   "backupCloseBlockedMessage": "Votre telephone envoie encore des photos. Quitter maintenant peut interrompre la sauvegarde.",
   "backupCloseWait": "Attendre la fin",
   "backupCloseQuitAnyway": "Quitter quand meme",
+  "vaultPasswordSetTitle": "Definir le mot de passe du coffre",
+  "vaultPasswordSetDescription": "Les albums verrouilles sont chiffres sur votre bureau sous forme d'archives protegees AES-256. Choisissez un mot de passe pour les consulter plus tard.",
+  "vaultPasswordEnterTitle": "Entrer le mot de passe du coffre",
+  "vaultPasswordEnterDescription": "Entrez le mot de passe du coffre pour acceder aux sauvegardes chiffrees sur le bureau.",
+  "vaultPasswordLabel": "Mot de passe",
+  "vaultPasswordConfirmLabel": "Confirmer le mot de passe",
+  "vaultPasswordChangeTitle": "Mot de passe de sauvegarde du coffre",
+  "vaultPasswordChangeSubtitle": "Modifier le mot de passe utilise pour les sauvegardes chiffrees des albums verrouilles",
+  "backupVaultStorageTitle": "Stockage coffre chiffre",
+  "backupVaultStorageCount": "{count, plural, =0{Aucun fichier chiffre} =1{1 fichier chiffre} other{{count} fichiers chiffres}}",
+  "@backupVaultStorageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopArchiveTitle": "Archive maison",
+  "desktopArchiveBrowseTitle": "Parcourir l'archive maison",
+  "desktopArchiveBrowseSubtitle": "Voir les photos et videos stockees sur votre bureau via Wi-Fi",
+  "desktopArchiveEmpty": "Aucun media archive trouve",
+  "desktopArchiveLoadFailed": "Impossible de charger l'archive bureau",
+  "desktopArchiveStreamFailed": "Impossible de lire ce fichier",
+  "desktopArchiveItemCount": "{count, plural, =1{1 élément} other{{count} éléments}}",
+  "@desktopArchiveItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsOrganizeGestures": "Gestes d'organisation",
   "settingsOrganizeGesturesSubtitle": "Reassigner les glissements gauche, droite, haut et bas",
   "settingsOrganizeGesturesReset": "Réinitialiser",

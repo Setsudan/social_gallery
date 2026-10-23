@@ -1,9 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
+import 'package:social_gallery/core/media/jxl_codec.dart';
 
 String computeDHash(Uint8List bytes) {
-  final decoded = img.decodeImage(bytes);
+  final decoded = decodeRasterImage(bytes);
   if (decoded == null) return '';
 
   final resized = img.copyResize(decoded, width: 9, height: 8);
@@ -21,7 +22,7 @@ String computeDHash(Uint8List bytes) {
 }
 
 double computeBlurScore(Uint8List bytes) {
-  final decoded = img.decodeImage(bytes);
+  final decoded = decodeRasterImage(bytes);
   if (decoded == null) return 0;
 
   final gray = img.grayscale(img.copyResize(decoded, width: 64, height: 64));
@@ -50,7 +51,7 @@ double computeBlurScore(Uint8List bytes) {
 }
 
 double computeExposureScore(Uint8List bytes) {
-  final decoded = img.decodeImage(bytes);
+  final decoded = decodeRasterImage(bytes);
   if (decoded == null) return 128;
 
   final gray = img.grayscale(img.copyResize(decoded, width: 32, height: 32));
@@ -65,7 +66,7 @@ double computeExposureScore(Uint8List bytes) {
 }
 
 bool computeIsSolidColor(Uint8List bytes) {
-  final decoded = img.decodeImage(bytes);
+  final decoded = decodeRasterImage(bytes);
   if (decoded == null) return false;
 
   final sample = img.copyResize(decoded, width: 16, height: 16);
@@ -104,7 +105,7 @@ const kColorBuckets = [
 
 /// Maps average thumbnail RGB to a [kColorBuckets] id, or null if undecodable.
 String? computeDominantColor(Uint8List bytes) {
-  final decoded = img.decodeImage(bytes);
+  final decoded = decodeRasterImage(bytes);
   if (decoded == null) return null;
 
   final sample = img.copyResize(decoded, width: 32, height: 32);

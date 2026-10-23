@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/media/asset_entity_cache.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 import 'package:social_gallery/core/media/thumbnail_decode.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/backup_state.dart';
@@ -180,8 +181,8 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
           );
         } else {
           thumbnail = SizedBox.expand(
-            child: Image.file(
-              File(widget.assetId),
+            child: buildFilesystemImage(
+              file: File(widget.assetId),
               fit: widget.fit,
               cacheWidth: maxEdge,
               filterQuality: FilterQuality.low,

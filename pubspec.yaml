@@ -58,6 +58,7 @@ dependencies:
   flutter_litert: ^3.5.1
   async_wallpaper: ^3.3.0
   mobile_scanner: ^7.2.1
+  koni_jxl_flutter: ^0.1.4
 
 dev_dependencies:
   flutter_test:

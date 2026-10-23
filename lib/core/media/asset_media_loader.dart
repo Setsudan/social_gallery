@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 import 'package:social_gallery/shared/widgets/unsupported_media_placeholder.dart';
 
 /// Central routing for thumbnails, fullscreen, and mime inference.
@@ -21,6 +22,7 @@ class AssetMediaLoader {
     'heif',
     'tif',
     'tiff',
+    'jxl',
     'dng',
     'cr2',
     'nef',
@@ -138,7 +140,7 @@ class AssetMediaLoader {
       case AssetMediaKind.video:
         return 'video/mp4';
       case AssetMediaKind.image:
-        return _imageMimeFromExtension(extensionFromEntity(asset)) ??
+        return imageMimeFromExtension(extensionFromEntity(asset)) ??
             'image/jpeg';
       case AssetMediaKind.audio:
         return 'audio/mpeg';
@@ -162,7 +164,7 @@ class AssetMediaLoader {
       case AssetMediaKind.video:
         return 'video/mp4';
       case AssetMediaKind.image:
-        return _imageMimeFromExtension(extensionFromEntity(asset)) ??
+        return imageMimeFromExtension(extensionFromEntity(asset)) ??
             'image/jpeg';
       case AssetMediaKind.audio:
         return 'audio/mpeg';
@@ -171,7 +173,8 @@ class AssetMediaLoader {
     }
   }
 
-  static String? _imageMimeFromExtension(String? ext) {
+  /// Maps a lowercase image extension to a MIME type.
+  static String? imageMimeFromExtension(String? ext) {
     if (ext == null) return null;
     switch (ext) {
       case 'png':
@@ -188,6 +191,8 @@ class AssetMediaLoader {
       case 'tif':
       case 'tiff':
         return 'image/tiff';
+      case 'jxl':
+        return 'image/jxl';
       default:
         return 'image/jpeg';
     }
@@ -362,8 +367,8 @@ class _FileThumbnail extends StatelessWidget {
           );
         }
         return SizedBox.expand(
-          child: Image.file(
-            file,
+          child: buildFilesystemImage(
+            file: file,
             fit: fit,
             cacheWidth: cacheWidth,
             filterQuality: FilterQuality.low,
@@ -410,8 +415,8 @@ class _FileFullscreenImage extends StatelessWidget {
             fit: fit,
           );
         }
-        return Image.file(
-          file,
+        return buildFilesystemImage(
+          file: file,
           fit: fit,
           cacheWidth: cacheWidth,
           gaplessPlayback: true,

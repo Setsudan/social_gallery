@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_litert/flutter_litert.dart';
 import 'package:image/image.dart' as img;
+import 'package:social_gallery/core/media/jxl_codec.dart';
 
 /// On-device image labels for desktop using MobileNet V2 (Apache 2.0, TF model zoo).
 class DesktopImageLabeler {
@@ -46,7 +47,7 @@ class DesktopImageLabeler {
     final interpreter = _interpreter;
     if (interpreter == null || _labels.isEmpty) return const [];
 
-    final decoded = img.decodeImage(bytes);
+    final decoded = decodeRasterImage(bytes);
     if (decoded == null) return const [];
 
     final resized = img.copyResize(

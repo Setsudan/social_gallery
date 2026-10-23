@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 
 class FolderAvatar extends StatefulWidget {
@@ -89,8 +90,8 @@ class _FolderAvatarState extends State<FolderAvatar> {
           child: SizedBox(
             width: widget.size,
             height: widget.size,
-            child: Image.file(
-              File(path),
+            child: buildFilesystemImage(
+              file: File(path),
               fit: BoxFit.cover,
               cacheWidth: (widget.size *
                       MediaQuery.devicePixelRatioOf(context))

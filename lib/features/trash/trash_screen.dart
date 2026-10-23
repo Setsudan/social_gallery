@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/layout/responsive_grid.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
@@ -232,8 +233,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                           16,
                                         ),
                                         child: trashedFile.existsSync()
-                                            ? Image.file(
-                                                trashedFile,
+                                            ? buildFilesystemImage(
+                                                file: trashedFile,
                                                 fit: BoxFit.contain,
                                                 cacheWidth:
                                                     (MediaQuery.sizeOf(context)
@@ -324,8 +325,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                     color:
                                         theme.colorScheme.surfaceContainerHighest,
                                     child: trashedFile.existsSync()
-                                        ? Image.file(
-                                            trashedFile,
+                                        ? buildFilesystemImage(
+                                            file: trashedFile,
                                             fit: BoxFit.cover,
                                             cacheWidth: 500,
                                           )

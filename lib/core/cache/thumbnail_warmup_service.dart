@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:social_gallery/core/media/asset_entity_cache.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 /// Pre-decodes recent thumbnails so the gallery feels instant on reopen.
@@ -42,9 +42,10 @@ class ThumbnailWarmupService {
     for (final path in paths) {
       try {
         final bytes = await File(path).readAsBytes();
-        final codec = await ui.instantiateImageCodec(
+        final codec = await instantiateRasterCodec(
           bytes,
           targetWidth: _thumbnailEdge,
+          targetHeight: _thumbnailEdge,
         );
         codec.dispose();
       } catch (_) {}

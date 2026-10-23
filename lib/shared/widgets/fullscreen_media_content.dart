@@ -6,6 +6,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/media/asset_media_loader.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/shared/widgets/asset_video_player.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
@@ -66,8 +67,8 @@ class FullscreenMediaContent extends ConsumerWidget {
         );
       }
 
-      final Widget imageChild = Image.file(
-        File(assetPath!),
+      final Widget imageChild = buildFilesystemImage(
+        file: File(assetPath!),
         fit: imageFit,
         cacheWidth: cacheWidth,
         gaplessPlayback: true,

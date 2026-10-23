@@ -108,6 +108,7 @@ class DesktopBackupInventory {
     '.webp',
     '.heic',
     '.heif',
+    '.jxl',
     '.mp4',
     '.mov',
     '.avi',

@@ -29,6 +29,24 @@ void main() {
       );
     });
 
+    test('other with image/jxl mime is image', () {
+      expect(
+        AssetMediaLoader.classify(
+          _entity(type: AssetType.other, mimeType: 'image/jxl'),
+        ),
+        AssetMediaKind.image,
+      );
+    });
+
+    test('other with .jxl title is image', () {
+      expect(
+        AssetMediaLoader.classify(
+          _entity(type: AssetType.other, title: 'photo.jxl'),
+        ),
+        AssetMediaKind.image,
+      );
+    });
+
     test('other with video extension is video', () {
       expect(
         AssetMediaLoader.classify(
@@ -62,6 +80,12 @@ void main() {
         ),
         isFalse,
       );
+    });
+  });
+
+  group('AssetMediaLoader.imageMimeFromExtension', () {
+    test('maps jxl to image/jxl', () {
+      expect(AssetMediaLoader.imageMimeFromExtension('jxl'), 'image/jxl');
     });
   });
 }

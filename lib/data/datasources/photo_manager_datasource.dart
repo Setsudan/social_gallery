@@ -21,7 +21,8 @@ class PhotoManagerDatasource {
   final PreferencesRepository _preferences;
   PhotoManagerDatasource(this._preferences);
   static const _imageExtensions = {
-    'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'tif', 'tiff'
+    'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'tif', 'tiff',
+    'jxl',
   };
   static const _videoExtensions = {
     'mp4', 'mov', 'm4v', 'avi', 'mkv', 'webm', '3gp', 'mpeg', 'mpg', 'wmv', 'flv'
@@ -103,7 +104,9 @@ class PhotoManagerDatasource {
 
         final ext = p.extension(filePath).replaceAll('.', '').toLowerCase();
         final isVideo = _videoExtensions.contains(ext);
-        final mimeType = isVideo ? 'video/mp4' : 'image/jpeg';
+        final mimeType = isVideo
+            ? 'video/mp4'
+            : (AssetMediaLoader.imageMimeFromExtension(ext) ?? 'image/jpeg');
 
         final id = filePath.hashCode & 0x7FFFFFFF;
         int? width;

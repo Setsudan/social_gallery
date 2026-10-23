@@ -16,6 +16,7 @@ import 'package:social_gallery/core/backup/desktop_backup_inventory.dart';
 import 'package:social_gallery/core/backup/pairing_service.dart';
 import 'package:social_gallery/core/backup/vault_archive_service.dart';
 import 'package:social_gallery/core/backup/vault_config_store.dart';
+import 'package:social_gallery/core/media/jxl_codec.dart';
 
 Future<String> _hashFile(String path) async {
   final digest = await sha256.bind(File(path).openRead()).first;
@@ -1057,7 +1058,7 @@ class DesktopBackupServer {
       }
 
       final bytes = await File(sourcePath).readAsBytes();
-      final decoded = img.decodeImage(bytes);
+      final decoded = decodeRasterImage(bytes);
       if (decoded == null) {
         return Response.notFound('Unsupported image');
       }
@@ -1227,6 +1228,8 @@ class DesktopBackupServer {
       case '.heic':
       case '.heif':
         return 'image/heic';
+      case '.jxl':
+        return 'image/jxl';
       case '.mp4':
         return 'video/mp4';
       case '.mov':
