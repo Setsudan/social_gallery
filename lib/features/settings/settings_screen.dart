@@ -21,6 +21,7 @@ import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/desktop_gallery_grid_size.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/features/settings/backup_settings_section.dart';
+import 'package:social_gallery/features/settings/cloud_backup_settings_section.dart';
 import 'package:social_gallery/shared/widgets/motion/animation_speed_preview.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_settings_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -885,6 +886,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           const SizedBox(height: OneUiSpacing.sectionGap),
           const BackupSettingsSection(),
+          const CloudBackupSettingsSection(),
           const SizedBox(height: OneUiSpacing.sectionGap),
           OneUiSettingsSection(
             title: l10n.settingsSectionContent,

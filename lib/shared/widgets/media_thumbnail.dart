@@ -21,6 +21,7 @@ class MediaThumbnail extends StatefulWidget {
     this.heroTag,
     this.maxThumbnailEdge,
     this.backupState,
+    this.cloudBackedUp = false,
   });
 
   final String assetId;
@@ -33,6 +34,7 @@ class MediaThumbnail extends StatefulWidget {
   /// so small cells do not decode oversized bitmaps.
   final int? maxThumbnailEdge;
   final MediaBackupState? backupState;
+  final bool cloudBackedUp;
 
   @override
   State<MediaThumbnail> createState() => _MediaThumbnailState();
@@ -68,9 +70,14 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
   }
 
   List<Widget> _overlayBadges({required bool isVideo}) {
+    final showBackup = !usesFilesystemGallery &&
+        (widget.backupState != null || widget.cloudBackedUp);
     return [
-      if (!usesFilesystemGallery && widget.backupState != null)
-        MediaBackupBadge(state: widget.backupState!),
+      if (showBackup)
+        MediaBackupBadge(
+          state: widget.backupState,
+          cloudBackedUp: widget.cloudBackedUp,
+        ),
       if (isVideo)
         const Positioned(
           right: 4,

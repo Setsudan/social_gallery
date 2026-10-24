@@ -41,6 +41,15 @@ class PreferencesRepository {
   static const _backupVerifyCursorKey = 'backup_verify_cursor';
   static const _backupInventoryBackfillDoneKey = 'backup_inventory_backfill_done';
   static const _backupInventoryBackfillRootKey = 'backup_inventory_backfill_root';
+  static const _cloudBackupEnabledKey = 'cloud_backup_enabled';
+  static const _cloudProviderKey = 'cloud_backup_provider';
+  static const _cloudEndpointKey = 'cloud_backup_endpoint';
+  static const _cloudRegionKey = 'cloud_backup_region';
+  static const _cloudBucketKey = 'cloud_backup_bucket';
+  static const _cloudPrefixKey = 'cloud_backup_prefix';
+  static const _cloudForcePathStyleKey = 'cloud_backup_force_path_style';
+  static const _cloudDeviceIdKey = 'cloud_backup_device_id';
+  static const _lastCloudBackupAtKey = 'last_cloud_backup_at_ms';
   static const _maxRecentSearches = 20;
 
   bool get hasCompletedInitialSetup =>
@@ -255,6 +264,75 @@ class PreferencesRepository {
     await _prefs.remove(_backupAuthTokenKey);
     await _prefs.remove(_pairedDesktopIdKey);
     await _prefs.remove(_pairedMobileDeviceNameKey);
+  }
+
+  bool get cloudBackupEnabled =>
+      _prefs.getBool(_cloudBackupEnabledKey) ?? false;
+  Future<void> setCloudBackupEnabled(bool value) async {
+    await _prefs.setBool(_cloudBackupEnabledKey, value);
+  }
+
+  /// One of: minio, rustfs, cloudflare_r2
+  String get cloudBackupProvider =>
+      _prefs.getString(_cloudProviderKey) ?? 'minio';
+  Future<void> setCloudBackupProvider(String value) async {
+    await _prefs.setString(_cloudProviderKey, value);
+  }
+
+  String get cloudBackupEndpoint =>
+      _prefs.getString(_cloudEndpointKey) ?? '';
+  Future<void> setCloudBackupEndpoint(String value) async {
+    await _prefs.setString(_cloudEndpointKey, value);
+  }
+
+  String get cloudBackupRegion =>
+      _prefs.getString(_cloudRegionKey) ?? 'us-east-1';
+  Future<void> setCloudBackupRegion(String value) async {
+    await _prefs.setString(_cloudRegionKey, value);
+  }
+
+  String get cloudBackupBucket =>
+      _prefs.getString(_cloudBucketKey) ?? '';
+  Future<void> setCloudBackupBucket(String value) async {
+    await _prefs.setString(_cloudBucketKey, value);
+  }
+
+  String get cloudBackupPrefix =>
+      _prefs.getString(_cloudPrefixKey) ?? '';
+  Future<void> setCloudBackupPrefix(String value) async {
+    await _prefs.setString(_cloudPrefixKey, value);
+  }
+
+  bool get cloudBackupForcePathStyle =>
+      _prefs.getBool(_cloudForcePathStyleKey) ?? true;
+  Future<void> setCloudBackupForcePathStyle(bool value) async {
+    await _prefs.setBool(_cloudForcePathStyleKey, value);
+  }
+
+  String? get cloudBackupDeviceId => _prefs.getString(_cloudDeviceIdKey);
+  Future<void> setCloudBackupDeviceId(String value) async {
+    await _prefs.setString(_cloudDeviceIdKey, value);
+  }
+
+  DateTime? get lastCloudBackupAt {
+    final ms = _prefs.getInt(_lastCloudBackupAtKey);
+    if (ms == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  Future<void> setLastCloudBackupAt(DateTime time) async {
+    await _prefs.setInt(_lastCloudBackupAtKey, time.millisecondsSinceEpoch);
+  }
+
+  Future<void> clearCloudBackupConfig() async {
+    await _prefs.remove(_cloudBackupEnabledKey);
+    await _prefs.remove(_cloudProviderKey);
+    await _prefs.remove(_cloudEndpointKey);
+    await _prefs.remove(_cloudRegionKey);
+    await _prefs.remove(_cloudBucketKey);
+    await _prefs.remove(_cloudPrefixKey);
+    await _prefs.remove(_cloudForcePathStyleKey);
+    await _prefs.remove(_lastCloudBackupAtKey);
   }
 
   List<RecentSearch> get recentSearches {

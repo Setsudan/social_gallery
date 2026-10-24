@@ -86,6 +86,9 @@ class MediaRepository {
             mergedRow = mergedRow.copyWith(
               backupState: Value(existing.backupState),
               lastSyncTime: Value(existing.lastSyncTime),
+              cloudBackupState: Value(existing.cloudBackupState),
+              cloudLastSyncTime: Value(existing.cloudLastSyncTime),
+              cloudObjectKey: Value(existing.cloudObjectKey),
             );
             final incomingLat =
                 row.latitude.present ? row.latitude.value : null;
@@ -694,4 +697,80 @@ class MediaRepository {
   Future<void> markVerifiedMissingAsPending(Iterable<int> ids) {
     return _db.markMediaIdsPending(ids);
   }
+
+  Future<List<PendingBackupFolder>> getPendingCloudBackupFolders() {
+    return _db.getPendingCloudBackupFolders();
+  }
+
+  Future<List<domain.MediaItem>> getMediaPendingCloudBackup({
+    int limit = 100,
+    String? folderPath,
+  }) async {
+    final rows = await _db.getMediaPendingCloudBackup(
+      limit: limit,
+      folderPath: folderPath,
+    );
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<int> countMediaPendingCloudBackup({String? folderPath}) {
+    return _db.countMediaPendingCloudBackup(folderPath: folderPath);
+  }
+
+  Future<void> updateCloudBackupState(int id, MediaBackupState state) {
+    return _db.updateMediaCloudBackupState(id, state.value);
+  }
+
+  Future<void> markMediaCloudBackedUp({
+    required int id,
+    required String objectKey,
+  }) {
+    return _db.markMediaCloudBackedUp(
+      id: id,
+      syncedAtMs: DateTime.now().millisecondsSinceEpoch,
+      objectKey: objectKey,
+    );
+  }
+
+  Future<void> resetStaleCloudBackupInProgress() {
+    return _db.resetStaleCloudBackupInProgress();
+  }
+
+  Future<List<domain.MediaItem>> getCloudBackedUpMedia({
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    final rows = await _db.getCloudBackedUpMedia(limit: limit, offset: offset);
+    return rows.map(mediaItemFromRow).toList();
+  }
+
+  Future<int> countCloudBackedUpMedia() => _db.countCloudBackedUpMedia();
+
+  Future<void> upsertCloudBackupObject({
+    required int mediaId,
+    required String objectKey,
+    required String plaintextChecksum,
+    required int size,
+  }) {
+    return _db.upsertCloudBackupObject(
+      mediaId: mediaId,
+      objectKey: objectKey,
+      plaintextChecksum: plaintextChecksum,
+      size: size,
+      updatedAt: DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  Future<CloudBackupObject?> getCloudBackupObject(int mediaId) {
+    return _db.getCloudBackupObject(mediaId);
+  }
+
+  Future<List<CloudBackupObject>> listCloudBackupObjects({
+    int limit = 200,
+    int offset = 0,
+  }) {
+    return _db.listCloudBackupObjects(limit: limit, offset: offset);
+  }
+
+  Future<void> clearCloudBackupInventory() => _db.clearCloudBackupInventory();
 }

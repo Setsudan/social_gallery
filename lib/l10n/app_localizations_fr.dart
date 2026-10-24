@@ -2361,4 +2361,110 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get feedPostDoubleTapFavoriteHint =>
       'Appuyer deux fois pour ajouter aux favoris';
+
+  @override
+  String get cloudBackupSectionTitle => 'Sauvegarde cloud';
+
+  @override
+  String get cloudBackupEnableTitle => 'Sauvegarde cloud chiffree';
+
+  @override
+  String get cloudBackupEnableSubtitle =>
+      'Chiffre tous les medias sur l\'appareil, puis envoi vers MinIO, RustFS ou Cloudflare R2';
+
+  @override
+  String get cloudBackupConfigureTitle => 'Connexion stockage';
+
+  @override
+  String get cloudBackupPasswordTitle => 'Mot de passe de chiffrement';
+
+  @override
+  String get cloudBackupPasswordSubtitle =>
+      'Seul ce telephone peut dechiffrer les copies cloud';
+
+  @override
+  String get cloudBackupPasswordWrong =>
+      'Mot de passe de chiffrement incorrect';
+
+  @override
+  String get cloudBackupNowTitle => 'Sauvegarder vers le cloud';
+
+  @override
+  String get cloudBackupNowSubtitle => 'Uniquement en Wi-Fi';
+
+  @override
+  String get cloudBackupUnlinkTitle => 'Dissocier la sauvegarde cloud';
+
+  @override
+  String get cloudBackupUnlinkSubtitle =>
+      'Efface identifiants et cle de chiffrement sur ce telephone';
+
+  @override
+  String get cloudBackupUnlinkConfirm =>
+      'Les objets deja presents dans le bucket restent en place. L\'inventaire local et les identifiants seront supprimes.';
+
+  @override
+  String get cloudBackupNeedsConfig =>
+      'Configurer l\'endpoint et les identifiants';
+
+  @override
+  String get cloudBackupNeedsPassword =>
+      'Definir un mot de passe de chiffrement';
+
+  @override
+  String get cloudBackupWaitingWifi => 'En attente du Wi-Fi';
+
+  @override
+  String cloudBackupSyncing(int processed, int total) {
+    return 'Envoi $processed/$total';
+  }
+
+  @override
+  String cloudBackupLastAt(String when) {
+    return 'Derniere sauvegarde : $when';
+  }
+
+  @override
+  String get cloudBackupEndpoint => 'URL de l\'endpoint';
+
+  @override
+  String get cloudBackupRegion => 'Region';
+
+  @override
+  String get cloudBackupBucket => 'Bucket';
+
+  @override
+  String get cloudBackupPrefix => 'Prefixe d\'objet (optionnel)';
+
+  @override
+  String get cloudBackupAccessKey => 'Cle d\'acces';
+
+  @override
+  String get cloudBackupSecretKey => 'Cle secrete';
+
+  @override
+  String get cloudBackupPathStyle => 'Adressage path-style';
+
+  @override
+  String get cloudBackupTestConnection => 'Tester la connexion';
+
+  @override
+  String get cloudBackupTestOk => 'Connexion OK';
+
+  @override
+  String get cloudBackupTestFailed => 'Echec de la connexion';
+
+  @override
+  String get cloudArchiveBrowseTitle => 'Parcourir l\'archive cloud';
+
+  @override
+  String get cloudArchiveBrowseSubtitle =>
+      'Dechiffrer et previsualiser les medias sauvegardes';
+
+  @override
+  String get cloudArchiveEmpty => 'Aucun media sauvegarde dans le cloud';
+
+  @override
+  String get cloudArchiveDecryptFailed =>
+      'Impossible de dechiffrer cet element';
 }

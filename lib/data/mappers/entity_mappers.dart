@@ -34,6 +34,9 @@ domain.MediaItem _mediaItemFromFields({
   required String? originalPath,
   MediaBackupState backupState = MediaBackupState.pending,
   int? lastSyncTime,
+  MediaBackupState cloudBackupState = MediaBackupState.pending,
+  int? cloudLastSyncTime,
+  String? cloudObjectKey,
   bool isVault = false,
   MediaContentKind contentKind = MediaContentKind.photo,
 }) {
@@ -65,6 +68,9 @@ domain.MediaItem _mediaItemFromFields({
     originalPath: originalPath,
     backupState: backupState,
     lastSyncTime: lastSyncTime,
+    cloudBackupState: cloudBackupState,
+    cloudLastSyncTime: cloudLastSyncTime,
+    cloudObjectKey: cloudObjectKey,
     isVault: isVault,
     contentKind: contentKind,
   );
@@ -100,6 +106,9 @@ domain.MediaItem mediaItemFromRow(MediaRow row) {
     originalPath: row.originalPath,
     backupState: MediaBackupState.fromValue(row.backupState),
     lastSyncTime: row.lastSyncTime,
+    cloudBackupState: MediaBackupState.fromValue(row.cloudBackupState),
+    cloudLastSyncTime: row.cloudLastSyncTime,
+    cloudObjectKey: row.cloudObjectKey,
     contentKind: MediaContentKind.fromValue(row.contentKind),
   );
 }
@@ -134,6 +143,11 @@ domain.MediaItem mediaItemFromQueryRow(QueryRow row) {
     originalPath: row.readNullable<String>('original_path'),
     backupState: MediaBackupState.fromValue(row.read<int>('backup_state')),
     lastSyncTime: row.readNullable<int>('last_sync_time'),
+    cloudBackupState: MediaBackupState.fromValue(
+      row.readNullable<int>('cloud_backup_state') ?? 0,
+    ),
+    cloudLastSyncTime: row.readNullable<int>('cloud_last_sync_time'),
+    cloudObjectKey: row.readNullable<String>('cloud_object_key'),
     contentKind: MediaContentKind.fromValue(
       row.readNullable<int>('content_kind') ?? MediaContentKind.photo.value,
     ),

@@ -42,6 +42,10 @@ import 'package:social_gallery/core/backup/desktop_discovery_service.dart';
 import 'package:social_gallery/core/backup/desktop_library_controller.dart';
 import 'package:social_gallery/core/backup/vault_password_store.dart';
 import 'package:social_gallery/core/notifications/desktop_backup_notification_service.dart';
+import 'package:social_gallery/core/notifications/cloud_backup_notification_service.dart';
+import 'package:social_gallery/core/cloud_backup/cloud_backup_controller.dart';
+import 'package:social_gallery/core/cloud_backup/cloud_credential_store.dart';
+import 'package:social_gallery/core/cloud_backup/cloud_vault_key_store.dart';
 import 'package:social_gallery/core/backup/pairing_service.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
@@ -460,6 +464,42 @@ final desktopLibraryProvider =
     ref.watch(desktopAvailabilityServiceProvider),
     ref.watch(vaultPasswordStoreProvider),
   );
+  ref.onDispose(controller.dispose);
+  return controller;
+});
+
+final cloudCredentialStoreProvider = Provider((ref) => CloudCredentialStore());
+
+final cloudVaultKeyStoreProvider = Provider((ref) => CloudVaultKeyStore());
+
+final cloudBackupNotificationServiceProvider =
+    Provider((ref) => CloudBackupNotificationService());
+
+final cloudBackupProvider =
+    StateNotifierProvider<CloudBackupController, CloudBackupState>((ref) {
+  final controller = CloudBackupController(
+    ref.watch(preferencesRepositoryProvider),
+    ref.watch(mediaRepositoryProvider),
+    ref.watch(cloudCredentialStoreProvider),
+    ref.watch(cloudVaultKeyStoreProvider),
+    notifications: usesFilesystemGallery
+        ? null
+        : ref.watch(cloudBackupNotificationServiceProvider),
+    onBackupFinished: () {
+      if (!usesFilesystemGallery) {
+        refreshFeedProvidersFromRef(ref);
+      }
+    },
+    isGallerySyncRunning: () => ref.read(gallerySyncProvider).isRunning,
+    waitForGallerySync: () async {
+      while (ref.read(gallerySyncProvider).isRunning) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      }
+    },
+  );
+  if (ref.watch(preferencesRepositoryProvider).cloudBackupEnabled) {
+    controller.startHeartbeat();
+  }
   ref.onDispose(controller.dispose);
   return controller;
 });

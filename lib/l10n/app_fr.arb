@@ -1411,5 +1411,48 @@
       }
     }
   },
-  "feedPostDoubleTapFavoriteHint": "Appuyer deux fois pour ajouter aux favoris"
+  "feedPostDoubleTapFavoriteHint": "Appuyer deux fois pour ajouter aux favoris",
+
+  "cloudBackupSectionTitle": "Sauvegarde cloud",
+  "cloudBackupEnableTitle": "Sauvegarde cloud chiffree",
+  "cloudBackupEnableSubtitle": "Chiffre tous les medias sur l'appareil, puis envoi vers MinIO, RustFS ou Cloudflare R2",
+  "cloudBackupConfigureTitle": "Connexion stockage",
+  "cloudBackupPasswordTitle": "Mot de passe de chiffrement",
+  "cloudBackupPasswordSubtitle": "Seul ce telephone peut dechiffrer les copies cloud",
+  "cloudBackupPasswordWrong": "Mot de passe de chiffrement incorrect",
+  "cloudBackupNowTitle": "Sauvegarder vers le cloud",
+  "cloudBackupNowSubtitle": "Uniquement en Wi-Fi",
+  "cloudBackupUnlinkTitle": "Dissocier la sauvegarde cloud",
+  "cloudBackupUnlinkSubtitle": "Efface identifiants et cle de chiffrement sur ce telephone",
+  "cloudBackupUnlinkConfirm": "Les objets deja presents dans le bucket restent en place. L'inventaire local et les identifiants seront supprimes.",
+  "cloudBackupNeedsConfig": "Configurer l'endpoint et les identifiants",
+  "cloudBackupNeedsPassword": "Definir un mot de passe de chiffrement",
+  "cloudBackupWaitingWifi": "En attente du Wi-Fi",
+  "cloudBackupSyncing": "Envoi {processed}/{total}",
+  "@cloudBackupSyncing": {
+    "placeholders": {
+      "processed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "cloudBackupLastAt": "Derniere sauvegarde : {when}",
+  "@cloudBackupLastAt": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "cloudBackupEndpoint": "URL de l'endpoint",
+  "cloudBackupRegion": "Region",
+  "cloudBackupBucket": "Bucket",
+  "cloudBackupPrefix": "Prefixe d'objet (optionnel)",
+  "cloudBackupAccessKey": "Cle d'acces",
+  "cloudBackupSecretKey": "Cle secrete",
+  "cloudBackupPathStyle": "Adressage path-style",
+  "cloudBackupTestConnection": "Tester la connexion",
+  "cloudBackupTestOk": "Connexion OK",
+  "cloudBackupTestFailed": "Echec de la connexion",
+  "cloudArchiveBrowseTitle": "Parcourir l'archive cloud",
+  "cloudArchiveBrowseSubtitle": "Dechiffrer et previsualiser les medias sauvegardes",
+  "cloudArchiveEmpty": "Aucun media sauvegarde dans le cloud",
+  "cloudArchiveDecryptFailed": "Impossible de dechiffrer cet element"
 }

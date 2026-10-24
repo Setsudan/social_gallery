@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
+import 'tables/cloud_backup_objects_table.dart';
 import 'tables/folders_table.dart';
 import 'tables/location_place_cache_table.dart';
 import 'tables/media_analysis_cache_table.dart';
@@ -31,6 +32,9 @@ class MediaSyncMergeState {
     required this.originalPath,
     required this.backupState,
     required this.lastSyncTime,
+    required this.cloudBackupState,
+    required this.cloudLastSyncTime,
+    required this.cloudObjectKey,
     required this.latitude,
     required this.longitude,
     required this.contentKind,
@@ -42,6 +46,9 @@ class MediaSyncMergeState {
   final String? originalPath;
   final int backupState;
   final int? lastSyncTime;
+  final int cloudBackupState;
+  final int? cloudLastSyncTime;
+  final String? cloudObjectKey;
   final double? latitude;
   final double? longitude;
   final int contentKind;
@@ -55,6 +62,7 @@ class MediaSyncMergeState {
     TravelModes,
     MediaAnalysisCache,
     LocationPlaceCache,
+    CloudBackupObjects,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -63,7 +71,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -135,6 +143,16 @@ ON folders (follow_status, is_biometric_locked)
 CREATE INDEX media_items_content_kind_trashed
 ON media_items (content_kind, is_trashed, date_modified DESC)
 ''',
+        ));
+      }
+      if (from < 9) {
+        await m.addColumn(mediaItems, mediaItems.cloudBackupState);
+        await m.addColumn(mediaItems, mediaItems.cloudLastSyncTime);
+        await m.addColumn(mediaItems, mediaItems.cloudObjectKey);
+        await m.createTable(cloudBackupObjects);
+        await m.createIndex(Index(
+          'media_items_cloud_backup_state',
+          'CREATE INDEX media_items_cloud_backup_state ON media_items (cloud_backup_state)',
         ));
       }
     },
@@ -741,7 +759,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     final rows = await customSelect(
       '''
       SELECT id, is_favorite, is_trashed, trashed_at, original_path,
-             backup_state, last_sync_time, latitude, longitude, content_kind
+             backup_state, last_sync_time,
+             cloud_backup_state, cloud_last_sync_time, cloud_object_key,
+             latitude, longitude, content_kind
       FROM media_items
       ''',
       readsFrom: {mediaItems},
@@ -755,6 +775,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
           originalPath: row.readNullable<String>('original_path'),
           backupState: row.read<int>('backup_state'),
           lastSyncTime: row.readNullable<int>('last_sync_time'),
+          cloudBackupState: row.readNullable<int>('cloud_backup_state') ?? 0,
+          cloudLastSyncTime: row.readNullable<int>('cloud_last_sync_time'),
+          cloudObjectKey: row.readNullable<String>('cloud_object_key'),
           latitude: row.readNullable<double>('latitude'),
           longitude: row.readNullable<double>('longitude'),
           contentKind: row.readNullable<int>('content_kind') ?? 1,
@@ -1020,6 +1043,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
       lastViewedAt: row.readNullable<int>('last_viewed_at'),
       backupState: row.read<int>('backup_state'),
       lastSyncTime: row.readNullable<int>('last_sync_time'),
+      cloudBackupState: row.readNullable<int>('cloud_backup_state') ?? 0,
+      cloudLastSyncTime: row.readNullable<int>('cloud_last_sync_time'),
+      cloudObjectKey: row.readNullable<String>('cloud_object_key'),
       isTrashed: row.read<bool>('is_trashed'),
       trashedAt: row.readNullable<int>('trashed_at'),
       originalPath: row.readNullable<String>('original_path'),
@@ -1503,5 +1529,191 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     await (update(mediaItems)..where((m) => m.id.isIn(idList))).write(
       const MediaItemsCompanion(backupState: Value(0)),
     );
+  }
+
+  // --- Cloud backup (independent of LAN backup_state) ---
+
+  Future<List<PendingBackupFolder>> getPendingCloudBackupFolders() async {
+    final rows = await customSelect(
+      '''
+      SELECT
+        m.folder_path,
+        MIN(m.folder_name) AS folder_name,
+        (
+          SELECT MIN(m2.date_added)
+          FROM media_items m2
+          WHERE m2.folder_path = m.folder_path
+            AND m2.is_trashed = 0
+        ) AS oldest_date_added,
+        SUM(m.size) AS pending_bytes,
+        COUNT(*) AS pending_count
+      FROM media_items m
+      WHERE m.is_trashed = 0
+        AND m.cloud_backup_state IN (0, 3)
+      GROUP BY m.folder_path
+      ORDER BY oldest_date_added ASC, pending_bytes ASC, m.folder_path ASC
+      ''',
+      readsFrom: {mediaItems},
+    ).get();
+    return rows
+        .map(
+          (row) => (
+            folderPath: row.read<String>('folder_path'),
+            folderName: row.read<String>('folder_name'),
+            oldestDateAdded: row.read<int>('oldest_date_added'),
+            pendingBytes: row.read<int>('pending_bytes'),
+            pendingCount: row.read<int>('pending_count'),
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<MediaRow>> getMediaPendingCloudBackup({
+    int limit = 100,
+    String? folderPath,
+  }) async {
+    final folderFilter =
+        folderPath != null ? 'AND m.folder_path = ?' : '';
+    final variables = <Variable>[
+      if (folderPath != null) Variable<String>(folderPath),
+      Variable<int>(limit),
+    ];
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      WHERE m.is_trashed = 0
+        AND m.cloud_backup_state IN (0, 3)
+        $folderFilter
+      ORDER BY m.date_added ASC
+      LIMIT ?
+      ''',
+      variables: variables,
+      readsFrom: {mediaItems},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<int> countMediaPendingCloudBackup({String? folderPath}) async {
+    final folderFilter = folderPath != null ? 'AND folder_path = ?' : '';
+    final variables = <Variable>[
+      if (folderPath != null) Variable<String>(folderPath),
+    ];
+    final row = await customSelect(
+      '''
+      SELECT COUNT(*) AS pending_count FROM media_items
+      WHERE is_trashed = 0
+        AND cloud_backup_state IN (0, 3)
+        $folderFilter
+      ''',
+      variables: variables,
+      readsFrom: {mediaItems},
+    ).getSingle();
+    return row.read<int>('pending_count');
+  }
+
+  Future<void> updateMediaCloudBackupState(int id, int cloudBackupState) async {
+    await (update(mediaItems)..where((m) => m.id.equals(id))).write(
+      MediaItemsCompanion(cloudBackupState: Value(cloudBackupState)),
+    );
+  }
+
+  Future<void> markMediaCloudBackedUp({
+    required int id,
+    required int syncedAtMs,
+    required String objectKey,
+  }) async {
+    await (update(mediaItems)..where((m) => m.id.equals(id))).write(
+      MediaItemsCompanion(
+        cloudBackupState: const Value(1),
+        cloudLastSyncTime: Value(syncedAtMs),
+        cloudObjectKey: Value(objectKey),
+      ),
+    );
+  }
+
+  Future<void> resetStaleCloudBackupInProgress() async {
+    await (update(mediaItems)..where((m) => m.cloudBackupState.equals(2)))
+        .write(
+      const MediaItemsCompanion(cloudBackupState: Value(3)),
+    );
+  }
+
+  Future<List<MediaRow>> getCloudBackedUpMedia({
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    final rows = await customSelect(
+      '''
+      SELECT m.* FROM media_items m
+      WHERE m.is_trashed = 0
+        AND m.cloud_backup_state = 1
+      ORDER BY m.cloud_last_sync_time DESC, m.id DESC
+      LIMIT ? OFFSET ?
+      ''',
+      variables: [Variable<int>(limit), Variable<int>(offset)],
+      readsFrom: {mediaItems},
+    ).get();
+    return rows.map(_mediaFromQuery).toList();
+  }
+
+  Future<int> countCloudBackedUpMedia() async {
+    final row = await customSelect(
+      '''
+      SELECT COUNT(*) AS backed_up_count FROM media_items
+      WHERE is_trashed = 0
+        AND cloud_backup_state = 1
+      ''',
+      readsFrom: {mediaItems},
+    ).getSingle();
+    return row.read<int>('backed_up_count');
+  }
+
+  Future<void> upsertCloudBackupObject({
+    required int mediaId,
+    required String objectKey,
+    required String plaintextChecksum,
+    required int size,
+    required int updatedAt,
+  }) async {
+    await into(cloudBackupObjects).insertOnConflictUpdate(
+      CloudBackupObjectsCompanion(
+        mediaId: Value(mediaId),
+        objectKey: Value(objectKey),
+        plaintextChecksum: Value(plaintextChecksum),
+        size: Value(size),
+        updatedAt: Value(updatedAt),
+      ),
+    );
+  }
+
+  Future<CloudBackupObject?> getCloudBackupObject(int mediaId) {
+    return (select(cloudBackupObjects)
+          ..where((t) => t.mediaId.equals(mediaId)))
+        .getSingleOrNull();
+  }
+
+  Future<CloudBackupObject?> getCloudBackupObjectByKey(String objectKey) {
+    return (select(cloudBackupObjects)
+          ..where((t) => t.objectKey.equals(objectKey)))
+        .getSingleOrNull();
+  }
+
+  Future<List<CloudBackupObject>> listCloudBackupObjects({
+    int limit = 200,
+    int offset = 0,
+  }) {
+    return (select(cloudBackupObjects)
+          ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])
+          ..limit(limit, offset: offset))
+        .get();
+  }
+
+  Future<void> deleteCloudBackupObject(int mediaId) async {
+    await (delete(cloudBackupObjects)..where((t) => t.mediaId.equals(mediaId)))
+        .go();
+  }
+
+  Future<void> clearCloudBackupInventory() async {
+    await delete(cloudBackupObjects).go();
   }
 }

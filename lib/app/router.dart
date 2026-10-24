@@ -43,6 +43,7 @@ import 'package:social_gallery/features/shell/main_shell.dart';
 
 import 'package:social_gallery/features/startup/startup_screen.dart';
 
+import 'package:social_gallery/features/archive/cloud_archive_screen.dart';
 import 'package:social_gallery/features/archive/desktop_archive_screen.dart';
 import 'package:social_gallery/features/settings/settings_screen.dart';
 
@@ -441,6 +442,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         pageBuilder: (context, state) =>
             _page(context, ref, state, const DesktopArchiveScreen()),
+      ),
+
+      GoRoute(
+        path: '/cloud-archive',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const CloudArchiveScreen()),
       ),
 
       GoRoute(

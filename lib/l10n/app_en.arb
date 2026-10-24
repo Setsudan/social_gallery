@@ -1383,6 +1383,49 @@
       "kind": {"type": "String"}
     }
   },
-  "feedPostDoubleTapFavoriteHint": "Double tap to favorite"
+  "feedPostDoubleTapFavoriteHint": "Double tap to favorite",
+
+  "cloudBackupSectionTitle": "Cloud backup",
+  "cloudBackupEnableTitle": "Encrypted cloud backup",
+  "cloudBackupEnableSubtitle": "Encrypt all media on device, then upload to MinIO, RustFS, or Cloudflare R2",
+  "cloudBackupConfigureTitle": "Storage connection",
+  "cloudBackupPasswordTitle": "Encryption password",
+  "cloudBackupPasswordSubtitle": "Only this phone can decrypt your cloud copies",
+  "cloudBackupPasswordWrong": "Incorrect encryption password",
+  "cloudBackupNowTitle": "Back up to cloud now",
+  "cloudBackupNowSubtitle": "Runs on Wi-Fi only",
+  "cloudBackupUnlinkTitle": "Unlink cloud backup",
+  "cloudBackupUnlinkSubtitle": "Clear credentials and encryption key on this phone",
+  "cloudBackupUnlinkConfirm": "Objects already in the bucket are left in place. Local inventory and credentials will be removed.",
+  "cloudBackupNeedsConfig": "Configure endpoint and credentials",
+  "cloudBackupNeedsPassword": "Set encryption password",
+  "cloudBackupWaitingWifi": "Waiting for Wi-Fi",
+  "cloudBackupSyncing": "Uploading {processed}/{total}",
+  "@cloudBackupSyncing": {
+    "placeholders": {
+      "processed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "cloudBackupLastAt": "Last backup: {when}",
+  "@cloudBackupLastAt": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "cloudBackupEndpoint": "Endpoint URL",
+  "cloudBackupRegion": "Region",
+  "cloudBackupBucket": "Bucket",
+  "cloudBackupPrefix": "Object prefix (optional)",
+  "cloudBackupAccessKey": "Access key",
+  "cloudBackupSecretKey": "Secret key",
+  "cloudBackupPathStyle": "Path-style addressing",
+  "cloudBackupTestConnection": "Test connection",
+  "cloudBackupTestOk": "Connection OK",
+  "cloudBackupTestFailed": "Connection failed",
+  "cloudArchiveBrowseTitle": "Browse cloud archive",
+  "cloudArchiveBrowseSubtitle": "Decrypt and preview backed-up media",
+  "cloudArchiveEmpty": "No cloud-backed media yet",
+  "cloudArchiveDecryptFailed": "Could not decrypt this item"
 
 }

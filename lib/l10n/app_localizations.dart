@@ -3997,6 +3997,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Double tap to favorite'**
   String get feedPostDoubleTapFavoriteHint;
+
+  /// No description provided for @cloudBackupSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup'**
+  String get cloudBackupSectionTitle;
+
+  /// No description provided for @cloudBackupEnableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted cloud backup'**
+  String get cloudBackupEnableTitle;
+
+  /// No description provided for @cloudBackupEnableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypt all media on device, then upload to MinIO, RustFS, or Cloudflare R2'**
+  String get cloudBackupEnableSubtitle;
+
+  /// No description provided for @cloudBackupConfigureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage connection'**
+  String get cloudBackupConfigureTitle;
+
+  /// No description provided for @cloudBackupPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption password'**
+  String get cloudBackupPasswordTitle;
+
+  /// No description provided for @cloudBackupPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only this phone can decrypt your cloud copies'**
+  String get cloudBackupPasswordSubtitle;
+
+  /// No description provided for @cloudBackupPasswordWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect encryption password'**
+  String get cloudBackupPasswordWrong;
+
+  /// No description provided for @cloudBackupNowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up to cloud now'**
+  String get cloudBackupNowTitle;
+
+  /// No description provided for @cloudBackupNowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on Wi-Fi only'**
+  String get cloudBackupNowSubtitle;
+
+  /// No description provided for @cloudBackupUnlinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink cloud backup'**
+  String get cloudBackupUnlinkTitle;
+
+  /// No description provided for @cloudBackupUnlinkSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear credentials and encryption key on this phone'**
+  String get cloudBackupUnlinkSubtitle;
+
+  /// No description provided for @cloudBackupUnlinkConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Objects already in the bucket are left in place. Local inventory and credentials will be removed.'**
+  String get cloudBackupUnlinkConfirm;
+
+  /// No description provided for @cloudBackupNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure endpoint and credentials'**
+  String get cloudBackupNeedsConfig;
+
+  /// No description provided for @cloudBackupNeedsPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Set encryption password'**
+  String get cloudBackupNeedsPassword;
+
+  /// No description provided for @cloudBackupWaitingWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Wi-Fi'**
+  String get cloudBackupWaitingWifi;
+
+  /// No description provided for @cloudBackupSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {processed}/{total}'**
+  String cloudBackupSyncing(int processed, int total);
+
+  /// No description provided for @cloudBackupLastAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {when}'**
+  String cloudBackupLastAt(String when);
+
+  /// No description provided for @cloudBackupEndpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint URL'**
+  String get cloudBackupEndpoint;
+
+  /// No description provided for @cloudBackupRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get cloudBackupRegion;
+
+  /// No description provided for @cloudBackupBucket.
+  ///
+  /// In en, this message translates to:
+  /// **'Bucket'**
+  String get cloudBackupBucket;
+
+  /// No description provided for @cloudBackupPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Object prefix (optional)'**
+  String get cloudBackupPrefix;
+
+  /// No description provided for @cloudBackupAccessKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Access key'**
+  String get cloudBackupAccessKey;
+
+  /// No description provided for @cloudBackupSecretKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret key'**
+  String get cloudBackupSecretKey;
+
+  /// No description provided for @cloudBackupPathStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Path-style addressing'**
+  String get cloudBackupPathStyle;
+
+  /// No description provided for @cloudBackupTestConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get cloudBackupTestConnection;
+
+  /// No description provided for @cloudBackupTestOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection OK'**
+  String get cloudBackupTestOk;
+
+  /// No description provided for @cloudBackupTestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed'**
+  String get cloudBackupTestFailed;
+
+  /// No description provided for @cloudArchiveBrowseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse cloud archive'**
+  String get cloudArchiveBrowseTitle;
+
+  /// No description provided for @cloudArchiveBrowseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrypt and preview backed-up media'**
+  String get cloudArchiveBrowseSubtitle;
+
+  /// No description provided for @cloudArchiveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No cloud-backed media yet'**
+  String get cloudArchiveEmpty;
+
+  /// No description provided for @cloudArchiveDecryptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not decrypt this item'**
+  String get cloudArchiveDecryptFailed;
 }
 
 class _AppLocalizationsDelegate

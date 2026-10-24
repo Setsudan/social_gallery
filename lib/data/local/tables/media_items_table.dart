@@ -43,6 +43,11 @@ class MediaItems extends Table {
   IntColumn get backupState => integer().withDefault(const Constant(0))();
   IntColumn get lastSyncTime => integer().nullable()();
 
+  /// Independent of LAN [backupState]; same enum values as [MediaBackupState].
+  IntColumn get cloudBackupState => integer().withDefault(const Constant(0))();
+  IntColumn get cloudLastSyncTime => integer().nullable()();
+  TextColumn get cloudObjectKey => text().nullable()();
+
   BoolColumn get isTrashed => boolean().withDefault(const Constant(false))();
   IntColumn get trashedAt => integer().nullable()();
   TextColumn get originalPath => text().nullable()();

@@ -31,6 +31,9 @@ class MediaItem {
     this.originalPath,
     this.backupState = MediaBackupState.pending,
     this.lastSyncTime,
+    this.cloudBackupState = MediaBackupState.pending,
+    this.cloudLastSyncTime,
+    this.cloudObjectKey,
     this.isVault = false,
     this.contentKind = MediaContentKind.photo,
   });
@@ -62,6 +65,9 @@ class MediaItem {
   final String? originalPath;
   final MediaBackupState backupState;
   final int? lastSyncTime;
+  final MediaBackupState cloudBackupState;
+  final int? cloudLastSyncTime;
+  final String? cloudObjectKey;
   final bool isVault;
   final MediaContentKind contentKind;
 
@@ -86,6 +92,9 @@ class MediaItem {
     String? folderPath,
     MediaBackupState? backupState,
     int? lastSyncTime,
+    MediaBackupState? cloudBackupState,
+    int? cloudLastSyncTime,
+    String? cloudObjectKey,
     bool? isVault,
     MediaContentKind? contentKind,
   }) {
@@ -117,6 +126,9 @@ class MediaItem {
       originalPath: originalPath ?? this.originalPath,
       backupState: backupState ?? this.backupState,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      cloudBackupState: cloudBackupState ?? this.cloudBackupState,
+      cloudLastSyncTime: cloudLastSyncTime ?? this.cloudLastSyncTime,
+      cloudObjectKey: cloudObjectKey ?? this.cloudObjectKey,
       isVault: isVault ?? this.isVault,
       contentKind: contentKind ?? this.contentKind,
     );

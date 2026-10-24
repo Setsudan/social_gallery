@@ -2328,4 +2328,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedPostDoubleTapFavoriteHint => 'Double tap to favorite';
+
+  @override
+  String get cloudBackupSectionTitle => 'Cloud backup';
+
+  @override
+  String get cloudBackupEnableTitle => 'Encrypted cloud backup';
+
+  @override
+  String get cloudBackupEnableSubtitle =>
+      'Encrypt all media on device, then upload to MinIO, RustFS, or Cloudflare R2';
+
+  @override
+  String get cloudBackupConfigureTitle => 'Storage connection';
+
+  @override
+  String get cloudBackupPasswordTitle => 'Encryption password';
+
+  @override
+  String get cloudBackupPasswordSubtitle =>
+      'Only this phone can decrypt your cloud copies';
+
+  @override
+  String get cloudBackupPasswordWrong => 'Incorrect encryption password';
+
+  @override
+  String get cloudBackupNowTitle => 'Back up to cloud now';
+
+  @override
+  String get cloudBackupNowSubtitle => 'Runs on Wi-Fi only';
+
+  @override
+  String get cloudBackupUnlinkTitle => 'Unlink cloud backup';
+
+  @override
+  String get cloudBackupUnlinkSubtitle =>
+      'Clear credentials and encryption key on this phone';
+
+  @override
+  String get cloudBackupUnlinkConfirm =>
+      'Objects already in the bucket are left in place. Local inventory and credentials will be removed.';
+
+  @override
+  String get cloudBackupNeedsConfig => 'Configure endpoint and credentials';
+
+  @override
+  String get cloudBackupNeedsPassword => 'Set encryption password';
+
+  @override
+  String get cloudBackupWaitingWifi => 'Waiting for Wi-Fi';
+
+  @override
+  String cloudBackupSyncing(int processed, int total) {
+    return 'Uploading $processed/$total';
+  }
+
+  @override
+  String cloudBackupLastAt(String when) {
+    return 'Last backup: $when';
+  }
+
+  @override
+  String get cloudBackupEndpoint => 'Endpoint URL';
+
+  @override
+  String get cloudBackupRegion => 'Region';
+
+  @override
+  String get cloudBackupBucket => 'Bucket';
+
+  @override
+  String get cloudBackupPrefix => 'Object prefix (optional)';
+
+  @override
+  String get cloudBackupAccessKey => 'Access key';
+
+  @override
+  String get cloudBackupSecretKey => 'Secret key';
+
+  @override
+  String get cloudBackupPathStyle => 'Path-style addressing';
+
+  @override
+  String get cloudBackupTestConnection => 'Test connection';
+
+  @override
+  String get cloudBackupTestOk => 'Connection OK';
+
+  @override
+  String get cloudBackupTestFailed => 'Connection failed';
+
+  @override
+  String get cloudArchiveBrowseTitle => 'Browse cloud archive';
+
+  @override
+  String get cloudArchiveBrowseSubtitle =>
+      'Decrypt and preview backed-up media';
+
+  @override
+  String get cloudArchiveEmpty => 'No cloud-backed media yet';
+
+  @override
+  String get cloudArchiveDecryptFailed => 'Could not decrypt this item';
 }

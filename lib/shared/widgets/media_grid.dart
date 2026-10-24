@@ -163,6 +163,7 @@ class MediaGrid extends ConsumerWidget {
                   item,
                   syncingMediaId: syncingMediaId,
                 ),
+                cloudBackedUp: visibleCloudBackup(item),
               ),
             ),
           );

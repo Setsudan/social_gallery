@@ -135,6 +135,7 @@ Settings → **Deleted items** to restore or permanently delete.
 - **Appearance:** theme (System / Light / Solar / Dark / Dark OLED), accent color, font size, animation speed
 - **Gallery view mode:** switch Home/Explore to Gallery/Albums layout
 - **Desktop backup:** pair phone with desktop on same Wi-Fi; automatic backup when desktop app is running (mobile). On desktop, enable **Receive backups** and use the pairing PIN/QR.
+- **Cloud backup (optional):** independent of desktop backup. Encrypt all media on-device (`SGVAULT2`), then upload to MinIO, RustFS, or Cloudflare R2. Only this phone can decrypt; Wi-Fi only.
 - **Organize:** batch size, queue order, release kept photos back to queue
 - **Storage:** trash retention, cache size/limit, auto-clear on close
 - **About:** version, privacy policy, open-source licenses, share app
@@ -241,6 +242,7 @@ Open `ios/Runner.xcworkspace` in Xcode to archive and sign.
 | Image compression | Yes | Yes | Not supported |
 | Duplicate scan notifications | Yes | Yes | No |
 | LAN backup to desktop | Yes | Yes | Receive + browse/stream |
+| Encrypted cloud backup (S3-compatible) | Yes | Yes | No |
 | Background trash cleanup | Workmanager | Limited | No |
 
 ## Developer documentation
@@ -267,6 +269,10 @@ Mobile and desktop must be on the same Wi-Fi. On desktop: Settings → **Receive
 **Windows:** allow the app through the firewall when prompted on first backup receive.
 
 **iOS:** local network permission is required for discovery and backup.
+
+### Cloud backup (S3-compatible)
+
+Independent of LAN desktop backup. On mobile: Settings → **Cloud backup** → choose MinIO, RustFS, or Cloudflare R2, enter endpoint/credentials, set an encryption password. All media is encrypted on-device (`SGVAULT2` chunked AES-256-GCM) before upload; the bucket only stores ciphertext. Sync runs on Wi-Fi/ethernet only. Browse decrypted previews via **Browse cloud archive**.
 
 ## License
 

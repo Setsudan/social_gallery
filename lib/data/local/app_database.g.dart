@@ -1128,6 +1128,40 @@ class $MediaItemsTable extends MediaItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _cloudBackupStateMeta = const VerificationMeta(
+    'cloudBackupState',
+  );
+  @override
+  late final GeneratedColumn<int> cloudBackupState = GeneratedColumn<int>(
+    'cloud_backup_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _cloudLastSyncTimeMeta = const VerificationMeta(
+    'cloudLastSyncTime',
+  );
+  @override
+  late final GeneratedColumn<int> cloudLastSyncTime = GeneratedColumn<int>(
+    'cloud_last_sync_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cloudObjectKeyMeta = const VerificationMeta(
+    'cloudObjectKey',
+  );
+  @override
+  late final GeneratedColumn<String> cloudObjectKey = GeneratedColumn<String>(
+    'cloud_object_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isTrashedMeta = const VerificationMeta(
     'isTrashed',
   );
@@ -1205,6 +1239,9 @@ class $MediaItemsTable extends MediaItems
     lastViewedAt,
     backupState,
     lastSyncTime,
+    cloudBackupState,
+    cloudLastSyncTime,
+    cloudObjectKey,
     isTrashed,
     trashedAt,
     originalPath,
@@ -1421,6 +1458,33 @@ class $MediaItemsTable extends MediaItems
         ),
       );
     }
+    if (data.containsKey('cloud_backup_state')) {
+      context.handle(
+        _cloudBackupStateMeta,
+        cloudBackupState.isAcceptableOrUnknown(
+          data['cloud_backup_state']!,
+          _cloudBackupStateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cloud_last_sync_time')) {
+      context.handle(
+        _cloudLastSyncTimeMeta,
+        cloudLastSyncTime.isAcceptableOrUnknown(
+          data['cloud_last_sync_time']!,
+          _cloudLastSyncTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cloud_object_key')) {
+      context.handle(
+        _cloudObjectKeyMeta,
+        cloudObjectKey.isAcceptableOrUnknown(
+          data['cloud_object_key']!,
+          _cloudObjectKeyMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_trashed')) {
       context.handle(
         _isTrashedMeta,
@@ -1564,6 +1628,18 @@ class $MediaItemsTable extends MediaItems
         DriftSqlType.int,
         data['${effectivePrefix}last_sync_time'],
       ),
+      cloudBackupState: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cloud_backup_state'],
+      )!,
+      cloudLastSyncTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cloud_last_sync_time'],
+      ),
+      cloudObjectKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cloud_object_key'],
+      ),
       isTrashed: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_trashed'],
@@ -1616,6 +1692,11 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
   final int? lastViewedAt;
   final int backupState;
   final int? lastSyncTime;
+
+  /// Independent of LAN [backupState]; same enum values as [MediaBackupState].
+  final int cloudBackupState;
+  final int? cloudLastSyncTime;
+  final String? cloudObjectKey;
   final bool isTrashed;
   final int? trashedAt;
   final String? originalPath;
@@ -1649,6 +1730,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     this.lastViewedAt,
     required this.backupState,
     this.lastSyncTime,
+    required this.cloudBackupState,
+    this.cloudLastSyncTime,
+    this.cloudObjectKey,
     required this.isTrashed,
     this.trashedAt,
     this.originalPath,
@@ -1712,6 +1796,13 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     map['backup_state'] = Variable<int>(backupState);
     if (!nullToAbsent || lastSyncTime != null) {
       map['last_sync_time'] = Variable<int>(lastSyncTime);
+    }
+    map['cloud_backup_state'] = Variable<int>(cloudBackupState);
+    if (!nullToAbsent || cloudLastSyncTime != null) {
+      map['cloud_last_sync_time'] = Variable<int>(cloudLastSyncTime);
+    }
+    if (!nullToAbsent || cloudObjectKey != null) {
+      map['cloud_object_key'] = Variable<String>(cloudObjectKey);
     }
     map['is_trashed'] = Variable<bool>(isTrashed);
     if (!nullToAbsent || trashedAt != null) {
@@ -1780,6 +1871,13 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       lastSyncTime: lastSyncTime == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncTime),
+      cloudBackupState: Value(cloudBackupState),
+      cloudLastSyncTime: cloudLastSyncTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cloudLastSyncTime),
+      cloudObjectKey: cloudObjectKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cloudObjectKey),
       isTrashed: Value(isTrashed),
       trashedAt: trashedAt == null && nullToAbsent
           ? const Value.absent()
@@ -1823,6 +1921,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       lastViewedAt: serializer.fromJson<int?>(json['lastViewedAt']),
       backupState: serializer.fromJson<int>(json['backupState']),
       lastSyncTime: serializer.fromJson<int?>(json['lastSyncTime']),
+      cloudBackupState: serializer.fromJson<int>(json['cloudBackupState']),
+      cloudLastSyncTime: serializer.fromJson<int?>(json['cloudLastSyncTime']),
+      cloudObjectKey: serializer.fromJson<String?>(json['cloudObjectKey']),
       isTrashed: serializer.fromJson<bool>(json['isTrashed']),
       trashedAt: serializer.fromJson<int?>(json['trashedAt']),
       originalPath: serializer.fromJson<String?>(json['originalPath']),
@@ -1859,6 +1960,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       'lastViewedAt': serializer.toJson<int?>(lastViewedAt),
       'backupState': serializer.toJson<int>(backupState),
       'lastSyncTime': serializer.toJson<int?>(lastSyncTime),
+      'cloudBackupState': serializer.toJson<int>(cloudBackupState),
+      'cloudLastSyncTime': serializer.toJson<int?>(cloudLastSyncTime),
+      'cloudObjectKey': serializer.toJson<String?>(cloudObjectKey),
       'isTrashed': serializer.toJson<bool>(isTrashed),
       'trashedAt': serializer.toJson<int?>(trashedAt),
       'originalPath': serializer.toJson<String?>(originalPath),
@@ -1893,6 +1997,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     Value<int?> lastViewedAt = const Value.absent(),
     int? backupState,
     Value<int?> lastSyncTime = const Value.absent(),
+    int? cloudBackupState,
+    Value<int?> cloudLastSyncTime = const Value.absent(),
+    Value<String?> cloudObjectKey = const Value.absent(),
     bool? isTrashed,
     Value<int?> trashedAt = const Value.absent(),
     Value<String?> originalPath = const Value.absent(),
@@ -1926,6 +2033,13 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     lastViewedAt: lastViewedAt.present ? lastViewedAt.value : this.lastViewedAt,
     backupState: backupState ?? this.backupState,
     lastSyncTime: lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
+    cloudBackupState: cloudBackupState ?? this.cloudBackupState,
+    cloudLastSyncTime: cloudLastSyncTime.present
+        ? cloudLastSyncTime.value
+        : this.cloudLastSyncTime,
+    cloudObjectKey: cloudObjectKey.present
+        ? cloudObjectKey.value
+        : this.cloudObjectKey,
     isTrashed: isTrashed ?? this.isTrashed,
     trashedAt: trashedAt.present ? trashedAt.value : this.trashedAt,
     originalPath: originalPath.present ? originalPath.value : this.originalPath,
@@ -1987,6 +2101,15 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
       lastSyncTime: data.lastSyncTime.present
           ? data.lastSyncTime.value
           : this.lastSyncTime,
+      cloudBackupState: data.cloudBackupState.present
+          ? data.cloudBackupState.value
+          : this.cloudBackupState,
+      cloudLastSyncTime: data.cloudLastSyncTime.present
+          ? data.cloudLastSyncTime.value
+          : this.cloudLastSyncTime,
+      cloudObjectKey: data.cloudObjectKey.present
+          ? data.cloudObjectKey.value
+          : this.cloudObjectKey,
       isTrashed: data.isTrashed.present ? data.isTrashed.value : this.isTrashed,
       trashedAt: data.trashedAt.present ? data.trashedAt.value : this.trashedAt,
       originalPath: data.originalPath.present
@@ -2027,6 +2150,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           ..write('lastViewedAt: $lastViewedAt, ')
           ..write('backupState: $backupState, ')
           ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('cloudBackupState: $cloudBackupState, ')
+          ..write('cloudLastSyncTime: $cloudLastSyncTime, ')
+          ..write('cloudObjectKey: $cloudObjectKey, ')
           ..write('isTrashed: $isTrashed, ')
           ..write('trashedAt: $trashedAt, ')
           ..write('originalPath: $originalPath, ')
@@ -2063,6 +2189,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
     lastViewedAt,
     backupState,
     lastSyncTime,
+    cloudBackupState,
+    cloudLastSyncTime,
+    cloudObjectKey,
     isTrashed,
     trashedAt,
     originalPath,
@@ -2098,6 +2227,9 @@ class MediaRow extends DataClass implements Insertable<MediaRow> {
           other.lastViewedAt == this.lastViewedAt &&
           other.backupState == this.backupState &&
           other.lastSyncTime == this.lastSyncTime &&
+          other.cloudBackupState == this.cloudBackupState &&
+          other.cloudLastSyncTime == this.cloudLastSyncTime &&
+          other.cloudObjectKey == this.cloudObjectKey &&
           other.isTrashed == this.isTrashed &&
           other.trashedAt == this.trashedAt &&
           other.originalPath == this.originalPath &&
@@ -2131,6 +2263,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
   final Value<int?> lastViewedAt;
   final Value<int> backupState;
   final Value<int?> lastSyncTime;
+  final Value<int> cloudBackupState;
+  final Value<int?> cloudLastSyncTime;
+  final Value<String?> cloudObjectKey;
   final Value<bool> isTrashed;
   final Value<int?> trashedAt;
   final Value<String?> originalPath;
@@ -2162,6 +2297,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.lastViewedAt = const Value.absent(),
     this.backupState = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
+    this.cloudBackupState = const Value.absent(),
+    this.cloudLastSyncTime = const Value.absent(),
+    this.cloudObjectKey = const Value.absent(),
     this.isTrashed = const Value.absent(),
     this.trashedAt = const Value.absent(),
     this.originalPath = const Value.absent(),
@@ -2194,6 +2332,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     this.lastViewedAt = const Value.absent(),
     this.backupState = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
+    this.cloudBackupState = const Value.absent(),
+    this.cloudLastSyncTime = const Value.absent(),
+    this.cloudObjectKey = const Value.absent(),
     this.isTrashed = const Value.absent(),
     this.trashedAt = const Value.absent(),
     this.originalPath = const Value.absent(),
@@ -2233,6 +2374,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Expression<int>? lastViewedAt,
     Expression<int>? backupState,
     Expression<int>? lastSyncTime,
+    Expression<int>? cloudBackupState,
+    Expression<int>? cloudLastSyncTime,
+    Expression<String>? cloudObjectKey,
     Expression<bool>? isTrashed,
     Expression<int>? trashedAt,
     Expression<String>? originalPath,
@@ -2265,6 +2409,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       if (lastViewedAt != null) 'last_viewed_at': lastViewedAt,
       if (backupState != null) 'backup_state': backupState,
       if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
+      if (cloudBackupState != null) 'cloud_backup_state': cloudBackupState,
+      if (cloudLastSyncTime != null) 'cloud_last_sync_time': cloudLastSyncTime,
+      if (cloudObjectKey != null) 'cloud_object_key': cloudObjectKey,
       if (isTrashed != null) 'is_trashed': isTrashed,
       if (trashedAt != null) 'trashed_at': trashedAt,
       if (originalPath != null) 'original_path': originalPath,
@@ -2299,6 +2446,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     Value<int?>? lastViewedAt,
     Value<int>? backupState,
     Value<int?>? lastSyncTime,
+    Value<int>? cloudBackupState,
+    Value<int?>? cloudLastSyncTime,
+    Value<String?>? cloudObjectKey,
     Value<bool>? isTrashed,
     Value<int?>? trashedAt,
     Value<String?>? originalPath,
@@ -2331,6 +2481,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
       lastViewedAt: lastViewedAt ?? this.lastViewedAt,
       backupState: backupState ?? this.backupState,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      cloudBackupState: cloudBackupState ?? this.cloudBackupState,
+      cloudLastSyncTime: cloudLastSyncTime ?? this.cloudLastSyncTime,
+      cloudObjectKey: cloudObjectKey ?? this.cloudObjectKey,
       isTrashed: isTrashed ?? this.isTrashed,
       trashedAt: trashedAt ?? this.trashedAt,
       originalPath: originalPath ?? this.originalPath,
@@ -2419,6 +2572,15 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
     if (lastSyncTime.present) {
       map['last_sync_time'] = Variable<int>(lastSyncTime.value);
     }
+    if (cloudBackupState.present) {
+      map['cloud_backup_state'] = Variable<int>(cloudBackupState.value);
+    }
+    if (cloudLastSyncTime.present) {
+      map['cloud_last_sync_time'] = Variable<int>(cloudLastSyncTime.value);
+    }
+    if (cloudObjectKey.present) {
+      map['cloud_object_key'] = Variable<String>(cloudObjectKey.value);
+    }
     if (isTrashed.present) {
       map['is_trashed'] = Variable<bool>(isTrashed.value);
     }
@@ -2463,6 +2625,9 @@ class MediaItemsCompanion extends UpdateCompanion<MediaRow> {
           ..write('lastViewedAt: $lastViewedAt, ')
           ..write('backupState: $backupState, ')
           ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('cloudBackupState: $cloudBackupState, ')
+          ..write('cloudLastSyncTime: $cloudLastSyncTime, ')
+          ..write('cloudObjectKey: $cloudObjectKey, ')
           ..write('isTrashed: $isTrashed, ')
           ..write('trashedAt: $trashedAt, ')
           ..write('originalPath: $originalPath, ')
@@ -4315,6 +4480,365 @@ class LocationPlaceCacheCompanion extends UpdateCompanion<LocationPlaceRow> {
   }
 }
 
+class $CloudBackupObjectsTable extends CloudBackupObjects
+    with TableInfo<$CloudBackupObjectsTable, CloudBackupObject> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CloudBackupObjectsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _mediaIdMeta = const VerificationMeta(
+    'mediaId',
+  );
+  @override
+  late final GeneratedColumn<int> mediaId = GeneratedColumn<int>(
+    'media_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _objectKeyMeta = const VerificationMeta(
+    'objectKey',
+  );
+  @override
+  late final GeneratedColumn<String> objectKey = GeneratedColumn<String>(
+    'object_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _plaintextChecksumMeta = const VerificationMeta(
+    'plaintextChecksum',
+  );
+  @override
+  late final GeneratedColumn<String> plaintextChecksum =
+      GeneratedColumn<String>(
+        'plaintext_checksum',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _sizeMeta = const VerificationMeta('size');
+  @override
+  late final GeneratedColumn<int> size = GeneratedColumn<int>(
+    'size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    mediaId,
+    objectKey,
+    plaintextChecksum,
+    size,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cloud_backup_objects';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CloudBackupObject> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('media_id')) {
+      context.handle(
+        _mediaIdMeta,
+        mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta),
+      );
+    }
+    if (data.containsKey('object_key')) {
+      context.handle(
+        _objectKeyMeta,
+        objectKey.isAcceptableOrUnknown(data['object_key']!, _objectKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_objectKeyMeta);
+    }
+    if (data.containsKey('plaintext_checksum')) {
+      context.handle(
+        _plaintextChecksumMeta,
+        plaintextChecksum.isAcceptableOrUnknown(
+          data['plaintext_checksum']!,
+          _plaintextChecksumMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_plaintextChecksumMeta);
+    }
+    if (data.containsKey('size')) {
+      context.handle(
+        _sizeMeta,
+        size.isAcceptableOrUnknown(data['size']!, _sizeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sizeMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {mediaId};
+  @override
+  CloudBackupObject map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CloudBackupObject(
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}media_id'],
+      )!,
+      objectKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}object_key'],
+      )!,
+      plaintextChecksum: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plaintext_checksum'],
+      )!,
+      size: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CloudBackupObjectsTable createAlias(String alias) {
+    return $CloudBackupObjectsTable(attachedDatabase, alias);
+  }
+}
+
+class CloudBackupObject extends DataClass
+    implements Insertable<CloudBackupObject> {
+  final int mediaId;
+  final String objectKey;
+  final String plaintextChecksum;
+  final int size;
+  final int updatedAt;
+  const CloudBackupObject({
+    required this.mediaId,
+    required this.objectKey,
+    required this.plaintextChecksum,
+    required this.size,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['media_id'] = Variable<int>(mediaId);
+    map['object_key'] = Variable<String>(objectKey);
+    map['plaintext_checksum'] = Variable<String>(plaintextChecksum);
+    map['size'] = Variable<int>(size);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  CloudBackupObjectsCompanion toCompanion(bool nullToAbsent) {
+    return CloudBackupObjectsCompanion(
+      mediaId: Value(mediaId),
+      objectKey: Value(objectKey),
+      plaintextChecksum: Value(plaintextChecksum),
+      size: Value(size),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CloudBackupObject.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CloudBackupObject(
+      mediaId: serializer.fromJson<int>(json['mediaId']),
+      objectKey: serializer.fromJson<String>(json['objectKey']),
+      plaintextChecksum: serializer.fromJson<String>(json['plaintextChecksum']),
+      size: serializer.fromJson<int>(json['size']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'mediaId': serializer.toJson<int>(mediaId),
+      'objectKey': serializer.toJson<String>(objectKey),
+      'plaintextChecksum': serializer.toJson<String>(plaintextChecksum),
+      'size': serializer.toJson<int>(size),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  CloudBackupObject copyWith({
+    int? mediaId,
+    String? objectKey,
+    String? plaintextChecksum,
+    int? size,
+    int? updatedAt,
+  }) => CloudBackupObject(
+    mediaId: mediaId ?? this.mediaId,
+    objectKey: objectKey ?? this.objectKey,
+    plaintextChecksum: plaintextChecksum ?? this.plaintextChecksum,
+    size: size ?? this.size,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  CloudBackupObject copyWithCompanion(CloudBackupObjectsCompanion data) {
+    return CloudBackupObject(
+      mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      objectKey: data.objectKey.present ? data.objectKey.value : this.objectKey,
+      plaintextChecksum: data.plaintextChecksum.present
+          ? data.plaintextChecksum.value
+          : this.plaintextChecksum,
+      size: data.size.present ? data.size.value : this.size,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CloudBackupObject(')
+          ..write('mediaId: $mediaId, ')
+          ..write('objectKey: $objectKey, ')
+          ..write('plaintextChecksum: $plaintextChecksum, ')
+          ..write('size: $size, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(mediaId, objectKey, plaintextChecksum, size, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CloudBackupObject &&
+          other.mediaId == this.mediaId &&
+          other.objectKey == this.objectKey &&
+          other.plaintextChecksum == this.plaintextChecksum &&
+          other.size == this.size &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CloudBackupObjectsCompanion extends UpdateCompanion<CloudBackupObject> {
+  final Value<int> mediaId;
+  final Value<String> objectKey;
+  final Value<String> plaintextChecksum;
+  final Value<int> size;
+  final Value<int> updatedAt;
+  const CloudBackupObjectsCompanion({
+    this.mediaId = const Value.absent(),
+    this.objectKey = const Value.absent(),
+    this.plaintextChecksum = const Value.absent(),
+    this.size = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  CloudBackupObjectsCompanion.insert({
+    this.mediaId = const Value.absent(),
+    required String objectKey,
+    required String plaintextChecksum,
+    required int size,
+    required int updatedAt,
+  }) : objectKey = Value(objectKey),
+       plaintextChecksum = Value(plaintextChecksum),
+       size = Value(size),
+       updatedAt = Value(updatedAt);
+  static Insertable<CloudBackupObject> custom({
+    Expression<int>? mediaId,
+    Expression<String>? objectKey,
+    Expression<String>? plaintextChecksum,
+    Expression<int>? size,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (mediaId != null) 'media_id': mediaId,
+      if (objectKey != null) 'object_key': objectKey,
+      if (plaintextChecksum != null) 'plaintext_checksum': plaintextChecksum,
+      if (size != null) 'size': size,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  CloudBackupObjectsCompanion copyWith({
+    Value<int>? mediaId,
+    Value<String>? objectKey,
+    Value<String>? plaintextChecksum,
+    Value<int>? size,
+    Value<int>? updatedAt,
+  }) {
+    return CloudBackupObjectsCompanion(
+      mediaId: mediaId ?? this.mediaId,
+      objectKey: objectKey ?? this.objectKey,
+      plaintextChecksum: plaintextChecksum ?? this.plaintextChecksum,
+      size: size ?? this.size,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (mediaId.present) {
+      map['media_id'] = Variable<int>(mediaId.value);
+    }
+    if (objectKey.present) {
+      map['object_key'] = Variable<String>(objectKey.value);
+    }
+    if (plaintextChecksum.present) {
+      map['plaintext_checksum'] = Variable<String>(plaintextChecksum.value);
+    }
+    if (size.present) {
+      map['size'] = Variable<int>(size.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CloudBackupObjectsCompanion(')
+          ..write('mediaId: $mediaId, ')
+          ..write('objectKey: $objectKey, ')
+          ..write('plaintextChecksum: $plaintextChecksum, ')
+          ..write('size: $size, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4325,6 +4849,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $MediaAnalysisCacheTable(this);
   late final $LocationPlaceCacheTable locationPlaceCache =
       $LocationPlaceCacheTable(this);
+  late final $CloudBackupObjectsTable cloudBackupObjects =
+      $CloudBackupObjectsTable(this);
   late final Index foldersFollowBiometric = Index(
     'folders_follow_biometric',
     'CREATE INDEX folders_follow_biometric ON folders (follow_status, is_biometric_locked)',
@@ -4355,6 +4881,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     travelModes,
     mediaAnalysisCache,
     locationPlaceCache,
+    cloudBackupObjects,
     foldersFollowBiometric,
     mediaItemsFolderTrashedModified,
     mediaItemsFavoriteTrashedModified,
@@ -4772,6 +5299,9 @@ typedef $$MediaItemsTableCreateCompanionBuilder =
       Value<int?> lastViewedAt,
       Value<int> backupState,
       Value<int?> lastSyncTime,
+      Value<int> cloudBackupState,
+      Value<int?> cloudLastSyncTime,
+      Value<String?> cloudObjectKey,
       Value<bool> isTrashed,
       Value<int?> trashedAt,
       Value<String?> originalPath,
@@ -4805,6 +5335,9 @@ typedef $$MediaItemsTableUpdateCompanionBuilder =
       Value<int?> lastViewedAt,
       Value<int> backupState,
       Value<int?> lastSyncTime,
+      Value<int> cloudBackupState,
+      Value<int?> cloudLastSyncTime,
+      Value<String?> cloudObjectKey,
       Value<bool> isTrashed,
       Value<int?> trashedAt,
       Value<String?> originalPath,
@@ -4947,6 +5480,21 @@ class $$MediaItemsTableFilterComposer
 
   ColumnFilters<int> get lastSyncTime => $composableBuilder(
     column: $table.lastSyncTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cloudBackupState => $composableBuilder(
+    column: $table.cloudBackupState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cloudLastSyncTime => $composableBuilder(
+    column: $table.cloudLastSyncTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cloudObjectKey => $composableBuilder(
+    column: $table.cloudObjectKey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5110,6 +5658,21 @@ class $$MediaItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get cloudBackupState => $composableBuilder(
+    column: $table.cloudBackupState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cloudLastSyncTime => $composableBuilder(
+    column: $table.cloudLastSyncTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cloudObjectKey => $composableBuilder(
+    column: $table.cloudObjectKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isTrashed => $composableBuilder(
     column: $table.isTrashed,
     builder: (column) => ColumnOrderings(column),
@@ -5246,6 +5809,21 @@ class $$MediaItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get cloudBackupState => $composableBuilder(
+    column: $table.cloudBackupState,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get cloudLastSyncTime => $composableBuilder(
+    column: $table.cloudLastSyncTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cloudObjectKey => $composableBuilder(
+    column: $table.cloudObjectKey,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isTrashed =>
       $composableBuilder(column: $table.isTrashed, builder: (column) => column);
 
@@ -5317,6 +5895,9 @@ class $$MediaItemsTableTableManager
                 Value<int?> lastViewedAt = const Value.absent(),
                 Value<int> backupState = const Value.absent(),
                 Value<int?> lastSyncTime = const Value.absent(),
+                Value<int> cloudBackupState = const Value.absent(),
+                Value<int?> cloudLastSyncTime = const Value.absent(),
+                Value<String?> cloudObjectKey = const Value.absent(),
                 Value<bool> isTrashed = const Value.absent(),
                 Value<int?> trashedAt = const Value.absent(),
                 Value<String?> originalPath = const Value.absent(),
@@ -5348,6 +5929,9 @@ class $$MediaItemsTableTableManager
                 lastViewedAt: lastViewedAt,
                 backupState: backupState,
                 lastSyncTime: lastSyncTime,
+                cloudBackupState: cloudBackupState,
+                cloudLastSyncTime: cloudLastSyncTime,
+                cloudObjectKey: cloudObjectKey,
                 isTrashed: isTrashed,
                 trashedAt: trashedAt,
                 originalPath: originalPath,
@@ -5381,6 +5965,9 @@ class $$MediaItemsTableTableManager
                 Value<int?> lastViewedAt = const Value.absent(),
                 Value<int> backupState = const Value.absent(),
                 Value<int?> lastSyncTime = const Value.absent(),
+                Value<int> cloudBackupState = const Value.absent(),
+                Value<int?> cloudLastSyncTime = const Value.absent(),
+                Value<String?> cloudObjectKey = const Value.absent(),
                 Value<bool> isTrashed = const Value.absent(),
                 Value<int?> trashedAt = const Value.absent(),
                 Value<String?> originalPath = const Value.absent(),
@@ -5412,6 +5999,9 @@ class $$MediaItemsTableTableManager
                 lastViewedAt: lastViewedAt,
                 backupState: backupState,
                 lastSyncTime: lastSyncTime,
+                cloudBackupState: cloudBackupState,
+                cloudLastSyncTime: cloudLastSyncTime,
+                cloudObjectKey: cloudObjectKey,
                 isTrashed: isTrashed,
                 trashedAt: trashedAt,
                 originalPath: originalPath,
@@ -6347,6 +6937,215 @@ typedef $$LocationPlaceCacheTableProcessedTableManager =
       LocationPlaceRow,
       PrefetchHooks Function()
     >;
+typedef $$CloudBackupObjectsTableCreateCompanionBuilder =
+    CloudBackupObjectsCompanion Function({
+      Value<int> mediaId,
+      required String objectKey,
+      required String plaintextChecksum,
+      required int size,
+      required int updatedAt,
+    });
+typedef $$CloudBackupObjectsTableUpdateCompanionBuilder =
+    CloudBackupObjectsCompanion Function({
+      Value<int> mediaId,
+      Value<String> objectKey,
+      Value<String> plaintextChecksum,
+      Value<int> size,
+      Value<int> updatedAt,
+    });
+
+class $$CloudBackupObjectsTableFilterComposer
+    extends Composer<_$AppDatabase, $CloudBackupObjectsTable> {
+  $$CloudBackupObjectsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get objectKey => $composableBuilder(
+    column: $table.objectKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get plaintextChecksum => $composableBuilder(
+    column: $table.plaintextChecksum,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get size => $composableBuilder(
+    column: $table.size,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CloudBackupObjectsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CloudBackupObjectsTable> {
+  $$CloudBackupObjectsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get mediaId => $composableBuilder(
+    column: $table.mediaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get objectKey => $composableBuilder(
+    column: $table.objectKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get plaintextChecksum => $composableBuilder(
+    column: $table.plaintextChecksum,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get size => $composableBuilder(
+    column: $table.size,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CloudBackupObjectsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CloudBackupObjectsTable> {
+  $$CloudBackupObjectsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get mediaId =>
+      $composableBuilder(column: $table.mediaId, builder: (column) => column);
+
+  GeneratedColumn<String> get objectKey =>
+      $composableBuilder(column: $table.objectKey, builder: (column) => column);
+
+  GeneratedColumn<String> get plaintextChecksum => $composableBuilder(
+    column: $table.plaintextChecksum,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get size =>
+      $composableBuilder(column: $table.size, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$CloudBackupObjectsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CloudBackupObjectsTable,
+          CloudBackupObject,
+          $$CloudBackupObjectsTableFilterComposer,
+          $$CloudBackupObjectsTableOrderingComposer,
+          $$CloudBackupObjectsTableAnnotationComposer,
+          $$CloudBackupObjectsTableCreateCompanionBuilder,
+          $$CloudBackupObjectsTableUpdateCompanionBuilder,
+          (
+            CloudBackupObject,
+            BaseReferences<
+              _$AppDatabase,
+              $CloudBackupObjectsTable,
+              CloudBackupObject
+            >,
+          ),
+          CloudBackupObject,
+          PrefetchHooks Function()
+        > {
+  $$CloudBackupObjectsTableTableManager(
+    _$AppDatabase db,
+    $CloudBackupObjectsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CloudBackupObjectsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CloudBackupObjectsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CloudBackupObjectsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> mediaId = const Value.absent(),
+                Value<String> objectKey = const Value.absent(),
+                Value<String> plaintextChecksum = const Value.absent(),
+                Value<int> size = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => CloudBackupObjectsCompanion(
+                mediaId: mediaId,
+                objectKey: objectKey,
+                plaintextChecksum: plaintextChecksum,
+                size: size,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> mediaId = const Value.absent(),
+                required String objectKey,
+                required String plaintextChecksum,
+                required int size,
+                required int updatedAt,
+              }) => CloudBackupObjectsCompanion.insert(
+                mediaId: mediaId,
+                objectKey: objectKey,
+                plaintextChecksum: plaintextChecksum,
+                size: size,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CloudBackupObjectsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CloudBackupObjectsTable,
+      CloudBackupObject,
+      $$CloudBackupObjectsTableFilterComposer,
+      $$CloudBackupObjectsTableOrderingComposer,
+      $$CloudBackupObjectsTableAnnotationComposer,
+      $$CloudBackupObjectsTableCreateCompanionBuilder,
+      $$CloudBackupObjectsTableUpdateCompanionBuilder,
+      (
+        CloudBackupObject,
+        BaseReferences<
+          _$AppDatabase,
+          $CloudBackupObjectsTable,
+          CloudBackupObject
+        >,
+      ),
+      CloudBackupObject,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6361,4 +7160,6 @@ class $AppDatabaseManager {
       $$MediaAnalysisCacheTableTableManager(_db, _db.mediaAnalysisCache);
   $$LocationPlaceCacheTableTableManager get locationPlaceCache =>
       $$LocationPlaceCacheTableTableManager(_db, _db.locationPlaceCache);
+  $$CloudBackupObjectsTableTableManager get cloudBackupObjects =>
+      $$CloudBackupObjectsTableTableManager(_db, _db.cloudBackupObjects);
 }

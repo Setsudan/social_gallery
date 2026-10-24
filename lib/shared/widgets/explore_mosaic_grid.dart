@@ -402,6 +402,7 @@ class _MosaicTile extends StatelessWidget {
                 item!,
                 syncingMediaId: syncingMediaId,
               ),
+              cloudBackedUp: visibleCloudBackup(item!),
             ),
           ),
         ),

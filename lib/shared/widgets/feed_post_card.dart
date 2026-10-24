@@ -98,6 +98,7 @@ class FeedPostCard extends ConsumerWidget {
                           media,
                           syncingMediaId: syncingMediaId,
                         ),
+                        cloudBackedUp: visibleCloudBackup(media),
                       ),
                     ),
                   ),

@@ -1102,6 +1102,7 @@ class _GalleryTile extends ConsumerWidget {
               item,
               syncingMediaId: syncingMediaId,
             ),
+            cloudBackedUp: visibleCloudBackup(item),
           ),
         ),
       ),
