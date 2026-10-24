@@ -26,6 +26,29 @@ class MediaTaggingController extends StateNotifier<MediaTaggingScanState> {
 
   final Ref _ref;
   bool _runQueued = false;
+  bool _paused = false;
+  Completer<void>? _resumeGate;
+
+  static const _yieldEvery = 4;
+  static const _yieldDelay = Duration(milliseconds: 40);
+
+  /// Pause background tagging when the app is not resumed (saves memory/CPU).
+  void setAppResumed(bool resumed) {
+    _paused = !resumed;
+    if (resumed) {
+      _resumeGate?.complete();
+      _resumeGate = null;
+    } else {
+      unawaited(_ref.read(mediaAnalysisServiceProvider).disposeMl());
+    }
+  }
+
+  Future<void> _waitWhilePaused() async {
+    while (_paused) {
+      _resumeGate ??= Completer<void>();
+      await _resumeGate!.future;
+    }
+  }
 
   Future<void> scheduleAfterLibrarySync() async {
     if (state.isScanning) {
@@ -63,7 +86,8 @@ class MediaTaggingController extends StateNotifier<MediaTaggingScanState> {
 
       var scanned = 0;
       for (final item in pending) {
-        final result = await service.analyzeItem(item);
+        await _waitWhilePaused();
+        final result = await service.tagForSearch(item);
         if (result != null) {
           await analysisRepo.saveResult(result);
         }
@@ -73,6 +97,9 @@ class MediaTaggingController extends StateNotifier<MediaTaggingScanState> {
           scanned: scanned,
           total: pending.length,
         );
+        if (scanned % _yieldEvery == 0) {
+          await Future<void>.delayed(_yieldDelay);
+        }
       }
 
       state = MediaTaggingScanState(

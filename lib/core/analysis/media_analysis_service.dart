@@ -30,10 +30,22 @@ typedef MediaAnalysisNeedsScan = bool Function(
   MediaAnalysisResult? cached,
 );
 
+/// How much on-device ML to run for an item.
+enum MediaAnalysisMode {
+  /// Metrics, dominant color, and image labels — no face detector.
+  tagForSearch,
+
+  /// Full Deep Organize pass including face detection / closed-eyes.
+  analyzeFull,
+}
+
 class MediaAnalysisService {
+  ImageLabeler? _labeler;
+  FaceDetector? _faceDetector;
+  bool _mlInitFailed = false;
+
   bool get mlAvailable =>
-      !kIsWeb &&
-      (Platform.isAndroid || Platform.isIOS);
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS) && !_mlInitFailed;
 
   bool get desktopLabelingAvailable =>
       !kIsWeb && usesFilesystemGallery && DesktopImageLabeler.instance.isAvailable;
@@ -43,29 +55,56 @@ class MediaAnalysisService {
     return !cached.isFullyTaggedForSearch;
   }
 
+  ImageLabeler get _sharedLabeler => _labeler ??= ImageLabeler(
+        options: ImageLabelerOptions(confidenceThreshold: 0.55),
+      );
+
+  FaceDetector get _sharedFaceDetector => _faceDetector ??= FaceDetector(
+        options: FaceDetectorOptions(
+          enableClassification: true,
+          performanceMode: FaceDetectorMode.fast,
+        ),
+      );
+
+  /// Releases long-lived ML Kit instances (call on app pause / dispose).
+  Future<void> disposeMl() async {
+    final labeler = _labeler;
+    final faces = _faceDetector;
+    _labeler = null;
+    _faceDetector = null;
+    try {
+      await labeler?.close();
+    } catch (_) {}
+    try {
+      await faces?.close();
+    } catch (_) {}
+  }
+
   Future<MediaAnalysisResult?> analyzeItem(
     MediaItem item, {
     Uint8List? thumbnailBytes,
+    MediaAnalysisMode mode = MediaAnalysisMode.analyzeFull,
   }) async {
     if (item.isVideo) return null;
 
     final bytes = thumbnailBytes ?? await _loadThumbnailBytes(item);
     if (bytes == null || bytes.isEmpty) return null;
 
-    final dHash = computeDHash(bytes);
-    if (dHash.isEmpty) return null;
-
-    final blurScore = computeBlurScore(bytes);
-    final exposureScore = computeExposureScore(bytes);
-    final isSolidColor = computeIsSolidColor(bytes);
-    final dominantColor = computeDominantColor(bytes);
+    final metrics = computeAllImageMetrics(bytes);
+    if (metrics == null || metrics.dHash.isEmpty) return null;
 
     var faceCount = 0;
     var hasClosedEyes = false;
     final labels = <String>[];
 
+    final includeFaces = mode == MediaAnalysisMode.analyzeFull;
+
     if (mlAvailable) {
-      final ml = await _runMlKit(item, bytes);
+      final ml = await _runMlKit(
+        item,
+        bytes,
+        includeFaces: includeFaces,
+      );
       faceCount = ml.faceCount;
       hasClosedEyes = ml.hasClosedEyes;
       labels.addAll(ml.labels);
@@ -76,15 +115,27 @@ class MediaAnalysisService {
 
     return MediaAnalysisResult(
       mediaId: item.id,
-      dHash: dHash,
-      blurScore: blurScore,
-      exposureScore: exposureScore,
-      isSolidColor: isSolidColor,
+      dHash: metrics.dHash,
+      blurScore: metrics.blurScore,
+      exposureScore: metrics.exposureScore,
+      isSolidColor: metrics.isSolidColor,
       faceCount: faceCount,
       hasClosedEyes: hasClosedEyes,
       labels: mergeNormalizedLabels(labels),
-      dominantColor: dominantColor,
+      dominantColor: metrics.dominantColor,
       scannedAt: DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  /// Background search indexing: labels + color, no face detector.
+  Future<MediaAnalysisResult?> tagForSearch(
+    MediaItem item, {
+    Uint8List? thumbnailBytes,
+  }) {
+    return analyzeItem(
+      item,
+      thumbnailBytes: thumbnailBytes,
+      mode: MediaAnalysisMode.tagForSearch,
     );
   }
 
@@ -141,6 +192,7 @@ class MediaAnalysisService {
     Map<int, MediaAnalysisResult>? cachedById,
     MediaAnalysisNeedsScan? needsScan,
     void Function(MediaAnalysisResult result)? onResult,
+    MediaAnalysisMode mode = MediaAnalysisMode.analyzeFull,
   }) async* {
     final images = items.where((i) => !i.isVideo).toList();
     final total = images.length;
@@ -159,7 +211,7 @@ class MediaAnalysisService {
         continue;
       }
 
-      final result = await analyzeItem(item);
+      final result = await analyzeItem(item, mode: mode);
       if (result != null) {
         onResult?.call(result);
       }
@@ -175,7 +227,7 @@ class MediaAnalysisService {
   Future<Uint8List?> _loadThumbnailBytes(MediaItem item) async {
     try {
       if (usesFilesystemGallery) {
-        return readFilesystemThumbnailBytes(item.uri);
+        return await readFilesystemThumbnailBytes(item.uri);
       }
       final entity = await AssetEntity.fromId(item.uri);
       if (entity == null) return null;
@@ -190,8 +242,9 @@ class MediaAnalysisService {
 
   Future<({int faceCount, bool hasClosedEyes, List<String> labels})> _runMlKit(
     MediaItem item,
-    Uint8List bytes,
-  ) async {
+    Uint8List bytes, {
+    required bool includeFaces,
+  }) async {
     var faceCount = 0;
     var hasClosedEyes = false;
     final labels = <String>[];
@@ -204,39 +257,42 @@ class MediaAnalysisService {
       await tempFile.writeAsBytes(bytes);
       final inputImage = InputImage.fromFilePath(tempFile.path);
 
-      final labeler = ImageLabeler(
-        options: ImageLabelerOptions(confidenceThreshold: 0.55),
-      );
-      final labelResults = await labeler.processImage(inputImage);
-      labels.addAll(
-        labelResults
-            .take(8)
-            .map((e) => normalizeLabel(e.label))
-            .where((label) => label.isNotEmpty),
-      );
-      await labeler.close();
+      try {
+        final labelResults = await _sharedLabeler.processImage(inputImage);
+        labels.addAll(
+          labelResults
+              .take(8)
+              .map((e) => normalizeLabel(e.label))
+              .where((label) => label.isNotEmpty),
+        );
+      } catch (e, st) {
+        debugPrint('ML Kit image labeling failed: $e\n$st');
+        _mlInitFailed = true;
+        await disposeMl();
+      }
 
-      final faceDetector = FaceDetector(
-        options: FaceDetectorOptions(
-          enableClassification: true,
-          performanceMode: FaceDetectorMode.fast,
-        ),
-      );
-      final faces = await faceDetector.processImage(inputImage);
-      faceCount = faces.length;
-      hasClosedEyes = faces.any(
-        (f) =>
-            f.leftEyeOpenProbability != null &&
-            f.rightEyeOpenProbability != null &&
-            f.leftEyeOpenProbability! < 0.3 &&
-            f.rightEyeOpenProbability! < 0.3,
-      );
-      await faceDetector.close();
+      if (includeFaces && !_mlInitFailed) {
+        try {
+          final faces = await _sharedFaceDetector.processImage(inputImage);
+          faceCount = faces.length;
+          hasClosedEyes = faces.any(
+            (f) =>
+                f.leftEyeOpenProbability != null &&
+                f.rightEyeOpenProbability != null &&
+                f.leftEyeOpenProbability! < 0.3 &&
+                f.rightEyeOpenProbability! < 0.3,
+          );
+        } catch (e, st) {
+          debugPrint('ML Kit face detection failed: $e\n$st');
+        }
+      }
 
       try {
         await tempFile.delete();
       } catch (_) {}
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('ML Kit analysis setup failed: $e\n$st');
+    }
 
     return (
       faceCount: faceCount,

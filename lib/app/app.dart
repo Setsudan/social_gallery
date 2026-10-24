@@ -9,6 +9,7 @@ import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/l10n/app_locale_preference.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/l10n/app_localizations.dart';
+import 'package:social_gallery/core/analysis/media_tagging_controller.dart';
 import 'package:social_gallery/core/backup/backup_deep_link.dart';
 import 'package:social_gallery/core/backup/desktop_backup_window_guard.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
@@ -19,6 +20,7 @@ import 'package:social_gallery/app/theme.dart';
 import 'package:social_gallery/core/animation/app_motion.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/core/theme/app_theme_variant.dart';
+import 'package:social_gallery/shared/navigation/desktop_back_shortcuts.dart';
 import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 
 /// Root widget: theme, lifecycle sync, and feed refresh coordination.
@@ -154,6 +156,9 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
     ref.read(desktopBackupNotificationServiceProvider).setAppInForeground(
           state == AppLifecycleState.resumed,
         );
+    ref
+        .read(mediaTaggingControllerProvider.notifier)
+        .setAppResumed(state == AppLifecycleState.resumed);
 
     if (state == AppLifecycleState.resumed) {
       refreshFeedProviders(ref);
@@ -245,7 +250,7 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
                 disableAnimations:
                     !motion.enabled || MediaQuery.disableAnimationsOf(context),
               ),
-              child: child!,
+              child: DesktopBackShortcuts(child: child!),
             );
           },
         ),

@@ -10,6 +10,7 @@ import 'package:social_gallery/core/backup/desktop_library_controller.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/features/settings/vault_password_dialog.dart';
+import 'package:social_gallery/shared/widgets/nav_back_leading.dart';
 import 'package:video_player/video_player.dart';
 
 class DesktopArchiveScreen extends ConsumerStatefulWidget {
@@ -310,6 +311,8 @@ class _DesktopArchiveViewerScreenState
         title: Text(widget.item.fileName),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        leading: const NavBackLeading(),
       ),
       body: Center(
         child: _loading

@@ -182,6 +182,7 @@ class MediaAnalysisController extends StateNotifier<MediaAnalysisScanState> {
         items: items,
         cachedById: cached,
         needsScan: MediaAnalysisService.needsTaggingScan,
+        mode: MediaAnalysisMode.analyzeFull,
         onResult: (result) async {
           await analysisRepo.saveResult(result);
         },

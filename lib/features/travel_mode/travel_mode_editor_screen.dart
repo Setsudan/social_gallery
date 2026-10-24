@@ -7,6 +7,7 @@ import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/domain/models/travel_mode.dart';
 import 'package:social_gallery/l10n/app_localizations.dart';
+import 'package:social_gallery/shared/widgets/nav_back_leading.dart';
 
 class TravelModeEditorScreen extends ConsumerStatefulWidget {
   const TravelModeEditorScreen({super.key, this.travelModeId});
@@ -207,6 +208,8 @@ class _TravelModeEditorScreenState
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: const NavBackLeading(),
         actions: [
           if (widget.travelModeId != null)
             IconButton(

@@ -30,6 +30,9 @@ import 'package:social_gallery/shared/widgets/empty_state.dart';
 
 import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 
+import 'package:social_gallery/shared/widgets/nav_back_leading.dart';
+
+
 import 'package:social_gallery/shared/widgets/folder_lock_gate.dart';
 
 import 'package:social_gallery/features/folder_profile/folder_profile_providers.dart';
@@ -358,7 +361,10 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
           return Scaffold(
 
-            appBar: AppBar(),
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              leading: const NavBackLeading(),
+            ),
 
             body: EmptyState(title: l10n.errorFolderNotFound),
 
@@ -391,6 +397,10 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
               )
 
             : AppBar(
+
+                automaticallyImplyLeading: false,
+
+                leading: const NavBackLeading(),
 
                 actions: [
 

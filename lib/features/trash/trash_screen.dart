@@ -11,7 +11,6 @@ import 'package:social_gallery/core/utils/haptics.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/core/theme/one_ui_theme.dart';
 import 'package:social_gallery/shared/widgets/empty_state.dart';
-import 'package:social_gallery/shared/widgets/one_ui/one_ui_tab_page_scaffold.dart';
 import 'package:social_gallery/l10n/app_localizations.dart';
 
 class TrashScreen extends ConsumerStatefulWidget {
@@ -394,11 +393,32 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 ),
         );
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => OneUiTabPageScaffold(
-        error: e,
-        body: const SizedBox.shrink(),
+      loading: () => Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              AppHaptics.light();
+              context.pop();
+            },
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              AppHaptics.light();
+              context.pop();
+            },
+          ),
+        ),
+        body: EmptyState(
+          title: l10n.errorGeneric,
+          message: e.toString(),
+        ),
       ),
     );
   }

@@ -3,10 +3,62 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:social_gallery/core/media/jxl_codec.dart';
 
+/// Bundle of thumbnail metrics computed from a single decode.
+class ImageMetricsBundle {
+  const ImageMetricsBundle({
+    required this.dHash,
+    required this.blurScore,
+    required this.exposureScore,
+    required this.isSolidColor,
+    required this.dominantColor,
+  });
+
+  final String dHash;
+  final double blurScore;
+  final double exposureScore;
+  final bool isSolidColor;
+  final String? dominantColor;
+}
+
+/// Decodes [bytes] once and computes all search/quality metrics.
+ImageMetricsBundle? computeAllImageMetrics(Uint8List bytes) {
+  final decoded = decodeRasterImage(bytes);
+  if (decoded == null) return null;
+
+  return ImageMetricsBundle(
+    dHash: _dHashFromImage(decoded),
+    blurScore: _blurScoreFromImage(decoded),
+    exposureScore: _exposureScoreFromImage(decoded),
+    isSolidColor: _isSolidColorFromImage(decoded),
+    dominantColor: _dominantColorFromImage(decoded),
+  );
+}
+
 String computeDHash(Uint8List bytes) {
   final decoded = decodeRasterImage(bytes);
   if (decoded == null) return '';
+  return _dHashFromImage(decoded);
+}
 
+double computeBlurScore(Uint8List bytes) {
+  final decoded = decodeRasterImage(bytes);
+  if (decoded == null) return 0;
+  return _blurScoreFromImage(decoded);
+}
+
+double computeExposureScore(Uint8List bytes) {
+  final decoded = decodeRasterImage(bytes);
+  if (decoded == null) return 128;
+  return _exposureScoreFromImage(decoded);
+}
+
+bool computeIsSolidColor(Uint8List bytes) {
+  final decoded = decodeRasterImage(bytes);
+  if (decoded == null) return false;
+  return _isSolidColorFromImage(decoded);
+}
+
+String _dHashFromImage(img.Image decoded) {
   final resized = img.copyResize(decoded, width: 9, height: 8);
   final gray = img.grayscale(resized);
   final buffer = StringBuffer();
@@ -21,10 +73,7 @@ String computeDHash(Uint8List bytes) {
   return buffer.toString();
 }
 
-double computeBlurScore(Uint8List bytes) {
-  final decoded = decodeRasterImage(bytes);
-  if (decoded == null) return 0;
-
+double _blurScoreFromImage(img.Image decoded) {
   final gray = img.grayscale(img.copyResize(decoded, width: 64, height: 64));
   var sum = 0.0;
   var sumSq = 0.0;
@@ -50,10 +99,7 @@ double computeBlurScore(Uint8List bytes) {
   return variance;
 }
 
-double computeExposureScore(Uint8List bytes) {
-  final decoded = decodeRasterImage(bytes);
-  if (decoded == null) return 128;
-
+double _exposureScoreFromImage(img.Image decoded) {
   final gray = img.grayscale(img.copyResize(decoded, width: 32, height: 32));
   var total = 0.0;
   final pixels = gray.width * gray.height;
@@ -65,10 +111,7 @@ double computeExposureScore(Uint8List bytes) {
   return total / pixels;
 }
 
-bool computeIsSolidColor(Uint8List bytes) {
-  final decoded = decodeRasterImage(bytes);
-  if (decoded == null) return false;
-
+bool _isSolidColorFromImage(img.Image decoded) {
   final sample = img.copyResize(decoded, width: 16, height: 16);
   final first = sample.getPixel(0, 0);
   var same = 0;
@@ -107,7 +150,10 @@ const kColorBuckets = [
 String? computeDominantColor(Uint8List bytes) {
   final decoded = decodeRasterImage(bytes);
   if (decoded == null) return null;
+  return _dominantColorFromImage(decoded);
+}
 
+String? _dominantColorFromImage(img.Image decoded) {
   final sample = img.copyResize(decoded, width: 32, height: 32);
   var rSum = 0.0;
   var gSum = 0.0;

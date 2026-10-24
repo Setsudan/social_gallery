@@ -24,6 +24,9 @@ import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 
 import 'package:social_gallery/core/platform/reveal_in_file_explorer.dart';
 
+import 'package:social_gallery/shared/widgets/nav_back_leading.dart';
+
+
 import 'package:social_gallery/core/animation/app_motion.dart';
 
 import 'package:social_gallery/core/animation/modal_sheet.dart';
@@ -500,7 +503,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
           duration: motion.fade,
 
-          opacity: _showChrome ? 1 : 0,
+          // Desktop has no system back; keep chrome (and leading) visible.
+          opacity: usesFilesystemGallery || _showChrome ? 1 : 0,
 
           child: AppBar(
 
@@ -509,6 +513,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             foregroundColor: Colors.white,
 
             elevation: 0,
+
+            automaticallyImplyLeading: false,
+
+            leading: const NavBackLeading(),
 
             title: showPager
 

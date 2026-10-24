@@ -4,6 +4,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:social_gallery/app/providers.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/shared/widgets/fullscreen_media_content.dart';
+import 'package:social_gallery/shared/widgets/nav_back_leading.dart';
 
 class MediaViewerScreen extends ConsumerStatefulWidget {
   const MediaViewerScreen({
@@ -45,6 +46,8 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
         backgroundColor: Colors.black54,
         foregroundColor: Colors.white,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: const NavBackLeading(),
         actions: [
           IconButton(
             icon: Icon(

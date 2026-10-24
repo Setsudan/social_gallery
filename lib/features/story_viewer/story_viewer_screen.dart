@@ -269,7 +269,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                 right: 12,
                 child: AnimatedOpacity(
                   duration: motion.fade,
-                  opacity: _showChrome ? 1 : 0,
+                  opacity: usesFilesystemGallery || _showChrome ? 1 : 0,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

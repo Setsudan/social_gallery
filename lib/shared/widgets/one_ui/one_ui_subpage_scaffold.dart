@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:social_gallery/shared/widgets/async_tab_body.dart';
+import 'package:social_gallery/shared/widgets/nav_back_leading.dart';
 
 /// Pushed screen: minimal top bar (One UI).
 class OneUiSubpageScaffold extends StatelessWidget {
@@ -38,12 +40,25 @@ class OneUiSubpageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = onBack != null ||
+        GoRouter.of(context).canPop() ||
+        Navigator.of(context).canPop();
+
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: onBack ?? () => Navigator.maybePop(context),
-        ),
+        automaticallyImplyLeading: false,
+        leading: canPop
+            ? NavBackLeading(
+                onPressed: onBack ??
+                    () {
+                      if (GoRouter.of(context).canPop()) {
+                        context.pop();
+                      } else {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
+              )
+            : null,
         title: appBarTitle != null ? Text(appBarTitle!) : null,
         actions: actions,
       ),

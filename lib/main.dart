@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,19 @@ import 'package:window_manager/window_manager.dart';
 /// Application entry: SharedPreferences override, background workers, ProviderScope.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exceptionAsString()}');
+    if (details.stack != null) {
+      debugPrint('${details.stack}');
+    }
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Uncaught platform error: $error\n$stack');
+    return true;
+  };
+
   // Keep more decoded thumbs while flinging / reversing grids.
   PaintingBinding.instance.imageCache.maximumSize = 400;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 160 << 20;
