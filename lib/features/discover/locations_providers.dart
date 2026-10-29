@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/app/providers/data_providers.dart';
 import 'package:social_gallery/core/location/location_clustering.dart';
 import 'package:social_gallery/core/location/reverse_geocoding_service.dart';
 import 'package:social_gallery/data/repositories/location_repository.dart';

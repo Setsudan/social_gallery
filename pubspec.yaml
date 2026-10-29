@@ -48,7 +48,7 @@ dependencies:
   shelf_router: ^1.1.4
   http: ^1.4.0
   crypto: ^3.0.6
-  archive: ^4.0.7
+  archive: 4.5.2
   pointycastle: ^4.0.0
   flutter_secure_storage: ^9.2.4
   qr_flutter: ^4.1.0

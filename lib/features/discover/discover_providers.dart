@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/app/providers/data_providers.dart';
 import 'package:social_gallery/features/discover/discover_hub_controller.dart';
 import 'package:social_gallery/features/discover/duplicate_scan_controller.dart';
 import 'package:social_gallery/domain/models/media_analysis_result.dart';

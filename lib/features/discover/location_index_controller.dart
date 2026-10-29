@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/app/providers/data_providers.dart';
 import 'package:social_gallery/core/location/reverse_geocoding_service.dart';
 import 'package:social_gallery/core/sync/gallery_sync_controller.dart';
 import 'package:social_gallery/domain/models/resolved_place.dart';

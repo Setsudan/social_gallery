@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/app/providers/data_providers.dart';
 import 'package:social_gallery/core/analysis/media_analysis_service.dart';
 
 class MediaTaggingScanState {

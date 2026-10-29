@@ -9,6 +9,8 @@ import 'package:social_gallery/data/datasources/photo_manager_datasource.dart';
 import 'package:social_gallery/data/local/app_database.dart';
 import 'package:social_gallery/data/mappers/entity_mappers.dart';
 import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
+import 'package:social_gallery/core/sync/media_sync_service.dart';
+import 'package:social_gallery/data/repositories/media_sync_repository.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/feed_item.dart';
@@ -19,11 +21,22 @@ import 'package:social_gallery/domain/models/media_item.dart' as domain;
 
 /// Single entry point for indexed media: sync, queries, favorites, trash, and device I/O.
 class MediaRepository {
-  MediaRepository(this._db, this._photoManager, this._preferences);
+  MediaRepository(
+    this._database,
+    this._photoManagerDatasource,
+    PreferencesRepository preferencesRepository, {
+    MediaSyncService? syncService,
+  }) : _syncService =
+           syncService ??
+           MediaSyncService(
+             MediaSyncRepository(_database),
+             _photoManagerDatasource,
+             preferencesRepository,
+           );
 
-  final AppDatabase _db;
-  final PhotoManagerDatasource _photoManager;
-  final PreferencesRepository _preferences;
+  final AppDatabase _database;
+  final PhotoManagerDatasource _photoManagerDatasource;
+  final MediaSyncService _syncService;
 
   /// Page size for home feed, gallery, and explore pagination.
   static const pageSize = 60;
@@ -34,126 +47,19 @@ class MediaRepository {
     bool fastScan = false,
     bool Function()? shouldCancel,
     GallerySyncProgressCallback? onProgress,
-  }) async {
-    final existingFolders = await _db.select(_db.folders).get();
-    final statusMap = {for (final f in existingFolders) f.path: f.followStatus};
-
-    final existingById = await _db.getMediaSyncMergeState();
-    final trashedIds = <int>{
-      for (final entry in existingById.entries)
-        if (entry.value.isTrashed) entry.key,
-    };
-
-    onProgress?.call(
-      const GallerySyncProgress(
-        phase: 'folders',
-        detail: 'Reading albums on your device',
-      ),
-    );
-
-    final folderRows = await _photoManager.loadFolders(
-      statusMap,
-      _preferences.hasCompletedInitialSetup,
-    );
-    if (shouldCancel?.call() == true) return;
-    await _db.upsertFolders(folderRows);
-
-    final scannedIds = <int>{};
-    var savedCount = 0;
-
-    await _photoManager.scanAllMedia(
-      fastScan: fastScan,
-      shouldCancel: shouldCancel,
-      onProgress: onProgress,
-      onChunk: (chunk) async {
-        if (shouldCancel?.call() == true) return;
-        final merged = chunk.map((row) {
-          final id = row.id.value;
-          scannedIds.add(id);
-          final existing = existingById[id];
-          var mergedRow = row;
-          if (existing != null && existing.isFavorite) {
-            mergedRow = mergedRow.copyWith(isFavorite: const Value(true));
-          }
-          if (existing != null) {
-            if (existing.isTrashed) {
-              mergedRow = mergedRow.copyWith(
-                isTrashed: const Value(true),
-                trashedAt: Value(existing.trashedAt),
-                originalPath: Value(existing.originalPath),
-              );
-            }
-            mergedRow = mergedRow.copyWith(
-              backupState: Value(existing.backupState),
-              lastSyncTime: Value(existing.lastSyncTime),
-              cloudBackupState: Value(existing.cloudBackupState),
-              cloudLastSyncTime: Value(existing.cloudLastSyncTime),
-              cloudObjectKey: Value(existing.cloudObjectKey),
-            );
-            final incomingLat =
-                row.latitude.present ? row.latitude.value : null;
-            final incomingLng =
-                row.longitude.present ? row.longitude.value : null;
-            final hasIncomingLocation = incomingLat != null &&
-                incomingLng != null &&
-                incomingLat != 0 &&
-                incomingLng != 0;
-            final hasExistingLocation = existing.latitude != null &&
-                existing.longitude != null &&
-                existing.latitude != 0 &&
-                existing.longitude != 0;
-            if (!hasIncomingLocation && hasExistingLocation) {
-              mergedRow = mergedRow.copyWith(
-                latitude: Value(existing.latitude),
-                longitude: Value(existing.longitude),
-              );
-            }
-            // Preserve document classification from OCR; screenshots re-derived.
-            if (existing.contentKind == MediaContentKind.document.value &&
-                (!mergedRow.contentKind.present ||
-                    mergedRow.contentKind.value !=
-                        MediaContentKind.screenshot.value)) {
-              mergedRow = mergedRow.copyWith(
-                contentKind: const Value(3),
-              );
-            }
-          }
-          return mergedRow;
-        }).toList();
-
-        await _db.upsertMediaItemsChunk(merged);
-        savedCount += merged.length;
-        onProgress?.call(
-          GallerySyncProgress(
-            phase: 'saving',
-            detail: 'Saving $savedCount items to your library',
-            processed: savedCount,
-            total: savedCount,
-          ),
-        );
-      },
-    );
-    if (shouldCancel?.call() == true) return;
-
-    await _db.deleteMediaNotIn({...scannedIds, ...trashedIds});
-    await _db.updateFolderCounts();
-    await _db.repairFolderCovers();
-
-    onProgress?.call(
-      const GallerySyncProgress(
-        phase: 'finishing',
-        detail: 'Finishing setup',
-      ),
-    );
-  }
+  }) => _syncService.syncFromDevice(
+    fastScan: fastScan,
+    shouldCancel: shouldCancel,
+    onProgress: onProgress,
+  );
 
   Future<List<FolderWithStories>> getFoldersWithStories() async {
     final windowMs = storyWindowHours * 60 * 60 * 1000;
     final since = DateTime.now().millisecondsSinceEpoch - windowMs;
 
-    final storyFolders = await _db.getStoriesEnabledFolders();
+    final storyFolders = await _database.getStoriesEnabledFolders();
     final folderMap = {for (final f in storyFolders) f.path: f};
-    final recentMedia = await _db.getMediaAddedAfter(since);
+    final recentMedia = await _database.getMediaAddedAfter(since);
 
     final grouped = <String, List<domain.MediaItem>>{};
     for (final row in recentMedia) {
@@ -197,7 +103,7 @@ class MediaRepository {
   }
 
   Future<List<FeedItem>> getHomeFeedPage(int page) async {
-    final rows = await _db.getHomeFeedMediaPage(
+    final rows = await _database.getHomeFeedMediaPage(
       limit: pageSize,
       offset: page * pageSize,
     );
@@ -213,7 +119,7 @@ class MediaRepository {
   }
 
   Future<List<domain.MediaItem>> getExplorePage(int page) async {
-    final rows = await _db.getExploreMediaPage(
+    final rows = await _database.getExploreMediaPage(
       limit: pageSize,
       offset: page * pageSize,
     );
@@ -231,7 +137,7 @@ class MediaRepository {
     if (query.isEmpty) {
       return getExplorePage(page);
     }
-    final rows = await _db.searchExploreMediaFiltered(
+    final rows = await _database.searchExploreMediaFiltered(
       text: query.text,
       labels: query.labels,
       color: query.color,
@@ -253,7 +159,7 @@ class MediaRepository {
     int page, {
     String? ocrQuery,
   }) async {
-    final rows = await _db.getMediaByContentKindPage(
+    final rows = await _database.getMediaByContentKindPage(
       contentKind: kind.value,
       limit: pageSize,
       offset: page * pageSize,
@@ -266,7 +172,7 @@ class MediaRepository {
     String folderPath, {
     bool random = true,
   }) async {
-    final row = await _db.pickFolderMedia(
+    final row = await _database.pickFolderMedia(
       folderPath: folderPath,
       random: random,
     );
@@ -276,55 +182,49 @@ class MediaRepository {
   Future<domain.MediaItem?> pickFavoriteWidgetMedia({
     bool random = true,
   }) async {
-    final row = await _db.pickFavoriteMedia(random: random);
+    final row = await _database.pickFavoriteMedia(random: random);
     return row == null ? null : mediaItemFromRow(row);
   }
 
   Future<domain.MediaItem?> pickOnThisDayWidgetMedia({
     bool random = true,
   }) async {
-    final row = await _db.pickOnThisDayMedia(random: random);
+    final row = await _database.pickOnThisDayMedia(random: random);
     return row == null ? null : mediaItemFromRow(row);
   }
 
   Future<void> updateContentKind(int mediaId, MediaContentKind kind) {
-    return _db.updateMediaContentKind(mediaId, kind.value);
+    return _database.updateMediaContentKind(mediaId, kind.value);
   }
 
   Future<int> backfillScreenshotContentKinds() {
-    return _db.backfillScreenshotContentKinds();
+    return _database.backfillScreenshotContentKinds();
   }
 
   Future<List<domain.MediaItem>> getAllSearchableMedia() async {
-    final rows = await _db.getAllSearchableMedia();
+    final rows = await _database.getAllSearchableMedia();
     return rows.map(mediaItemFromRow).toList();
   }
 
   Stream<List<domain.MediaItem>> watchFavorites() {
-    return _db.watchFavoritesMedia().map(
+    return _database.watchFavoritesMedia().map(
       (rows) => rows.map(mediaItemFromRow).toList(),
     );
   }
 
   Future<List<domain.MediaItem>> getFavoritesPage(int page) async {
-    final rows = await _db.getFavoritesMediaPage(
+    final rows = await _database.getFavoritesMediaPage(
       limit: pageSize,
       offset: page * pageSize,
     );
     return rows.map(mediaItemFromRow).toList();
   }
 
-  Stream<List<domain.MediaItem>> watchFolderMedia(String folderPath) {
-    return _db
-        .watchMediaInFolder(folderPath)
-        .map((rows) => rows.map(mediaItemFromRow).toList());
-  }
-
   Future<List<domain.MediaItem>> getFolderMediaPage(
     String folderPath,
     int page,
   ) async {
-    final rows = await _db.getMediaInFolderPage(
+    final rows = await _database.getMediaInFolderPage(
       folderPath,
       limit: pageSize,
       offset: page * pageSize,
@@ -333,23 +233,23 @@ class MediaRepository {
   }
 
   Future<void> setFavorite(int id, bool favorite) {
-    return _db.setFavorite(id, favorite);
+    return _database.setFavorite(id, favorite);
   }
 
   Future<List<domain.MediaItem>> getPotentialDuplicates() async {
     await backfillFilesystemImageDimensions();
-    final rows = await _db.getPotentialDuplicateMedia();
+    final rows = await _database.getPotentialDuplicateMedia();
     return rows.map(mediaItemFromRow).toList();
   }
 
   Future<void> backfillFilesystemImageDimensions() async {
     if (!usesFilesystemGallery) return;
 
-    final rows = await _db.getHomeFeedImagesMissingDimensions();
+    final rows = await _database.getHomeFeedImagesMissingDimensions();
     for (final row in rows) {
       final dimensions = await readFilesystemImageDimensions(row.uri);
       if (dimensions == null) continue;
-      await _db.updateMediaDimensions(
+      await _database.updateMediaDimensions(
         row.id,
         dimensions.width,
         dimensions.height,
@@ -361,7 +261,7 @@ class MediaRepository {
   Future<int> backfillMediaLocations({
     void Function(int processed, int total)? onProgress,
   }) async {
-    final rows = await _db.getHomeFeedImagesMissingLocation();
+    final rows = await _database.getHomeFeedImagesMissingLocation();
     if (rows.isEmpty) return 0;
 
     var updated = 0;
@@ -369,7 +269,7 @@ class MediaRepository {
       final row = rows[i];
       final coords = await _readGpsForMediaRow(row);
       if (coords != null) {
-        await _db.updateMediaLocation(row.id, coords.$1, coords.$2);
+        await _database.updateMediaLocation(row.id, coords.$1, coords.$2);
         updated++;
       }
       if (i % 10 == 0 || i == rows.length - 1) {
@@ -410,54 +310,55 @@ class MediaRepository {
   }
 
   Future<List<domain.MediaItem>> getOrganizeMediaPool() async {
-    final rows = await _db.getOrganizeMediaPool();
+    final rows = await _database.getOrganizeMediaPool();
     return rows.map(mediaItemFromRow).toList();
   }
 
   Future<List<domain.MediaItem>> getAllHomeFeedMedia() async {
-    final rows = await _db.getAllHomeFeedMedia();
+    final rows = await _database.getAllHomeFeedMedia();
     return rows.map(mediaItemFromRow).toList();
   }
 
   Future<List<domain.MediaItem>> getMediaWithLocation() async {
-    final rows = await _db.getMediaWithLocation();
+    final rows = await _database.getMediaWithLocation();
     return rows.map(mediaItemFromRow).toList();
   }
 
   Future<List<domain.MediaItem>> getFavoriteMediaList() async {
-    final rows = await _db.getFavoriteMediaList();
+    final rows = await _database.getFavoriteMediaList();
     return rows.map(mediaItemFromRow).toList();
   }
 
   Future<domain.MediaItem?> getMediaById(int id) async {
-    final row = await (_db.select(
-      _db.mediaItems,
+    final row = await (_database.select(
+      _database.mediaItems,
     )..where((m) => m.id.equals(id))).getSingleOrNull();
     return row == null ? null : mediaItemFromRow(row);
   }
 
   Future<List<domain.MediaItem>> getMediaByIds(Set<int> ids) async {
     if (ids.isEmpty) return [];
-    final rows = await (_db.select(_db.mediaItems)
-          ..where((m) => m.id.isIn(ids.toList())))
-        .get();
+    final rows = await (_database.select(
+      _database.mediaItems,
+    )..where((m) => m.id.isIn(ids.toList()))).get();
     return rows.map(mediaItemFromRow).toList();
   }
 
   Future<bool> deleteFromDevice(List<domain.MediaItem> items) async {
     final assetIds = items.map((e) => e.uri).toList();
-    final deleted = await _photoManager.deleteAssets(assetIds);
+    final deleted = await _photoManagerDatasource.deleteAssets(assetIds);
     if (deleted) {
-      await _db.deleteMediaByIds(items.map((e) => e.id).toList());
-      await _db.updateFolderCounts();
-      await _db.repairFolderCovers();
+      await _database.deleteMediaByIds(items.map((e) => e.id).toList());
+      await _database.updateFolderCounts();
+      await _database.repairFolderCovers();
     }
     return deleted;
   }
 
   Future<void> markStoryAsViewed(String folderPath) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    await (_db.update(_db.folders)..where((f) => f.path.equals(folderPath)))
+    await (_database.update(_database.folders)
+          ..where((f) => f.path.equals(folderPath)))
         .write(FoldersCompanion(storyLastViewedTime: Value(now)));
   }
 
@@ -467,7 +368,7 @@ class MediaRepository {
     String folderName,
     List<domain.MediaItem> items,
   ) async {
-    final newPath = await _photoManager.createAlbumFolder(folderName);
+    final newPath = await _photoManagerDatasource.createAlbumFolder(folderName);
     if (newPath == null) return false;
     await moveMedia(items, newPath);
     await syncFromDevice();
@@ -486,15 +387,15 @@ class MediaRepository {
     };
 
     final resolvedPath =
-        await _photoManager.resolveTargetAlbumId(targetFolderPath) ??
-            targetFolderPath;
+        await _photoManagerDatasource.resolveTargetAlbumId(targetFolderPath) ??
+        targetFolderPath;
 
-    final folder = await (_db.select(_db.folders)
-          ..where((f) => f.path.equals(resolvedPath)))
-        .getSingleOrNull();
+    final folder = await (_database.select(
+      _database.folders,
+    )..where((f) => f.path.equals(resolvedPath))).getSingleOrNull();
     final folderName = folder?.name ?? _folderNameFromPath(resolvedPath);
 
-    final movedByUri = await _photoManager.moveAssetsOnDisk(
+    final movedByUri = await _photoManagerDatasource.moveAssetsOnDisk(
       items.map((item) => item.uri).toList(),
       targetFolderPath,
     );
@@ -518,7 +419,7 @@ class MediaRepository {
       if (newUri != item.uri) {
         uriChanged = true;
         final newId = newUri.hashCode & 0x7FFFFFFF;
-        await _db.moveMediaItemWithUri(
+        await _database.moveMediaItemWithUri(
           id: item.id,
           targetFolderPath: resolvedPath,
           targetFolderName: folderName,
@@ -534,7 +435,7 @@ class MediaRepository {
         for (final uri in movedByUri.keys)
           if (byUri[uri] != null) byUri[uri]!.id,
       ];
-      await _db.moveMediaItems(
+      await _database.moveMediaItems(
         movedIds,
         resolvedPath,
         folderName,
@@ -542,7 +443,7 @@ class MediaRepository {
       );
     }
 
-    await _db.repairFolderCoversForPaths({...sourcePaths, resolvedPath});
+    await _database.repairFolderCoversForPaths({...sourcePaths, resolvedPath});
     for (final oldUri in movedByUri.keys) {
       AssetEntityCache.evict(oldUri);
     }
@@ -562,7 +463,9 @@ class MediaRepository {
     final successIds = <int>[];
 
     for (final item in items) {
-      final originalPath = await _photoManager.trashAssetOnDisk(item.uri);
+      final originalPath = await _photoManagerDatasource.trashAssetOnDisk(
+        item.uri,
+      );
       if (originalPath != null) {
         origPaths[item.id] = originalPath;
         successIds.add(item.id);
@@ -570,8 +473,8 @@ class MediaRepository {
     }
 
     if (successIds.isNotEmpty) {
-      await _db.trashMediaItems(successIds, now, origPaths);
-      await _db.repairFolderCovers();
+      await _database.trashMediaItems(successIds, now, origPaths);
+      await _database.repairFolderCovers();
     }
   }
 
@@ -579,7 +482,7 @@ class MediaRepository {
     final successIds = <int>[];
     for (final item in items) {
       if (item.originalPath != null) {
-        final restored = await _photoManager.restoreAssetOnDisk(
+        final restored = await _photoManagerDatasource.restoreAssetOnDisk(
           item.originalPath!,
         );
         if (restored) {
@@ -588,8 +491,8 @@ class MediaRepository {
       }
     }
     if (successIds.isNotEmpty) {
-      await _db.restoreMediaItems(successIds);
-      await _db.repairFolderCovers();
+      await _database.restoreMediaItems(successIds);
+      await _database.repairFolderCovers();
     }
   }
 
@@ -597,23 +500,23 @@ class MediaRepository {
     final ids = <int>[];
     for (final item in items) {
       if (item.originalPath != null) {
-        await _photoManager.deleteTrashedFile(item.originalPath!);
+        await _photoManagerDatasource.deleteTrashedFile(item.originalPath!);
       }
       ids.add(item.id);
     }
-    await _db.deleteMediaByIds(ids);
-    await _db.updateFolderCounts();
-    await _db.repairFolderCovers();
+    await _database.deleteMediaByIds(ids);
+    await _database.updateFolderCounts();
+    await _database.repairFolderCovers();
   }
 
   Future<void> repairFolderCovers() {
-    return _db.repairFolderCovers();
+    return _database.repairFolderCovers();
   }
 
   Future<void> cleanupExpiredTrash(int retentionDays) async {
     final retentionMs = retentionDays * 24 * 60 * 60 * 1000;
     final beforeTimestamp = DateTime.now().millisecondsSinceEpoch - retentionMs;
-    final expiredRows = await _db.getExpiredTrashedMedia(beforeTimestamp);
+    final expiredRows = await _database.getExpiredTrashedMedia(beforeTimestamp);
 
     if (expiredRows.isNotEmpty) {
       final expiredItems = expiredRows.map(mediaItemFromRow).toList();
@@ -622,7 +525,7 @@ class MediaRepository {
   }
 
   Stream<List<domain.MediaItem>> watchTrashedMedia() {
-    return _db.watchTrashedMedia().map(
+    return _database.watchTrashedMedia().map(
       (rows) => rows.map(mediaItemFromRow).toList(),
     );
   }
@@ -631,56 +534,61 @@ class MediaRepository {
     int limit = 100,
     String? folderPath,
   }) async {
-    final rows = await _db.getMediaPendingBackupWithFolder(
+    final rows = await _database.getMediaPendingBackupWithFolder(
       limit: limit,
       folderPath: folderPath,
     );
     return rows
         .map(
-          (entry) => mediaItemFromRow(entry.row).copyWith(isVault: entry.isVault),
+          (entry) =>
+              mediaItemFromRow(entry.row).copyWith(isVault: entry.isVault),
         )
         .toList();
   }
 
   Future<List<PendingBackupFolder>> getPendingBackupFolders() {
-    return _db.getPendingBackupFolders();
+    return _database.getPendingBackupFolders();
   }
 
-  Future<bool> hasPendingVaultBackup() => _db.hasPendingVaultBackup();
+  Future<bool> hasPendingVaultBackup() => _database.hasPendingVaultBackup();
 
   Future<int> countMediaPendingBackup({String? folderPath}) {
-    return _db.countMediaPendingBackup(folderPath: folderPath);
+    return _database.countMediaPendingBackup(folderPath: folderPath);
   }
 
   Future<void> updateBackupState(int id, MediaBackupState state) {
-    return _db.updateMediaBackupState(id, state.value);
+    return _database.updateMediaBackupState(id, state.value);
   }
 
   Future<void> markMediaBackedUp(int id) {
-    return _db.markMediaBackedUp(id, DateTime.now().millisecondsSinceEpoch);
+    return _database.markMediaBackedUp(
+      id,
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   Future<void> resetStaleBackupInProgress() {
-    return _db.resetStaleBackupInProgress();
+    return _database.resetStaleBackupInProgress();
   }
 
   Future<List<domain.MediaItem>> getBackedUpMediaSample({
     required int offset,
     required int limit,
   }) async {
-    final rows = await _db.getBackedUpMediaSampleWithFolder(
+    final rows = await _database.getBackedUpMediaSampleWithFolder(
       offset: offset,
       limit: limit,
     );
     return rows
         .map(
-          (entry) => mediaItemFromRow(entry.row).copyWith(isVault: entry.isVault),
+          (entry) =>
+              mediaItemFromRow(entry.row).copyWith(isVault: entry.isVault),
         )
         .toList();
   }
 
   Future<int> countBackedUpMedia() {
-    return _db.countBackedUpMedia();
+    return _database.countBackedUpMedia();
   }
 
   Future<void> reconcileBackupStates({
@@ -689,24 +597,24 @@ class MediaRepository {
     required Iterable<int> missingIds,
   }) async {
     final syncedAt = DateTime.now().millisecondsSinceEpoch;
-    await _db.markMediaIdsBackedUp(presentIds, syncedAt);
+    await _database.markMediaIdsBackedUp(presentIds, syncedAt);
     final resetIds = [...mismatchIds, ...missingIds];
-    await _db.markMediaIdsPending(resetIds);
+    await _database.markMediaIdsPending(resetIds);
   }
 
   Future<void> markVerifiedMissingAsPending(Iterable<int> ids) {
-    return _db.markMediaIdsPending(ids);
+    return _database.markMediaIdsPending(ids);
   }
 
   Future<List<PendingBackupFolder>> getPendingCloudBackupFolders() {
-    return _db.getPendingCloudBackupFolders();
+    return _database.getPendingCloudBackupFolders();
   }
 
   Future<List<domain.MediaItem>> getMediaPendingCloudBackup({
     int limit = 100,
     String? folderPath,
   }) async {
-    final rows = await _db.getMediaPendingCloudBackup(
+    final rows = await _database.getMediaPendingCloudBackup(
       limit: limit,
       folderPath: folderPath,
     );
@@ -714,18 +622,18 @@ class MediaRepository {
   }
 
   Future<int> countMediaPendingCloudBackup({String? folderPath}) {
-    return _db.countMediaPendingCloudBackup(folderPath: folderPath);
+    return _database.countMediaPendingCloudBackup(folderPath: folderPath);
   }
 
   Future<void> updateCloudBackupState(int id, MediaBackupState state) {
-    return _db.updateMediaCloudBackupState(id, state.value);
+    return _database.updateMediaCloudBackupState(id, state.value);
   }
 
   Future<void> markMediaCloudBackedUp({
     required int id,
     required String objectKey,
   }) {
-    return _db.markMediaCloudBackedUp(
+    return _database.markMediaCloudBackedUp(
       id: id,
       syncedAtMs: DateTime.now().millisecondsSinceEpoch,
       objectKey: objectKey,
@@ -733,18 +641,21 @@ class MediaRepository {
   }
 
   Future<void> resetStaleCloudBackupInProgress() {
-    return _db.resetStaleCloudBackupInProgress();
+    return _database.resetStaleCloudBackupInProgress();
   }
 
   Future<List<domain.MediaItem>> getCloudBackedUpMedia({
     int limit = 100,
     int offset = 0,
   }) async {
-    final rows = await _db.getCloudBackedUpMedia(limit: limit, offset: offset);
+    final rows = await _database.getCloudBackedUpMedia(
+      limit: limit,
+      offset: offset,
+    );
     return rows.map(mediaItemFromRow).toList();
   }
 
-  Future<int> countCloudBackedUpMedia() => _db.countCloudBackedUpMedia();
+  Future<int> countCloudBackedUpMedia() => _database.countCloudBackedUpMedia();
 
   Future<void> upsertCloudBackupObject({
     required int mediaId,
@@ -752,7 +663,7 @@ class MediaRepository {
     required String plaintextChecksum,
     required int size,
   }) {
-    return _db.upsertCloudBackupObject(
+    return _database.upsertCloudBackupObject(
       mediaId: mediaId,
       objectKey: objectKey,
       plaintextChecksum: plaintextChecksum,
@@ -762,15 +673,16 @@ class MediaRepository {
   }
 
   Future<CloudBackupObject?> getCloudBackupObject(int mediaId) {
-    return _db.getCloudBackupObject(mediaId);
+    return _database.getCloudBackupObject(mediaId);
   }
 
   Future<List<CloudBackupObject>> listCloudBackupObjects({
     int limit = 200,
     int offset = 0,
   }) {
-    return _db.listCloudBackupObjects(limit: limit, offset: offset);
+    return _database.listCloudBackupObjects(limit: limit, offset: offset);
   }
 
-  Future<void> clearCloudBackupInventory() => _db.clearCloudBackupInventory();
+  Future<void> clearCloudBackupInventory() =>
+      _database.clearCloudBackupInventory();
 }

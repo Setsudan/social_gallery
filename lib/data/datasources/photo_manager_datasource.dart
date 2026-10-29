@@ -14,10 +14,11 @@ import 'package:social_gallery/core/sync/gallery_sync_progress.dart';
 import 'package:social_gallery/core/media/asset_media_kind.dart';
 import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/data/local/app_database.dart';
+import 'package:social_gallery/data/datasources/media_scan_source.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 
 /// Reads device albums and media via photo_manager (mobile) or filesystem (desktop).
-class PhotoManagerDatasource {
+class PhotoManagerDatasource implements MediaScanSource {
   final PreferencesRepository _preferences;
   PhotoManagerDatasource(this._preferences);
   static const _imageExtensions = {
@@ -291,6 +292,7 @@ class PhotoManagerDatasource {
   }
 
   /// Scans the device library and delivers companions in bounded chunks.
+  @override
   Future<void> scanAllMedia({
     bool fastScan = false,
     bool Function()? shouldCancel,
@@ -460,6 +462,7 @@ class PhotoManagerDatasource {
     return scored.map((e) => e.album).toList();
   }
 
+  @override
   Future<List<FoldersCompanion>> loadFolders(
     Map<String, String> existingFollowStatus,
     bool initialSetupComplete,

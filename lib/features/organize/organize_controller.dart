@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/app/providers/data_providers.dart';
+import 'package:social_gallery/features/settings/settings_providers.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/domain/usecases/build_organize_queue.dart';
@@ -10,19 +11,23 @@ import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart';
 /// Riverpod state for the organize swipe session (queue, undo, trash review).
 final organizeControllerProvider =
     StateNotifierProvider.autoDispose<OrganizeController, OrganizeState>((ref) {
-  final controller = OrganizeController(ref);
-  ref.onDispose(controller.disposeController);
-  return controller;
-});
+      final controller = OrganizeController(
+        ref,
+        ref.read(buildOrganizeQueueProvider),
+      );
+      ref.onDispose(controller.disposeController);
+      return controller;
+    });
 
 /// Loads organize batches, handles swipes, undo, and trash review commits.
 class OrganizeController extends StateNotifier<OrganizeState> {
-  OrganizeController(this._ref) : super(const OrganizeState()) {
+  OrganizeController(this._ref, this._buildQueue)
+    : super(const OrganizeState()) {
     _init();
   }
 
   final Ref _ref;
-  final _buildQueue = BuildOrganizeQueue();
+  final BuildOrganizeQueue _buildQueue;
   final _undoStack = <OrganizeUndoAction>[];
 
   List<MediaItem> _pool = [];
@@ -69,10 +74,7 @@ class OrganizeController extends StateNotifier<OrganizeState> {
         batchSize: organizeRepo.batchSize,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -80,7 +82,9 @@ class OrganizeController extends StateNotifier<OrganizeState> {
   ///
   /// Returns [OrganizeSwipeAction.move] when the UI should open a folder
   /// picker (non-strip move). Returns `null` when nothing was applied.
-  Future<OrganizeSwipeAction?> applySwipe(OrganizeSwipeDirection direction) async {
+  Future<OrganizeSwipeAction?> applySwipe(
+    OrganizeSwipeDirection direction,
+  ) async {
     final current = state.currentCard;
     if (current == null) return null;
 

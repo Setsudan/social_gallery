@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:social_gallery/app/providers.dart';
+import 'package:social_gallery/app/providers/data_providers.dart';
+import 'package:social_gallery/features/settings/settings_providers.dart';
 import 'package:social_gallery/core/analysis/media_tagging_controller.dart'
     show mediaTaggingControllerProvider;
 import 'package:social_gallery/core/workers/trash_cleanup_worker.dart';
@@ -12,7 +13,7 @@ import 'package:social_gallery/features/discover/locations_providers.dart'
     show invalidateLocationProvidersFromRef;
 import 'package:social_gallery/features/discover/location_index_controller.dart'
     show locationIndexControllerProvider;
-import 'package:social_gallery/shared/pagination/paginated_list_notifier.dart'
+import 'package:social_gallery/app/providers/feed_refresh_providers.dart'
     show refreshFeedProvidersFromRef;
 
 /// Phase of an in-progress device-to-database gallery sync.
@@ -244,6 +245,10 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
     }
   }
 }
+
+final syncStateProvider = Provider<bool>((ref) {
+  return ref.watch(gallerySyncProvider.select((state) => state.isRunning));
+});
 
 /// Riverpod provider for [GallerySyncController] sync state and actions.
 final gallerySyncProvider =
