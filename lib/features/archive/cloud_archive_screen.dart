@@ -26,9 +26,9 @@ class _CloudArchiveScreenState extends ConsumerState<CloudArchiveScreen> {
   }
 
   Future<void> _load() async {
-    final items = await ref.read(mediaRepositoryProvider).getCloudBackedUpMedia(
-          limit: 500,
-        );
+    final items = await ref
+        .read(mediaRepositoryProvider)
+        .getCloudBackedUpMedia(limit: 500);
     if (!mounted) return;
     setState(() {
       _items = items;
@@ -44,14 +44,15 @@ class _CloudArchiveScreenState extends ConsumerState<CloudArchiveScreen> {
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
     try {
-      final file =
-          await ref.read(cloudBackupProvider.notifier).downloadAndDecrypt(item);
+      final file = await ref
+          .read(cloudBackupProvider.notifier)
+          .downloadAndDecrypt(item);
       if (!mounted) return;
       Navigator.pop(context);
       if (file == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.cloudArchiveDecryptFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.cloudArchiveDecryptFailed)));
         return;
       }
       await Navigator.of(context).push(
@@ -62,9 +63,9 @@ class _CloudArchiveScreenState extends ConsumerState<CloudArchiveScreen> {
     } catch (_) {
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.cloudArchiveDecryptFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.cloudArchiveDecryptFailed)));
     }
   }
 
@@ -76,23 +77,23 @@ class _CloudArchiveScreenState extends ConsumerState<CloudArchiveScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
-              ? Center(child: Text(l10n.cloudArchiveEmpty))
-              : ListView.builder(
-                  itemCount: _items.length,
-                  itemBuilder: (context, index) {
-                    final item = _items[index];
-                    return ListTile(
-                      leading: Icon(
-                        item.isVideo
-                            ? Icons.videocam_outlined
-                            : Icons.image_outlined,
-                      ),
-                      title: Text(item.displayName),
-                      subtitle: Text(item.folderName),
-                      onTap: () => _open(item),
-                    );
-                  },
-                ),
+          ? Center(child: Text(l10n.cloudArchiveEmpty))
+          : ListView.builder(
+              itemCount: _items.length,
+              itemBuilder: (context, index) {
+                final item = _items[index];
+                return ListTile(
+                  leading: Icon(
+                    item.isVideo
+                        ? Icons.videocam_outlined
+                        : Icons.image_outlined,
+                  ),
+                  title: Text(item.displayName),
+                  subtitle: Text(item.folderName),
+                  onTap: () => _open(item),
+                );
+              },
+            ),
     );
   }
 }
@@ -139,11 +140,11 @@ class _CloudArchiveViewerState extends State<_CloudArchiveViewer> {
       body: Center(
         child: widget.item.isVideo
             ? (_video != null && _video!.value.isInitialized
-                ? AspectRatio(
-                    aspectRatio: _video!.value.aspectRatio,
-                    child: VideoPlayer(_video!),
-                  )
-                : const CircularProgressIndicator())
+                  ? AspectRatio(
+                      aspectRatio: _video!.value.aspectRatio,
+                      child: VideoPlayer(_video!),
+                    )
+                  : const CircularProgressIndicator())
             : InteractiveViewer(
                 child: Image.file(widget.file, fit: BoxFit.contain),
               ),

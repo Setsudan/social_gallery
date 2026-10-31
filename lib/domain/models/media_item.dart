@@ -78,10 +78,7 @@ class MediaItem {
   int get pixelCount => (width ?? 0) * (height ?? 0);
 
   bool get hasLocation =>
-      latitude != null &&
-      longitude != null &&
-      latitude != 0 &&
-      longitude != 0;
+      latitude != null && longitude != null && latitude != 0 && longitude != 0;
 
   MediaItem copyWith({
     bool? isFavorite,

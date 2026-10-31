@@ -32,7 +32,9 @@ class OnboardingAccentSwatch extends StatelessWidget {
             color: preset.color,
             shape: BoxShape.circle,
             border: Border.all(
-              color: selected ? theme.colorScheme.onSurface : Colors.transparent,
+              color: selected
+                  ? theme.colorScheme.onSurface
+                  : Colors.transparent,
               width: 2,
             ),
           ),

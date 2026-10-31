@@ -21,12 +21,7 @@ import 'package:social_gallery/domain/models/backup_state.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 
 /// Per-file upload phase shown in progress UI.
-enum BackupSyncPhase {
-  idle,
-  preparing,
-  uploading,
-  completing,
-}
+enum BackupSyncPhase { idle, preparing, uploading, completing }
 
 class _BatchUploadProgress {
   const _BatchUploadProgress({
@@ -85,16 +80,17 @@ class _BatchUploadTracker {
     if (_items.length == 1) {
       final progress = _items.values.first;
       if (progress.bytesTotal > 0) {
-        final percent =
-            ((progress.bytesSent / progress.bytesTotal) * 100).round();
+        final percent = ((progress.bytesSent / progress.bytesTotal) * 100)
+            .round();
         return '${progress.fileDetail} ($percent%)';
       }
       return progress.fileDetail;
     }
 
     final total = aggregateBytesTotal;
-    final percent =
-        total > 0 ? ((aggregateBytesSent / total) * 100).round() : 0;
+    final percent = total > 0
+        ? ((aggregateBytesSent / total) * 100).round()
+        : 0;
     return 'Backing up ${_items.length} files ($percent%)';
   }
 }
@@ -173,10 +169,9 @@ class DesktopBackupState {
   double? get fileProgress =>
       syncingBytesTotal > 0 ? syncingBytesSent / syncingBytesTotal : null;
 
-  double? get receivingFileProgress =>
-      receivingBytesTotal > 0
-          ? receivingBytesReceived / receivingBytesTotal
-          : null;
+  double? get receivingFileProgress => receivingBytesTotal > 0
+      ? receivingBytesReceived / receivingBytesTotal
+      : null;
 
   bool get showsProgressUi =>
       isRunning &&
@@ -280,12 +275,12 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     DesktopBackupNotificationService? notifications,
     bool Function()? isGallerySyncRunning,
     Future<void> Function()? waitForGallerySync,
-  })  : _onLibraryRefresh = onLibraryRefresh,
-        _onBackupFinished = onBackupFinished,
-        _notifications = notifications,
-        _isGallerySyncRunning = isGallerySyncRunning,
-        _waitForGallerySync = waitForGallerySync,
-        super(const DesktopBackupState()) {
+  }) : _onLibraryRefresh = onLibraryRefresh,
+       _onBackupFinished = onBackupFinished,
+       _notifications = notifications,
+       _isGallerySyncRunning = isGallerySyncRunning,
+       _waitForGallerySync = waitForGallerySync,
+       super(const DesktopBackupState()) {
     _recoverStaleInProgress();
     if (usesFilesystemGallery) {
       if (_prefs.desktopReceiveBackups) {
@@ -323,7 +318,8 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
   static const _reconcileChunkSize = 100;
   static const _verifySampleSize = 50;
   bool _backfillInProgress = false;
-  final BackupSessionChecksumCache _checksumCache = BackupSessionChecksumCache();
+  final BackupSessionChecksumCache _checksumCache =
+      BackupSessionChecksumCache();
 
   Future<bool> registerVaultPassword(String password) async {
     await _vaultPasswordStore.savePassword(password);
@@ -432,7 +428,9 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       dir.createSync(recursive: true);
     }
 
-    final pin = _pairing.isDesktopReceiverPaired ? null : _pairing.generatePin();
+    final pin = _pairing.isDesktopReceiverPaired
+        ? null
+        : _pairing.generatePin();
     final deviceName = Platform.localHostname;
 
     _server ??= DesktopBackupServer(
@@ -486,8 +484,8 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     );
 
     try {
-      final inventory = _server?.inventory ??
-          DesktopBackupInventory(backupRoot: root);
+      final inventory =
+          _server?.inventory ?? DesktopBackupInventory(backupRoot: root);
       await inventory.load();
       await inventory.backfillFromDisk(
         onProgress: (scanned) {
@@ -644,16 +642,9 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
     required String pin,
     required String mobileDeviceName,
   }) async {
-    final client = DesktopBackupClient(
-      host: host,
-      port: port,
-      authToken: '',
-    );
+    final client = DesktopBackupClient(host: host, port: port, authToken: '');
 
-    final response = await client.pair(
-      pin: pin,
-      deviceName: mobileDeviceName,
-    );
+    final response = await client.pair(pin: pin, deviceName: mobileDeviceName);
 
     if (response == null) return false;
 
@@ -851,10 +842,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
       }
 
       sessionPendingTotal = await _mediaRepo.countMediaPendingBackup();
-      state = state.copyWith(
-        total: sessionPendingTotal,
-        processed: 0,
-      );
+      state = state.copyWith(total: sessionPendingTotal, processed: 0);
 
       final verified = await _verifyBackedUpSample(client, availability);
       if (!verified) {
@@ -954,7 +942,9 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
             idleFolderPasses = 0;
             final remaining = await _mediaRepo.countMediaPendingBackup();
             if (remaining > 0) {
-              pending = await _mediaRepo.getMediaPendingBackup(limit: _batchSize);
+              pending = await _mediaRepo.getMediaPendingBackup(
+                limit: _batchSize,
+              );
               if (pending.isNotEmpty) {
                 folderQueue = await _mediaRepo.getPendingBackupFolders();
                 folderIndex = 0;
@@ -980,8 +970,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
         final folderRemaining = await _mediaRepo.countMediaPendingBackup(
           folderPath: batchFolderPath,
         );
-        final remainingAfterBatch =
-            await _mediaRepo.countMediaPendingBackup();
+        final remainingAfterBatch = await _mediaRepo.countMediaPendingBackup();
         final folderPosition = folderQueue.indexWhere(
           (folder) => folder.folderPath == batchFolderPath,
         );
@@ -1022,13 +1011,16 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
           }
 
           final now = DateTime.now();
-          final shouldNotify = forceNotify ||
+          final shouldNotify =
+              forceNotify ||
               phaseChanged ||
               now.difference(lastProgressNotifyAt) >=
                   const Duration(seconds: 1);
           if (shouldNotify) {
             lastProgressNotifyAt = now;
-            unawaited(_syncBackupNotification(force: forceNotify || phaseChanged));
+            unawaited(
+              _syncBackupNotification(force: forceNotify || phaseChanged),
+            );
           }
         }
 
@@ -1053,12 +1045,16 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
           },
         );
 
-        final readyUploads = preparedUploads.whereType<
-            ({MediaItem item, File file, String checksum})>().toList();
+        final readyUploads = preparedUploads
+            .whereType<({MediaItem item, File file, String checksum})>()
+            .toList();
 
         if (readyUploads.isEmpty) {
           for (final item in pending) {
-            await _mediaRepo.updateBackupState(item.id, MediaBackupState.failed);
+            await _mediaRepo.updateBackupState(
+              item.id,
+              MediaBackupState.failed,
+            );
             failedThisRun++;
           }
           state = state.copyWith(
@@ -1143,27 +1139,31 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
                 upload.file,
                 checksum: upload.checksum,
                 uploadSession: session,
-                onProgress: ({
-                  required BackupUploadPhase phase,
-                  required int bytesSent,
-                  required int bytesTotal,
-                }) {
-                  final syncPhase = switch (phase) {
-                    BackupUploadPhase.preparing => BackupSyncPhase.preparing,
-                    BackupUploadPhase.uploading => BackupSyncPhase.uploading,
-                    BackupUploadPhase.completing => BackupSyncPhase.completing,
-                  };
-                  final phaseChanged = syncPhase != lastPhase;
-                  lastPhase = syncPhase;
-                  uploadTracker.update(
-                    mediaId: upload.item.id,
-                    bytesSent: bytesSent,
-                    bytesTotal: bytesTotal,
-                    phase: syncPhase,
-                    fileDetail: fileDetail,
-                  );
-                  refreshUploadState(phaseChanged: phaseChanged);
-                },
+                onProgress:
+                    ({
+                      required BackupUploadPhase phase,
+                      required int bytesSent,
+                      required int bytesTotal,
+                    }) {
+                      final syncPhase = switch (phase) {
+                        BackupUploadPhase.preparing =>
+                          BackupSyncPhase.preparing,
+                        BackupUploadPhase.uploading =>
+                          BackupSyncPhase.uploading,
+                        BackupUploadPhase.completing =>
+                          BackupSyncPhase.completing,
+                      };
+                      final phaseChanged = syncPhase != lastPhase;
+                      lastPhase = syncPhase;
+                      uploadTracker.update(
+                        mediaId: upload.item.id,
+                        bytesSent: bytesSent,
+                        bytesTotal: bytesTotal,
+                        phase: syncPhase,
+                        fileDetail: fileDetail,
+                      );
+                      refreshUploadState(phaseChanged: phaseChanged);
+                    },
                 onStall: (fileName) {
                   unawaited(_notifications?.onBackupStallWarning(fileName));
                 },
@@ -1347,8 +1347,7 @@ class DesktopBackupController extends StateNotifier<DesktopBackupState> {
 
         state = state.copyWith(
           phase: DesktopBackupPhase.reconciling,
-          detail:
-              'Reconciling ${folder.folderName} (${items.length} items)...',
+          detail: 'Reconciling ${folder.folderName} (${items.length} items)...',
         );
         await _syncBackupNotification();
 

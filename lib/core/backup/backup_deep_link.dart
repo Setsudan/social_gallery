@@ -26,11 +26,7 @@ class BackupDeepLink {
     return Uri(
       scheme: scheme,
       host: pairHost,
-      queryParameters: {
-        'ip': address,
-        'port': port.toString(),
-        'pin': pin,
-      },
+      queryParameters: {'ip': address, 'port': port.toString(), 'pin': pin},
     );
   }
 

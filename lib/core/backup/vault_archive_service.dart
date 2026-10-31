@@ -31,25 +31,14 @@ class VaultArchiveService {
     final plainBytes = await File(plainPath).readAsBytes();
 
     final archive = Archive()
-      ..addFile(
-        ArchiveFile(
-          innerFileName,
-          plainBytes.length,
-          plainBytes,
-        ),
-      );
+      ..addFile(ArchiveFile(innerFileName, plainBytes.length, plainBytes));
     final zipBytes = ZipEncoder().encode(archive);
 
     final nonce = _randomBytes(_nonceLength);
     final cipher = GCMBlockCipher(AESEngine())
       ..init(
         true,
-        AEADParameters(
-          KeyParameter(encryptionKey),
-          128,
-          nonce,
-          Uint8List(0),
-        ),
+        AEADParameters(KeyParameter(encryptionKey), 128, nonce, Uint8List(0)),
       );
 
     final encrypted = cipher.process(Uint8List.fromList(zipBytes));
@@ -106,7 +95,9 @@ class VaultArchiveService {
 
     final nameLength = _readUint32(bytes, offset);
     offset += 4;
-    final innerFileName = utf8.decode(bytes.sublist(offset, offset + nameLength));
+    final innerFileName = utf8.decode(
+      bytes.sublist(offset, offset + nameLength),
+    );
     offset += nameLength;
 
     final originalSize = _readUint64(bytes, offset);
@@ -116,12 +107,7 @@ class VaultArchiveService {
     final cipher = GCMBlockCipher(AESEngine())
       ..init(
         false,
-        AEADParameters(
-          KeyParameter(encryptionKey),
-          128,
-          nonce,
-          Uint8List(0),
-        ),
+        AEADParameters(KeyParameter(encryptionKey), 128, nonce, Uint8List(0)),
       );
 
     final zipBytes = cipher.process(Uint8List.fromList(encrypted));
@@ -148,13 +134,11 @@ class VaultArchiveService {
   }
 
   Uint8List _uint32Bytes(int value) {
-    return Uint8List(4)
-      ..buffer.asByteData().setUint32(0, value, Endian.big);
+    return Uint8List(4)..buffer.asByteData().setUint32(0, value, Endian.big);
   }
 
   Uint8List _uint64Bytes(int value) {
-    return Uint8List(8)
-      ..buffer.asByteData().setUint64(0, value, Endian.big);
+    return Uint8List(8)..buffer.asByteData().setUint64(0, value, Endian.big);
   }
 
   int _readUint32(Uint8List bytes, int offset) {

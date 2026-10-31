@@ -89,8 +89,9 @@ Future<void> bulkMove(
 
   if (useHaptics) AppHaptics.light();
   final items = await resolveSelectedMedia(ref, selectedIds);
-  final moved =
-      await ref.read(mediaRepositoryProvider).moveMedia(items, targetPath);
+  final moved = await ref
+      .read(mediaRepositoryProvider)
+      .moveMedia(items, targetPath);
   if (!context.mounted) return;
 
   final l10n = context.l10n;
@@ -100,8 +101,8 @@ Future<void> bulkMove(
         moved == items.length
             ? l10n.snackbarMovedItems(moved)
             : moved == 0
-                ? l10n.snackbarMoveFailed
-                : l10n.snackbarMovedPartial(moved, items.length),
+            ? l10n.snackbarMoveFailed
+            : l10n.snackbarMovedPartial(moved, items.length),
       ),
     ),
   );
@@ -217,9 +218,9 @@ Future<void> bulkShare(
 
   if (!context.mounted) return;
   if (files.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.snackbarShareFailed)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.snackbarShareFailed)));
     return;
   }
 
@@ -249,18 +250,18 @@ Future<void> copyMediaToClipboard(
 
   if (!supportsImageClipboard) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.snackbarCopyFailed)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.snackbarCopyFailed)));
     return;
   }
 
   final file = await resolveMediaFile(item);
   if (file == null) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.snackbarCopyFailed)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.snackbarCopyFailed)));
     return;
   }
 
@@ -278,9 +279,9 @@ Future<void> copyMediaToClipboard(
     );
   } catch (_) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.snackbarCopyFailed)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.snackbarCopyFailed)));
   }
 }
 

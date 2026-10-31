@@ -72,17 +72,12 @@ class MediaTaggingController extends StateNotifier<MediaTaggingScanState> {
       final photos = items.where((item) => !item.isVideo).toList();
       final pending = photos
           .where(
-            (item) => MediaAnalysisService.needsTaggingScan(
-              item.id,
-              cached[item.id],
-            ),
+            (item) =>
+                MediaAnalysisService.needsTaggingScan(item.id, cached[item.id]),
           )
           .toList();
 
-      state = MediaTaggingScanState(
-        isScanning: true,
-        total: pending.length,
-      );
+      state = MediaTaggingScanState(isScanning: true, total: pending.length);
 
       var scanned = 0;
       for (final item in pending) {
@@ -120,5 +115,5 @@ class MediaTaggingController extends StateNotifier<MediaTaggingScanState> {
 
 final mediaTaggingControllerProvider =
     StateNotifierProvider<MediaTaggingController, MediaTaggingScanState>(
-  (ref) => MediaTaggingController(ref),
-);
+      (ref) => MediaTaggingController(ref),
+    );

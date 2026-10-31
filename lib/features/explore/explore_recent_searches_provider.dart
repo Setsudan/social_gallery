@@ -4,8 +4,8 @@ import 'package:social_gallery/domain/models/recent_search.dart';
 
 final recentSearchesProvider =
     NotifierProvider<RecentSearchesNotifier, List<RecentSearch>>(
-  RecentSearchesNotifier.new,
-);
+      RecentSearchesNotifier.new,
+    );
 
 class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
   @override

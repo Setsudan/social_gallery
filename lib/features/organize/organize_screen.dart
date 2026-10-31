@@ -28,8 +28,7 @@ class OrganizeScreen extends ConsumerWidget {
     final state = ref.watch(organizeControllerProvider);
     final controller = ref.read(organizeControllerProvider.notifier);
     final allFolders = ref.watch(allFoldersProvider).valueOrNull ?? [];
-    final recentPaths =
-        ref.read(organizeRepositoryProvider).recentFolderPaths;
+    final recentPaths = ref.read(organizeRepositoryProvider).recentFolderPaths;
     final sortedFolders = sortFoldersByRecent(allFolders, recentPaths);
 
     return PopScope(
@@ -89,7 +88,8 @@ class OrganizeScreen extends ConsumerWidget {
                   },
                   onFolderDrop: (path) =>
                       _handleFolderDrop(context, ref, controller, path),
-                  onTapPreview: (item) => OrganizePreviewSheet.show(context, item),
+                  onTapPreview: (item) =>
+                      OrganizePreviewSheet.show(context, item),
                   onShare: () => _shareCurrent(context, state),
                   onFilter: () => _openFilter(context, ref, controller),
                   onUndo: controller.undo,
@@ -140,9 +140,9 @@ class OrganizeScreen extends ConsumerWidget {
     }
     final moved = await controller.moveToFolder(folderPath);
     if (!moved && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.organizeMoveFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.organizeMoveFailed)));
     }
   }
 

@@ -14,8 +14,7 @@ const _progressChannelDescription =
 
 const _statusChannelId = 'cloud_backup_status';
 const _statusChannelName = 'Cloud backup results';
-const _statusChannelDescription =
-    'Cloud backup completed or failed alerts';
+const _statusChannelDescription = 'Cloud backup completed or failed alerts';
 
 const _successColor = Color(0xFF2E7D32);
 const _errorColor = Color(0xFFC62828);
@@ -37,8 +36,9 @@ class CloudBackupNotificationService {
   Future<void> initialize() async {
     if (_initialized || !supportsNotifications) return;
 
-    const androidSettings =
-        AndroidInitializationSettings(androidNotificationIcon);
+    const androidSettings = AndroidInitializationSettings(
+      androidNotificationIcon,
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -54,7 +54,8 @@ class CloudBackupNotificationService {
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
         _progressChannelId,
@@ -84,12 +85,18 @@ class CloudBackupNotificationService {
     await initialize();
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.requestNotificationsPermission();
     final iosPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-    await iosPlugin?.requestPermissions(alert: true, badge: false, sound: false);
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    await iosPlugin?.requestPermissions(
+      alert: true,
+      badge: false,
+      sound: false,
+    );
   }
 
   Future<void> onBackupStarted() async {
@@ -120,14 +127,19 @@ class CloudBackupNotificationService {
     );
   }
 
-  Future<void> onBackupFinished({required bool success, String? message}) async {
+  Future<void> onBackupFinished({
+    required bool success,
+    String? message,
+  }) async {
     if (!supportsNotifications) return;
     _active = false;
     await _plugin.cancel(id: cloudBackupNotificationId);
     await _plugin.show(
       id: cloudBackupNotificationId + 1,
       title: success ? 'Cloud backup complete' : 'Cloud backup failed',
-      body: message ?? (success ? 'Media encrypted and uploaded.' : 'Try again later.'),
+      body:
+          message ??
+          (success ? 'Media encrypted and uploaded.' : 'Try again later.'),
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           _statusChannelId,

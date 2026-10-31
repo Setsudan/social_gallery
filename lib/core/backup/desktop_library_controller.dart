@@ -8,12 +8,7 @@ import 'package:social_gallery/core/backup/desktop_library_client.dart';
 import 'package:social_gallery/core/backup/vault_password_store.dart';
 import 'package:social_gallery/data/repositories/preferences_repository.dart';
 
-enum DesktopLibraryPhase {
-  idle,
-  loading,
-  ready,
-  error,
-}
+enum DesktopLibraryPhase { idle, loading, ready, error }
 
 class DesktopLibraryState {
   const DesktopLibraryState({
@@ -126,9 +121,7 @@ class DesktopLibraryController extends StateNotifier<DesktopLibraryState> {
   Future<bool> unlockVault({String? password}) async {
     final resolved = password ?? await _vaultPasswordStore.readPassword();
     if (resolved == null || resolved.isEmpty) {
-      state = state.copyWith(
-        error: 'Vault password required',
-      );
+      state = state.copyWith(error: 'Vault password required');
       return false;
     }
 

@@ -40,7 +40,8 @@ class OneUiSubpageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canPop = onBack != null ||
+    final canPop =
+        onBack != null ||
         GoRouter.of(context).canPop() ||
         Navigator.of(context).canPop();
 
@@ -49,7 +50,8 @@ class OneUiSubpageScaffold extends StatelessWidget {
         automaticallyImplyLeading: false,
         leading: canPop
             ? NavBackLeading(
-                onPressed: onBack ??
+                onPressed:
+                    onBack ??
                     () {
                       if (GoRouter.of(context).canPop()) {
                         context.pop();
@@ -72,10 +74,7 @@ class OneUiSubpageScaffold extends StatelessWidget {
           isEmpty: isEmpty,
           empty: empty,
           onRetry: onRetry,
-          child: Padding(
-            padding: padding ?? EdgeInsets.zero,
-            child: body,
-          ),
+          child: Padding(padding: padding ?? EdgeInsets.zero, child: body),
         ),
       ),
     );

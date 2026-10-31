@@ -31,9 +31,12 @@ class DiscoverHubController extends AsyncNotifier<DiscoverHubData> {
     var lowQualityCount = 0;
     final snapshot = await ref.watch(analysisLibrarySnapshotProvider.future);
     if (snapshot.analysisById.isNotEmpty) {
-      similarCount = (await ref.watch(similarPhotoGroupsProvider.future)).length;
-      lowQualityCount =
-          (await ref.watch(lowQualityQueueProvider.future)).length;
+      similarCount = (await ref.watch(
+        similarPhotoGroupsProvider.future,
+      )).length;
+      lowQualityCount = (await ref.watch(
+        lowQualityQueueProvider.future,
+      )).length;
     }
 
     return DiscoverHubData(

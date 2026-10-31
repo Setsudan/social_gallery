@@ -61,14 +61,10 @@ class DesktopImageLabeler {
       1,
       (_) => List.generate(
         _inputSize,
-        (y) => List.generate(
-          _inputSize,
-          (x) {
-            final pixel = resized.getPixel(x, y);
-            return [pixel.r.toInt(), pixel.g.toInt(), pixel.b.toInt()];
-          },
-          growable: false,
-        ),
+        (y) => List.generate(_inputSize, (x) {
+          final pixel = resized.getPixel(x, y);
+          return [pixel.r.toInt(), pixel.g.toInt(), pixel.b.toInt()];
+        }, growable: false),
         growable: false,
       ),
       growable: false,

@@ -88,7 +88,9 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
     }
 
     if (usesFilesystemGallery) {
-      final rootPath = ref.read(preferencesRepositoryProvider).desktopGalleryRootPath;
+      final rootPath = ref
+          .read(preferencesRepositoryProvider)
+          .desktopGalleryRootPath;
       if (rootPath == null || rootPath.isEmpty) {
         setState(() => _showDesktopRootPrompt = true);
         return;
@@ -217,9 +219,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
       physics: const NeverScrollableScrollPhysics(),
       onPageChanged: (index) => setState(() => _pageIndex = index),
       children: [
-        _LanguagePage(
-          onNext: _nextPage,
-        ),
+        _LanguagePage(onNext: _nextPage),
         _WelcomePage(
           onBack: _previousPage,
           onNext: _nextPage,
@@ -241,11 +241,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
           onBack: _previousPage,
           onNext: _nextPage,
         ),
-        _ThemePage(
-          onBack: _previousPage,
-          onNext: _nextPage,
-          onSkip: _nextPage,
-        ),
+        _ThemePage(onBack: _previousPage, onNext: _nextPage, onSkip: _nextPage),
         _AppearancePage(
           onBack: _previousPage,
           onNext: _nextPage,
@@ -256,10 +252,7 @@ class _OnboardingCarouselState extends ConsumerState<OnboardingCarousel> {
           onNext: _nextPage,
           onSkip: _nextPage,
         ),
-        _FoldersPage(
-          onBack: _previousPage,
-          onComplete: _completeOnboarding,
-        ),
+        _FoldersPage(onBack: _previousPage, onComplete: _completeOnboarding),
       ],
     );
   }
@@ -312,7 +305,10 @@ class _LanguagePage extends ConsumerWidget {
                   leading: LocalePreferenceFlag(preference: preference),
                   title: Text(appLocalePreferenceLabel(l10n, preference)),
                   trailing: selected
-                      ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+                      ? Icon(
+                          Icons.check_circle,
+                          color: theme.colorScheme.primary,
+                        )
                       : null,
                   onTap: () {
                     AppHaptics.medium();
@@ -354,7 +350,9 @@ class _WelcomePage extends StatelessWidget {
       onSkip: onSkip,
       onNext: onNext,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
+        padding: const EdgeInsets.symmetric(
+          horizontal: OneUiSpacing.pageHorizontal,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -575,9 +573,17 @@ class _PermissionCard extends StatelessWidget {
           children: [
             Icon(icon, size: 48, color: theme.colorScheme.primary),
             const SizedBox(height: OneUiSpacing.md),
-            Text(title, style: theme.textTheme.titleLarge, textAlign: TextAlign.center),
+            Text(
+              title,
+              style: theme.textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: OneUiSpacing.sm),
-            Text(message, style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
+            Text(
+              message,
+              style: theme.textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
             if (error != null) ...[
               const SizedBox(height: OneUiSpacing.sm),
               Text(
@@ -657,7 +663,10 @@ class _ThemePage extends ConsumerWidget {
                   leading: Icon(option.$2),
                   title: Text(appThemeVariantLabel(l10n, option.$1)),
                   trailing: selected
-                      ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+                      ? Icon(
+                          Icons.check_circle,
+                          color: theme.colorScheme.primary,
+                        )
                       : null,
                   onTap: () {
                     AppHaptics.medium();
@@ -705,12 +714,19 @@ class _AppearancePage extends ConsumerWidget {
             subtitle: l10n.onboardingAccentAndTextSubtitle,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
-            child: Text(l10n.settingsAccentColor, style: theme.textTheme.titleMedium),
+            padding: const EdgeInsets.symmetric(
+              horizontal: OneUiSpacing.pageHorizontal,
+            ),
+            child: Text(
+              l10n.settingsAccentColor,
+              style: theme.textTheme.titleMedium,
+            ),
           ),
           const SizedBox(height: OneUiSpacing.sm),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
+            padding: const EdgeInsets.symmetric(
+              horizontal: OneUiSpacing.pageHorizontal,
+            ),
             child: Wrap(
               spacing: OneUiSpacing.md,
               runSpacing: OneUiSpacing.md,
@@ -718,10 +734,14 @@ class _AppearancePage extends ConsumerWidget {
                 for (final preset in AccentPresets.all)
                   OnboardingAccentSwatch(
                     preset: preset,
-                    selected: preset.color.toARGB32() == settings.accentColor.toARGB32(),
+                    selected:
+                        preset.color.toARGB32() ==
+                        settings.accentColor.toARGB32(),
                     onTap: () {
                       AppHaptics.medium();
-                      ref.read(settingsProvider.notifier).setAccentColor(preset.color);
+                      ref
+                          .read(settingsProvider.notifier)
+                          .setAccentColor(preset.color);
                     },
                   ),
               ],
@@ -729,11 +749,18 @@ class _AppearancePage extends ConsumerWidget {
           ),
           const SizedBox(height: OneUiSpacing.xl),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
-            child: Text(l10n.settingsFontSize, style: theme.textTheme.titleMedium),
+            padding: const EdgeInsets.symmetric(
+              horizontal: OneUiSpacing.pageHorizontal,
+            ),
+            child: Text(
+              l10n.settingsFontSize,
+              style: theme.textTheme.titleMedium,
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: OneUiSpacing.pageHorizontal),
+            padding: const EdgeInsets.symmetric(
+              horizontal: OneUiSpacing.pageHorizontal,
+            ),
             child: Column(
               children: [
                 Row(
@@ -748,7 +775,9 @@ class _AppearancePage extends ConsumerWidget {
                         label: fontSizeLabel(l10n, settings.fontSizeFactor),
                         onChanged: (value) {
                           AppHaptics.selection();
-                          ref.read(settingsProvider.notifier).setFontSizeFactor(value);
+                          ref
+                              .read(settingsProvider.notifier)
+                              .setFontSizeFactor(value);
                         },
                       ),
                     ),
@@ -897,10 +926,7 @@ class _ViewModeCard extends StatelessWidget {
 }
 
 class _FoldersPage extends ConsumerWidget {
-  const _FoldersPage({
-    required this.onBack,
-    required this.onComplete,
-  });
+  const _FoldersPage({required this.onBack, required this.onComplete});
 
   final VoidCallback onBack;
   final Future<void> Function() onComplete;
@@ -912,11 +938,9 @@ class _FoldersPage extends ConsumerWidget {
     bool locked = false,
   }) async {
     AppHaptics.medium();
-    await ref.read(folderRepositoryProvider).updateFollowStatus(
-          folder.path,
-          status,
-          isBiometricLocked: locked,
-        );
+    await ref
+        .read(folderRepositoryProvider)
+        .updateFollowStatus(folder.path, status, isBiometricLocked: locked);
     if (locked) {
       ref.read(folderUnlockStoreProvider).lock(folder.path);
     }
@@ -938,9 +962,8 @@ class _FoldersPage extends ConsumerWidget {
       nextLabel: l10n.onboardingGetStarted,
       child: foldersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(l10n.errorCouldNotLoadFolders(e.toString())),
-        ),
+        error: (e, _) =>
+            Center(child: Text(l10n.errorCouldNotLoadFolders(e.toString()))),
         data: (folders) {
           if (folders.isEmpty) {
             return ListView(
@@ -974,27 +997,18 @@ class _FoldersPage extends ConsumerWidget {
               final folder = folders[index - 1];
               return _OnboardingFolderTile(
                 folder: folder,
-                onHomeFeed: () => _setVisibility(
-                  ref,
-                  folder,
-                  FollowStatus.homeFeed,
-                ),
-                onAccount: () => _setVisibility(
-                  ref,
-                  folder,
-                  FollowStatus.accountOnly,
-                ),
+                onHomeFeed: () =>
+                    _setVisibility(ref, folder, FollowStatus.homeFeed),
+                onAccount: () =>
+                    _setVisibility(ref, folder, FollowStatus.accountOnly),
                 onLocked: () => _setVisibility(
                   ref,
                   folder,
                   FollowStatus.accountOnly,
                   locked: true,
                 ),
-                onHidden: () => _setVisibility(
-                  ref,
-                  folder,
-                  FollowStatus.unfollowed,
-                ),
+                onHidden: () =>
+                    _setVisibility(ref, folder, FollowStatus.unfollowed),
               );
             },
           );
@@ -1024,12 +1038,12 @@ class _OnboardingFolderTile extends StatelessWidget {
     final l10n = context.l10n;
     final locked = folder.isLockedAccount;
     final statusLabel = switch (folder.followStatus) {
-      FollowStatus.homeFeed => locked
-          ? l10n.folderSecureLock
-          : l10n.folderVisibilityHomeFeed,
-      FollowStatus.accountOnly => locked
-          ? l10n.folderVisibilityAccountLocked
-          : l10n.folderVisibilityAccount,
+      FollowStatus.homeFeed =>
+        locked ? l10n.folderSecureLock : l10n.folderVisibilityHomeFeed,
+      FollowStatus.accountOnly =>
+        locked
+            ? l10n.folderVisibilityAccountLocked
+            : l10n.folderVisibilityAccount,
       FollowStatus.unfollowed => l10n.folderVisibilityHidden,
     };
 
@@ -1062,13 +1076,15 @@ class _OnboardingFolderTile extends StatelessWidget {
                 children: [
                   _VisibilityChip(
                     label: l10n.folderVisibilityHome,
-                    selected: folder.followStatus == FollowStatus.homeFeed && !locked,
+                    selected:
+                        folder.followStatus == FollowStatus.homeFeed && !locked,
                     onTap: onHomeFeed,
                   ),
                   _VisibilityChip(
                     label: l10n.folderVisibilityAccount,
                     selected:
-                        folder.followStatus == FollowStatus.accountOnly && !locked,
+                        folder.followStatus == FollowStatus.accountOnly &&
+                        !locked,
                     onTap: onAccount,
                   ),
                   _VisibilityChip(

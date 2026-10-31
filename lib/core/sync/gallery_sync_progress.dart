@@ -1,4 +1,5 @@
-typedef GallerySyncProgressCallback = void Function(GallerySyncProgress progress);
+typedef GallerySyncProgressCallback =
+    void Function(GallerySyncProgress progress);
 
 class GallerySyncProgress {
   const GallerySyncProgress({

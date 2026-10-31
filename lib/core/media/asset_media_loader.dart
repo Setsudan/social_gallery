@@ -225,7 +225,10 @@ class AssetMediaLoader {
       return ThumbnailSize.square(maxEdge);
     }
     if (w >= h) {
-      return ThumbnailSize(maxEdge, (maxEdge * h / w).round().clamp(1, maxEdge));
+      return ThumbnailSize(
+        maxEdge,
+        (maxEdge * h / w).round().clamp(1, maxEdge),
+      );
     }
     return ThumbnailSize((maxEdge * w / h).round().clamp(1, maxEdge), maxEdge);
   }
@@ -304,11 +307,8 @@ class AssetMediaLoader {
         ),
         fit: fit,
         gaplessPlayback: true,
-        errorBuilder: (context, error, stackTrace) => _FileFullscreenImage(
-          entity: entity,
-          fit: fit,
-          cacheWidth: edge,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            _FileFullscreenImage(entity: entity, fit: fit, cacheWidth: edge),
       );
     } else {
       imageChild = _FileFullscreenImage(

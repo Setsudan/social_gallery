@@ -93,8 +93,7 @@ class _FolderAvatarState extends State<FolderAvatar> {
             child: buildFilesystemImage(
               file: File(path),
               fit: BoxFit.cover,
-              cacheWidth: (widget.size *
-                      MediaQuery.devicePixelRatioOf(context))
+              cacheWidth: (widget.size * MediaQuery.devicePixelRatioOf(context))
                   .ceil()
                   .clamp(48, 256),
               errorBuilder: (context, error, stackTrace) =>
@@ -110,10 +109,10 @@ class _FolderAvatarState extends State<FolderAvatar> {
           height: widget.size,
           child: MediaThumbnail(
             assetId: cover,
-            maxThumbnailEdge: (widget.size *
-                    MediaQuery.devicePixelRatioOf(context))
-                .ceil()
-                .clamp(48, 128),
+            maxThumbnailEdge:
+                (widget.size * MediaQuery.devicePixelRatioOf(context))
+                    .ceil()
+                    .clamp(48, 128),
           ),
         ),
       );

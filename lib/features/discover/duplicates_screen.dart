@@ -94,9 +94,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
     }
 
     final groups = scan.groups!;
-    return _selected == null
-        ? _buildGroupList(groups)
-        : _buildGroupDetail();
+    return _selected == null ? _buildGroupList(groups) : _buildGroupDetail();
   }
 
   Widget _buildGroupList(List<DuplicateGroup> groups) {

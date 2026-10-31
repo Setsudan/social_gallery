@@ -199,8 +199,8 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                         final elapsedMs =
                             DateTime.now().millisecondsSinceEpoch -
                             (item.trashedAt ?? 0);
-                        final elapsedDays =
-                            (elapsedMs / (24 * 60 * 60 * 1000)).floor();
+                        final elapsedDays = (elapsedMs / (24 * 60 * 60 * 1000))
+                            .floor();
                         final remainingDays =
                             settings.trashRetentionDays - elapsedDays;
                         final daysLabel = _daysLabel(l10n, remainingDays);
@@ -228,16 +228,15 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                   child: Stack(
                                     children: [
                                       ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          16,
-                                        ),
+                                        borderRadius: BorderRadius.circular(16),
                                         child: trashedFile.existsSync()
                                             ? buildFilesystemImage(
                                                 file: trashedFile,
                                                 fit: BoxFit.contain,
                                                 cacheWidth:
-                                                    (MediaQuery.sizeOf(context)
-                                                                .shortestSide *
+                                                    (MediaQuery.sizeOf(
+                                                              context,
+                                                            ).shortestSide *
                                                             MediaQuery.devicePixelRatioOf(
                                                               context,
                                                             ))
@@ -280,8 +279,9 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                             color: Colors.black.withValues(
                                               alpha: 0.8,
                                             ),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
@@ -321,8 +321,9 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: Container(
-                                    color:
-                                        theme.colorScheme.surfaceContainerHighest,
+                                    color: theme
+                                        .colorScheme
+                                        .surfaceContainerHighest,
                                     child: trashedFile.existsSync()
                                         ? buildFilesystemImage(
                                             file: trashedFile,
@@ -363,8 +364,9 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                               if (isSelected)
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary
-                                        .withValues(alpha: 0.35),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.35,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                       color: theme.colorScheme.primary,
@@ -415,10 +417,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             },
           ),
         ),
-        body: EmptyState(
-          title: l10n.errorGeneric,
-          message: e.toString(),
-        ),
+        body: EmptyState(title: l10n.errorGeneric, message: e.toString()),
       ),
     );
   }

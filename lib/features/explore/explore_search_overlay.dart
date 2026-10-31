@@ -15,7 +15,10 @@ import 'package:social_gallery/shared/navigation/tab_scroll_to_top.dart';
 import 'package:social_gallery/shared/widgets/media_thumbnail.dart';
 
 class ExploreSearchOverlay extends ConsumerStatefulWidget {
-  const ExploreSearchOverlay({super.key, this.initialQuery = const ExploreSearchQuery()});
+  const ExploreSearchOverlay({
+    super.key,
+    this.initialQuery = const ExploreSearchQuery(),
+  });
 
   final ExploreSearchQuery initialQuery;
 
@@ -37,24 +40,25 @@ class ExploreSearchOverlay extends ConsumerStatefulWidget {
             },
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              final curved = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-                reverseCurve: Curves.easeInCubic,
-              );
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1, 0),
-                  end: Offset.zero,
-                ).animate(curved),
-                child: child,
-              );
-            },
+                  final curved = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  );
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(curved),
+                    child: child,
+                  );
+                },
           ),
         )
         .whenComplete(() {
-      container.read(exploreSearchOverlayOpenProvider.notifier).state = false;
-    });
+          container.read(exploreSearchOverlayOpenProvider.notifier).state =
+              false;
+        });
   }
 
   @override
@@ -95,9 +99,9 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
 
   void _dismiss({required bool clearActiveSearch}) {
     AppHaptics.light();
-    Navigator.of(context).pop(
-      clearActiveSearch ? const ExploreSearchQuery() : null,
-    );
+    Navigator.of(
+      context,
+    ).pop(clearActiveSearch ? const ExploreSearchQuery() : null);
   }
 
   ExploreSearchQuery _buildQuery() {
@@ -132,34 +136,29 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
       _controller.clear();
     });
     AppHaptics.light();
-    Navigator.of(context).pop(
-      ExploreSearchQuery(labels: [label]),
-    );
+    Navigator.of(context).pop(ExploreSearchQuery(labels: [label]));
   }
 
   void _submitColor(String color) {
     setState(() => _selectedColor = color);
     AppHaptics.light();
-    Navigator.of(context).pop(
-      ExploreSearchQuery(color: color),
-    );
+    Navigator.of(context).pop(ExploreSearchQuery(color: color));
   }
 
   List<String> _folderSuggestions(AsyncValue<List<FolderInfo>> foldersAsync) {
     final folders = foldersAsync.valueOrNull ?? const <FolderInfo>[];
-    final names = folders
-        .where((folder) => folder.mediaCount > 0)
-        .map((folder) => folder.name)
-        .toSet()
-        .toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final names =
+        folders
+            .where((folder) => folder.mediaCount > 0)
+            .map((folder) => folder.name)
+            .toSet()
+            .toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
     final typed = _controller.text.trim().toLowerCase();
     final filtered = typed.isEmpty
         ? names
-        : names
-            .where((name) => name.toLowerCase().contains(typed))
-            .toList();
+        : names.where((name) => name.toLowerCase().contains(typed)).toList();
     return filtered.take(12).toList();
   }
 
@@ -336,8 +335,9 @@ class _ExploreSearchOverlayState extends ConsumerState<ExploreSearchOverlay> {
                         boxShadow: selected
                             ? [
                                 BoxShadow(
-                                  color: colorScheme.primary
-                                      .withValues(alpha: 0.28),
+                                  color: colorScheme.primary.withValues(
+                                    alpha: 0.28,
+                                  ),
                                   blurRadius: 8,
                                 ),
                               ]

@@ -5,10 +5,7 @@ import 'dart:ui' as ui;
 import 'package:social_gallery/core/media/jxl_codec.dart';
 
 class FilesystemImageDimensions {
-  const FilesystemImageDimensions({
-    required this.width,
-    required this.height,
-  });
+  const FilesystemImageDimensions({required this.width, required this.height});
 
   final int width;
   final int height;
@@ -17,7 +14,10 @@ class FilesystemImageDimensions {
 /// Bytes typically enough for codec headers / EXIF dimension probes.
 const _headerProbeBytes = 256 * 1024;
 
-Future<Uint8List?> _readFilePrefix(File file, {int maxBytes = _headerProbeBytes}) async {
+Future<Uint8List?> _readFilePrefix(
+  File file, {
+  int maxBytes = _headerProbeBytes,
+}) async {
   final length = await file.length();
   if (length <= 0) return null;
   final raf = await file.open();

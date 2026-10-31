@@ -9,10 +9,7 @@ const mediaViewerMaxSessionItems = 120;
 
 /// Items to swipe through in post detail, set immediately before navigation.
 class MediaViewerSession {
-  const MediaViewerSession({
-    required this.items,
-    required this.initialIndex,
-  });
+  const MediaViewerSession({required this.items, required this.initialIndex});
 
   final List<MediaItem> items;
   final int initialIndex;
@@ -54,19 +51,12 @@ void openMediaViewer(
   required MediaItem item,
 }) {
   final rawIndex = items.indexWhere((m) => m.id == item.id);
-  final window = boundMediaViewerWindow(
-    items,
-    rawIndex >= 0 ? rawIndex : 0,
-  );
+  final window = boundMediaViewerWindow(items, rawIndex >= 0 ? rawIndex : 0);
   ref.read(mediaViewerSessionProvider.notifier).state = MediaViewerSession(
     items: window.items,
     initialIndex: window.index,
   );
   context.push(
-    postDetailLocation(
-      item.uri,
-      mediaId: item.id,
-      favorite: item.isFavorite,
-    ),
+    postDetailLocation(item.uri, mediaId: item.id, favorite: item.isFavorite),
   );
 }

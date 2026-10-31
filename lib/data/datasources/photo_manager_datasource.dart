@@ -22,13 +22,35 @@ class PhotoManagerDatasource implements MediaScanSource {
   final PreferencesRepository _preferences;
   PhotoManagerDatasource(this._preferences);
   static const _imageExtensions = {
-    'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'tif', 'tiff',
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'webp',
+    'bmp',
+    'heic',
+    'heif',
+    'tif',
+    'tiff',
     'jxl',
   };
   static const _videoExtensions = {
-    'mp4', 'mov', 'm4v', 'avi', 'mkv', 'webm', '3gp', 'mpeg', 'mpg', 'wmv', 'flv'
+    'mp4',
+    'mov',
+    'm4v',
+    'avi',
+    'mkv',
+    'webm',
+    '3gp',
+    'mpeg',
+    'mpg',
+    'wmv',
+    'flv',
   };
-  static final _supportedExtensions = {..._imageExtensions, ..._videoExtensions};
+  static final _supportedExtensions = {
+    ..._imageExtensions,
+    ..._videoExtensions,
+  };
 
   List<AssetPathEntity>? _albumsCache;
   DateTime? _albumsCacheAt;
@@ -46,7 +68,10 @@ class PhotoManagerDatasource implements MediaScanSource {
         if (entity is File) {
           final name = p.basename(entity.path);
           if (name.startsWith('.trashed_')) continue; // Skip trashed files
-          final ext = p.extension(entity.path).replaceAll('.', '').toLowerCase();
+          final ext = p
+              .extension(entity.path)
+              .replaceAll('.', '')
+              .toLowerCase();
           if (_supportedExtensions.contains(ext)) {
             files.add(entity);
           }
@@ -166,15 +191,19 @@ class PhotoManagerDatasource implements MediaScanSource {
             height: Value(height),
             latitude: latitude != null ? Value(latitude) : const Value(null),
             longitude: longitude != null ? Value(longitude) : const Value(null),
-            cameraMake:
-                cameraMake != null ? Value(cameraMake) : const Value(null),
-            cameraModel:
-                cameraModel != null ? Value(cameraModel) : const Value(null),
+            cameraMake: cameraMake != null
+                ? Value(cameraMake)
+                : const Value(null),
+            cameraModel: cameraModel != null
+                ? Value(cameraModel)
+                : const Value(null),
             iso: iso != null ? Value(iso) : const Value(null),
-            shutterSpeed:
-                shutterSpeed != null ? Value(shutterSpeed) : const Value(null),
-            focalLength:
-                focalLength != null ? Value(focalLength) : const Value(null),
+            shutterSpeed: shutterSpeed != null
+                ? Value(shutterSpeed)
+                : const Value(null),
+            focalLength: focalLength != null
+                ? Value(focalLength)
+                : const Value(null),
             aperture: aperture != null ? Value(aperture) : const Value(null),
             videoDuration: const Value(null),
             contentKind: Value(contentKind.value),
@@ -225,12 +254,15 @@ class PhotoManagerDatasource implements MediaScanSource {
       final count = folderFiles.length;
 
       final coverFile = folderFiles.firstWhere(
-        (f) => _imageExtensions.contains(p.extension(f.path).replaceAll('.', '').toLowerCase()),
+        (f) => _imageExtensions.contains(
+          p.extension(f.path).replaceAll('.', '').toLowerCase(),
+        ),
         orElse: () => folderFiles.first,
       );
 
       final existing = existingFollowStatus[path];
-      final followStatus = existing ??
+      final followStatus =
+          existing ??
           (usesFilesystemGallery
               ? 'HOME_FEED'
               : (initialSetupComplete ? 'UNFOLLOWED' : 'HOME_FEED'));
@@ -405,9 +437,12 @@ class PhotoManagerDatasource implements MediaScanSource {
               mimeType: mimeType,
               width: Value(asset.width),
               height: Value(asset.height),
-              latitude: lat != null && lat != 0 ? Value(lat) : const Value(null),
-              longitude:
-                  lng != null && lng != 0 ? Value(lng) : const Value(null),
+              latitude: lat != null && lat != 0
+                  ? Value(lat)
+                  : const Value(null),
+              longitude: lng != null && lng != 0
+                  ? Value(lng)
+                  : const Value(null),
               videoDuration: Value(
                 kind == AssetMediaKind.video ? asset.duration : null,
               ),
@@ -589,8 +624,9 @@ class PhotoManagerDatasource implements MediaScanSource {
     if (cached != null) return cached;
 
     final albums = await listAlbumsCached();
-    final byId =
-        albums.where((album) => album.id == targetFolderPath).firstOrNull;
+    final byId = albums
+        .where((album) => album.id == targetFolderPath)
+        .firstOrNull;
     if (byId != null) {
       _resolvedAlbumIds[targetFolderPath] = byId.id;
       return byId.id;
@@ -680,11 +716,11 @@ class PhotoManagerDatasource implements MediaScanSource {
             .firstOrNull;
         if (targetAlbum != null) {
           try {
-            final legacyMoved =
-                await PhotoManager.editor.android.moveAssetToAnother(
-              entity: entities.first,
-              target: targetAlbum,
-            );
+            final legacyMoved = await PhotoManager.editor.android
+                .moveAssetToAnother(
+                  entity: entities.first,
+                  target: targetAlbum,
+                );
             if (legacyMoved) {
               invalidateAlbumsCache();
               _deferClearFileCacheIfNeeded(mediaLocationChanged: true);
@@ -770,9 +806,12 @@ class PhotoManagerDatasource implements MediaScanSource {
     String targetFolderPath,
     List<AssetPathEntity> albums,
   ) async {
-    final byId = albums.where((album) => album.id == targetFolderPath).firstOrNull;
+    final byId = albums
+        .where((album) => album.id == targetFolderPath)
+        .firstOrNull;
     if (byId != null) {
-      return await byId.relativePathAsync ?? _albumNameToRelativePath(byId.name);
+      return await byId.relativePathAsync ??
+          _albumNameToRelativePath(byId.name);
     }
 
     final absoluteRelative = _absoluteToRelativePath(targetFolderPath);

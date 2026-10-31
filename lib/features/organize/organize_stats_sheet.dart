@@ -38,9 +38,18 @@ class OrganizeStatsSheet extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            _StatRow(label: l10n.organizeStatProcessed, value: '${stats.processedCount}'),
-            _StatRow(label: l10n.organizeStatDeleted, value: '${stats.deletedCount}'),
-            _StatRow(label: l10n.organizeStatLiked, value: '${stats.likedCount}'),
+            _StatRow(
+              label: l10n.organizeStatProcessed,
+              value: '${stats.processedCount}',
+            ),
+            _StatRow(
+              label: l10n.organizeStatDeleted,
+              value: '${stats.deletedCount}',
+            ),
+            _StatRow(
+              label: l10n.organizeStatLiked,
+              value: '${stats.likedCount}',
+            ),
             _StatRow(
               label: l10n.organizeStatSpaceSaved,
               value: _formatBytes(stats.savedBytes),

@@ -30,9 +30,7 @@ class _PlacesTabState extends ConsumerState<PlacesTab> {
   }
 
   void _openPlace(PlaceGroup place) {
-    context.push(
-      placeMediaLocation(place.countryName, place.locality),
-    );
+    context.push(placeMediaLocation(place.countryName, place.locality));
   }
 
   @override
@@ -64,20 +62,14 @@ class _PlacesTabState extends ConsumerState<PlacesTab> {
           );
         }
 
-        return _CountryGrid(
-          countries: countries,
-          onTapCountry: _selectCountry,
-        );
+        return _CountryGrid(countries: countries, onTapCountry: _selectCountry);
       },
     );
   }
 }
 
 class _CountryGrid extends StatelessWidget {
-  const _CountryGrid({
-    required this.countries,
-    required this.onTapCountry,
-  });
+  const _CountryGrid({required this.countries, required this.onTapCountry});
 
   final List<CountryPlaceGroup> countries;
   final void Function(CountryPlaceGroup country) onTapCountry;
@@ -88,7 +80,8 @@ class _CountryGrid extends StatelessWidget {
     const columns = 2;
 
     return CustomScrollView(
-      scrollCacheExtent: ScrollCacheExtent.pixels(600), slivers: [
+      scrollCacheExtent: ScrollCacheExtent.pixels(600),
+      slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -99,9 +92,9 @@ class _CountryGrid extends StatelessWidget {
             ),
             child: Text(
               l10n.locationsCountry,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -160,7 +153,8 @@ class _CityGrid extends StatelessWidget {
     const columns = 2;
 
     return CustomScrollView(
-      scrollCacheExtent: ScrollCacheExtent.pixels(600), slivers: [
+      scrollCacheExtent: ScrollCacheExtent.pixels(600),
+      slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(

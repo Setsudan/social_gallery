@@ -59,17 +59,17 @@ class ExploreSearchQuery {
       minFaceCount != null;
 
   String get cacheKey => [
-        text.trim().toLowerCase(),
-        labels.map((l) => l.toLowerCase()).join(','),
-        color ?? '',
-        placeQuery?.toLowerCase() ?? '',
-        dateFromMs?.toString() ?? '',
-        dateToMs?.toString() ?? '',
-        cameraMake?.toLowerCase() ?? '',
-        cameraModel?.toLowerCase() ?? '',
-        contentFilter.name,
-        minFaceCount?.toString() ?? '',
-      ].join('|');
+    text.trim().toLowerCase(),
+    labels.map((l) => l.toLowerCase()).join(','),
+    color ?? '',
+    placeQuery?.toLowerCase() ?? '',
+    dateFromMs?.toString() ?? '',
+    dateToMs?.toString() ?? '',
+    cameraMake?.toLowerCase() ?? '',
+    cameraModel?.toLowerCase() ?? '',
+    contentFilter.name,
+    minFaceCount?.toString() ?? '',
+  ].join('|');
 
   ExploreSearchQuery copyWith({
     String? text,
@@ -102,8 +102,9 @@ class ExploreSearchQuery {
       contentFilter: clearContentFilter
           ? ExploreContentFilter.all
           : (contentFilter ?? this.contentFilter),
-      minFaceCount:
-          clearMinFaceCount ? null : (minFaceCount ?? this.minFaceCount),
+      minFaceCount: clearMinFaceCount
+          ? null
+          : (minFaceCount ?? this.minFaceCount),
     );
   }
 

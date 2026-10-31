@@ -159,18 +159,19 @@ class ExploreQueryParser {
       working = working.replaceAll('last year', ' ');
     }
     if (working.contains('yesterday')) {
-      final day = DateTime(_now.year, _now.month, _now.day)
-          .subtract(const Duration(days: 1));
+      final day = DateTime(
+        _now.year,
+        _now.month,
+        _now.day,
+      ).subtract(const Duration(days: 1));
       dateFromMs = day.millisecondsSinceEpoch;
-      dateToMs =
-          day.add(const Duration(days: 1)).millisecondsSinceEpoch - 1;
+      dateToMs = day.add(const Duration(days: 1)).millisecondsSinceEpoch - 1;
       working = working.replaceAll('yesterday', ' ');
     }
     if (working.contains('today')) {
       final day = DateTime(_now.year, _now.month, _now.day);
       dateFromMs = day.millisecondsSinceEpoch;
-      dateToMs =
-          day.add(const Duration(days: 1)).millisecondsSinceEpoch - 1;
+      dateToMs = day.add(const Duration(days: 1)).millisecondsSinceEpoch - 1;
       working = working.replaceAll('today', ' ');
     }
     if (working.contains('screen shot') || working.contains('screen-shot')) {

@@ -112,7 +112,9 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
     ref.read(pendingDeepLinkLocationProvider.notifier).state = null;
 
     final isShellTab =
-        location == '/home' || location == '/explore' || location == '/discover';
+        location == '/home' ||
+        location == '/explore' ||
+        location == '/discover';
     if (isShellTab) {
       router.go(location);
     } else {
@@ -130,12 +132,14 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
     if (params == null) return;
     ref.read(pendingBackupPairProvider.notifier).state = null;
 
-    final ok = await ref.read(desktopBackupProvider.notifier).pairWithDesktop(
-      host: params.address,
-      port: params.port,
-      pin: params.pin,
-      mobileDeviceName: Platform.localHostname,
-    );
+    final ok = await ref
+        .read(desktopBackupProvider.notifier)
+        .pairWithDesktop(
+          host: params.address,
+          port: params.port,
+          pin: params.pin,
+          mobileDeviceName: Platform.localHostname,
+        );
     if (ok) {
       await ref.read(desktopBackupProvider.notifier).setBackupEnabled(true);
     }
@@ -150,12 +154,12 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    ref.read(duplicateScanNotificationServiceProvider).setAppInForeground(
-          state == AppLifecycleState.resumed,
-        );
-    ref.read(desktopBackupNotificationServiceProvider).setAppInForeground(
-          state == AppLifecycleState.resumed,
-        );
+    ref
+        .read(duplicateScanNotificationServiceProvider)
+        .setAppInForeground(state == AppLifecycleState.resumed);
+    ref
+        .read(desktopBackupNotificationServiceProvider)
+        .setAppInForeground(state == AppLifecycleState.resumed);
     ref
         .read(mediaTaggingControllerProvider.notifier)
         .setAppResumed(state == AppLifecycleState.resumed);
@@ -190,7 +194,10 @@ class _SocialGalleryAppState extends ConsumerState<SocialGalleryApp>
       }
     });
 
-    ref.listen<BackupPairingParams?>(pendingBackupPairProvider, (previous, next) {
+    ref.listen<BackupPairingParams?>(pendingBackupPairProvider, (
+      previous,
+      next,
+    ) {
       if (next != null) {
         unawaited(_consumePendingBackupPair());
       }

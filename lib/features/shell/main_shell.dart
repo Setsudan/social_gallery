@@ -54,8 +54,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     ref.listen<bool>(
       settingsProvider.select((settings) => settings.galleryViewMode),
       (previous, next) {
-        if (next &&
-            widget.navigationShell.currentIndex == kShellTabExplore) {
+        if (next && widget.navigationShell.currentIndex == kShellTabExplore) {
           widget.navigationShell.goBranch(kShellTabHome);
         }
       },
@@ -285,4 +284,3 @@ class _SidebarItem extends StatelessWidget {
     );
   }
 }
-

@@ -119,10 +119,8 @@ class TravelModeListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(
-          title: l10n.travelModeErrorLoad,
-          message: e.toString(),
-        ),
+        error: (e, _) =>
+            EmptyState(title: l10n.travelModeErrorLoad, message: e.toString()),
       ),
     );
   }

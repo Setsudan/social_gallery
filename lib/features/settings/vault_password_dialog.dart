@@ -97,10 +97,7 @@ class _VaultPasswordDialogState extends State<_VaultPasswordDialog> {
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.actionCancel),
           ),
-        FilledButton(
-          onPressed: _submit,
-          child: Text(l10n.actionOk),
-        ),
+        FilledButton(onPressed: _submit, child: Text(l10n.actionOk)),
       ],
     );
   }

@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// Access/secret keys for S3-compatible cloud backup.
 class CloudCredentialStore {
   CloudCredentialStore({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   static const _accessKey = 'cloud_backup_access_key';
   static const _secretKey = 'cloud_backup_secret_key';

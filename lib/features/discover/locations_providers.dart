@@ -8,7 +8,9 @@ import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/place_group.dart';
 import 'package:social_gallery/domain/models/resolved_place.dart';
 
-void _invalidateLocationTargets(void Function(ProviderOrFamily provider) invalidate) {
+void _invalidateLocationTargets(
+  void Function(ProviderOrFamily provider) invalidate,
+) {
   invalidate(locationLibrarySnapshotProvider);
   invalidate(countryPlaceGroupsProvider);
   invalidate(mapClustersProvider);
@@ -32,16 +34,19 @@ final locationRepositoryProvider = Provider(
 );
 
 final locationLibrarySnapshotProvider =
-    FutureProvider<({List<MediaItem> items, Map<String, ResolvedPlace> placesByKey})>((ref) async {
-  final mediaRepo = ref.watch(mediaRepositoryProvider);
-  final locationRepo = ref.watch(locationRepositoryProvider);
-  final items = await mediaRepo.getMediaWithLocation();
-  final placesByKey = await locationRepo.getAllCachedPlaces();
-  return (items: items, placesByKey: placesByKey);
-});
+    FutureProvider<
+      ({List<MediaItem> items, Map<String, ResolvedPlace> placesByKey})
+    >((ref) async {
+      final mediaRepo = ref.watch(mediaRepositoryProvider);
+      final locationRepo = ref.watch(locationRepositoryProvider);
+      final items = await mediaRepo.getMediaWithLocation();
+      final placesByKey = await locationRepo.getAllCachedPlaces();
+      return (items: items, placesByKey: placesByKey);
+    });
 
-final countryPlaceGroupsProvider =
-    FutureProvider<List<CountryPlaceGroup>>((ref) async {
+final countryPlaceGroupsProvider = FutureProvider<List<CountryPlaceGroup>>((
+  ref,
+) async {
   final snapshot = await ref.watch(locationLibrarySnapshotProvider.future);
   return groupMediaByCountry(
     items: snapshot.items,
@@ -49,7 +54,9 @@ final countryPlaceGroupsProvider =
   );
 });
 
-final mapClustersProvider = FutureProvider<List<MapLocationCluster>>((ref) async {
+final mapClustersProvider = FutureProvider<List<MapLocationCluster>>((
+  ref,
+) async {
   final snapshot = await ref.watch(locationLibrarySnapshotProvider.future);
   return buildMapClusters(items: snapshot.items);
 });

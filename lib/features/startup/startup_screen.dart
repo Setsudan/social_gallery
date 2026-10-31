@@ -60,7 +60,9 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     }
 
     if (usesFilesystemGallery) {
-      final rootPath = ref.read(preferencesRepositoryProvider).desktopGalleryRootPath;
+      final rootPath = ref
+          .read(preferencesRepositoryProvider)
+          .desktopGalleryRootPath;
       if (rootPath == null || rootPath.isEmpty) {
         setState(() {
           _checking = false;
@@ -103,9 +105,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   @override
   Widget build(BuildContext context) {
     if (_checking) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_showOnboarding) {

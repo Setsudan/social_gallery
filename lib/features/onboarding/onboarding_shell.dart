@@ -54,10 +54,7 @@ class OnboardingShell extends StatelessWidget {
                   else
                     const SizedBox(width: 48),
                   Expanded(
-                    child: _OnboardingDots(
-                      count: pageCount,
-                      index: pageIndex,
-                    ),
+                    child: _OnboardingDots(count: pageCount, index: pageIndex),
                   ),
                   if (showSkip && onSkip != null)
                     TextButton(

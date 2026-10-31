@@ -64,10 +64,11 @@ class ThumbnailPrefetcher {
     _lastFirstVisible = firstVisibleIndex;
 
     final effectiveBehind = scrollingUp ? behindCount : behindCount ~/ 2;
-    final start =
-        (firstVisibleIndex - effectiveBehind).clamp(0, assetIds.length);
-    final end =
-        (firstVisibleIndex + aheadCount).clamp(0, assetIds.length);
+    final start = (firstVisibleIndex - effectiveBehind).clamp(
+      0,
+      assetIds.length,
+    );
+    final end = (firstVisibleIndex + aheadCount).clamp(0, assetIds.length);
     if (start >= end) return;
     final slice = assetIds.sublist(start, end);
     _throttleTimer?.cancel();
@@ -88,7 +89,10 @@ class ThumbnailPrefetcher {
     int behindCount = defaultBehindCount,
   }) {
     if (mainAxisExtent <= 0 || crossAxisCount <= 0) return;
-    final firstRow = (metrics.pixels / mainAxisExtent).floor().clamp(0, 1 << 20);
+    final firstRow = (metrics.pixels / mainAxisExtent).floor().clamp(
+      0,
+      1 << 20,
+    );
     final firstIndex = firstRow * crossAxisCount;
     scheduleFromScroll(
       assetIds: assetIds,
@@ -221,10 +225,7 @@ class ThumbnailPrefetcher {
       return;
     }
 
-    final size = AssetMediaLoader.thumbnailSizeForEntity(
-      entity,
-      maxEdge: edge,
-    );
+    final size = AssetMediaLoader.thumbnailSizeForEntity(entity, maxEdge: edge);
     final provider = AssetEntityImageProvider(
       entity,
       isOriginal: false,

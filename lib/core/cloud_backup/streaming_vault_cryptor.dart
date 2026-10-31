@@ -95,7 +95,7 @@ class StreamingVaultCryptor {
 
   /// Decrypts [vaultPath] to a temp plain file. Returns path + metadata.
   Future<({File file, String fileName, String mimeType, int originalSize})>
-      decryptToTempFile({
+  decryptToTempFile({
     required String vaultPath,
     required Uint8List encryptionKey,
   }) async {

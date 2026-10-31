@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:social_gallery/core/l10n/l10n_extensions.dart';
 
-class MediaSelectionAppBar extends StatelessWidget implements PreferredSizeWidget {
+class MediaSelectionAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
   const MediaSelectionAppBar({
     super.key,
     required this.selectedCount,

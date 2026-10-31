@@ -23,7 +23,8 @@ class PreferencesRepository {
   static const _cacheSizeLimitMbKey = 'settings_cache_size_limit_mb';
   static const _autoClearCacheKey = 'settings_auto_clear_cache_on_close';
   static const _galleryViewModeKey = 'settings_gallery_view_mode';
-  static const _desktopGalleryGridSizeKey = 'settings_desktop_gallery_grid_size';
+  static const _desktopGalleryGridSizeKey =
+      'settings_desktop_gallery_grid_size';
   static const _organizeGestureMappingKey = 'settings_organize_gesture_mapping';
   static const _localeKey = 'settings_locale';
   static const _lastGallerySyncAtKey = 'last_gallery_sync_at_ms';
@@ -39,8 +40,10 @@ class PreferencesRepository {
   static const _desktopBackupRootKey = 'desktop_backup_root';
   static const _lastBackupAtKey = 'last_backup_at_ms';
   static const _backupVerifyCursorKey = 'backup_verify_cursor';
-  static const _backupInventoryBackfillDoneKey = 'backup_inventory_backfill_done';
-  static const _backupInventoryBackfillRootKey = 'backup_inventory_backfill_root';
+  static const _backupInventoryBackfillDoneKey =
+      'backup_inventory_backfill_done';
+  static const _backupInventoryBackfillRootKey =
+      'backup_inventory_backfill_root';
   static const _cloudBackupEnabledKey = 'cloud_backup_enabled';
   static const _cloudProviderKey = 'cloud_backup_provider';
   static const _cloudEndpointKey = 'cloud_backup_endpoint';
@@ -157,7 +160,6 @@ class PreferencesRepository {
       jsonEncode(safe.toJson()),
     );
   }
-
 
   AppLocalePreference get localePreference =>
       AppLocalePreference.fromStorage(_prefs.getString(_localeKey));
@@ -279,8 +281,7 @@ class PreferencesRepository {
     await _prefs.setString(_cloudProviderKey, value);
   }
 
-  String get cloudBackupEndpoint =>
-      _prefs.getString(_cloudEndpointKey) ?? '';
+  String get cloudBackupEndpoint => _prefs.getString(_cloudEndpointKey) ?? '';
   Future<void> setCloudBackupEndpoint(String value) async {
     await _prefs.setString(_cloudEndpointKey, value);
   }
@@ -291,14 +292,12 @@ class PreferencesRepository {
     await _prefs.setString(_cloudRegionKey, value);
   }
 
-  String get cloudBackupBucket =>
-      _prefs.getString(_cloudBucketKey) ?? '';
+  String get cloudBackupBucket => _prefs.getString(_cloudBucketKey) ?? '';
   Future<void> setCloudBackupBucket(String value) async {
     await _prefs.setString(_cloudBucketKey, value);
   }
 
-  String get cloudBackupPrefix =>
-      _prefs.getString(_cloudPrefixKey) ?? '';
+  String get cloudBackupPrefix => _prefs.getString(_cloudPrefixKey) ?? '';
   Future<void> setCloudBackupPrefix(String value) async {
     await _prefs.setString(_cloudPrefixKey, value);
   }
@@ -373,4 +372,3 @@ class PreferencesRepository {
     await _prefs.remove(_recentSearchesKey);
   }
 }
-

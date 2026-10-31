@@ -297,11 +297,11 @@ class OrganizeGestureMapping {
   }
 
   Map<String, String> toJson() => {
-        'left': left.storageValue,
-        'right': right.storageValue,
-        'up': up.storageValue,
-        'down': down.storageValue,
-      };
+    'left': left.storageValue,
+    'right': right.storageValue,
+    'up': up.storageValue,
+    'down': down.storageValue,
+  };
 
   static OrganizeGestureMapping fromJson(Map<String, dynamic>? json) {
     if (json == null) return defaults;

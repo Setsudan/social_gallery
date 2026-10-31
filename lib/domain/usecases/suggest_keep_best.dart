@@ -1,19 +1,11 @@
 import 'package:social_gallery/domain/models/media_item.dart';
 
 /// Reason why an item was chosen as the keeper in a duplicate group.
-enum KeeperReason {
-  newest,
-  largestFile,
-  highestResolution,
-  first,
-}
+enum KeeperReason { newest, largestFile, highestResolution, first }
 
 /// Result of selecting the best item from a duplicate group.
 class KeeperSuggestion {
-  const KeeperSuggestion({
-    required this.keeper,
-    required this.reason,
-  });
+  const KeeperSuggestion({required this.keeper, required this.reason});
 
   final MediaItem keeper;
   final KeeperReason reason;

@@ -105,11 +105,11 @@ class CloudBackupController extends StateNotifier<CloudBackupState> {
     this.isGallerySyncRunning,
     this.waitForGallerySync,
     this.onBackupFinished,
-  })  : _notifications = notifications,
-        _connectivity = connectivity ?? Connectivity(),
-        _inventory = CloudBackupInventory(_media),
-        _cryptor = StreamingVaultCryptor(),
-        super(const CloudBackupState()) {
+  }) : _notifications = notifications,
+       _connectivity = connectivity ?? Connectivity(),
+       _inventory = CloudBackupInventory(_media),
+       _cryptor = StreamingVaultCryptor(),
+       super(const CloudBackupState()) {
     _hydrate();
   }
 
@@ -339,7 +339,9 @@ class CloudBackupController extends StateNotifier<CloudBackupState> {
             break;
           }
 
-          final batch = await _media.getMediaPendingCloudBackup(limit: _batchSize);
+          final batch = await _media.getMediaPendingCloudBackup(
+            limit: _batchSize,
+          );
           if (batch.isEmpty) break;
 
           final small = <MediaItem>[];
@@ -525,8 +527,7 @@ class CloudBackupController extends StateNotifier<CloudBackupState> {
   Future<bool> _onWifiOrEthernet() async {
     final results = await _connectivity.checkConnectivity();
     return results.any(
-      (r) =>
-          r == ConnectivityResult.wifi || r == ConnectivityResult.ethernet,
+      (r) => r == ConnectivityResult.wifi || r == ConnectivityResult.ethernet,
     );
   }
 

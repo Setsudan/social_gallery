@@ -12,10 +12,10 @@ Future<bool> revealInFileExplorer(String filePath) async {
   final normalized = file.absolute.path;
 
   if (Platform.isWindows) {
-    final result = await Process.run(
-      'explorer.exe',
-      ['/select,', normalized.replaceAll('/', r'\')],
-    );
+    final result = await Process.run('explorer.exe', [
+      '/select,',
+      normalized.replaceAll('/', r'\'),
+    ]);
     return result.exitCode == 0;
   }
 

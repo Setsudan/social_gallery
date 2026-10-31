@@ -50,8 +50,7 @@ class ExploreMosaicGrid extends ConsumerWidget {
       context,
     ).add(EdgeInsets.all(spacing));
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final contentWidth =
-        MediaQuery.sizeOf(context).width - padding.horizontal;
+    final contentWidth = MediaQuery.sizeOf(context).width - padding.horizontal;
     final smallLogical = (contentWidth - spacing * 2) / 3;
     final bigLogical = smallLogical * 2 + spacing;
     final smallThumbEdge = thumbnailDecodeEdge(
@@ -97,7 +96,8 @@ class ExploreMosaicGrid extends ConsumerWidget {
         return false;
       },
       child: ListView.builder(
-        scrollCacheExtent: ScrollCacheExtent.pixels(kMediaGridCacheExtent), controller: controller,
+        scrollCacheExtent: ScrollCacheExtent.pixels(kMediaGridCacheExtent),
+        controller: controller,
         padding: padding,
         addAutomaticKeepAlives: false,
         itemCount: listItemCount,
@@ -410,4 +410,3 @@ class _MosaicTile extends StatelessWidget {
     );
   }
 }
-

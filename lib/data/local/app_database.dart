@@ -100,60 +100,59 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(mediaAnalysisCache, mediaAnalysisCache.dominantColor);
       }
       if (from < 7) {
-        await m.createIndex(Index(
-          'media_items_folder_trashed_modified',
-          '''
+        await m.createIndex(
+          Index('media_items_folder_trashed_modified', '''
 CREATE INDEX media_items_folder_trashed_modified
 ON media_items (folder_path, is_trashed, date_modified DESC)
-''',
-        ));
-        await m.createIndex(Index(
-          'media_items_favorite_trashed_modified',
-          '''
+'''),
+        );
+        await m.createIndex(
+          Index('media_items_favorite_trashed_modified', '''
 CREATE INDEX media_items_favorite_trashed_modified
 ON media_items (is_trashed, is_favorite, date_modified DESC)
-''',
-        ));
-        await m.createIndex(Index(
-          'media_items_trashed_modified',
-          '''
+'''),
+        );
+        await m.createIndex(
+          Index('media_items_trashed_modified', '''
 CREATE INDEX media_items_trashed_modified
 ON media_items (is_trashed, date_modified DESC)
-''',
-        ));
-        await m.createIndex(Index(
-          'media_items_backup_state',
-          'CREATE INDEX media_items_backup_state ON media_items (backup_state)',
-        ));
-        await m.createIndex(Index(
-          'folders_follow_biometric',
-          '''
+'''),
+        );
+        await m.createIndex(
+          Index(
+            'media_items_backup_state',
+            'CREATE INDEX media_items_backup_state ON media_items (backup_state)',
+          ),
+        );
+        await m.createIndex(
+          Index('folders_follow_biometric', '''
 CREATE INDEX folders_follow_biometric
 ON folders (follow_status, is_biometric_locked)
-''',
-        ));
+'''),
+        );
       }
       if (from < 8) {
         await m.addColumn(mediaItems, mediaItems.contentKind);
         await m.addColumn(mediaAnalysisCache, mediaAnalysisCache.ocrText);
         await m.addColumn(mediaAnalysisCache, mediaAnalysisCache.ocrScannedAt);
-        await m.createIndex(Index(
-          'media_items_content_kind_trashed',
-          '''
+        await m.createIndex(
+          Index('media_items_content_kind_trashed', '''
 CREATE INDEX media_items_content_kind_trashed
 ON media_items (content_kind, is_trashed, date_modified DESC)
-''',
-        ));
+'''),
+        );
       }
       if (from < 9) {
         await m.addColumn(mediaItems, mediaItems.cloudBackupState);
         await m.addColumn(mediaItems, mediaItems.cloudLastSyncTime);
         await m.addColumn(mediaItems, mediaItems.cloudObjectKey);
         await m.createTable(cloudBackupObjects);
-        await m.createIndex(Index(
-          'media_items_cloud_backup_state',
-          'CREATE INDEX media_items_cloud_backup_state ON media_items (cloud_backup_state)',
-        ));
+        await m.createIndex(
+          Index(
+            'media_items_cloud_backup_state',
+            'CREATE INDEX media_items_cloud_backup_state ON media_items (cloud_backup_state)',
+          ),
+        );
       }
     },
   );
@@ -430,12 +429,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
         Variable.withInt(limit),
         Variable.withInt(offset),
       ],
-      readsFrom: {
-        mediaItems,
-        folders,
-        mediaAnalysisCache,
-        locationPlaceCache,
-      },
+      readsFrom: {mediaItems, folders, mediaAnalysisCache, locationPlaceCache},
     ).get();
     return rows.map(_mediaFromQuery).toList();
   }
@@ -532,10 +526,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
       ORDER BY $order
       LIMIT 1
       ''',
-      variables: [
-        Variable.withInt(now.month),
-        Variable.withInt(now.day),
-      ],
+      variables: [Variable.withInt(now.month), Variable.withInt(now.day)],
       readsFrom: {mediaItems, folders},
     ).get();
     if (rows.isEmpty) return null;
@@ -714,10 +705,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
 
   Future<void> updateMediaDimensions(int id, int width, int height) {
     return (update(mediaItems)..where((m) => m.id.equals(id))).write(
-      MediaItemsCompanion(
-        width: Value(width),
-        height: Value(height),
-      ),
+      MediaItemsCompanion(width: Value(width), height: Value(height)),
     );
   }
 
@@ -799,8 +787,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
       await delete(mediaItems).go();
       return;
     }
-    await (delete(mediaItems)..where((m) => m.id.isNotIn(keepIds.toList())))
-        .go();
+    await (delete(
+      mediaItems,
+    )..where((m) => m.id.isNotIn(keepIds.toList()))).go();
   }
 
   Future<void> syncMediaItems(
@@ -814,7 +803,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
       if (items.isNotEmpty) {
         const chunkSize = 500;
         for (var i = 0; i < items.length; i += chunkSize) {
-          final end = i + chunkSize > items.length ? items.length : i + chunkSize;
+          final end = i + chunkSize > items.length
+              ? items.length
+              : i + chunkSize;
           final chunk = items.sublist(i, end);
           await batch((b) {
             for (final row in chunk) {
@@ -1087,9 +1078,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
   }
 
   Future<MediaAnalysisRow?> getAnalysisForMedia(int mediaId) {
-    return (select(mediaAnalysisCache)
-          ..where((a) => a.mediaId.equals(mediaId)))
-        .getSingleOrNull();
+    return (select(
+      mediaAnalysisCache,
+    )..where((a) => a.mediaId.equals(mediaId))).getSingleOrNull();
   }
 
   Future<List<MediaAnalysisRow>> getAllAnalysisRows() {
@@ -1100,7 +1091,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     return into(mediaAnalysisCache).insert(row, mode: InsertMode.replace);
   }
 
-  Future<void> upsertAnalysisRows(List<MediaAnalysisCacheCompanion> rows) async {
+  Future<void> upsertAnalysisRows(
+    List<MediaAnalysisCacheCompanion> rows,
+  ) async {
     await batch((b) {
       for (final row in rows) {
         b.insert(mediaAnalysisCache, row, mode: InsertMode.replace);
@@ -1133,9 +1126,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
   }
 
   Future<LocationPlaceRow?> getCachedPlace(String placeKey) {
-    return (select(locationPlaceCache)
-          ..where((p) => p.placeKey.equals(placeKey)))
-        .getSingleOrNull();
+    return (select(
+      locationPlaceCache,
+    )..where((p) => p.placeKey.equals(placeKey))).getSingleOrNull();
   }
 
   Future<List<LocationPlaceRow>> getAllCachedPlaces() {
@@ -1331,8 +1324,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     int limit = 100,
     String? folderPath,
   }) async {
-    final folderFilter =
-        folderPath != null ? 'AND m.folder_path = ?' : '';
+    final folderFilter = folderPath != null ? 'AND m.folder_path = ?' : '';
     final variables = <Variable>[
       if (folderPath != null) Variable<String>(folderPath),
       Variable<int>(limit),
@@ -1356,8 +1348,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     int limit = 100,
     String? folderPath,
   }) async {
-    final folderFilter =
-        folderPath != null ? 'AND m.folder_path = ?' : '';
+    final folderFilter = folderPath != null ? 'AND m.folder_path = ?' : '';
     final variables = <Variable>[
       if (folderPath != null) Variable<String>(folderPath),
       Variable<int>(limit),
@@ -1469,7 +1460,8 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     return rows.map(_mediaFromQuery).toList();
   }
 
-  Future<List<({MediaRow row, bool isVault})>> getBackedUpMediaSampleWithFolder({
+  Future<List<({MediaRow row, bool isVault})>>
+  getBackedUpMediaSampleWithFolder({
     required int offset,
     required int limit,
   }) async {
@@ -1572,8 +1564,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
     int limit = 100,
     String? folderPath,
   }) async {
-    final folderFilter =
-        folderPath != null ? 'AND m.folder_path = ?' : '';
+    final folderFilter = folderPath != null ? 'AND m.folder_path = ?' : '';
     final variables = <Variable>[
       if (folderPath != null) Variable<String>(folderPath),
       Variable<int>(limit),
@@ -1633,9 +1624,7 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
 
   Future<void> resetStaleCloudBackupInProgress() async {
     await (update(mediaItems)..where((m) => m.cloudBackupState.equals(2)))
-        .write(
-      const MediaItemsCompanion(cloudBackupState: Value(3)),
-    );
+        .write(const MediaItemsCompanion(cloudBackupState: Value(3)));
   }
 
   Future<List<MediaRow>> getCloudBackedUpMedia({
@@ -1687,15 +1676,15 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
   }
 
   Future<CloudBackupObject?> getCloudBackupObject(int mediaId) {
-    return (select(cloudBackupObjects)
-          ..where((t) => t.mediaId.equals(mediaId)))
-        .getSingleOrNull();
+    return (select(
+      cloudBackupObjects,
+    )..where((t) => t.mediaId.equals(mediaId))).getSingleOrNull();
   }
 
   Future<CloudBackupObject?> getCloudBackupObjectByKey(String objectKey) {
-    return (select(cloudBackupObjects)
-          ..where((t) => t.objectKey.equals(objectKey)))
-        .getSingleOrNull();
+    return (select(
+      cloudBackupObjects,
+    )..where((t) => t.objectKey.equals(objectKey))).getSingleOrNull();
   }
 
   Future<List<CloudBackupObject>> listCloudBackupObjects({
@@ -1709,8 +1698,9 @@ ON media_items (content_kind, is_trashed, date_modified DESC)
   }
 
   Future<void> deleteCloudBackupObject(int mediaId) async {
-    await (delete(cloudBackupObjects)..where((t) => t.mediaId.equals(mediaId)))
-        .go();
+    await (delete(
+      cloudBackupObjects,
+    )..where((t) => t.mediaId.equals(mediaId))).go();
   }
 
   Future<void> clearCloudBackupInventory() async {

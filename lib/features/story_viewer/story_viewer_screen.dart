@@ -161,8 +161,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     }
 
     if (_noStories || _error != null) {
-      final message =
-          _noStories ? l10n.storyNoStoriesFound : _error!;
+      final message = _noStories ? l10n.storyNoStoriesFound : _error!;
       return Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -236,7 +235,8 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                     : FutureBuilder<AssetEntity?>(
                         future: AssetEntity.fromId(currentMedia.uri),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState != ConnectionState.done) {
+                          if (snapshot.connectionState !=
+                              ConnectionState.done) {
                             return const Center(
                               child: CircularProgressIndicator(
                                 color: Colors.white,

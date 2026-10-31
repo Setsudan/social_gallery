@@ -25,10 +25,8 @@ class MediaAnalysisProgress {
   double get fraction => total == 0 ? 0 : scanned / total;
 }
 
-typedef MediaAnalysisNeedsScan = bool Function(
-  int mediaId,
-  MediaAnalysisResult? cached,
-);
+typedef MediaAnalysisNeedsScan =
+    bool Function(int mediaId, MediaAnalysisResult? cached);
 
 /// How much on-device ML to run for an item.
 enum MediaAnalysisMode {
@@ -48,7 +46,9 @@ class MediaAnalysisService {
       !kIsWeb && (Platform.isAndroid || Platform.isIOS) && !_mlInitFailed;
 
   bool get desktopLabelingAvailable =>
-      !kIsWeb && usesFilesystemGallery && DesktopImageLabeler.instance.isAvailable;
+      !kIsWeb &&
+      usesFilesystemGallery &&
+      DesktopImageLabeler.instance.isAvailable;
 
   static bool needsTaggingScan(int mediaId, MediaAnalysisResult? cached) {
     if (cached == null) return true;
@@ -56,15 +56,15 @@ class MediaAnalysisService {
   }
 
   ImageLabeler get _sharedLabeler => _labeler ??= ImageLabeler(
-        options: ImageLabelerOptions(confidenceThreshold: 0.55),
-      );
+    options: ImageLabelerOptions(confidenceThreshold: 0.55),
+  );
 
   FaceDetector get _sharedFaceDetector => _faceDetector ??= FaceDetector(
-        options: FaceDetectorOptions(
-          enableClassification: true,
-          performanceMode: FaceDetectorMode.fast,
-        ),
-      );
+    options: FaceDetectorOptions(
+      enableClassification: true,
+      performanceMode: FaceDetectorMode.fast,
+    ),
+  );
 
   /// Releases long-lived ML Kit instances (call on app pause / dispose).
   Future<void> disposeMl() async {
@@ -100,16 +100,14 @@ class MediaAnalysisService {
     final includeFaces = mode == MediaAnalysisMode.analyzeFull;
 
     if (mlAvailable) {
-      final ml = await _runMlKit(
-        item,
-        bytes,
-        includeFaces: includeFaces,
-      );
+      final ml = await _runMlKit(item, bytes, includeFaces: includeFaces);
       faceCount = ml.faceCount;
       hasClosedEyes = ml.hasClosedEyes;
       labels.addAll(ml.labels);
     } else if (desktopLabelingAvailable) {
-      final desktopLabels = await DesktopImageLabeler.instance.labelImage(bytes);
+      final desktopLabels = await DesktopImageLabeler.instance.labelImage(
+        bytes,
+      );
       labels.addAll(desktopLabels);
     }
 
@@ -251,9 +249,7 @@ class MediaAnalysisService {
 
     try {
       final tempDir = Directory.systemTemp;
-      final tempFile = File(
-        '${tempDir.path}/sg_analysis_${item.id}.jpg',
-      );
+      final tempFile = File('${tempDir.path}/sg_analysis_${item.id}.jpg');
       await tempFile.writeAsBytes(bytes);
       final inputImage = InputImage.fromFilePath(tempFile.path);
 
@@ -294,10 +290,6 @@ class MediaAnalysisService {
       debugPrint('ML Kit analysis setup failed: $e\n$st');
     }
 
-    return (
-      faceCount: faceCount,
-      hasClosedEyes: hasClosedEyes,
-      labels: labels,
-    );
+    return (faceCount: faceCount, hasClosedEyes: hasClosedEyes, labels: labels);
   }
 }

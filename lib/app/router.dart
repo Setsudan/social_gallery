@@ -159,7 +159,6 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-
         ],
       ),
 
@@ -263,12 +262,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
         parentNavigatorKey: _rootNavigatorKey,
 
-        pageBuilder: (context, state) => _page(
-          context,
-          ref,
-          state,
-          const LocationsScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _page(context, ref, state, const LocationsScreen()),
       ),
 
       GoRoute(
@@ -297,10 +292,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/widgets/folder-config',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
-          final widgetId = int.tryParse(
-                state.uri.queryParameters['widgetId'] ?? '',
-              ) ??
-              0;
+          final widgetId =
+              int.tryParse(state.uri.queryParameters['widgetId'] ?? '') ?? 0;
           return _page(
             context,
             ref,
@@ -322,10 +315,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             context,
             ref,
             state,
-            PlaceMediaScreen(
-              countryName: country,
-              locality: locality,
-            ),
+            PlaceMediaScreen(countryName: country, locality: locality),
           );
         },
       ),

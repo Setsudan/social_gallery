@@ -87,9 +87,11 @@ class OrganizeFolderStripState extends State<OrganizeFolderStrip>
     if (dtSec <= 0) return;
 
     final position = _scrollController.position;
-    final next = (_scrollController.offset +
-            _edgeScrollVelocityPxPerSec * dtSec)
-        .clamp(0.0, position.maxScrollExtent);
+    final next =
+        (_scrollController.offset + _edgeScrollVelocityPxPerSec * dtSec).clamp(
+          0.0,
+          position.maxScrollExtent,
+        );
     if (next != _scrollController.offset) {
       _scrollController.jumpTo(next);
       _markHitCacheDirty();
@@ -276,14 +278,12 @@ class _FolderDropTarget extends StatelessWidget {
         return DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: borderColor,
-              width: hovered ? 2.5 : 1,
-            ),
+            border: Border.all(color: borderColor, width: hovered ? 2.5 : 1),
             color: hovered
                 ? theme.colorScheme.primaryContainer.withValues(alpha: 0.45)
-                : theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5),
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
           ),
           child: SizedBox(
             width: OrganizeFolderStripState.itemWidth,
@@ -302,8 +302,7 @@ class _FolderDropTarget extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight:
-                            hovered ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: hovered ? FontWeight.w700 : FontWeight.w500,
                         height: 1.15,
                       ),
                     ),

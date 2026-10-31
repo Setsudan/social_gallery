@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-
 
 import 'package:social_gallery/app/providers.dart';
 
@@ -32,7 +28,6 @@ import 'package:social_gallery/shared/widgets/folder_avatar.dart';
 
 import 'package:social_gallery/shared/widgets/nav_back_leading.dart';
 
-
 import 'package:social_gallery/shared/widgets/folder_lock_gate.dart';
 
 import 'package:social_gallery/features/folder_profile/folder_profile_providers.dart';
@@ -49,30 +44,17 @@ import 'package:social_gallery/shared/widgets/media_selection_app_bar.dart';
 
 import 'package:social_gallery/l10n/app_localizations.dart';
 
-
-
 class FolderProfileScreen extends ConsumerStatefulWidget {
-
   const FolderProfileScreen({super.key, required this.folderPath});
-
-
 
   final String folderPath;
 
-
-
   @override
-
   ConsumerState<FolderProfileScreen> createState() =>
-
       _FolderProfileScreenState();
-
 }
 
-
-
 class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
-
   FolderUnlockStore? _unlockStore;
 
   final Set<int> _selectedIds = {};
@@ -87,8 +69,7 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
   void _onMediaScroll() {
     if (!_scrollController.hasClients) return;
-    final paginated =
-        ref.read(folderMediaPaginatedProvider(widget.folderPath));
+    final paginated = ref.read(folderMediaPaginatedProvider(widget.folderPath));
     handlePaginatedScroll(
       _scrollController.position,
       isLoading: paginated.isLoading,
@@ -99,43 +80,25 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
     );
   }
 
-
-
   void _toggleSelect(MediaItem item) {
-
     AppHaptics.medium();
 
     setState(() {
-
       if (_selectedIds.contains(item.id)) {
-
         _selectedIds.remove(item.id);
-
       } else {
-
         _selectedIds.add(item.id);
-
       }
-
     });
-
   }
-
-
 
   void _startSelection(MediaItem item) {
-
     AppHaptics.medium();
 
     setState(() {
-
       _selectedIds.add(item.id);
-
     });
-
   }
-
-
 
   void _clearSelection() => setState(_selectedIds.clear);
 
@@ -146,74 +109,53 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
         .loadMore(refresh: true);
   }
 
-
-
   Future<void> _bulkDelete() => bulkTrash(
+    ref,
 
-        ref,
+    context,
 
-        context,
+    _selectedIds,
 
-        _selectedIds,
+    onDone: _refreshFolderMedia,
 
-        onDone: _refreshFolderMedia,
-
-        useHaptics: true,
-
-      );
-
-
+    useHaptics: true,
+  );
 
   Future<void> _bulkMove() => bulkMove(
+    ref,
 
-        ref,
+    context,
 
-        context,
+    _selectedIds,
 
-        _selectedIds,
+    excludePaths: {widget.folderPath},
 
-        excludePaths: {widget.folderPath},
+    onDone: _refreshFolderMedia,
 
-        onDone: _refreshFolderMedia,
-
-        useHaptics: true,
-
-      );
-
-
+    useHaptics: true,
+  );
 
   Future<void> _bulkFavorite(bool favorite) => bulkFavorite(
+    ref,
 
-        ref,
+    _selectedIds,
 
-        _selectedIds,
+    favorite,
 
-        favorite,
+    onDone: _refreshFolderMedia,
 
-        onDone: _refreshFolderMedia,
-
-        useHaptics: true,
-
-      );
-
-
+    useHaptics: true,
+  );
 
   Future<void> _handleMenuAction(
-
     FolderInfo folder,
 
     _FolderProfileMenuAction action,
-
   ) async {
-
     AppHaptics.medium();
 
-
-
     switch (action) {
-
       case _FolderProfileMenuAction.changeCover:
-
         final unlocked = await ensureFolderUnlocked(ref: ref, folder: folder);
 
         if (!unlocked || !mounted) return;
@@ -221,7 +163,6 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
         await _changeAlbumCover(folder);
 
       case _FolderProfileMenuAction.resetCover:
-
         final unlocked = await ensureFolderUnlocked(ref: ref, folder: folder);
 
         if (!unlocked || !mounted) return;
@@ -229,49 +170,33 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
         await _resetAlbumCover(folder);
 
       case _FolderProfileMenuAction.visibility:
-
         await _showFollowDialog(folder);
-
     }
-
   }
 
-
-
   Future<void> _changeAlbumCover(FolderInfo folder) async {
-
     final selectedUri = await showAlbumCoverPickerSheet(
-
       context: context,
 
       ref: ref,
 
       folder: folder,
-
     );
 
     if (selectedUri == null || !mounted) return;
 
-
-
     AppHaptics.success();
 
     await ref
-
         .read(folderRepositoryProvider)
-
         .setCustomCover(folder.path, selectedUri);
 
     ref.invalidate(folderProvider(folder.path));
 
     ref.invalidate(allFoldersProvider);
-
   }
 
-
-
   Future<void> _resetAlbumCover(FolderInfo folder) async {
-
     AppHaptics.success();
 
     await ref.read(folderRepositoryProvider).setCustomCover(folder.path, null);
@@ -279,30 +204,21 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
     ref.invalidate(folderProvider(folder.path));
 
     ref.invalidate(allFoldersProvider);
-
   }
 
-
-
   Future<void> _setAlbumCover() async {
-
     if (_selectedIds.length != 1) return;
 
     final id = _selectedIds.first;
 
-    final selected =
-        await ref.read(mediaRepositoryProvider).getMediaById(id);
+    final selected = await ref.read(mediaRepositoryProvider).getMediaById(id);
 
     if (selected == null) return;
-
-
 
     AppHaptics.success();
 
     await ref
-
         .read(folderRepositoryProvider)
-
         .setCustomCover(widget.folderPath, selected.uri);
 
     ref.invalidate(folderProvider(widget.folderPath));
@@ -310,74 +226,47 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
     ref.invalidate(allFoldersProvider);
 
     _clearSelection();
-
   }
 
-
-
   @override
-
   void didChangeDependencies() {
-
     super.didChangeDependencies();
 
     _unlockStore = ref.read(folderUnlockStoreProvider);
-
   }
 
-
-
   @override
-
   void dispose() {
-
     _scrollController.dispose();
 
     _unlockStore?.lock(widget.folderPath);
 
     super.dispose();
-
   }
 
-
-
   @override
-
   Widget build(BuildContext context) {
-
     final l10n = context.l10n;
 
     final folderAsync = ref.watch(folderProvider(widget.folderPath));
 
     final inSelectionMode = _selectedIds.isNotEmpty;
 
-
-
     return folderAsync.when(
-
       data: (folder) {
-
         if (folder == null) {
-
           return Scaffold(
-
             appBar: AppBar(
               automaticallyImplyLeading: false,
               leading: const NavBackLeading(),
             ),
 
             body: EmptyState(title: l10n.errorFolderNotFound),
-
           );
-
         }
 
-
-
         final PreferredSizeWidget appBar = inSelectionMode
-
             ? MediaSelectionAppBar(
-
                 selectedCount: _selectedIds.length,
 
                 onCancel: _clearSelection,
@@ -390,42 +279,30 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
 
                 onTrash: _bulkDelete,
 
-                onSetAlbumCover:
-
-                    _selectedIds.length == 1 ? _setAlbumCover : null,
-
+                onSetAlbumCover: _selectedIds.length == 1
+                    ? _setAlbumCover
+                    : null,
               )
-
             : AppBar(
-
                 automaticallyImplyLeading: false,
 
                 leading: const NavBackLeading(),
 
                 actions: [
-
                   PopupMenuButton<_FolderProfileMenuAction>(
-
                     tooltip: l10n.tooltipAlbumOptions,
 
                     onSelected: (action) => _handleMenuAction(folder, action),
 
                     itemBuilder: (context) {
-
                       final hasCustomCover =
-
                           folder.customCoverUri?.trim().isNotEmpty == true;
 
-
-
                       return [
-
                         PopupMenuItem(
-
                           value: _FolderProfileMenuAction.changeCover,
 
                           child: ListTile(
-
                             leading: const Icon(Icons.image_outlined),
 
                             title: Text(l10n.folderChangeCover),
@@ -433,19 +310,14 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                             contentPadding: EdgeInsets.zero,
 
                             dense: true,
-
                           ),
-
                         ),
 
                         if (hasCustomCover)
-
                           PopupMenuItem(
-
                             value: _FolderProfileMenuAction.resetCover,
 
                             child: ListTile(
-
                               leading: const Icon(Icons.restore_outlined),
 
                               title: Text(l10n.folderUseLatestPhoto),
@@ -453,17 +325,13 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                               contentPadding: EdgeInsets.zero,
 
                               dense: true,
-
                             ),
-
                           ),
 
                         PopupMenuItem(
-
                           value: _FolderProfileMenuAction.visibility,
 
                           child: ListTile(
-
                             leading: const Icon(Icons.visibility_outlined),
 
                             title: Text(l10n.folderVisibilityTitle),
@@ -471,43 +339,29 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                             contentPadding: EdgeInsets.zero,
 
                             dense: true,
-
                           ),
-
                         ),
-
                       ];
-
                     },
-
                   ),
-
                 ],
-
               );
 
-
-
         return Scaffold(
-
           appBar: appBar,
 
           body: Column(
-
             children: [
-
               _header(folder, l10n),
 
               Expanded(
-
                 child: FolderLockGate(
-
                   folder: folder,
 
                   builder: (context) {
-
-                    final paginated =
-                        ref.watch(folderMediaPaginatedProvider(folder.path));
+                    final paginated = ref.watch(
+                      folderMediaPaginatedProvider(folder.path),
+                    );
                     final items = paginated.items;
 
                     if (paginated.error != null && items.isEmpty) {
@@ -540,37 +394,23 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                       ),
                     );
                   },
-
                 ),
-
               ),
-
             ],
-
           ),
-
         );
-
       },
 
       loading: () =>
-
           const Scaffold(body: Center(child: CircularProgressIndicator())),
 
       error: (e, _) => Scaffold(body: Center(child: Text(e.toString()))),
-
     );
-
   }
 
-
-
   Widget _header(FolderInfo folder, AppLocalizations l10n) {
-
     return Padding(
-
       padding: const EdgeInsets.fromLTRB(
-
         OneUiSpacing.pageHorizontal,
 
         OneUiSpacing.md,
@@ -578,17 +418,13 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
         OneUiSpacing.pageHorizontal,
 
         OneUiSpacing.sm,
-
       ),
 
       child: Row(
-
         crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           FolderAvatar(
-
             name: folder.name,
 
             size: 72,
@@ -596,25 +432,19 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
             coverUri: folder.isLockedAccount ? null : folder.displayCoverUri,
 
             locked: folder.isLockedAccount,
-
           ),
 
           const SizedBox(width: 16),
 
           Expanded(
-
             child: Column(
-
               crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-
                 Text(
-
                   folder.name,
 
                   style: Theme.of(context).textTheme.headlineMedium,
-
                 ),
 
                 Text(l10n.folderItemCount(folder.mediaCount)),
@@ -622,95 +452,59 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
                 const SizedBox(height: 8),
 
                 GestureDetector(
-
                   onTap: () => _editBio(folder),
 
                   child: Text(
-
                     folder.biography?.isNotEmpty == true
-
                         ? folder.biography!
-
                         : l10n.folderAddBiography,
 
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-
                       color: Theme.of(context).colorScheme.primary,
-
                     ),
-
                   ),
-
                 ),
-
               ],
-
             ),
-
           ),
-
         ],
-
       ),
-
     );
-
   }
 
-
-
   Future<void> _editBio(FolderInfo folder) async {
-
     final l10n = context.l10n;
 
     final controller = TextEditingController(text: folder.biography ?? '');
 
-
-
     final saved = await showDialog<String>(
-
       context: context,
 
       builder: (context) => AlertDialog(
-
         title: Text(l10n.folderBiographyTitle),
 
         content: TextField(controller: controller, maxLines: 4),
 
         actions: [
-
           TextButton(
-
             onPressed: () => Navigator.pop(context),
 
             child: Text(l10n.actionCancel),
-
           ),
 
           FilledButton(
-
             onPressed: () => Navigator.pop(context, controller.text.trim()),
 
             child: Text(l10n.actionSave),
-
           ),
-
         ],
-
       ),
-
     );
 
-
-
     if (saved != null) {
-
       await ref
-
           .read(folderRepositoryProvider)
-
           .updateFollowStatus(
-
             folder.path,
 
             folder.followStatus,
@@ -718,191 +512,110 @@ class _FolderProfileScreenState extends ConsumerState<FolderProfileScreen> {
             isBiometricLocked: folder.isBiometricLocked,
 
             biography: saved,
-
           );
-
     }
-
   }
 
-
-
   Future<void> _showFollowDialog(FolderInfo folder) async {
-
     final l10n = context.l10n;
 
     var choice = _visibilityChoice(
-
       folder.followStatus,
 
       folder.isBiometricLocked,
-
     );
 
-
-
     await showDialog<void>(
-
       context: context,
 
       builder: (context) {
-
         return StatefulBuilder(
-
           builder: (context, setDialogState) {
-
             return AlertDialog(
-
               title: Text(l10n.folderVisibilityTitle),
 
               content: RadioGroup<_FolderVisibilityOption>(
-
                 groupValue: choice,
 
                 onChanged: (v) => setDialogState(() => choice = v!),
 
                 child: Column(
-
                   mainAxisSize: MainAxisSize.min,
 
                   children: _FolderVisibilityOption.values
-
                       .map(
-
                         (option) => ListTile(
-
                           title: Text(option.label(l10n)),
 
                           leading: Radio<_FolderVisibilityOption>(
-
                             value: option,
-
                           ),
 
                           onTap: () => setDialogState(() => choice = option),
-
                         ),
-
                       )
-
                       .toList(),
-
                 ),
-
               ),
 
               actions: [
-
                 TextButton(
-
                   onPressed: () => Navigator.pop(context),
 
                   child: Text(l10n.actionCancel),
-
                 ),
 
                 FilledButton(
-
                   onPressed: () async {
-
                     await ref
-
                         .read(folderRepositoryProvider)
-
                         .updateFollowStatus(
-
                           folder.path,
 
                           choice.status,
 
                           isBiometricLocked: choice.locked,
-
                         );
 
-
-
                     if (choice.locked) {
-
                       ref.read(folderUnlockStoreProvider).lock(folder.path);
-
                     }
-
-
 
                     ref.invalidate(folderProvider(folder.path));
 
                     refreshFeedProviders(ref);
 
-
-
                     if (context.mounted) Navigator.pop(context);
-
                   },
 
                   child: Text(l10n.actionSave),
-
                 ),
-
               ],
-
             );
-
           },
-
         );
-
       },
-
     );
-
   }
-
-
 
   _FolderVisibilityOption _visibilityChoice(FollowStatus status, bool locked) {
-
     if (status == FollowStatus.homeFeed) {
-
       return _FolderVisibilityOption.homeFeed;
-
     }
-
-
 
     if (status == FollowStatus.unfollowed) {
-
       return _FolderVisibilityOption.hidden;
-
     }
 
-
-
     return locked
-
         ? _FolderVisibilityOption.accountLocked
-
         : _FolderVisibilityOption.accountOnly;
-
   }
-
 }
 
-
-
-enum _FolderProfileMenuAction {
-
-  changeCover,
-
-  resetCover,
-
-  visibility,
-
-}
-
-
+enum _FolderProfileMenuAction { changeCover, resetCover, visibility }
 
 enum _FolderVisibilityOption {
-
   homeFeed(FollowStatus.homeFeed, false),
 
   accountOnly(FollowStatus.accountOnly, false),
@@ -911,30 +624,19 @@ enum _FolderVisibilityOption {
 
   hidden(FollowStatus.unfollowed, false);
 
-
-
   const _FolderVisibilityOption(this.status, this.locked);
-
-
 
   final FollowStatus status;
 
   final bool locked;
 
-
-
   String label(AppLocalizations l10n) => switch (this) {
+    homeFeed => l10n.folderVisibilityHomeFeed,
 
-        homeFeed => l10n.folderVisibilityHomeFeed,
+    accountOnly => l10n.folderVisibilityAccountOnly,
 
-        accountOnly => l10n.folderVisibilityAccountOnly,
+    accountLocked => l10n.folderVisibilityAccountLocked,
 
-        accountLocked => l10n.folderVisibilityAccountLocked,
-
-        hidden => l10n.folderVisibilityHidden,
-
-      };
-
+    hidden => l10n.folderVisibilityHidden,
+  };
 }
-
-

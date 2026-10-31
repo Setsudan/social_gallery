@@ -19,14 +19,13 @@ class DesktopBackupWindowGuard extends ConsumerStatefulWidget {
       _DesktopBackupWindowGuardState();
 }
 
-class _DesktopBackupWindowGuardState extends ConsumerState<DesktopBackupWindowGuard>
+class _DesktopBackupWindowGuardState
+    extends ConsumerState<DesktopBackupWindowGuard>
     with WindowListener {
   bool _dialogVisible = false;
 
   bool get _supportsWindowGuard =>
-      usesFilesystemGallery &&
-      !Platform.isAndroid &&
-      !Platform.isIOS;
+      usesFilesystemGallery && !Platform.isAndroid && !Platform.isIOS;
 
   @override
   void initState() {
@@ -54,8 +53,8 @@ class _DesktopBackupWindowGuardState extends ConsumerState<DesktopBackupWindowGu
     if (fileName != null && fileName.isNotEmpty) {
       final total = backupState.receivingBytesTotal;
       if (total > 0) {
-        final percent =
-            ((backupState.receivingBytesReceived / total) * 100).round();
+        final percent = ((backupState.receivingBytesReceived / total) * 100)
+            .round();
         message = '$message\n\n$fileName ($percent%)';
       } else {
         message = '$message\n\n$fileName';

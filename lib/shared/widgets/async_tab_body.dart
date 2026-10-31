@@ -51,10 +51,7 @@ class AsyncTabBody extends StatelessWidget {
     }
     if (isEmpty) {
       return empty ??
-          EmptyState(
-            title: l10n.emptyNothingHere,
-            icon: Icons.inbox_outlined,
-          );
+          EmptyState(title: l10n.emptyNothingHere, icon: Icons.inbox_outlined);
     }
     return child;
   }

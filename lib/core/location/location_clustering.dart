@@ -34,16 +34,17 @@ List<CountryPlaceGroup> groupMediaByCountry({
   }
 
   final countries = byCountry.entries.map((countryEntry) {
-    final cities = countryEntry.value.entries
-        .map(
-          (cityEntry) => PlaceGroup(
-            countryName: countryEntry.key,
-            locality: cityEntry.key,
-            mediaItems: _sortedByDate(cityEntry.value),
-          ),
-        )
-        .toList()
-      ..sort((a, b) => b.count.compareTo(a.count));
+    final cities =
+        countryEntry.value.entries
+            .map(
+              (cityEntry) => PlaceGroup(
+                countryName: countryEntry.key,
+                locality: cityEntry.key,
+                mediaItems: _sortedByDate(cityEntry.value),
+              ),
+            )
+            .toList()
+          ..sort((a, b) => b.count.compareTo(a.count));
 
     final allMedia = cities.expand((c) => c.mediaItems).toList();
 
@@ -59,9 +60,7 @@ List<CountryPlaceGroup> groupMediaByCountry({
 }
 
 /// Builds map pin clusters, one per unique coordinate grid cell.
-List<MapLocationCluster> buildMapClusters({
-  required List<MediaItem> items,
-}) {
+List<MapLocationCluster> buildMapClusters({required List<MediaItem> items}) {
   final byKey = <String, List<MediaItem>>{};
 
   for (final item in items) {

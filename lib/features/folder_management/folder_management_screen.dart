@@ -148,7 +148,11 @@ class _FolderManagementScreenState
     );
   }
 
-  Widget _folderTile(FolderInfo folder, ThemeData theme, AppLocalizations l10n) {
+  Widget _folderTile(
+    FolderInfo folder,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     final isSelected = _selected.contains(folder.path);
     final motion = AppMotion.of(context, ref);
 
@@ -363,16 +367,16 @@ enum _FolderVisibilityOption {
   final bool locked;
 
   String menuLabel(AppLocalizations l10n) => switch (this) {
-        homeFeed => l10n.folderVisibilityHomeFeed,
-        accountOnly => l10n.folderVisibilityAccountOnly,
-        accountLocked => l10n.folderVisibilityAccountLocked,
-        hidden => l10n.folderVisibilityHidden,
-      };
+    homeFeed => l10n.folderVisibilityHomeFeed,
+    accountOnly => l10n.folderVisibilityAccountOnly,
+    accountLocked => l10n.folderVisibilityAccountLocked,
+    hidden => l10n.folderVisibilityHidden,
+  };
 
   String chipLabel(AppLocalizations l10n) => switch (this) {
-        homeFeed => l10n.folderVisibilityHomeFeed,
-        accountOnly => l10n.folderVisibilityAccount,
-        accountLocked => l10n.folderVisibilityLock,
-        hidden => l10n.folderVisibilityHidden,
-      };
+    homeFeed => l10n.folderVisibilityHomeFeed,
+    accountOnly => l10n.folderVisibilityAccount,
+    accountLocked => l10n.folderVisibilityLock,
+    hidden => l10n.folderVisibilityHidden,
+  };
 }

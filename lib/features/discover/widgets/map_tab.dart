@@ -48,10 +48,7 @@ class _MapTabState extends ConsumerState<MapTab>
           .toList();
       final bounds = LatLngBounds.fromPoints(points);
       _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.all(48),
-        ),
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(48)),
       );
       _fittedBounds = true;
       _fittedClusterCount = clusters.length;
@@ -126,12 +123,7 @@ class _MapTabState extends ConsumerState<MapTab>
                       item: item,
                       onTap: () {
                         Navigator.of(context).pop();
-                        openMediaViewer(
-                          context,
-                          ref,
-                          items: items,
-                          item: item,
-                        );
+                        openMediaViewer(context, ref, items: items, item: item);
                       },
                     );
                   },
@@ -184,7 +176,10 @@ class _MapTabState extends ConsumerState<MapTab>
           );
         }).toList();
 
-        final center = LatLng(clusters.first.latitude, clusters.first.longitude);
+        final center = LatLng(
+          clusters.first.latitude,
+          clusters.first.longitude,
+        );
 
         return FlutterMap(
           mapController: _mapController,
@@ -207,10 +202,7 @@ class _MapTabState extends ConsumerState<MapTab>
                   _showItemsSheet(items);
                 },
                 onMarkerTap: (marker) {
-                  final items = _itemsForMarkers(
-                    [marker],
-                    clustersByPoint,
-                  );
+                  final items = _itemsForMarkers([marker], clustersByPoint);
                   _showItemsSheet(items);
                 },
               ),
@@ -218,14 +210,8 @@ class _MapTabState extends ConsumerState<MapTab>
             RichAttributionWidget(
               alignment: AttributionAlignment.bottomRight,
               attributions: [
-                TextSourceAttribution(
-                  'OpenStreetMap',
-                  onTap: () {},
-                ),
-                TextSourceAttribution(
-                  'CARTO',
-                  onTap: () {},
-                ),
+                TextSourceAttribution('OpenStreetMap', onTap: () {}),
+                TextSourceAttribution('CARTO', onTap: () {}),
               ],
             ),
           ],
@@ -269,10 +255,7 @@ class _MapPin extends StatelessWidget {
 }
 
 class _MapThumbnailTile extends StatelessWidget {
-  const _MapThumbnailTile({
-    required this.item,
-    required this.onTap,
-  });
+  const _MapThumbnailTile({required this.item, required this.onTap});
 
   final MediaItem item;
   final VoidCallback onTap;

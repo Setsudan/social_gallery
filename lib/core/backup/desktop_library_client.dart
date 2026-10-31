@@ -78,9 +78,7 @@ class DesktopLibraryClient {
 
   Future<List<int>?> fetchThumbnail(int mediaId, {String? vaultToken}) async {
     try {
-      final query = {
-        'vaultToken': ?vaultToken,
-      };
+      final query = {'vaultToken': ?vaultToken};
       final response = await _http
           .get(_uri('/v1/library/thumbnail/$mediaId', query), headers: _headers)
           .timeout(const Duration(seconds: 30));

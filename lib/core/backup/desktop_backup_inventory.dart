@@ -120,8 +120,7 @@ class DesktopBackupInventory {
   final Map<String, BackupInventoryEntry> _byCanonicalPath = {};
   final Map<String, BackupInventoryEntry> _byFolderChecksum = {};
 
-  String get _inventoryPath =>
-      p.join(backupRoot, _hiddenDir, _inventoryFile);
+  String get _inventoryPath => p.join(backupRoot, _hiddenDir, _inventoryFile);
 
   static final RegExp _dotsOnly = RegExp(r'^\.+$');
 
@@ -167,7 +166,8 @@ class DesktopBackupInventory {
     if (!await file.exists()) return;
 
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       final entries = json['entries'] as List<dynamic>? ?? const [];
       for (final raw in entries) {
         final entry = BackupInventoryEntry.fromJson(

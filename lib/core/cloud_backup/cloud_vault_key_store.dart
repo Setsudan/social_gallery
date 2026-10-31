@@ -15,7 +15,7 @@ abstract class CloudSecureKv {
 
 class FlutterCloudSecureKv implements CloudSecureKv {
   FlutterCloudSecureKv([FlutterSecureStorage? storage])
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
@@ -46,7 +46,7 @@ class MemoryCloudSecureKv implements CloudSecureKv {
 /// One-time PBKDF2 key setup for cloud encryption. Salt never rotates after register.
 class CloudVaultKeyStore {
   CloudVaultKeyStore({CloudSecureKv? storage})
-      : _storage = storage ?? FlutterCloudSecureKv();
+    : _storage = storage ?? FlutterCloudSecureKv();
 
   static const _passwordKey = 'cloud_vault_password';
   static const _saltKey = 'cloud_vault_salt_b64';

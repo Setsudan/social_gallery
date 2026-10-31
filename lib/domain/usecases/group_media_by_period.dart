@@ -32,12 +32,13 @@ class GroupMediaByPeriod {
       grouped.putIfAbsent(key, () => []).add(item);
     }
 
-    final keys = grouped.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
+    final keys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return keys.map((key) {
       final groupItems = grouped[key]!;
-      final date = DateTime.fromMillisecondsSinceEpoch(groupItems.first.sortDate);
+      final date = DateTime.fromMillisecondsSinceEpoch(
+        groupItems.first.sortDate,
+      );
       return MediaPeriodGroup(
         key: key,
         label: _groupLabel(date, period),

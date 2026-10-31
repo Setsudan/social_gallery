@@ -44,7 +44,9 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
 
   void _initSelection(DuplicateGroup group) {
     if (_selectedIds != null) return;
-    final suggestion = ref.read(suggestKeepBestProvider).suggestWithReason(group.items);
+    final suggestion = ref
+        .read(suggestKeepBestProvider)
+        .suggestWithReason(group.items);
     _keeperId = suggestion.keeper.id;
     _selectedIds = group.items
         .where((m) => m.id != _keeperId)
@@ -69,7 +71,9 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
 
     final l10n = context.l10n;
     final keeper = group.items.firstWhere((m) => m.id == keeperId);
-    final toDelete = group.items.where((m) => selectedIds.contains(m.id)).toList();
+    final toDelete = group.items
+        .where((m) => selectedIds.contains(m.id))
+        .toList();
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -79,10 +83,12 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.duplicateDeleteConfirmMessage(
-              keeper.displayName,
-              toDelete.length,
-            )),
+            Text(
+              l10n.duplicateDeleteConfirmMessage(
+                keeper.displayName,
+                toDelete.length,
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.duplicateDeleteWarning,
@@ -209,7 +215,9 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
     final selectedIds = _selectedIds!;
     final keeperId = _keeperId!;
     final keeper = group.items.firstWhere((m) => m.id == keeperId);
-    final suggestion = ref.read(suggestKeepBestProvider).suggestWithReason(group.items);
+    final suggestion = ref
+        .read(suggestKeepBestProvider)
+        .suggestWithReason(group.items);
     final isAutoSelected = keeper.id == suggestion.keeper.id;
     final columns = gridCrossAxisCountForWidth(
       MediaQuery.sizeOf(context).width,
@@ -291,7 +299,9 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
                 final media = group.items[index];
                 final isKeeper = media.id == keeperId;
                 final isMarkedDelete = selectedIds.contains(media.id);
-                final date = DateTime.fromMillisecondsSinceEpoch(media.sortDate);
+                final date = DateTime.fromMillisecondsSinceEpoch(
+                  media.sortDate,
+                );
                 final dateStr = DateFormat.yMMMd(
                   Localizations.localeOf(context).toString(),
                 ).format(date);
@@ -360,10 +370,11 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
                                         const SizedBox(width: 4),
                                         Text(
                                           l10n.duplicateBestLabel,
-                                          style: theme.textTheme.labelSmall?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -393,7 +404,9 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           color: isKeeper
-                              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+                              ? theme.colorScheme.primaryContainer.withValues(
+                                  alpha: 0.5,
+                                )
                               : null,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,9 +445,7 @@ class _DuplicateReviewScreenState extends ConsumerState<DuplicateReviewScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              border: Border(
-                top: BorderSide(color: theme.dividerColor),
-              ),
+              border: Border(top: BorderSide(color: theme.dividerColor)),
             ),
             child: Row(
               children: [

@@ -15,10 +15,7 @@ import 'package:social_gallery/shared/widgets/media_grid.dart';
 import 'package:social_gallery/shared/widgets/one_ui/one_ui_subpage_scaffold.dart';
 
 class ContentKindBrowseScreen extends ConsumerStatefulWidget {
-  const ContentKindBrowseScreen({
-    super.key,
-    required this.kind,
-  });
+  const ContentKindBrowseScreen({super.key, required this.kind});
 
   final MediaContentKind kind;
 
@@ -43,7 +40,9 @@ class _ContentKindBrowseScreenState
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!_isDocument) {
-        await ref.read(mediaRepositoryProvider).backfillScreenshotContentKinds();
+        await ref
+            .read(mediaRepositoryProvider)
+            .backfillScreenshotContentKinds();
       }
       await ref
           .read(contentKindPaginatedProvider(widget.kind).notifier)
@@ -66,8 +65,9 @@ class _ContentKindBrowseScreenState
       _scrollController.position,
       isLoading: paginated.isLoading,
       hasMore: paginated.hasMore,
-      loadMore: () =>
-          ref.read(contentKindPaginatedProvider(widget.kind).notifier).loadMore(),
+      loadMore: () => ref
+          .read(contentKindPaginatedProvider(widget.kind).notifier)
+          .loadMore(),
     );
   }
 
@@ -134,10 +134,7 @@ class _ContentKindBrowseScreenState
             padding: const EdgeInsets.only(right: 12),
             child: Center(
               child: Text(
-                l10n.discoverOcrIndexProgress(
-                  ocrState.scanned,
-                  ocrState.total,
-                ),
+                l10n.discoverOcrIndexProgress(ocrState.scanned, ocrState.total),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             ),
@@ -184,12 +181,8 @@ class _ContentKindBrowseScreenState
                   items: items,
                   selectedIds: _selectedIds,
                   isLoadingMore: paginated.isLoading && items.isNotEmpty,
-                  onTap: (item) => openMediaViewer(
-                    context,
-                    ref,
-                    items: items,
-                    item: item,
-                  ),
+                  onTap: (item) =>
+                      openMediaViewer(context, ref, items: items, item: item),
                   onLongPress: _toggle,
                   onSelectToggle: _toggle,
                 ),

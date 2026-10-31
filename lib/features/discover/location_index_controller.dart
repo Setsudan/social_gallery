@@ -166,5 +166,5 @@ class LocationIndexController extends StateNotifier<LocationIndexState> {
 
 final locationIndexControllerProvider =
     StateNotifierProvider<LocationIndexController, LocationIndexState>(
-  (ref) => LocationIndexController(ref),
-);
+      (ref) => LocationIndexController(ref),
+    );

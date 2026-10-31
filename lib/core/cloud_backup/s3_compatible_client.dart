@@ -17,9 +17,7 @@ class S3CompatibleClient {
 
   static Minio _build(CloudBackupConfig config) {
     final uri = config.endpointUri;
-    final endPoint = uri.hasPort
-        ? '${uri.host}:${uri.port}'
-        : uri.host;
+    final endPoint = uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
     return Minio(
       endPoint: endPoint,
       accessKey: config.accessKey,
@@ -34,7 +32,9 @@ class S3CompatibleClient {
   /// HEAD-equivalent / connectivity check.
   Future<bool> testConnection() async {
     try {
-      await _minio.bucketExists(config.bucket).timeout(const Duration(seconds: 15));
+      await _minio
+          .bucketExists(config.bucket)
+          .timeout(const Duration(seconds: 15));
       return true;
     } catch (e) {
       debugPrint('Cloud backup connection test failed: $e');

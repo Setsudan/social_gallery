@@ -53,9 +53,7 @@ Future<void> applyBackupFileMetadata(
   final addedMs = metadata.dateAdded;
   if (addedMs != null && addedMs != sortMs) {
     try {
-      await file.setLastAccessed(
-        DateTime.fromMillisecondsSinceEpoch(addedMs),
-      );
+      await file.setLastAccessed(DateTime.fromMillisecondsSinceEpoch(addedMs));
     } catch (_) {
       // setLastAccessed is not supported on all platforms.
     }

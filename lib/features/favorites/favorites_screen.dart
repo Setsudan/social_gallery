@@ -36,8 +36,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       _scrollController.position,
       isLoading: paginated.isLoading,
       hasMore: paginated.hasMore,
-      loadMore: () =>
-          ref.read(favoritesPaginatedProvider.notifier).loadMore(),
+      loadMore: () => ref.read(favoritesPaginatedProvider.notifier).loadMore(),
     );
   }
 
@@ -75,12 +74,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         controller: _scrollController,
         items: items,
         isLoadingMore: paginated.isLoading && items.isNotEmpty,
-        onTap: (item) => openMediaViewer(
-          context,
-          ref,
-          items: items,
-          item: item,
-        ),
+        onTap: (item) =>
+            openMediaViewer(context, ref, items: items, item: item),
       ),
     );
   }

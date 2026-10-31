@@ -13,8 +13,7 @@ Future<RawDatagramSocket> mdnsDatagramSocketFactory(
   bool reusePort = true,
   int ttl = 1,
 }) {
-  final allowReusePort =
-      reusePort && !kIsWeb && !Platform.isAndroid;
+  final allowReusePort = reusePort && !kIsWeb && !Platform.isAndroid;
   return RawDatagramSocket.bind(
     host,
     port,

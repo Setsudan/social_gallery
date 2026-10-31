@@ -57,9 +57,15 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.organizeFiltersTitle, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              l10n.organizeFiltersTitle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
-            Text(l10n.organizeMediaType, style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              l10n.organizeMediaType,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             const SizedBox(height: 8),
             SegmentedButton<OrganizeMediaType>(
               segments: [
@@ -86,7 +92,10 @@ class _OrganizeFilterSheetState extends ConsumerState<OrganizeFilterSheet> {
               initialValue: _folderPath,
               decoration: InputDecoration(labelText: l10n.organizeFilterFolder),
               items: [
-                DropdownMenuItem(value: null, child: Text(l10n.organizeAllFolders)),
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(l10n.organizeAllFolders),
+                ),
                 ...folders.map(
                   (f) => DropdownMenuItem(value: f.path, child: Text(f.name)),
                 ),

@@ -18,10 +18,4 @@ enum MediaContentKind {
 }
 
 /// Explore / Gallery search filter for media kind (broader than stored kind).
-enum ExploreContentFilter {
-  all,
-  screenshot,
-  document,
-  image,
-  video,
-}
+enum ExploreContentFilter { all, screenshot, document, image, video }
