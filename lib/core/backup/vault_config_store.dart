@@ -19,8 +19,7 @@ class VaultConfigStore {
   static const _saltLength = 32;
   static const _keyLength = 32;
 
-  String get _configPath =>
-      p.join(backupRoot, _hiddenDir, _configFile);
+  String get _configPath => p.join(backupRoot, _hiddenDir, _configFile);
 
   VaultConfig? _cached;
 
@@ -33,7 +32,8 @@ class VaultConfigStore {
     final file = File(_configPath);
     if (!await file.exists()) return;
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       _cached = VaultConfig.fromJson(json);
     } catch (_) {
       _cached = null;
@@ -45,18 +45,13 @@ class VaultConfigStore {
     final key = _deriveKey(password, salt);
     final verifierHash = sha256.convert(key).toString();
 
-    _cached = VaultConfig(
-      salt: base64Encode(salt),
-      verifierHash: verifierHash,
-    );
+    _cached = VaultConfig(salt: base64Encode(salt), verifierHash: verifierHash);
 
     final dir = Directory(p.join(backupRoot, _hiddenDir));
     if (!dir.existsSync()) {
       await dir.create(recursive: true);
     }
-    await File(_configPath).writeAsString(
-      jsonEncode(_cached!.toJson()),
-    );
+    await File(_configPath).writeAsString(jsonEncode(_cached!.toJson()));
   }
 
   bool validatePassword(String password) {
@@ -92,10 +87,7 @@ class VaultConfigStore {
 }
 
 class VaultConfig {
-  const VaultConfig({
-    required this.salt,
-    required this.verifierHash,
-  });
+  const VaultConfig({required this.salt, required this.verifierHash});
 
   factory VaultConfig.fromJson(Map<String, dynamic> json) {
     return VaultConfig(
@@ -107,8 +99,5 @@ class VaultConfig {
   final String salt;
   final String verifierHash;
 
-  Map<String, dynamic> toJson() => {
-    'salt': salt,
-    'verifierHash': verifierHash,
-  };
+  Map<String, dynamic> toJson() => {'salt': salt, 'verifierHash': verifierHash};
 }

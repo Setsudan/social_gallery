@@ -145,9 +145,9 @@ class DesktopBackupServer {
     DesktopBackupInventory? inventory,
     VaultConfigStore? vaultConfig,
     VaultArchiveService? vaultArchive,
-  })  : _inventory = inventory ?? DesktopBackupInventory(backupRoot: backupRoot),
-        _vaultConfig = vaultConfig ?? VaultConfigStore(backupRoot: backupRoot),
-        _vaultArchive = vaultArchive ?? VaultArchiveService();
+  }) : _inventory = inventory ?? DesktopBackupInventory(backupRoot: backupRoot),
+       _vaultConfig = vaultConfig ?? VaultConfigStore(backupRoot: backupRoot),
+       _vaultArchive = vaultArchive ?? VaultArchiveService();
 
   final PairingService pairing;
   final String deviceName;
@@ -162,7 +162,8 @@ class DesktopBackupServer {
     String? currentFileName,
     int bytesReceived,
     int bytesTotal,
-  })? onReceivingStateChanged;
+  })?
+  onReceivingStateChanged;
   final DesktopBackupInventory _inventory;
   final VaultConfigStore _vaultConfig;
   final VaultArchiveService _vaultArchive;
@@ -476,7 +477,9 @@ class DesktopBackupServer {
       final body = BackupProtocol.decodeJson(await request.readAsString());
       final password = body['password'] as String? ?? '';
       if (password.length < 8) {
-        return _json({'error': 'Password must be at least 8 characters'}, status: 400);
+        return _json({
+          'error': 'Password must be at least 8 characters',
+        }, status: 400);
       }
 
       await _vaultConfig.registerPassword(password);
@@ -589,8 +592,10 @@ class DesktopBackupServer {
       return BackupReconcileStatus.mismatch;
     }
 
-    final byChecksum =
-        _inventory.lookupByChecksumInFolder(folderName, checksum);
+    final byChecksum = _inventory.lookupByChecksumInFolder(
+      folderName,
+      checksum,
+    );
     if (byChecksum != null) {
       if (linkMediaId) {
         await _recordInventoryEntry(
@@ -658,10 +663,7 @@ class DesktopBackupServer {
           isVault: isVault,
         );
 
-        results.add({
-          'mediaId': mediaId,
-          'status': status.name,
-        });
+        results.add({'mediaId': mediaId, 'status': status.name});
       }
 
       return _json({'results': results});
@@ -700,10 +702,7 @@ class DesktopBackupServer {
             ? BackupVerifyStatus.present
             : BackupVerifyStatus.missing;
 
-        results.add({
-          'mediaId': mediaId,
-          'status': status.name,
-        });
+        results.add({'mediaId': mediaId, 'status': status.name});
       }
 
       return _json({'results': results});
@@ -731,7 +730,9 @@ class DesktopBackupServer {
         final metadata = BackupFileMetadata.fromInitJson(item);
 
         if (isVault && !_vaultConfig.isConfigured) {
-          return _json({'error': 'Vault not configured on desktop'}, status: 400);
+          return _json({
+            'error': 'Vault not configured on desktop',
+          }, status: 400);
         }
 
         final status = await _resolveItemStatus(
@@ -743,7 +744,8 @@ class DesktopBackupServer {
         );
 
         if (status == BackupReconcileStatus.present) {
-          final entry = _inventory.lookup(mediaId) ??
+          final entry =
+              _inventory.lookup(mediaId) ??
               _inventory.lookupByCanonicalPath(folderName, name);
           if (entry != null && !entry.isVault) {
             final targetPath = p.join(backupRoot, entry.relativePath);
@@ -767,8 +769,8 @@ class DesktopBackupServer {
                 DesktopBackupInventory.sanitizeFileName(name),
               )
             : status == BackupReconcileStatus.mismatch
-                ? _allocateUniquePath(name, folderName)
-                : _canonicalPath(name, folderName);
+            ? _allocateUniquePath(name, folderName)
+            : _canonicalPath(name, folderName);
 
         if (!isVault && await File(targetPath).exists()) {
           await File(targetPath).delete();
@@ -867,7 +869,10 @@ class DesktopBackupServer {
 
       final session = _sessions.remove(sessionId);
       if (session == null) {
-        return _json({'success': false, 'error': 'Unknown session'}, status: 404);
+        return _json({
+          'success': false,
+          'error': 'Unknown session',
+        }, status: 404);
       }
 
       await session.finalize();
@@ -877,16 +882,24 @@ class DesktopBackupServer {
         if (await file.exists()) {
           await file.delete();
         }
-        return _json({'success': false, 'error': 'Checksum mismatch'}, status: 400);
+        return _json({
+          'success': false,
+          'error': 'Checksum mismatch',
+        }, status: 400);
       }
 
       if (session.isVault) {
         if (_vaultEncryptionKey == null) {
-          return _json({'success': false, 'error': 'Vault key unavailable'}, status: 400);
+          return _json({
+            'success': false,
+            'error': 'Vault key unavailable',
+          }, status: 400);
         }
 
-        final vaultRelative =
-            VaultArchiveService.vaultRelativePath(session.folderName, session.fileName);
+        final vaultRelative = VaultArchiveService.vaultRelativePath(
+          session.folderName,
+          session.fileName,
+        );
         final vaultPath = p.join(backupRoot, vaultRelative);
 
         await _vaultArchive.encryptToVaultArchive(
@@ -898,7 +911,9 @@ class DesktopBackupServer {
 
         await File(session.targetPath).delete();
         try {
-          await Directory(p.dirname(session.targetPath)).delete(recursive: true);
+          await Directory(
+            p.dirname(session.targetPath),
+          ).delete(recursive: true);
         } catch (_) {}
 
         await _recordInventoryEntry(
@@ -962,20 +977,22 @@ class DesktopBackupServer {
       final limit = int.tryParse(params['limit'] ?? '50') ?? 50;
       final cursor = int.tryParse(params['cursor'] ?? '0') ?? 0;
 
-      final entries = _inventory.allEntries
-          .where((entry) => entry.mediaId != null)
-          .where(
-            (entry) =>
-                folderFilter == null ||
-                folderFilter.isEmpty ||
-                entry.folderName == folderFilter,
-          )
-          .toList()
-        ..sort((a, b) => (b.syncedAtMs ?? 0).compareTo(a.syncedAtMs ?? 0));
+      final entries =
+          _inventory.allEntries
+              .where((entry) => entry.mediaId != null)
+              .where(
+                (entry) =>
+                    folderFilter == null ||
+                    folderFilter.isEmpty ||
+                    entry.folderName == folderFilter,
+              )
+              .toList()
+            ..sort((a, b) => (b.syncedAtMs ?? 0).compareTo(a.syncedAtMs ?? 0));
 
       final page = entries.skip(cursor).take(limit).toList();
-      final nextCursor =
-          cursor + page.length < entries.length ? '${cursor + page.length}' : null;
+      final nextCursor = cursor + page.length < entries.length
+          ? '${cursor + page.length}'
+          : null;
 
       final folderCounts = <String, ({int count, bool isVault})>{};
       for (final entry in entries) {
@@ -1019,7 +1036,10 @@ class DesktopBackupServer {
     }
   }
 
-  Future<Response> _handleLibraryThumbnail(Request request, String mediaIdStr) async {
+  Future<Response> _handleLibraryThumbnail(
+    Request request,
+    String mediaIdStr,
+  ) async {
     final authError = await _requireAuth(request);
     if (authError != null) return authError;
 
@@ -1033,7 +1053,8 @@ class DesktopBackupServer {
       return Response.notFound('Not found');
     }
 
-    if (entry.isVault && !_isValidVaultToken(request.url.queryParameters['vaultToken'])) {
+    if (entry.isVault &&
+        !_isValidVaultToken(request.url.queryParameters['vaultToken'])) {
       return Response.forbidden('Vault token required');
     }
 

@@ -87,7 +87,8 @@ class _AlbumCoverPickerSheet extends ConsumerWidget {
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    final isCurrent = currentCover != null &&
+                    final isCurrent =
+                        currentCover != null &&
                         currentCover.isNotEmpty &&
                         currentCover == item.uri;
 
@@ -142,10 +143,7 @@ class _CoverPickerTile extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                MediaThumbnail(
-                  assetId: item.uri,
-                  showVideoBadge: item.isVideo,
-                ),
+                MediaThumbnail(assetId: item.uri, showVideoBadge: item.isVideo),
                 if (isCurrent)
                   Align(
                     alignment: Alignment.topRight,

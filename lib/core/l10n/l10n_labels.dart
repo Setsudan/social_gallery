@@ -77,7 +77,6 @@ String appLocalePreferenceLabel(
   };
 }
 
-
 String organizeSwipeActionLabel(
   AppLocalizations l10n,
   OrganizeSwipeAction action,

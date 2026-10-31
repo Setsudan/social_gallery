@@ -70,7 +70,8 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
   }
 
   List<Widget> _overlayBadges({required bool isVideo}) {
-    final showBackup = !usesFilesystemGallery &&
+    final showBackup =
+        !usesFilesystemGallery &&
         (widget.backupState != null || widget.cloudBackedUp);
     return [
       if (showBackup)
@@ -101,8 +102,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
 
   Widget _buildEntityThumb(AssetEntity entity) {
     final isVideo = widget.showVideoBadge || AssetMediaLoader.isVideo(entity);
-    final placeholder =
-        Theme.of(context).colorScheme.surfaceContainerHigh;
+    final placeholder = Theme.of(context).colorScheme.surfaceContainerHigh;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -168,7 +168,8 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
   }
 
   Widget _buildWindowsThumbnail(BuildContext context) {
-    final isWinVideo = widget.assetId.toLowerCase().endsWith('.mp4') ||
+    final isWinVideo =
+        widget.assetId.toLowerCase().endsWith('.mp4') ||
         widget.assetId.toLowerCase().endsWith('.mov') ||
         widget.assetId.toLowerCase().endsWith('.mkv') ||
         widget.assetId.toLowerCase().endsWith('.webm') ||
@@ -182,9 +183,7 @@ class _MediaThumbnailState extends State<MediaThumbnail> {
         if (isWinVideo) {
           thumbnail = ColoredBox(
             color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            child: const Center(
-              child: Icon(Icons.videocam_outlined, size: 36),
-            ),
+            child: const Center(child: Icon(Icons.videocam_outlined, size: 36)),
           );
         } else {
           thumbnail = SizedBox.expand(

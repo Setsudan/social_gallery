@@ -54,10 +54,7 @@ class HealthResponse {
 class PairRequest {
   const PairRequest({required this.pin, required this.deviceName});
 
-  Map<String, dynamic> toJson() => {
-    'pin': pin,
-    'deviceName': deviceName,
-  };
+  Map<String, dynamic> toJson() => {'pin': pin, 'deviceName': deviceName};
 
   final String pin;
   final String deviceName;
@@ -270,10 +267,7 @@ enum BackupReconcileStatus {
 }
 
 class BackupReconcileResult {
-  const BackupReconcileResult({
-    required this.mediaId,
-    required this.status,
-  });
+  const BackupReconcileResult({required this.mediaId, required this.status});
 
   factory BackupReconcileResult.fromJson(Map<String, dynamic> json) {
     return BackupReconcileResult(
@@ -316,10 +310,7 @@ enum BackupVerifyStatus {
 }
 
 class BackupVerifyResult {
-  const BackupVerifyResult({
-    required this.mediaId,
-    required this.status,
-  });
+  const BackupVerifyResult({required this.mediaId, required this.status});
 
   factory BackupVerifyResult.fromJson(Map<String, dynamic> json) {
     return BackupVerifyResult(
@@ -501,10 +492,7 @@ class LibraryCatalogResponse {
 }
 
 class LibraryStreamInitRequest {
-  const LibraryStreamInitRequest({
-    required this.mediaId,
-    this.vaultToken,
-  });
+  const LibraryStreamInitRequest({required this.mediaId, this.vaultToken});
 
   Map<String, dynamic> toJson() => {
     'mediaId': mediaId,

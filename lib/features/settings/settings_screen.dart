@@ -83,9 +83,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await ref.read(cacheServiceProvider).clearCache();
       await _loadCacheSize();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.snackbarCacheCleared)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.snackbarCacheCleared)));
       }
     }
   }
@@ -104,7 +104,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   double _animationSpeedFromIndex(int index) {
-    return _animationSpeedSteps[index.clamp(0, _animationSpeedSteps.length - 1)];
+    return _animationSpeedSteps[index.clamp(
+      0,
+      _animationSpeedSteps.length - 1,
+    )];
   }
 
   Future<void> _pickLanguage(AppLocalePreference current) async {
@@ -193,8 +196,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   for (final preset in AccentPresets.all)
                     _AccentSwatch(
                       preset: preset,
-                      selected:
-                          preset.color.toARGB32() == current.toARGB32(),
+                      selected: preset.color.toARGB32() == current.toARGB32(),
                       onTap: () {
                         AppHaptics.medium();
                         ref
@@ -257,7 +259,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(l10n.settingsFontSize, style: theme.textTheme.titleLarge),
+                  Text(
+                    l10n.settingsFontSize,
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: OneUiSpacing.sm),
                   Text(
                     l10n.settingsFontSizeDescription,
@@ -353,7 +358,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       Expanded(
                         child: Slider(
-                          value: _animationSpeedIndex(animationSpeed).toDouble(),
+                          value: _animationSpeedIndex(
+                            animationSpeed,
+                          ).toDouble(),
                           min: 0,
                           max: (_animationSpeedSteps.length - 1).toDouble(),
                           divisions: _animationSpeedSteps.length - 1,
@@ -535,7 +542,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(l10n.settingsBatchSize, style: theme.textTheme.titleLarge),
+                  Text(
+                    l10n.settingsBatchSize,
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: OneUiSpacing.sm),
                   Text(
                     l10n.settingsBatchSizeDescription,
@@ -587,17 +597,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (!mounted) return;
 
       if (!saved) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorCouldNotUseFolder)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.errorCouldNotUseFolder)));
         return;
       }
 
       setState(() {});
       unawaited(ref.read(gallerySyncProvider.notifier).run(force: true));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.snackbarGalleryRootUpdated)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.snackbarGalleryRootUpdated)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -638,42 +648,76 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           builder: (context, setSheetState) {
             Widget directionTile(OrganizeSwipeDirection direction) {
               final action = draft.actionFor(direction);
+              final isRemappable = OrganizeGestureMapping.isRemappable(
+                direction,
+              );
               return OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,
                 title: organizeSwipeDirectionLabel(l10n, direction),
                 value: organizeSwipeActionLabel(l10n, action),
+                subtitle: !isRemappable
+                    ? l10n.settingsOrganizeGesturesLocked
+                    : null,
                 showDivider: direction != OrganizeSwipeDirection.down,
-                onTap: () async {
-                  final picked =
-                      await showOneUiSettingsPicker<OrganizeSwipeAction>(
-                    context: context,
-                    title: organizeSwipeDirectionLabel(l10n, direction),
-                    selected: action,
-                    options: [
-                      for (final value in OrganizeSwipeAction.values)
-                        OneUiPickerOption(
-                          value: value,
-                          label: organizeSwipeActionLabel(l10n, value),
-                          subtitle: () {
-                            if (value == action) {
-                              return null;
-                            }
-                            final owner = draft.directionFor(value);
-                            if (owner == null || owner == direction) {
-                              return null;
-                            }
-                            return l10n.settingsOrganizeGesturesSwapHint(
-                              organizeSwipeDirectionLabel(l10n, owner),
+                showChevron: isRemappable,
+                trailing: !isRemappable
+                    ? Icon(
+                        Icons.lock_outline,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      )
+                    : null,
+                onTap: isRemappable
+                    ? () async {
+                        final remappableActions = OrganizeSwipeAction.values
+                            .where((a) => a != OrganizeSwipeAction.move)
+                            .toList();
+                        final picked =
+                            await showOneUiSettingsPicker<OrganizeSwipeAction>(
+                              context: context,
+                              title: organizeSwipeDirectionLabel(
+                                l10n,
+                                direction,
+                              ),
+                              selected: action,
+                              options: [
+                                for (final value in remappableActions)
+                                  OneUiPickerOption(
+                                    value: value,
+                                    label: organizeSwipeActionLabel(
+                                      l10n,
+                                      value,
+                                    ),
+                                    subtitle: () {
+                                      if (value == action) {
+                                        return null;
+                                      }
+                                      final owner = draft.directionFor(value);
+                                      if (owner == null || owner == direction) {
+                                        return null;
+                                      }
+                                      if (!OrganizeGestureMapping.isRemappable(
+                                        owner,
+                                      )) {
+                                        return null;
+                                      }
+                                      return l10n
+                                          .settingsOrganizeGesturesSwapHint(
+                                            organizeSwipeDirectionLabel(
+                                              l10n,
+                                              owner,
+                                            ),
+                                          );
+                                    }(),
+                                  ),
+                              ],
                             );
-                          }(),
-                        ),
-                    ],
-                  );
-                  if (picked == null || picked == action) return;
-                  setSheetState(() {
-                    draft = draft.remap(direction, picked);
-                  });
-                },
+                        if (picked == null || picked == action) return;
+                        setSheetState(() {
+                          draft = draft.remap(direction, picked);
+                        });
+                      }
+                    : null,
               );
             }
 
@@ -702,8 +746,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Text(
                     l10n.settingsOrganizeGesturesSubtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 if (!draft.isBijective)
@@ -717,8 +761,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: Text(
                       l10n.settingsOrganizeGesturesDuplicateError,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ),
                 directionTile(OrganizeSwipeDirection.left),
@@ -757,12 +801,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       },
     );
-    if (saved == true &&
-        draft != current &&
-        draft.isBijective &&
-        mounted) {
+    if (saved == true && draft != current && draft.isBijective && mounted) {
       AppHaptics.medium();
-      await ref.read(settingsProvider.notifier).setOrganizeGestureMapping(draft);
+      await ref
+          .read(settingsProvider.notifier)
+          .setOrganizeGestureMapping(draft);
     }
   }
 
@@ -805,7 +848,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.language,
                 title: l10n.settingsLanguage,
-                value: appLocalePreferenceLabel(l10n, settings.localePreference),
+                value: appLocalePreferenceLabel(
+                  l10n,
+                  settings.localePreference,
+                ),
                 onTap: () => _pickLanguage(settings.localePreference),
               ),
               OneUiSettingsTile(
@@ -877,7 +923,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: settings.galleryViewMode,
                   onChanged: (value) {
                     AppHaptics.medium();
-                    ref.read(settingsProvider.notifier).setGalleryViewMode(value);
+                    ref
+                        .read(settingsProvider.notifier)
+                        .setGalleryViewMode(value);
                   },
                 ),
                 showChevron: false,
@@ -967,7 +1015,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.trash,
                 title: l10n.settingsTrashRetention,
-                value: l10n.settingsTrashRetentionDays(settings.trashRetentionDays),
+                value: l10n.settingsTrashRetentionDays(
+                  settings.trashRetentionDays,
+                ),
                 onTap: _pickTrashRetention,
               ),
               OneUiSettingsTile(
@@ -991,7 +1041,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               OneUiSettingsTile(
                 icon: OneUiSettingsIcon.storage,
                 title: l10n.settingsCacheSizeLimit,
-                value: l10n.settingsCacheSizeLimitValue(settings.cacheSizeLimitMb),
+                value: l10n.settingsCacheSizeLimitValue(
+                  settings.cacheSizeLimitMb,
+                ),
                 showDivider: true,
                 onTap: _pickCacheLimit,
               ),
@@ -1103,11 +1155,7 @@ class _DebugBuildWarningCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                size: 22,
-                color: warningColor,
-              ),
+              Icon(Icons.warning_amber_rounded, size: 22, color: warningColor),
               const SizedBox(width: OneUiSpacing.sm),
               Expanded(
                 child: Column(
@@ -1165,7 +1213,9 @@ class _AccentSwatch extends StatelessWidget {
             color: preset.color,
             shape: BoxShape.circle,
             border: Border.all(
-              color: selected ? theme.colorScheme.onSurface : Colors.transparent,
+              color: selected
+                  ? theme.colorScheme.onSurface
+                  : Colors.transparent,
               width: 2,
             ),
           ),

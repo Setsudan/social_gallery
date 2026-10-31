@@ -2430,4 +2430,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudArchiveDecryptFailed => 'Could not decrypt this item';
+
+  @override
+  String get settingsOrganizeGesturesLocked =>
+      'Fixed action (cannot be changed)';
+
+  @override
+  String get duplicateReviewSubtitleImproved =>
+      'Tap to toggle deletion, long-press to choose as keeper';
+
+  @override
+  String get duplicateDeleteConfirmTitle => 'Delete duplicates?';
+
+  @override
+  String duplicateDeleteConfirmMessage(String keeperName, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count duplicates',
+      one: '1 duplicate',
+    );
+    return 'Keep \"$keeperName\" and permanently delete $_temp0?';
+  }
+
+  @override
+  String get duplicateDeleteWarning =>
+      'This cannot be undone. Files will be permanently removed from your device.';
+
+  @override
+  String duplicateDeleteAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return 'Delete $_temp0';
+  }
+
+  @override
+  String get duplicateBestLabel => 'Best';
+
+  @override
+  String get duplicateKeeperExplanation =>
+      'We suggest which photo to keep based on date, file size, and resolution.';
+
+  @override
+  String get duplicateReasonNewest => 'Selected: Newest photo';
+
+  @override
+  String get duplicateReasonLargestFile => 'Selected: Largest file size';
+
+  @override
+  String get duplicateReasonHighestResolution => 'Selected: Highest resolution';
+
+  @override
+  String get duplicateReasonFirst => 'Selected: First in group';
+
+  @override
+  String get duplicateTapToToggle => 'Tap to toggle deletion';
+
+  @override
+  String get duplicateLongPressToKeep => 'Long-press to keep instead';
+
+  @override
+  String get duplicateKeeperInfoSnack =>
+      'This is marked as the best photo to keep';
 }

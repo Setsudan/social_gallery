@@ -13,17 +13,14 @@ import 'package:social_gallery/domain/models/media_item.dart';
 export 'package:social_gallery/core/backup/backup_checksum_cache.dart';
 
 /// Phase of a single-file upload on the mobile client.
-enum BackupUploadPhase {
-  preparing,
-  uploading,
-  completing,
-}
+enum BackupUploadPhase { preparing, uploading, completing }
 
-typedef BackupUploadProgress = void Function({
-  required BackupUploadPhase phase,
-  required int bytesSent,
-  required int bytesTotal,
-});
+typedef BackupUploadProgress =
+    void Function({
+      required BackupUploadPhase phase,
+      required int bytesSent,
+      required int bytesTotal,
+    });
 
 typedef BackupUploadStallHandler = void Function(String fileName);
 
@@ -219,9 +216,7 @@ class DesktopBackupClient {
   }) async {
     for (var attempt = 0; attempt < _maxChunkAttempts; attempt++) {
       if (attempt > 0) {
-        await Future<void>.delayed(
-          Duration(seconds: attempt == 1 ? 2 : 5),
-        );
+        await Future<void>.delayed(Duration(seconds: attempt == 1 ? 2 : 5));
       }
 
       var stallNotified = false;
@@ -266,8 +261,10 @@ class DesktopBackupClient {
             _uri('/v1/backup/complete'),
             headers: _headers,
             body: BackupProtocol.encodeJson(
-              BackupCompleteRequest(sessionId: sessionId, checksum: checksum)
-                  .toJson(),
+              BackupCompleteRequest(
+                sessionId: sessionId,
+                checksum: checksum,
+              ).toJson(),
             ),
           )
           .timeout(const Duration(seconds: 30));
@@ -439,7 +436,8 @@ class DesktopBackupClient {
         sessionId: session.sessionId,
         checksum: checksum,
       );
-      return complete?.matchesAck(mediaId: item.id, checksum: checksum) ?? false;
+      return complete?.matchesAck(mediaId: item.id, checksum: checksum) ??
+          false;
     }
 
     final uploaded = await _streamFileUpload(

@@ -55,7 +55,8 @@ class FolderWidgetConfig {
       folderPath: path,
       folderName: prefs.getString(_key(widgetId, 'folderName')) ?? path,
       intervalMinutes: prefs.getInt(_key(widgetId, 'intervalMinutes')) ?? 30,
-      refreshOnUnlock: prefs.getBool(_key(widgetId, 'refreshOnUnlock')) ?? false,
+      refreshOnUnlock:
+          prefs.getBool(_key(widgetId, 'refreshOnUnlock')) ?? false,
       pickMode: prefs.getString(_key(widgetId, 'pickMode')) == 'recent'
           ? WidgetPickMode.recent
           : WidgetPickMode.random,
@@ -79,8 +80,7 @@ class FolderWidgetConfig {
 class WidgetUpdateService {
   WidgetUpdateService._();
 
-  static bool get isSupported =>
-      !kIsWeb && Platform.isAndroid;
+  static bool get isSupported => !kIsWeb && Platform.isAndroid;
 
   static Future<void> updateAll() async {
     if (!isSupported) return;
@@ -93,7 +93,9 @@ class WidgetUpdateService {
   static Future<void> updateFolderWidgets() async {
     if (!isSupported) return;
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith('sg_folder_widget_'));
+    final keys = prefs.getKeys().where(
+      (k) => k.startsWith('sg_folder_widget_'),
+    );
     final ids = <int>{};
     for (final key in keys) {
       final parts = key.split('_');
@@ -160,7 +162,9 @@ class WidgetUpdateService {
     if (!isSupported) return;
     final db = AppDatabase();
     try {
-      final prefs = PreferencesRepository(await SharedPreferences.getInstance());
+      final prefs = PreferencesRepository(
+        await SharedPreferences.getInstance(),
+      );
       final repo = MediaRepository(db, PhotoManagerDatasource(prefs), prefs);
       final pool = await repo.getOrganizeMediaPool();
       // Approximate unprocessed as home-feed pool size for glance.
@@ -194,7 +198,9 @@ class WidgetUpdateService {
   }) async {
     final db = AppDatabase();
     try {
-      final prefs = PreferencesRepository(await SharedPreferences.getInstance());
+      final prefs = PreferencesRepository(
+        await SharedPreferences.getInstance(),
+      );
       final repo = MediaRepository(db, PhotoManagerDatasource(prefs), prefs);
       MediaItem? item;
       switch (source) {

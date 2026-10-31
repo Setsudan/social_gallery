@@ -107,7 +107,9 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
     if (state.isRunning && !force) return;
 
     if (!force) {
-      final lastSync = _ref.read(preferencesRepositoryProvider).lastGallerySyncAt;
+      final lastSync = _ref
+          .read(preferencesRepositoryProvider)
+          .lastGallerySyncAt;
       if (lastSync != null &&
           DateTime.now().difference(lastSync) < _minSyncInterval) {
         return;
@@ -186,9 +188,15 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
       _refreshFeeds(background: true);
       invalidateAnalysisProvidersFromRef(_ref);
       invalidateLocationProvidersFromRef(_ref);
-      _ref.read(locationIndexControllerProvider.notifier).scheduleAfterLibrarySync();
-      _ref.read(mediaTaggingControllerProvider.notifier).scheduleAfterLibrarySync();
-      unawaited(_ref.read(mediaRepositoryProvider).backfillScreenshotContentKinds());
+      _ref
+          .read(locationIndexControllerProvider.notifier)
+          .scheduleAfterLibrarySync();
+      _ref
+          .read(mediaTaggingControllerProvider.notifier)
+          .scheduleAfterLibrarySync();
+      unawaited(
+        _ref.read(mediaRepositoryProvider).backfillScreenshotContentKinds(),
+      );
       await _ref
           .read(preferencesRepositoryProvider)
           .setLastGallerySyncAt(DateTime.now());
@@ -232,7 +240,9 @@ class GallerySyncController extends StateNotifier<GallerySyncState> {
 
   Future<void> _warmRecentThumbnails() async {
     try {
-      final items = await _ref.read(mediaRepositoryProvider).getGalleryMediaPage(0);
+      final items = await _ref
+          .read(mediaRepositoryProvider)
+          .getGalleryMediaPage(0);
       final ids = items.map((item) => item.uri);
       await _ref.read(thumbnailWarmupServiceProvider).warmAssetIds(ids);
     } catch (_) {}
@@ -253,5 +263,5 @@ final syncStateProvider = Provider<bool>((ref) {
 /// Riverpod provider for [GallerySyncController] sync state and actions.
 final gallerySyncProvider =
     StateNotifierProvider<GallerySyncController, GallerySyncState>(
-  (ref) => GallerySyncController(ref),
-);
+      (ref) => GallerySyncController(ref),
+    );

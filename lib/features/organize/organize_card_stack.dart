@@ -13,10 +13,11 @@ import 'package:social_gallery/features/organize/organize_folder_strip.dart';
 
 typedef OrganizeSwipeCallback = void Function(OrganizeSwipeDirection direction);
 typedef OrganizeFolderDropCallback = void Function(String folderPath);
+typedef OrganizeTapPreviewCallback = void Function(MediaItem item);
 
 enum _OverlayBand { none, left, right, up, down }
 
-/// Draggable card stack for organize: swipe gestures and folder drop strip.
+/// Draggable card stack for organize: swipe gestures, folder drop strip, and tap preview.
 class OrganizeCardStack extends ConsumerStatefulWidget {
   const OrganizeCardStack({
     super.key,
@@ -25,6 +26,7 @@ class OrganizeCardStack extends ConsumerStatefulWidget {
     required this.onSwipe,
     this.onFolderDrop,
     this.onFolderDragChanged,
+    this.onTapPreview,
   });
 
   final List<MediaItem> cards;
@@ -32,6 +34,7 @@ class OrganizeCardStack extends ConsumerStatefulWidget {
   final OrganizeSwipeCallback onSwipe;
   final OrganizeFolderDropCallback? onFolderDrop;
   final ValueChanged<bool>? onFolderDragChanged;
+  final OrganizeTapPreviewCallback? onTapPreview;
 
   @override
   ConsumerState<OrganizeCardStack> createState() => _OrganizeCardStackState();
@@ -83,10 +86,7 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
               _isDraggingDown ? 140 : 96,
             ),
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 380,
-                maxHeight: maxHeight,
-              ),
+              constraints: BoxConstraints(maxWidth: 380, maxHeight: maxHeight),
               child: AspectRatio(
                 aspectRatio: 3 / 4,
                 child: Stack(
@@ -154,8 +154,10 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
               final action = _mapping.actionFor(direction);
               final color = _colorForAction(action);
               if (color == null) return const SizedBox.shrink();
-              final actionLabel =
-                  organizeSwipeActionLabel(context.l10n, action);
+              final actionLabel = organizeSwipeActionLabel(
+                context.l10n,
+                action,
+              );
               return IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -165,14 +167,12 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
                   child: Center(
                     child: Text(
                       actionLabel,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                             shadows: const [
-                              Shadow(
-                                blurRadius: 8,
-                                color: Colors.black54,
-                              ),
+                              Shadow(blurRadius: 8, color: Colors.black54),
                             ],
                           ),
                     ),
@@ -193,33 +193,31 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
           '${l10n.organizeSwipeHintDown(organizeSwipeActionLabel(l10n, mapping.down))}';
       card = Semantics(
         explicitChildNodes: true,
-        label: l10n.organizeCardSemanticLabel(item.displayName, item.folderName),
+        label: l10n.organizeCardSemanticLabel(
+          item.displayName,
+          item.folderName,
+        ),
         hint: semanticHint,
         child: GestureDetector(
-        onPanUpdate: _onPanUpdate,
-        onPanEnd: (details) => _handleRelease(details.velocity),
-        child: ValueListenableBuilder<Offset>(
-          valueListenable: _dragOffset,
-          builder: (context, offset, child) {
-            return Transform.translate(
-              offset: offset,
-              child: Transform.rotate(
-                angle: offset.dx * 0.001,
-                child: child,
-              ),
-            );
-          },
-          child: card,
+          onTap: () => widget.onTapPreview?.call(item),
+          onPanUpdate: _onPanUpdate,
+          onPanEnd: (details) => _handleRelease(details.velocity),
+          child: ValueListenableBuilder<Offset>(
+            valueListenable: _dragOffset,
+            builder: (context, offset, child) {
+              return Transform.translate(
+                offset: offset,
+                child: Transform.rotate(angle: offset.dx * 0.001, child: child),
+              );
+            },
+            child: card,
+          ),
         ),
-      ),
       );
     } else {
       card = Transform.scale(
         scale: scale,
-        child: Transform.translate(
-          offset: Offset(0, yOffset),
-          child: card,
-        ),
+        child: Transform.translate(offset: Offset(0, yOffset), child: card),
       );
     }
 
@@ -254,7 +252,10 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
   /// Overlay bands follow the drag axis. Folder-strip drag ([folderStripActive])
   /// forces the down band (mapped move). When down is remapped away from move,
   /// a downward drag still gets a down overlay via the dy threshold.
-  _OverlayBand _bandForOffset(Offset offset, {required bool folderStripActive}) {
+  _OverlayBand _bandForOffset(
+    Offset offset, {
+    required bool folderStripActive,
+  }) {
     if (folderStripActive) return _OverlayBand.down;
     if (offset.dx < -_colorThreshold) return _OverlayBand.left;
     if (offset.dx > _colorThreshold) return _OverlayBand.right;
@@ -266,8 +267,7 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
   OrganizeGestureMapping get _mapping =>
       ref.read(settingsProvider).organizeGestureMapping;
 
-  bool get _downIsMove =>
-      _mapping.down == OrganizeSwipeAction.move;
+  bool get _downIsMove => _mapping.down == OrganizeSwipeAction.move;
 
   Color? _colorForAction(OrganizeSwipeAction action) {
     return switch (action) {
@@ -287,6 +287,7 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
       _OverlayBand.none => OrganizeSwipeDirection.down,
     };
   }
+
   void _handleRelease(Velocity velocity) {
     final dx = _dragOffset.value.dx;
     final dy = _dragOffset.value.dy;

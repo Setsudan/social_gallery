@@ -20,12 +20,11 @@ class ResolvedPlace {
   final String? adminArea;
   final int geocodedAt;
 
-  String get displayLocality =>
-      locality?.trim().isNotEmpty == true
-          ? locality!.trim()
-          : adminArea?.trim().isNotEmpty == true
-          ? adminArea!.trim()
-          : '';
+  String get displayLocality => locality?.trim().isNotEmpty == true
+      ? locality!.trim()
+      : adminArea?.trim().isNotEmpty == true
+      ? adminArea!.trim()
+      : '';
 
   String get displayCountry =>
       countryName?.trim().isNotEmpty == true ? countryName!.trim() : '';

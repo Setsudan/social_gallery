@@ -35,8 +35,7 @@ class OcrIndexingController extends StateNotifier<OcrIndexingScanState> {
   final Ref _ref;
   static const _maxOcrChars = 4000;
 
-  bool get isAvailable =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get isAvailable => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   Future<void> startScan() async {
     if (state.isScanning) return;
@@ -60,10 +59,7 @@ class OcrIndexingController extends StateNotifier<OcrIndexingScanState> {
           .where((item) => !(cached[item.id]?.hasOcr ?? false))
           .toList();
 
-      state = OcrIndexingScanState(
-        isScanning: true,
-        total: pending.length,
-      );
+      state = OcrIndexingScanState(isScanning: true, total: pending.length);
 
       final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
       var scanned = 0;
@@ -76,18 +72,16 @@ class OcrIndexingController extends StateNotifier<OcrIndexingScanState> {
           final truncated = ocrText == null || ocrText.isEmpty
               ? ''
               : (ocrText.length > _maxOcrChars
-                  ? ocrText.substring(0, _maxOcrChars)
-                  : ocrText);
+                    ? ocrText.substring(0, _maxOcrChars)
+                    : ocrText);
 
-          final result = (existing ??
-                  MediaAnalysisResult(
-                    mediaId: item.id,
-                    scannedAt: now,
-                  ))
-              .copyWith(
-                ocrText: truncated.isEmpty ? null : truncated,
-                ocrScannedAt: now,
-              );
+          final result =
+              (existing ??
+                      MediaAnalysisResult(mediaId: item.id, scannedAt: now))
+                  .copyWith(
+                    ocrText: truncated.isEmpty ? null : truncated,
+                    ocrScannedAt: now,
+                  );
           await analysisRepo.saveResult(result);
 
           if (truncated.isNotEmpty &&
@@ -121,17 +115,11 @@ class OcrIndexingController extends StateNotifier<OcrIndexingScanState> {
         total: pending.length,
       );
     } catch (e) {
-      state = OcrIndexingScanState(
-        isScanning: false,
-        error: e.toString(),
-      );
+      state = OcrIndexingScanState(isScanning: false, error: e.toString());
     }
   }
 
-  Future<String?> _recognize(
-    TextRecognizer recognizer,
-    MediaItem item,
-  ) async {
+  Future<String?> _recognize(TextRecognizer recognizer, MediaItem item) async {
     try {
       File? tempFile;
       String path;
@@ -148,9 +136,7 @@ class OcrIndexingController extends StateNotifier<OcrIndexingScanState> {
             const ThumbnailSize(1024, 1024),
           );
           if (bytes == null || bytes.isEmpty) return null;
-          tempFile = File(
-            '${Directory.systemTemp.path}/sg_ocr_${item.id}.jpg',
-          );
+          tempFile = File('${Directory.systemTemp.path}/sg_ocr_${item.id}.jpg');
           await tempFile.writeAsBytes(bytes);
           path = tempFile.path;
         } else {
@@ -172,5 +158,5 @@ class OcrIndexingController extends StateNotifier<OcrIndexingScanState> {
 
 final ocrIndexingProvider =
     StateNotifierProvider<OcrIndexingController, OcrIndexingScanState>(
-  (ref) => OcrIndexingController(ref),
-);
+      (ref) => OcrIndexingController(ref),
+    );

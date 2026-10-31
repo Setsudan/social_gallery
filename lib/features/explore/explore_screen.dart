@@ -76,33 +76,25 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     });
   }
 
-  Future<void> _bulkTrash() => bulkTrash(
-        ref,
-        context,
-        _selectedIds,
-        onDone: _clearSelectionAndRefresh,
-      );
+  Future<void> _bulkTrash() =>
+      bulkTrash(ref, context, _selectedIds, onDone: _clearSelectionAndRefresh);
 
-  Future<void> _bulkMove() => bulkMove(
-        ref,
-        context,
-        _selectedIds,
-        onDone: _clearSelectionAndRefresh,
-      );
+  Future<void> _bulkMove() =>
+      bulkMove(ref, context, _selectedIds, onDone: _clearSelectionAndRefresh);
 
   Future<void> _bulkCreateAlbumAndMove() => createAlbumAndMove(
-        ref,
-        context,
-        _selectedIds,
-        onDone: _clearSelectionAndRefresh,
-      );
+    ref,
+    context,
+    _selectedIds,
+    onDone: _clearSelectionAndRefresh,
+  );
 
   Future<void> _bulkFavorite(bool favorite) => bulkFavorite(
-        ref,
-        _selectedIds,
-        favorite,
-        onDone: _clearSelectionAndRefresh,
-      );
+    ref,
+    _selectedIds,
+    favorite,
+    onDone: _clearSelectionAndRefresh,
+  );
 
   @override
   void initState() {
@@ -117,9 +109,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       _scrollController.position,
       isLoading: paginated.isLoading,
       hasMore: paginated.hasMore,
-      loadMore: () => ref
-          .read(explorePaginatedProvider(_searchQuery).notifier)
-          .loadMore(),
+      loadMore: () =>
+          ref.read(explorePaginatedProvider(_searchQuery).notifier).loadMore(),
     );
   }
 
@@ -179,10 +170,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       localize: (key) => _localizeSearchKey(key),
     );
     if (recentLabel.isNotEmpty) {
-      await ref.read(recentSearchesProvider.notifier).add(
-            recentLabel,
-            thumbnailUri: thumbnailUri,
-          );
+      await ref
+          .read(recentSearchesProvider.notifier)
+          .add(recentLabel, thumbnailUri: thumbnailUri);
     }
   }
 
@@ -265,111 +255,113 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         return false;
       },
       child: PopScope(
-      canPop: !inSelectionMode && !_isSearching,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && inSelectionMode) {
-          setState(_selectedIds.clear);
-        } else if (!didPop && _isSearching) {
-          _handleSearchBack();
-        }
-      },
-      child: Scaffold(
-      extendBody: true,
-      appBar: AnimatedMediaSelectionAppBar(
-        visible: inSelectionMode,
-        selectedCount: _selectedIds.length,
-        duration: motion.fade,
-        curve: motion.enterCurve,
-        onCancel: () => setState(_selectedIds.clear),
-        onFavorite: () => _bulkFavorite(true),
-        onUnfavorite: () => _bulkFavorite(false),
-        onMove: _bulkMove,
-        onTrash: _bulkTrash,
-        onCreateAlbum: _bulkCreateAlbumAndMove,
-      ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        canPop: !inSelectionMode && !_isSearching,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && inSelectionMode) {
+            setState(_selectedIds.clear);
+          } else if (!didPop && _isSearching) {
+            _handleSearchBack();
+          }
+        },
+        child: Scaffold(
+          extendBody: true,
+          appBar: AnimatedMediaSelectionAppBar(
+            visible: inSelectionMode,
+            selectedCount: _selectedIds.length,
+            duration: motion.fade,
+            curve: motion.enterCurve,
+            onCancel: () => setState(_selectedIds.clear),
+            onFavorite: () => _bulkFavorite(true),
+            onUnfavorite: () => _bulkFavorite(false),
+            onMove: _bulkMove,
+            onTrash: _bulkTrash,
+            onCreateAlbum: _bulkCreateAlbumAndMove,
+          ),
+          body: Stack(
+            fit: StackFit.expand,
             children: [
-              if (!inSelectionMode && _isSearching)
-                ExploreActiveSearchBar(
-                  query: _searchQuery,
-                  onBack: _handleSearchBack,
-                  onClear: _handleSearchBack,
-                  onTapQuery: _openSearchOverlay,
-                  onRemoveLabel: () => _applySearch(
-                    _searchQuery.copyWith(clearLabels: true),
-                  ),
-                  onRemoveColor: () => _applySearch(
-                    _searchQuery.copyWith(clearColor: true),
-                  ),
-                ),
-              if (!inSelectionMode && tagging.isScanning)
-                MaterialBanner(
-                  content: Text(
-                    l10n.searchIndexingProgress(tagging.scanned, tagging.total),
-                  ),
-                  leading: const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  actions: const [SizedBox.shrink()],
-                ),
-              if (!inSelectionMode && _folderSuggestions.isNotEmpty)
-                SizedBox(
-                  height: 56,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: _folderSuggestions.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final folder = _folderSuggestions[index];
-                      return ActionChip(
-                        avatar: FolderAvatar(
-                          name: folder.name,
-                          size: 28,
-                          coverUri: folder.isLockedAccount
-                              ? null
-                              : folder.displayCoverUri,
-                          locked: folder.isLockedAccount,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!inSelectionMode && _isSearching)
+                    ExploreActiveSearchBar(
+                      query: _searchQuery,
+                      onBack: _handleSearchBack,
+                      onClear: _handleSearchBack,
+                      onTapQuery: _openSearchOverlay,
+                      onRemoveLabel: () => _applySearch(
+                        _searchQuery.copyWith(clearLabels: true),
+                      ),
+                      onRemoveColor: () =>
+                          _applySearch(_searchQuery.copyWith(clearColor: true)),
+                    ),
+                  if (!inSelectionMode && tagging.isScanning)
+                    MaterialBanner(
+                      content: Text(
+                        l10n.searchIndexingProgress(
+                          tagging.scanned,
+                          tagging.total,
                         ),
-                        label: Text(folder.name),
-                        onPressed: () => _openFolderProfile(folder),
-                      );
-                    },
+                      ),
+                      leading: const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      actions: const [SizedBox.shrink()],
+                    ),
+                  if (!inSelectionMode && _folderSuggestions.isNotEmpty)
+                    SizedBox(
+                      height: 56,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: _folderSuggestions.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final folder = _folderSuggestions[index];
+                          return ActionChip(
+                            avatar: FolderAvatar(
+                              name: folder.name,
+                              size: 28,
+                              coverUri: folder.isLockedAccount
+                                  ? null
+                                  : folder.displayCoverUri,
+                              locked: folder.isLockedAccount,
+                            ),
+                            label: Text(folder.name),
+                            onPressed: () => _openFolderProfile(folder),
+                          );
+                        },
+                      ),
+                    ),
+                  Expanded(child: _buildGrid()),
+                ],
+              ),
+              if (!inSelectionMode && !_isSearching)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: OneUiSpacing.sm,
+                        right: OneUiSpacing.pageHorizontal,
+                      ),
+                      child: FloatingActionButton.small(
+                        heroTag: 'explore_search',
+                        tooltip: l10n.tooltipSearch,
+                        onPressed: _openSearchOverlay,
+                        child: const Icon(Icons.search),
+                      ),
+                    ),
                   ),
                 ),
-              Expanded(child: _buildGrid()),
             ],
           ),
-          if (!inSelectionMode && !_isSearching)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: OneUiSpacing.sm,
-                    right: OneUiSpacing.pageHorizontal,
-                  ),
-                  child: FloatingActionButton.small(
-                    heroTag: 'explore_search',
-                    tooltip: l10n.tooltipSearch,
-                    onPressed: _openSearchOverlay,
-                    child: const Icon(Icons.search),
-                  ),
-                ),
-              ),
-            ),
-        ],
+        ),
       ),
-    ),
-    ),
     );
   }
 
@@ -392,8 +384,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         title: l10n.exploreEmptyTitle,
         message: _isSearching
             ? (indexing
-                ? l10n.exploreEmptyMessageIndexing
-                : l10n.exploreEmptyMessageSearch)
+                  ? l10n.exploreEmptyMessageIndexing
+                  : l10n.exploreEmptyMessageSearch)
             : l10n.exploreEmptyMessageNoSearch,
       );
     }
@@ -417,12 +409,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             selectedIds: _selectedIds,
             onSelectToggle: _toggleSelect,
             onLongPress: _startSelection,
-            onTap: (item) => openMediaViewer(
-              context,
-              ref,
-              items: _items,
-              item: item,
-            ),
+            onTap: (item) =>
+                openMediaViewer(context, ref, items: _items, item: item),
           )
         : ExploreMosaicGrid(
             controller: _scrollController,
@@ -431,12 +419,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             selectedIds: _selectedIds,
             onSelectToggle: _toggleSelect,
             onLongPress: _startSelection,
-            onTap: (item) => openMediaViewer(
-              context,
-              ref,
-              items: _items,
-              item: item,
-            ),
+            onTap: (item) =>
+                openMediaViewer(context, ref, items: _items, item: item),
           );
 
     return RefreshIndicator(

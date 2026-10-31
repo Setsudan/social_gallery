@@ -116,10 +116,7 @@ class DuplicateScanController extends StateNotifier<DuplicateScanState> {
         );
       }
 
-      final groups = findGroups(
-        candidates: candidates,
-        hashesById: hashesById,
-      );
+      final groups = findGroups(candidates: candidates, hashesById: hashesById);
 
       state = DuplicateScanState(
         isScanning: false,
@@ -142,10 +139,10 @@ class DuplicateScanController extends StateNotifier<DuplicateScanState> {
 
 final duplicateScanNotificationServiceProvider =
     Provider<DuplicateScanNotificationService>(
-  (ref) => DuplicateScanNotificationService(),
-);
+      (ref) => DuplicateScanNotificationService(),
+    );
 
 final duplicateScanControllerProvider =
     StateNotifierProvider<DuplicateScanController, DuplicateScanState>(
-  (ref) => DuplicateScanController(ref),
-);
+      (ref) => DuplicateScanController(ref),
+    );

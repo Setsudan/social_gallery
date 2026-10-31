@@ -40,19 +40,23 @@ class DeepOrganizeScreen extends ConsumerWidget {
           FilledButton.icon(
             onPressed: isBusy
                 ? null
-                : () =>
-                    ref.read(mediaAnalysisControllerProvider.notifier).startScan(),
+                : () => ref
+                      .read(mediaAnalysisControllerProvider.notifier)
+                      .startScan(),
             icon: const Icon(Icons.document_scanner_outlined),
             label: Text(
-              scan.isScanning ? l10n.deepOrganizeScanning : l10n.deepOrganizeStartScan,
+              scan.isScanning
+                  ? l10n.deepOrganizeScanning
+                  : l10n.deepOrganizeStartScan,
             ),
           ),
           const SizedBox(height: OneUiSpacing.sm),
           OutlinedButton.icon(
             onPressed: isBusy
                 ? null
-                : () =>
-                    ref.read(mediaTaggingControllerProvider.notifier).startScan(),
+                : () => ref
+                      .read(mediaTaggingControllerProvider.notifier)
+                      .startScan(),
             icon: const Icon(Icons.image_search_outlined),
             label: Text(
               tagging.isScanning

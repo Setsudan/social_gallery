@@ -102,7 +102,8 @@ class MediaGrid extends ConsumerWidget {
         return false;
       },
       child: GridView.builder(
-        scrollCacheExtent: ScrollCacheExtent.pixels(kMediaGridCacheExtent), controller: controller,
+        scrollCacheExtent: ScrollCacheExtent.pixels(kMediaGridCacheExtent),
+        controller: controller,
         padding: padding,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
@@ -176,10 +177,7 @@ class MediaGrid extends ConsumerWidget {
             );
           }
 
-          return RepaintBoundary(
-            key: ValueKey(item.id),
-            child: tile,
-          );
+          return RepaintBoundary(key: ValueKey(item.id), child: tile);
         },
       ),
     );

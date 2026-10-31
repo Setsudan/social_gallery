@@ -100,7 +100,8 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
     final w = size.width;
     final h = size.height;
     final angle = (t * orb.speed + orb.phase) * 2 * math.pi;
-    final driftX = math.sin(angle) * w * 0.22 + math.cos(angle * 0.6) * w * 0.08;
+    final driftX =
+        math.sin(angle) * w * 0.22 + math.cos(angle * 0.6) * w * 0.08;
     final driftY =
         math.cos(angle * 0.85) * h * 0.18 + math.sin(angle * 0.45) * h * 0.1;
 
@@ -141,10 +142,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                   gradient: RadialGradient(
                     center: const Alignment(0, -0.2),
                     radius: 1.2,
-                    colors: [
-                      colors.background,
-                      colors.backgroundDeep,
-                    ],
+                    colors: [colors.background, colors.backgroundDeep],
                   ),
                 ),
               ),
@@ -178,10 +176,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(28),
                     color: colors.panelFill,
-                    border: Border.all(
-                      color: colors.panelBorder,
-                      width: 1.2,
-                    ),
+                    border: Border.all(color: colors.panelBorder, width: 1.2),
                     boxShadow: [
                       BoxShadow(
                         color: colors.panelShadow,
@@ -229,9 +224,7 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             text: widget.detail,
                             minHold: const Duration(milliseconds: 900),
                             fadeDuration: const Duration(milliseconds: 340),
-                            style: textTheme.bodyMedium?.copyWith(
-                              height: 1.35,
-                            ),
+                            style: textTheme.bodyMedium?.copyWith(height: 1.35),
                           ),
                         ),
                         SizedBox(
@@ -241,7 +234,9 @@ class _GradientLoadingScreenState extends State<GradientLoadingScreen>
                             minHold: const Duration(milliseconds: 600),
                             fadeDuration: const Duration(milliseconds: 280),
                             style: textTheme.labelMedium?.copyWith(
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ),
@@ -363,7 +358,8 @@ class _ThrottledCrossfadeText extends StatefulWidget {
   final TextStyle? style;
 
   @override
-  State<_ThrottledCrossfadeText> createState() => _ThrottledCrossfadeTextState();
+  State<_ThrottledCrossfadeText> createState() =>
+      _ThrottledCrossfadeTextState();
 }
 
 class _ThrottledCrossfadeTextState extends State<_ThrottledCrossfadeText> {
@@ -436,30 +432,25 @@ class _ThrottledCrossfadeTextState extends State<_ThrottledCrossfadeText> {
       layoutBuilder: (currentChild, previousChildren) {
         return Stack(
           alignment: Alignment.center,
-          children: [
-            ...previousChildren,
-            ?currentChild,
-          ],
+          children: [...previousChildren, ?currentChild],
         );
       },
       transitionBuilder: (child, animation) {
-        final offsetAnimation = Tween<Offset>(
-          begin: const Offset(0, 0.08),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
-          ),
-        );
+        final offsetAnimation =
+            Tween<Offset>(
+              begin: const Offset(0, 0.08),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+                reverseCurve: Curves.easeInCubic,
+              ),
+            );
 
         return FadeTransition(
           opacity: animation,
-          child: SlideTransition(
-            position: offsetAnimation,
-            child: child,
-          ),
+          child: SlideTransition(position: offsetAnimation, child: child),
         );
       },
       child: _displayed == null

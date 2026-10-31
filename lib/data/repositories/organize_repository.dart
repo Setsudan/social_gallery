@@ -142,9 +142,6 @@ class OrganizeRepository {
   }
 
   Future<void> _writeIntSet(String key, Set<int> ids) async {
-    await _prefs.setStringList(
-      key,
-      ids.map((e) => e.toString()).toList(),
-    );
+    await _prefs.setStringList(key, ids.map((e) => e.toString()).toList());
   }
 }

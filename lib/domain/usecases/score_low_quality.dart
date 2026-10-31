@@ -29,8 +29,7 @@ class ScoreLowQuality {
       if (analysis?.isSolidColor == true) {
         reasons.add('Solid color');
       }
-      if (analysis?.blurScore != null &&
-          analysis!.blurScore! < blurThreshold) {
+      if (analysis?.blurScore != null && analysis!.blurScore! < blurThreshold) {
         reasons.add('Blurry');
       }
       if (analysis?.exposureScore != null) {

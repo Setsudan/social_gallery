@@ -70,7 +70,10 @@ class _ShootingStatsScreenState extends ConsumerState<ShootingStatsScreen> {
             const SizedBox(height: 16),
             _StatTile(l10n.shootingStatsPhotos, '${stats.photoCount}'),
             _StatTile(l10n.shootingStatsVideos, '${stats.videoCount}'),
-            _StatTile(l10n.shootingStatsScreenshots, '${stats.screenshotCount}'),
+            _StatTile(
+              l10n.shootingStatsScreenshots,
+              '${stats.screenshotCount}',
+            ),
             _StatTile(l10n.shootingStatsLiked, '${stats.likedCount}'),
             _StatTile(l10n.shootingStatsFolders, '${stats.folderCount}'),
             _StatTile(
@@ -142,9 +145,9 @@ class _Heatmap extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(
-                alpha: 0.15 + intensity * 0.85,
-              ),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.15 + intensity * 0.85),
               borderRadius: BorderRadius.circular(4),
             ),
             alignment: Alignment.center,

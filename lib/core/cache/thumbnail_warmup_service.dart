@@ -25,7 +25,8 @@ class ThumbnailWarmupService {
     for (final id in ids) {
       try {
         final entity = await AssetEntityCache.resolve(id);
-        if (entity == null || !AssetMediaLoader.canUseAssetImageProvider(entity)) {
+        if (entity == null ||
+            !AssetMediaLoader.canUseAssetImageProvider(entity)) {
           continue;
         }
         final size = AssetMediaLoader.thumbnailSizeForEntity(

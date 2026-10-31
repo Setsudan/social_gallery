@@ -5,11 +5,13 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
 
   if (detail == 'Backup disabled') return l10n.backupDetailDisabled;
   if (detail == 'Not receiving backups') return l10n.backupDetailNotReceiving;
-  if (detail == 'Ready to receive backups') return l10n.backupDetailReadyToReceive;
+  if (detail == 'Ready to receive backups')
+    return l10n.backupDetailReadyToReceive;
   if (detail == 'Indexing existing backups...') {
     return l10n.backupDetailIndexingBackups;
   }
-  if (detail == 'Searching for desktop...') return l10n.backupDetailSearchingDesktop;
+  if (detail == 'Searching for desktop...')
+    return l10n.backupDetailSearchingDesktop;
   if (detail == 'No desktop found on network') {
     return l10n.backupDetailNoDesktopFound;
   }
@@ -17,7 +19,8 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
   if (detail == 'Checking desktop availability...') {
     return l10n.backupDetailCheckingDesktop;
   }
-  if (detail == 'Waiting for desktop') return l10n.backupDetailWaitingForDesktop;
+  if (detail == 'Waiting for desktop')
+    return l10n.backupDetailWaitingForDesktop;
   if (detail == 'Desktop ready') return l10n.backupDetailDesktopReady;
   if (detail == 'Reconciling with desktop') return l10n.backupDetailReconciling;
   if (detail == 'Checking for items to back up') {
@@ -48,12 +51,11 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
   if (detail == 'Not paired with a desktop') {
     return l10n.backupDetailNotPairedWithDesktop;
   }
-  if (detail == 'Desktop unavailable') return l10n.backupDetailDesktopUnavailable;
+  if (detail == 'Desktop unavailable')
+    return l10n.backupDetailDesktopUnavailable;
 
   if (detail.startsWith('Paired with ')) {
-    return l10n.backupDetailPairedWith(
-      detail.substring('Paired with '.length),
-    );
+    return l10n.backupDetailPairedWith(detail.substring('Paired with '.length));
   }
   if (detail.startsWith('Receiving backup from ')) {
     return l10n.backupReceivingFromDevice(
@@ -90,7 +92,8 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
     );
     if (count != null) return l10n.backupDetailBackingUpItems(count);
   }
-  if (detail.startsWith('Found ') && detail.contains(' more items to back up')) {
+  if (detail.startsWith('Found ') &&
+      detail.contains(' more items to back up')) {
     final count = int.tryParse(
       detail.substring('Found '.length, detail.indexOf(' more items')),
     );
@@ -102,7 +105,8 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
     );
     if (count != null) return l10n.backupDetailBackedUpItems(count);
   }
-  if (detail.startsWith('Verifying ') && detail.endsWith(' backed-up items...')) {
+  if (detail.startsWith('Verifying ') &&
+      detail.endsWith(' backed-up items...')) {
     final count = int.tryParse(
       detail.substring(
         'Verifying '.length,
@@ -112,9 +116,9 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
     if (count != null) return l10n.backupDetailVerifyingItems(count);
   }
   if (detail.startsWith('Backing up batch ')) {
-    final match = RegExp(r'^Backing up batch (\d+) \((\d+) items\)$').firstMatch(
-      detail,
-    );
+    final match = RegExp(
+      r'^Backing up batch (\d+) \((\d+) items\)$',
+    ).firstMatch(detail);
     if (match != null) {
       return l10n.backupDetailBackingUpBatch(
         int.parse(match.group(1)!),
@@ -134,9 +138,9 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
     }
   }
   if (detail.startsWith('Backing up ') && detail.endsWith('%)')) {
-    final match = RegExp(r'^Backing up (\d+) files \((\d+)%\)$').firstMatch(
-      detail,
-    );
+    final match = RegExp(
+      r'^Backing up (\d+) files \((\d+)%\)$',
+    ).firstMatch(detail);
     if (match != null) {
       return l10n.backupDetailBackingUpFilesProgress(
         int.parse(match.group(1)!),
@@ -145,7 +149,9 @@ String localizeBackupDetail(AppLocalizations l10n, String detail) {
     }
   }
   if (detail.startsWith('Backing up ') && detail.contains('/')) {
-    final percentMatch = RegExp(r'^Backing up (.+) \((\d+)%\)$').firstMatch(detail);
+    final percentMatch = RegExp(
+      r'^Backing up (.+) \((\d+)%\)$',
+    ).firstMatch(detail);
     if (percentMatch != null) {
       return l10n.backupDetailBackingUpFileProgress(
         percentMatch.group(1)!,
@@ -178,7 +184,10 @@ int? _extractParenNumber(String detail) {
   return int.tryParse(detail.substring(start + 1, end));
 }
 
-String localizeBackupRelativeTime(AppLocalizations l10n, DateTime? lastBackupAt) {
+String localizeBackupRelativeTime(
+  AppLocalizations l10n,
+  DateTime? lastBackupAt,
+) {
   if (lastBackupAt == null) return l10n.backupStatusUpToDate;
   final diff = DateTime.now().difference(lastBackupAt);
   if (diff.inMinutes < 1) return l10n.timeJustNow;

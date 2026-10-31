@@ -80,10 +80,7 @@ class SimilarPhotoGroup {
 
 /// One image flagged by [ScoreLowQuality] with human-readable [reasons].
 class LowQualityItem {
-  const LowQualityItem({
-    required this.mediaId,
-    required this.reasons,
-  });
+  const LowQualityItem({required this.mediaId, required this.reasons});
 
   final int mediaId;
   final List<String> reasons;

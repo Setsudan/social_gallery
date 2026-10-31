@@ -40,7 +40,8 @@ class FrostedPillShell extends StatelessWidget {
           child: SizedBox(
             height: extent,
             child: Padding(
-              padding: padding ??
+              padding:
+                  padding ??
                   const EdgeInsets.symmetric(horizontal: OneUiSpacing.md),
               child: child,
             ),
@@ -52,10 +53,7 @@ class FrostedPillShell extends StatelessWidget {
 }
 
 class FloatingSelectionCountPill extends StatelessWidget {
-  const FloatingSelectionCountPill({
-    super.key,
-    required this.count,
-  });
+  const FloatingSelectionCountPill({super.key, required this.count});
 
   final int count;
 
@@ -80,10 +78,7 @@ class FloatingSelectionCountPill extends StatelessWidget {
 }
 
 class FloatingSelectionCancelButton extends StatelessWidget {
-  const FloatingSelectionCancelButton({
-    super.key,
-    required this.onPressed,
-  });
+  const FloatingSelectionCancelButton({super.key, required this.onPressed});
 
   final VoidCallback onPressed;
 
@@ -103,11 +98,7 @@ class FloatingSelectionCancelButton extends StatelessWidget {
           onPressed: onPressed,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-          icon: Icon(
-            Icons.close,
-            size: 20,
-            color: theme.colorScheme.onSurface,
-          ),
+          icon: Icon(Icons.close, size: 20, color: theme.colorScheme.onSurface),
         ),
       ),
     );
@@ -248,8 +239,7 @@ Future<SelectionMoreAction?> showSelectionMoreSheet({
             ListTile(
               leading: const Icon(Icons.favorite),
               title: Text(l10n.tooltipFavoriteSelected),
-              onTap: () =>
-                  Navigator.pop(context, SelectionMoreAction.favorite),
+              onTap: () => Navigator.pop(context, SelectionMoreAction.favorite),
             ),
             ListTile(
               leading: const Icon(Icons.favorite_border),
@@ -267,19 +257,15 @@ Future<SelectionMoreAction?> showSelectionMoreSheet({
               ListTile(
                 leading: const Icon(Icons.copy_outlined),
                 title: Text(l10n.selectionCopyToClipboard),
-                onTap: () => Navigator.pop(
-                  context,
-                  SelectionMoreAction.copyToClipboard,
-                ),
+                onTap: () =>
+                    Navigator.pop(context, SelectionMoreAction.copyToClipboard),
               ),
             if (showWallpaper)
               ListTile(
                 leading: const Icon(Icons.wallpaper_outlined),
                 title: Text(l10n.selectionSetAsWallpaper),
-                onTap: () => Navigator.pop(
-                  context,
-                  SelectionMoreAction.setAsWallpaper,
-                ),
+                onTap: () =>
+                    Navigator.pop(context, SelectionMoreAction.setAsWallpaper),
               ),
             const SizedBox(height: OneUiSpacing.sm),
           ],

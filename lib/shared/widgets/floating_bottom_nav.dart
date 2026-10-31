@@ -156,16 +156,29 @@ class _FloatingBottomNavState extends ConsumerState<FloatingBottomNav>
           animation: _expandCurve,
           builder: (context, _) {
             final t = _expandCurve.value;
-            final slotWidth = _lerp(_navItemSlotCompactWidth, _navItemSlotWidth, t);
-            final innerWidth =
-                _lerp(_navItemInnerCompactWidth, _navItemInnerWidth, t);
-            final innerHeight =
-                _lerp(_navItemInnerCompactHeight, _navItemInnerHeight, t);
-            final barExtent =
-                _lerp(kFloatingNavBarCompactExtent, kFloatingNavBarExtent, t);
+            final slotWidth = _lerp(
+              _navItemSlotCompactWidth,
+              _navItemSlotWidth,
+              t,
+            );
+            final innerWidth = _lerp(
+              _navItemInnerCompactWidth,
+              _navItemInnerWidth,
+              t,
+            );
+            final innerHeight = _lerp(
+              _navItemInnerCompactHeight,
+              _navItemInnerHeight,
+              t,
+            );
+            final barExtent = _lerp(
+              kFloatingNavBarCompactExtent,
+              kFloatingNavBarExtent,
+              t,
+            );
             final pillWidth = destinations.length * slotWidth;
-            final indicatorLeft = slotWidth * selectedNavIndex +
-                (slotWidth - innerWidth) / 2;
+            final indicatorLeft =
+                slotWidth * selectedNavIndex + (slotWidth - innerWidth) / 2;
             final indicatorTop = (barExtent - innerHeight) / 2;
 
             return _OneUiNavShell(
@@ -205,17 +218,20 @@ class _FloatingBottomNavState extends ConsumerState<FloatingBottomNav>
                                   child: Center(
                                     child: _NavItemButton(
                                       expandT: t,
-                                      selected: selectedNavIndex ==
+                                      selected:
+                                          selectedNavIndex ==
                                           destination.navIndex,
                                       label: destination.label,
-                                      unselectedIcon: destination.unselectedIcon,
+                                      unselectedIcon:
+                                          destination.unselectedIcon,
                                       selectedIcon: destination.selectedIcon,
                                       filledWhenSelected:
                                           destination.filledWhenSelected,
                                       onPressed: () => widget.onBranchSelected(
                                         destination.branchIndex,
                                       ),
-                                      onLongPress: widget.galleryViewMode &&
+                                      onLongPress:
+                                          widget.galleryViewMode &&
                                               destination.branchIndex ==
                                                   kShellTabExplore
                                           ? widget.onAlbumsLongPress
@@ -273,9 +289,16 @@ class _NavItemButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final itemWidth = _lerp(_navItemInnerCompactWidth, _settingsItemWidth, expandT);
-    final itemHeight =
-        _lerp(_navItemInnerCompactHeight, _navItemInnerHeight, expandT);
+    final itemWidth = _lerp(
+      _navItemInnerCompactWidth,
+      _settingsItemWidth,
+      expandT,
+    );
+    final itemHeight = _lerp(
+      _navItemInnerCompactHeight,
+      _navItemInnerHeight,
+      expandT,
+    );
     final iconColor = selected
         ? theme.colorScheme.onSurface
         : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45);
@@ -337,10 +360,7 @@ class _NavItemButton extends StatelessWidget {
 
 /// Floating capsule nav bar with frosted fill and circular outline.
 class _OneUiNavShell extends StatelessWidget {
-  const _OneUiNavShell({
-    required this.barExtent,
-    required this.child,
-  });
+  const _OneUiNavShell({required this.barExtent, required this.child});
 
   final double barExtent;
   final Widget child;

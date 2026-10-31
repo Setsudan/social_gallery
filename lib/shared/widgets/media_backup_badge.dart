@@ -6,10 +6,7 @@ import 'package:social_gallery/domain/models/media_item.dart';
 ///
 /// Backup check/in-progress states are communicated via push notifications
 /// only, so this only surfaces the permanent "backed up" status.
-MediaBackupState? visibleBackupState(
-  MediaItem item, {
-  int? syncingMediaId,
-}) {
+MediaBackupState? visibleBackupState(MediaItem item, {int? syncingMediaId}) {
   return switch (item.backupState) {
     MediaBackupState.backedUp => MediaBackupState.backedUp,
     _ => null,
@@ -22,11 +19,7 @@ bool visibleCloudBackup(MediaItem item) =>
 
 /// Badges shown on thumbnails for desktop and/or cloud backup.
 class MediaBackupBadge extends StatelessWidget {
-  const MediaBackupBadge({
-    super.key,
-    this.state,
-    this.cloudBackedUp = false,
-  });
+  const MediaBackupBadge({super.key, this.state, this.cloudBackedUp = false});
 
   final MediaBackupState? state;
   final bool cloudBackedUp;
@@ -44,11 +37,9 @@ class MediaBackupBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showDesktop)
-            const _BadgeIcon(Icons.computer_rounded),
+          if (showDesktop) const _BadgeIcon(Icons.computer_rounded),
           if (showDesktop && cloudBackedUp) const SizedBox(width: 4),
-          if (cloudBackedUp)
-            const _BadgeIcon(Icons.cloud_done_rounded),
+          if (cloudBackedUp) const _BadgeIcon(Icons.cloud_done_rounded),
         ],
       ),
     );

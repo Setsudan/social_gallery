@@ -50,7 +50,10 @@ class ExploreActiveSearchBar extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 20,
+                    ),
                     tooltip: l10n.tooltipClearSearch,
                     onPressed: onBack,
                   ),
@@ -64,11 +67,13 @@ class ExploreActiveSearchBar extends StatelessWidget {
                           height: 48,
                           decoration: BoxDecoration(
                             color: colorScheme.surfaceContainerHighest,
-                            borderRadius:
-                                BorderRadius.circular(OneUiRadii.pill),
+                            borderRadius: BorderRadius.circular(
+                              OneUiRadii.pill,
+                            ),
                             border: Border.all(
-                              color:
-                                  colorScheme.outline.withValues(alpha: 0.22),
+                              color: colorScheme.outline.withValues(
+                                alpha: 0.22,
+                              ),
                             ),
                           ),
                           child: Padding(
@@ -137,8 +142,7 @@ class ExploreActiveSearchBar extends StatelessWidget {
                       if (query.color != null)
                         InputChip(
                           avatar: CircleAvatar(
-                            backgroundColor:
-                                kColorBucketColors[query.color!],
+                            backgroundColor: kColorBucketColors[query.color!],
                             radius: 8,
                           ),
                           label: Text(

@@ -1454,5 +1454,34 @@
   "cloudArchiveBrowseTitle": "Parcourir l'archive cloud",
   "cloudArchiveBrowseSubtitle": "Dechiffrer et previsualiser les medias sauvegardes",
   "cloudArchiveEmpty": "Aucun media sauvegarde dans le cloud",
-  "cloudArchiveDecryptFailed": "Impossible de dechiffrer cet element"
+  "cloudArchiveDecryptFailed": "Impossible de dechiffrer cet element",
+
+  "settingsOrganizeGesturesLocked": "Action fixe (non modifiable)",
+
+  "duplicateReviewSubtitleImproved": "Appuyez pour basculer la suppression, appui long pour conserver",
+  "duplicateDeleteConfirmTitle": "Supprimer les doublons ?",
+  "duplicateDeleteConfirmMessage": "Conserver \"{keeperName}\" et supprimer definitivement {count, plural, =1{1 doublon} other{{count} doublons}} ?",
+  "@duplicateDeleteConfirmMessage": {
+    "placeholders": {
+      "keeperName": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "duplicateDeleteWarning": "Cette action est irreversible. Les fichiers seront supprimes definitivement de votre appareil.",
+  "duplicateDeleteAction": "Supprimer {count, plural, =1{1 element} other{{count} elements}}",
+  "@duplicateDeleteAction": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "duplicateBestLabel": "Meilleur",
+  "duplicateKeeperExplanation": "Nous suggerons quelle photo garder selon la date, la taille et la resolution.",
+  "duplicateReasonNewest": "Selectionne : Photo la plus recente",
+  "duplicateReasonLargestFile": "Selectionne : Taille de fichier la plus grande",
+  "duplicateReasonHighestResolution": "Selectionne : Resolution la plus elevee",
+  "duplicateReasonFirst": "Selectionne : Premier du groupe",
+  "duplicateTapToToggle": "Appuyez pour basculer",
+  "duplicateLongPressToKeep": "Appui long pour conserver",
+  "duplicateKeeperInfoSnack": "Ceci est marque comme la meilleure photo a conserver"
+
 }

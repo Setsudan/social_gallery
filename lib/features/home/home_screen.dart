@@ -59,8 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _scrollController.position,
       isLoading: paginated.isLoading,
       hasMore: paginated.hasMore,
-      loadMore: () =>
-          ref.read(homeFeedPaginatedProvider.notifier).loadMore(),
+      loadMore: () => ref.read(homeFeedPaginatedProvider.notifier).loadMore(),
     );
 
     final items = paginated.items;
@@ -75,11 +74,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
     // Feed cards are ~full-width squares; estimate index from scroll pixels.
     final cardExtent = width + 96;
-    final firstIndex =
-        (_scrollController.position.pixels / cardExtent).floor().clamp(
-              0,
-              items.length,
-            );
+    final firstIndex = (_scrollController.position.pixels / cardExtent)
+        .floor()
+        .clamp(0, items.length);
     ThumbnailPrefetcher.instance.scheduleFromScroll(
       assetIds: items.map((e) => e.media.uri).toList(growable: false),
       firstVisibleIndex: firstIndex,
@@ -189,7 +186,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         onCameraTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.snackbarCameraCaptureComingSoon)),
+            SnackBar(
+              content: Text(context.l10n.snackbarCameraCaptureComingSoon),
+            ),
           );
         },
       );
@@ -215,7 +214,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const headerCount = 1;
 
     return ListView.builder(
-      scrollCacheExtent: ScrollCacheExtent.pixels(1200), controller: _scrollController,
+      scrollCacheExtent: ScrollCacheExtent.pixels(1200),
+      controller: _scrollController,
       padding: listPadding,
       addAutomaticKeepAlives: false,
       itemCount: headerCount + _items.length + (_paginated.hasMore ? 1 : 0),
@@ -236,17 +236,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return FeedPostCard(
           key: ValueKey(item.media.id),
           item: item,
-            onFolderTap: () =>
-                context.push(folderProfileLocation(item.folderPath)),
-            onMediaTap: () => openMediaViewer(
-              context,
-              ref,
-              items: _items.map((entry) => entry.media).toList(),
-              item: item.media,
-            ),
-            onFavoriteTap: () => _toggleFavorite(item),
-            onShareTap: () => _shareMedia(item),
-          );
+          onFolderTap: () =>
+              context.push(folderProfileLocation(item.folderPath)),
+          onMediaTap: () => openMediaViewer(
+            context,
+            ref,
+            items: _items.map((entry) => entry.media).toList(),
+            item: item.media,
+          ),
+          onFavoriteTap: () => _toggleFavorite(item),
+          onShareTap: () => _shareMedia(item),
+        );
       },
     );
   }

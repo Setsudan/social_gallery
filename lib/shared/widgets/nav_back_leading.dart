@@ -16,7 +16,8 @@ class NavBackLeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canPop = onPressed != null ||
+    final canPop =
+        onPressed != null ||
         GoRouter.of(context).canPop() ||
         Navigator.of(context).canPop();
     if (!canPop) return const SizedBox.shrink();
@@ -24,7 +25,8 @@ class NavBackLeading extends StatelessWidget {
     return IconButton(
       icon: Icon(icon),
       tooltip: tooltip,
-      onPressed: onPressed ??
+      onPressed:
+          onPressed ??
           () {
             if (GoRouter.of(context).canPop()) {
               context.pop();

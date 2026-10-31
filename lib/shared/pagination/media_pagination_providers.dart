@@ -55,6 +55,7 @@ void handlePaginatedScroll(
 }
 
 /// Resolve + warm OS thumbs for a freshly fetched page (idle priority).
+/// Uses PhotoCachingManager on mobile for efficient OS-level caching.
 void warmPaginatedMediaUris(Iterable<String> uris, {int limit = 16}) {
   final assetIds = uris.take(limit).toList(growable: false);
   if (assetIds.isEmpty) return;
@@ -63,14 +64,20 @@ void warmPaginatedMediaUris(Iterable<String> uris, {int limit = 16}) {
       unawaited(AssetEntityCache.resolve(assetId));
     }
   }
-  // Defer image precache to the next event-loop turn so the page insert
-  // frame is not competing with decode work.
   scheduleMicrotask(() {
     ThumbnailPrefetcher.instance.warm(
       assetIds,
       limit: limit,
       thumbnailEdge: 256,
     );
+    if (!usesFilesystemGallery) {
+      unawaited(
+        ThumbnailPrefetcher.instance.requestOsCache(
+          assetIds,
+          thumbnailEdge: 256,
+        ),
+      );
+    }
   });
 }
 

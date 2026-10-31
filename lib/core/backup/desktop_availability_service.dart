@@ -39,11 +39,14 @@ class DesktopAvailabilityService {
   Future<bool> isOnLocalNetwork() async {
     if (usesFilesystemGallery) return true;
     final results = await _connectivity.checkConnectivity();
-    return results.any((r) =>
-        r == ConnectivityResult.wifi || r == ConnectivityResult.ethernet);
+    return results.any(
+      (r) => r == ConnectivityResult.wifi || r == ConnectivityResult.ethernet,
+    );
   }
 
-  Future<DesktopAvailabilityResult> check({bool discoverIfNeeded = true}) async {
+  Future<DesktopAvailabilityResult> check({
+    bool discoverIfNeeded = true,
+  }) async {
     if (usesFilesystemGallery) {
       return const DesktopAvailabilityResult(
         available: false,
@@ -104,11 +107,7 @@ class DesktopAvailabilityService {
     }
 
     final token = _prefs.backupAuthToken!;
-    final health = await _healthCheck(
-      discovered.host,
-      discovered.port,
-      token,
-    );
+    final health = await _healthCheck(discovered.host, discovered.port, token);
 
     if (health == null || !health.isReady || !health.tokenValid) {
       return DesktopAvailabilityResult(
@@ -143,10 +142,7 @@ class DesktopAvailabilityService {
     try {
       final uri = Uri.http('$host:$port', '/v1/health');
       final response = await http
-          .get(
-            uri,
-            headers: {'Authorization': 'Bearer $token'},
-          )
+          .get(uri, headers: {'Authorization': 'Bearer $token'})
           .timeout(const Duration(seconds: 5));
       if (response.statusCode != 200) return null;
       return HealthResponse.fromJson(BackupProtocol.decodeJson(response.body));

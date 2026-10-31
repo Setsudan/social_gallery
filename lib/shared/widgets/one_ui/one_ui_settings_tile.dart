@@ -189,8 +189,7 @@ class OneUiSettingsTile extends StatelessWidget {
                 textAlign: TextAlign.end,
               ),
             ),
-          if (value != null && showChevron && canTap)
-            const SizedBox(width: 2),
+          if (value != null && showChevron && canTap) const SizedBox(width: 2),
           if (showChevron && canTap)
             Icon(
               Icons.chevron_right_rounded,
@@ -295,7 +294,9 @@ class _IconBadge extends StatelessWidget {
     final bg = isDark
         ? icon.foreground.withValues(alpha: 0.18)
         : icon.background;
-    final fg = isDark ? icon.foreground.withValues(alpha: 0.95) : icon.foreground;
+    final fg = isDark
+        ? icon.foreground.withValues(alpha: 0.95)
+        : icon.foreground;
 
     return Container(
       width: OneUiSettingsTile._badgeSize,
@@ -312,11 +313,7 @@ class _IconBadge extends StatelessWidget {
 
 /// Rounded grouped list container for settings rows (One UI).
 class OneUiSettingsGroup extends StatelessWidget {
-  const OneUiSettingsGroup({
-    super.key,
-    required this.children,
-    this.margin,
-  });
+  const OneUiSettingsGroup({super.key, required this.children, this.margin});
 
   final List<Widget> children;
   final EdgeInsetsGeometry? margin;
@@ -421,9 +418,7 @@ Future<T?> showOneUiSettingsPicker<T>({
             final isSelected = option.value == selected;
             return ListTile(
               title: Text(option.label),
-              subtitle: option.subtitle != null
-                  ? Text(option.subtitle!)
-                  : null,
+              subtitle: option.subtitle != null ? Text(option.subtitle!) : null,
               trailing: isSelected
                   ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
                   : null,

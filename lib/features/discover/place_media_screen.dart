@@ -22,7 +22,9 @@ class PlaceMediaScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final snapshotAsync = ref.watch(locationLibrarySnapshotProvider);
     final l10n = context.l10n;
-    final title = locality == countryName ? countryName : '$locality, $countryName';
+    final title = locality == countryName
+        ? countryName
+        : '$locality, $countryName';
 
     return snapshotAsync.when(
       loading: () => OneUiSubpageScaffold(
@@ -55,12 +57,8 @@ class PlaceMediaScreen extends ConsumerWidget {
           ),
           body: MediaGrid(
             items: items,
-            onTap: (item) => openMediaViewer(
-              context,
-              ref,
-              items: items,
-              item: item,
-            ),
+            onTap: (item) =>
+                openMediaViewer(context, ref, items: items, item: item),
           ),
         );
       },

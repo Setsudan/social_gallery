@@ -7,8 +7,7 @@ class MediaAnalysisCache extends Table {
   TextColumn get dHash => text().nullable()();
   RealColumn get blurScore => real().nullable()();
   RealColumn get exposureScore => real().nullable()();
-  BoolColumn get isSolidColor =>
-      boolean().withDefault(const Constant(false))();
+  BoolColumn get isSolidColor => boolean().withDefault(const Constant(false))();
   IntColumn get faceCount => integer().withDefault(const Constant(0))();
   BoolColumn get hasClosedEyes =>
       boolean().withDefault(const Constant(false))();

@@ -42,12 +42,11 @@ class _FolderWidgetConfigScreenState
     final folders = await ref.read(folderRepositoryProvider).watchAll().first;
     setState(() {
       _folder = folders.cast<FolderInfo?>().firstWhere(
-            (f) => f?.path == existing.folderPath,
-            orElse: () => null,
-          );
+        (f) => f?.path == existing.folderPath,
+        orElse: () => null,
+      );
       _intervalMinutes = existing.intervalMinutes;
-      _customInterval =
-          ![10, 30, 60].contains(existing.intervalMinutes);
+      _customInterval = ![10, 30, 60].contains(existing.intervalMinutes);
       if (_customInterval) {
         _customController.text = '${existing.intervalMinutes}';
       }
@@ -104,7 +103,10 @@ class _FolderWidgetConfigScreenState
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(l10n.widgetConfigFolder, style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            l10n.widgetConfigFolder,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
           foldersAsync.when(
             loading: () => const LinearProgressIndicator(),
@@ -129,8 +131,10 @@ class _FolderWidgetConfigScreenState
             },
           ),
           const SizedBox(height: 24),
-          Text(l10n.widgetConfigInterval,
-              style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            l10n.widgetConfigInterval,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -183,8 +187,10 @@ class _FolderWidgetConfigScreenState
             onChanged: (v) => setState(() => _refreshOnUnlock = v),
           ),
           const SizedBox(height: 8),
-          Text(l10n.widgetConfigPickMode,
-              style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            l10n.widgetConfigPickMode,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
           SegmentedButton<WidgetPickMode>(
             segments: [

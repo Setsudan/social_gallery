@@ -97,10 +97,7 @@ class _DesktopArchiveScreenState extends ConsumerState<DesktopArchiveScreen> {
           child: Text(state.error ?? l10n.desktopArchiveLoadFailed),
         ),
         DesktopLibraryPhase.ready when state.selectedFolder == null =>
-          _FolderList(
-            folders: state.folders,
-            onTap: _openFolder,
-          ),
+          _FolderList(folders: state.folders, onTap: _openFolder),
         DesktopLibraryPhase.ready => _ItemGrid(
           items: state.items,
           onTap: _openItem,
@@ -114,10 +111,7 @@ class _DesktopArchiveScreenState extends ConsumerState<DesktopArchiveScreen> {
 }
 
 class _FolderList extends StatelessWidget {
-  const _FolderList({
-    required this.folders,
-    required this.onTap,
-  });
+  const _FolderList({required this.folders, required this.onTap});
 
   final List<LibraryCatalogFolder> folders;
   final Future<void> Function(LibraryCatalogFolder folder) onTap;
@@ -138,9 +132,7 @@ class _FolderList extends StatelessWidget {
       itemBuilder: (context, index) {
         final folder = folders[index];
         return ListTile(
-          leading: Icon(
-            folder.isVault ? Icons.lock : Icons.folder,
-          ),
+          leading: Icon(folder.isVault ? Icons.lock : Icons.folder),
           title: Text(folder.folderName),
           subtitle: Text(l10n.desktopArchiveItemCount(folder.itemCount)),
           trailing: const Icon(Icons.chevron_right),
@@ -194,7 +186,9 @@ class _ItemGrid extends StatelessWidget {
                     return Image.memory(snapshot.data!, fit: BoxFit.cover);
                   }
                   return ColoredBox(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     child: Icon(isVideo ? Icons.videocam : Icons.image),
                   );
                 },
@@ -318,21 +312,18 @@ class _DesktopArchiveViewerScreenState
         child: _loading
             ? const CircularProgressIndicator()
             : _error != null
-                ? Text(_error!, style: const TextStyle(color: Colors.white))
-                : _videoController != null &&
-                        _videoController!.value.isInitialized
-                    ? AspectRatio(
-                        aspectRatio: _videoController!.value.aspectRatio,
-                        child: VideoPlayer(_videoController!),
-                      )
-                    : _imageBytes != null
-                        ? InteractiveViewer(
-                            child: Image.memory(_imageBytes!),
-                          )
-                        : Text(
-                            l10n.desktopArchiveStreamFailed,
-                            style: const TextStyle(color: Colors.white),
-                          ),
+            ? Text(_error!, style: const TextStyle(color: Colors.white))
+            : _videoController != null && _videoController!.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: _videoController!.value.aspectRatio,
+                child: VideoPlayer(_videoController!),
+              )
+            : _imageBytes != null
+            ? InteractiveViewer(child: Image.memory(_imageBytes!))
+            : Text(
+                l10n.desktopArchiveStreamFailed,
+                style: const TextStyle(color: Colors.white),
+              ),
       ),
     );
   }

@@ -46,7 +46,8 @@ class FullscreenMediaContent extends ConsumerWidget {
     final cacheWidth = _decodeCacheWidth(context, size);
 
     if (usesFilesystemGallery && assetPath != null) {
-      final isWinVideo = assetPath!.toLowerCase().endsWith('.mp4') ||
+      final isWinVideo =
+          assetPath!.toLowerCase().endsWith('.mp4') ||
           assetPath!.toLowerCase().endsWith('.mov') ||
           assetPath!.toLowerCase().endsWith('.mkv') ||
           assetPath!.toLowerCase().endsWith('.webm') ||
@@ -77,20 +78,25 @@ class FullscreenMediaContent extends ConsumerWidget {
       final Widget routedImage = heroTag != null
           ? Hero(
               tag: heroTag!,
-              flightShuttleBuilder: (
-                flightContext,
-                animation,
-                flightDirection,
-                fromHeroContext,
-                toHeroContext,
-              ) {
-                final shuttleHero = flightDirection == HeroFlightDirection.pop
-                    ? fromHeroContext.widget as Hero
-                    : toHeroContext.widget as Hero;
-                return SizedBox.expand(
-                  child: FittedBox(fit: BoxFit.contain, child: shuttleHero.child),
-                );
-              },
+              flightShuttleBuilder:
+                  (
+                    flightContext,
+                    animation,
+                    flightDirection,
+                    fromHeroContext,
+                    toHeroContext,
+                  ) {
+                    final shuttleHero =
+                        flightDirection == HeroFlightDirection.pop
+                        ? fromHeroContext.widget as Hero
+                        : toHeroContext.widget as Hero;
+                    return SizedBox.expand(
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: shuttleHero.child,
+                      ),
+                    );
+                  },
               child: imageChild,
             )
           : imageChild;

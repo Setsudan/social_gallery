@@ -1426,6 +1426,34 @@
   "cloudArchiveBrowseTitle": "Browse cloud archive",
   "cloudArchiveBrowseSubtitle": "Decrypt and preview backed-up media",
   "cloudArchiveEmpty": "No cloud-backed media yet",
-  "cloudArchiveDecryptFailed": "Could not decrypt this item"
+  "cloudArchiveDecryptFailed": "Could not decrypt this item",
+
+  "settingsOrganizeGesturesLocked": "Fixed action (cannot be changed)",
+
+  "duplicateReviewSubtitleImproved": "Tap to toggle deletion, long-press to choose as keeper",
+  "duplicateDeleteConfirmTitle": "Delete duplicates?",
+  "duplicateDeleteConfirmMessage": "Keep \"{keeperName}\" and permanently delete {count, plural, =1{1 duplicate} other{{count} duplicates}}?",
+  "@duplicateDeleteConfirmMessage": {
+    "placeholders": {
+      "keeperName": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "duplicateDeleteWarning": "This cannot be undone. Files will be permanently removed from your device.",
+  "duplicateDeleteAction": "Delete {count, plural, =1{1 item} other{{count} items}}",
+  "@duplicateDeleteAction": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "duplicateBestLabel": "Best",
+  "duplicateKeeperExplanation": "We suggest which photo to keep based on date, file size, and resolution.",
+  "duplicateReasonNewest": "Selected: Newest photo",
+  "duplicateReasonLargestFile": "Selected: Largest file size",
+  "duplicateReasonHighestResolution": "Selected: Highest resolution",
+  "duplicateReasonFirst": "Selected: First in group",
+  "duplicateTapToToggle": "Tap to toggle deletion",
+  "duplicateLongPressToKeep": "Long-press to keep instead",
+  "duplicateKeeperInfoSnack": "This is marked as the best photo to keep"
 
 }

@@ -40,7 +40,8 @@ class CloudBackupConfig {
 
   String objectKeyForChecksum(String plaintextChecksum) {
     final parts = <String>[
-      if (prefix.trim().isNotEmpty) prefix.trim().replaceAll(RegExp(r'^/+|/+$'), ''),
+      if (prefix.trim().isNotEmpty)
+        prefix.trim().replaceAll(RegExp(r'^/+|/+$'), ''),
       if (deviceId.trim().isNotEmpty) deviceId.trim(),
       plaintextChecksum,
     ];

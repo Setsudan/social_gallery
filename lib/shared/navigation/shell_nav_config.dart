@@ -103,7 +103,8 @@ int branchIndexForNav(
   required bool galleryViewMode,
   required AppLocalizations l10n,
 }) {
-  return shellNavDestinations(galleryViewMode: galleryViewMode, l10n: l10n)
-      .firstWhere((dest) => dest.navIndex == navIndex)
-      .branchIndex;
+  return shellNavDestinations(
+    galleryViewMode: galleryViewMode,
+    l10n: l10n,
+  ).firstWhere((dest) => dest.navIndex == navIndex).branchIndex;
 }

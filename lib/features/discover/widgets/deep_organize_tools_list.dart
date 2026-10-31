@@ -5,10 +5,7 @@ import 'package:social_gallery/domain/models/media_analysis_result.dart';
 import 'package:social_gallery/shared/widgets/one_ui/discover_hub_card.dart';
 
 class DeepOrganizeToolsList extends StatelessWidget {
-  const DeepOrganizeToolsList({
-    super.key,
-    required this.hub,
-  });
+  const DeepOrganizeToolsList({super.key, required this.hub});
 
   final DiscoverHubData? hub;
 

@@ -55,7 +55,8 @@ Future<int?> readExifDateTakenMsFromBytes(List<int> bytes) async {
     final original = tags['EXIF DateTimeOriginal']?.printable;
     final digitized = tags['EXIF DateTimeDigitized']?.printable;
     final imageDate = tags['Image DateTime']?.printable;
-    final parsed = _parseExifDateTime(original) ??
+    final parsed =
+        _parseExifDateTime(original) ??
         _parseExifDateTime(digitized) ??
         _parseExifDateTime(imageDate);
     return parsed?.millisecondsSinceEpoch;

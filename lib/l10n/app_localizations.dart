@@ -4183,6 +4183,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not decrypt this item'**
   String get cloudArchiveDecryptFailed;
+
+  /// No description provided for @settingsOrganizeGesturesLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed action (cannot be changed)'**
+  String get settingsOrganizeGesturesLocked;
+
+  /// No description provided for @duplicateReviewSubtitleImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to toggle deletion, long-press to choose as keeper'**
+  String get duplicateReviewSubtitleImproved;
+
+  /// No description provided for @duplicateDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete duplicates?'**
+  String get duplicateDeleteConfirmTitle;
+
+  /// No description provided for @duplicateDeleteConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep \"{keeperName}\" and permanently delete {count, plural, =1{1 duplicate} other{{count} duplicates}}?'**
+  String duplicateDeleteConfirmMessage(String keeperName, int count);
+
+  /// No description provided for @duplicateDeleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Files will be permanently removed from your device.'**
+  String get duplicateDeleteWarning;
+
+  /// No description provided for @duplicateDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count, plural, =1{1 item} other{{count} items}}'**
+  String duplicateDeleteAction(int count);
+
+  /// No description provided for @duplicateBestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get duplicateBestLabel;
+
+  /// No description provided for @duplicateKeeperExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'We suggest which photo to keep based on date, file size, and resolution.'**
+  String get duplicateKeeperExplanation;
+
+  /// No description provided for @duplicateReasonNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: Newest photo'**
+  String get duplicateReasonNewest;
+
+  /// No description provided for @duplicateReasonLargestFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: Largest file size'**
+  String get duplicateReasonLargestFile;
+
+  /// No description provided for @duplicateReasonHighestResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: Highest resolution'**
+  String get duplicateReasonHighestResolution;
+
+  /// No description provided for @duplicateReasonFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: First in group'**
+  String get duplicateReasonFirst;
+
+  /// No description provided for @duplicateTapToToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to toggle deletion'**
+  String get duplicateTapToToggle;
+
+  /// No description provided for @duplicateLongPressToKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press to keep instead'**
+  String get duplicateLongPressToKeep;
+
+  /// No description provided for @duplicateKeeperInfoSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'This is marked as the best photo to keep'**
+  String get duplicateKeeperInfoSnack;
 }
 
 class _AppLocalizationsDelegate

@@ -30,25 +30,26 @@ class _CloudBackupSettingsSectionState
     final cloud = ref.watch(cloudBackupProvider);
     final notifier = ref.read(cloudBackupProvider.notifier);
 
-    ref.listen(
-      cloudBackupProvider.select((s) => s.needsPassword),
-      (previous, next) async {
-        if (next != true || !mounted) return;
-        final configured =
-            await ref.read(cloudVaultKeyStoreProvider).isConfigured();
-        if (!context.mounted) return;
-        final password = await showVaultPasswordDialog(
-          context,
-          isNewPassword: !configured,
-        );
-        if (password == null || !context.mounted) return;
-        if (configured) {
-          await notifier.unlockEncryptionPassword(password);
-        } else {
-          await notifier.registerEncryptionPassword(password);
-        }
-      },
-    );
+    ref.listen(cloudBackupProvider.select((s) => s.needsPassword), (
+      previous,
+      next,
+    ) async {
+      if (next != true || !mounted) return;
+      final configured = await ref
+          .read(cloudVaultKeyStoreProvider)
+          .isConfigured();
+      if (!context.mounted) return;
+      final password = await showVaultPasswordDialog(
+        context,
+        isNewPassword: !configured,
+      );
+      if (password == null || !context.mounted) return;
+      if (configured) {
+        await notifier.unlockEncryptionPassword(password);
+      } else {
+        await notifier.registerEncryptionPassword(password);
+      }
+    });
 
     return OneUiSettingsSection(
       title: l10n.cloudBackupSectionTitle,
@@ -75,8 +76,9 @@ class _CloudBackupSettingsSectionState
             title: l10n.cloudBackupPasswordTitle,
             subtitle: l10n.cloudBackupPasswordSubtitle,
             onTap: () async {
-              final configured =
-                  await ref.read(cloudVaultKeyStoreProvider).isConfigured();
+              final configured = await ref
+                  .read(cloudVaultKeyStoreProvider)
+                  .isConfigured();
               if (!context.mounted) return;
               final password = await showVaultPasswordDialog(
                 context,
@@ -271,9 +273,7 @@ class _CloudBackupConfigSheetState
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _message = ok
-            ? l10n.cloudBackupTestOk
-            : l10n.cloudBackupTestFailed;
+        _message = ok ? l10n.cloudBackupTestOk : l10n.cloudBackupTestFailed;
       });
       return;
     }
@@ -329,19 +329,15 @@ class _CloudBackupConfigSheetState
             ),
             TextField(
               controller: _prefix,
-              decoration: InputDecoration(
-                labelText: l10n.cloudBackupPrefix,
-              ),
+              decoration: InputDecoration(labelText: l10n.cloudBackupPrefix),
             ),
             TextField(
               controller: _access,
-              decoration:
-                  InputDecoration(labelText: l10n.cloudBackupAccessKey),
+              decoration: InputDecoration(labelText: l10n.cloudBackupAccessKey),
             ),
             TextField(
               controller: _secret,
-              decoration:
-                  InputDecoration(labelText: l10n.cloudBackupSecretKey),
+              decoration: InputDecoration(labelText: l10n.cloudBackupSecretKey),
               obscureText: true,
             ),
             SwitchListTile.adaptive(

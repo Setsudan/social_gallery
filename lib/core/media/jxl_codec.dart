@@ -66,11 +66,7 @@ img.Image? decodeRasterImage(
   final decoded = img.decodeImage(bytes);
   if (decoded == null) return null;
   if (targetWidth == null && targetHeight == null) return decoded;
-  return img.copyResize(
-    decoded,
-    width: targetWidth,
-    height: targetHeight,
-  );
+  return img.copyResize(decoded, width: targetWidth, height: targetHeight);
 }
 
 /// Instantiates a [ui.Codec], routing JPEG XL through koni_jxl.

@@ -33,7 +33,10 @@ class PostMetadataSheet extends StatelessWidget {
                 ),
               ),
             ),
-            Text(l10n.metadataTitle, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              l10n.metadataTitle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             _row(context, l10n.metadataFilename, media.displayName),
             if (media.width != null && media.height != null)

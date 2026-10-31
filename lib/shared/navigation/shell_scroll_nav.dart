@@ -22,8 +22,7 @@ class ShellScrollNavHost extends ConsumerStatefulWidget {
   final bool galleryViewMode;
 
   @override
-  ConsumerState<ShellScrollNavHost> createState() =>
-      _ShellScrollNavHostState();
+  ConsumerState<ShellScrollNavHost> createState() => _ShellScrollNavHostState();
 }
 
 class _ShellScrollNavHostState extends ConsumerState<ShellScrollNavHost> {
@@ -110,7 +109,8 @@ class _ShellScrollNavHostState extends ConsumerState<ShellScrollNavHost> {
   @override
   Widget build(BuildContext context) {
     final overlayHeight = floatingNavOverlayHeight(context);
-    final hideBottomNav = ref.watch(exploreSearchOverlayOpenProvider) ||
+    final hideBottomNav =
+        ref.watch(exploreSearchOverlayOpenProvider) ||
         ref.watch(gallerySelectionActiveProvider);
 
     return Scaffold(

@@ -30,9 +30,8 @@ class MediaAnalysisRepository {
             // Prefer newer labels/colors from [result]; keep OCR from either.
           );
     // If OCR pass omitted labels, keep prior labels/hash metrics.
-    final finalResult = existing != null &&
-            result.dHash == null &&
-            result.ocrScannedAt != null
+    final finalResult =
+        existing != null && result.dHash == null && result.ocrScannedAt != null
         ? existing.copyWith(
             ocrText: result.ocrText,
             ocrScannedAt: result.ocrScannedAt,

@@ -50,14 +50,9 @@ class _AnimationSpeedPreviewState extends State<AnimationSpeedPreview>
     if (_controller != null) return;
 
     final motion = _motion();
-    _controller = AnimationController(
-      vsync: this,
-      duration: motion.transition,
-    )..addStatusListener(_onAnimationStatus);
-    _position = CurvedAnimation(
-      parent: _controller!,
-      curve: motion.enterCurve,
-    );
+    _controller = AnimationController(vsync: this, duration: motion.transition)
+      ..addStatusListener(_onAnimationStatus);
+    _position = CurvedAnimation(parent: _controller!, curve: motion.enterCurve);
   }
 
   AppMotion _motion() {

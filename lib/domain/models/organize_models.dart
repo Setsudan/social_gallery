@@ -185,8 +185,8 @@ extension OrganizeSwipeActionStorage on OrganizeSwipeAction {
 
 /// User-configurable mapping from swipe direction to organize action.
 ///
-/// Defaults match historical behavior: left trash, right favorite, up keep,
-/// down move (folder strip).
+/// Defaults: left=trash, right=keep, up=favorite, down=move (fixed).
+/// Down direction is always move (folder strip) and cannot be remapped.
 class OrganizeGestureMapping {
   const OrganizeGestureMapping({
     required this.left,
@@ -202,10 +202,21 @@ class OrganizeGestureMapping {
 
   static const defaults = OrganizeGestureMapping(
     left: OrganizeSwipeAction.trash,
-    right: OrganizeSwipeAction.favorite,
-    up: OrganizeSwipeAction.keep,
+    right: OrganizeSwipeAction.keep,
+    up: OrganizeSwipeAction.favorite,
     down: OrganizeSwipeAction.move,
   );
+
+  /// Directions that users can remap (down is fixed to move).
+  static const remappableDirections = [
+    OrganizeSwipeDirection.left,
+    OrganizeSwipeDirection.right,
+    OrganizeSwipeDirection.up,
+  ];
+
+  /// Check if a direction can be remapped by the user.
+  static bool isRemappable(OrganizeSwipeDirection direction) =>
+      direction != OrganizeSwipeDirection.down;
 
   /// True when each swipe direction maps to a distinct action.
   bool get isBijective {
@@ -252,10 +263,15 @@ class OrganizeGestureMapping {
   }
 
   /// Remap [direction] to [action], swapping if [action] was already assigned.
+  /// Down direction cannot be remapped (always move) and move action cannot
+  /// be assigned to other directions.
   OrganizeGestureMapping remap(
     OrganizeSwipeDirection direction,
     OrganizeSwipeAction action,
   ) {
+    if (!isRemappable(direction)) return this;
+    if (action == OrganizeSwipeAction.move) return this;
+
     final current = actionFor(direction);
     if (current == action) return this;
 
@@ -265,25 +281,27 @@ class OrganizeGestureMapping {
       OrganizeSwipeDirection.left => next.copyWith(left: action),
       OrganizeSwipeDirection.right => next.copyWith(right: action),
       OrganizeSwipeDirection.up => next.copyWith(up: action),
-      OrganizeSwipeDirection.down => next.copyWith(down: action),
+      OrganizeSwipeDirection.down => next,
     };
-    if (previousOwner != null && previousOwner != direction) {
+    if (previousOwner != null &&
+        previousOwner != direction &&
+        isRemappable(previousOwner)) {
       next = switch (previousOwner) {
         OrganizeSwipeDirection.left => next.copyWith(left: current),
         OrganizeSwipeDirection.right => next.copyWith(right: current),
         OrganizeSwipeDirection.up => next.copyWith(up: current),
-        OrganizeSwipeDirection.down => next.copyWith(down: current),
+        OrganizeSwipeDirection.down => next,
       };
     }
     return next;
   }
 
   Map<String, String> toJson() => {
-        'left': left.storageValue,
-        'right': right.storageValue,
-        'up': up.storageValue,
-        'down': down.storageValue,
-      };
+    'left': left.storageValue,
+    'right': right.storageValue,
+    'up': up.storageValue,
+    'down': down.storageValue,
+  };
 
   static OrganizeGestureMapping fromJson(Map<String, dynamic>? json) {
     if (json == null) return defaults;

@@ -87,17 +87,17 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen>
               Text(
                 indexState.isBackfilling
                     ? (indexState.total > 0
-                        ? l10n.locationsBackfillProgress(
-                            indexState.indexed,
-                            indexState.total,
-                          )
-                        : l10n.locationsBackfillPreparing)
+                          ? l10n.locationsBackfillProgress(
+                              indexState.indexed,
+                              indexState.total,
+                            )
+                          : l10n.locationsBackfillPreparing)
                     : (indexState.total > 0
-                        ? l10n.locationsIndexing(
-                            indexState.indexed,
-                            indexState.total,
-                          )
-                        : l10n.locationsIndexingPreparing),
+                          ? l10n.locationsIndexing(
+                              indexState.indexed,
+                              indexState.total,
+                            )
+                          : l10n.locationsIndexingPreparing),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -108,10 +108,7 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen>
 
     return IndexedStack(
       index: _tabController.index,
-      children: const [
-        PlacesTab(),
-        MapTab(),
-      ],
+      children: const [PlacesTab(), MapTab()],
     );
   }
 }

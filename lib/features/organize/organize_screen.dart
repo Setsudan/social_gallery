@@ -11,6 +11,7 @@ import 'package:social_gallery/domain/models/folder_info.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/domain/models/organize_models.dart';
 import 'package:social_gallery/features/organize/organize_card_stack.dart';
+import 'package:social_gallery/features/organize/organize_preview_sheet.dart';
 import 'package:social_gallery/shared/widgets/folder_picker_sheet.dart';
 import 'package:social_gallery/features/organize/organize_controller.dart';
 import 'package:social_gallery/features/organize/organize_empty_state.dart';
@@ -27,8 +28,7 @@ class OrganizeScreen extends ConsumerWidget {
     final state = ref.watch(organizeControllerProvider);
     final controller = ref.read(organizeControllerProvider.notifier);
     final allFolders = ref.watch(allFoldersProvider).valueOrNull ?? [];
-    final recentPaths =
-        ref.read(organizeRepositoryProvider).recentFolderPaths;
+    final recentPaths = ref.read(organizeRepositoryProvider).recentFolderPaths;
     final sortedFolders = sortFoldersByRecent(allFolders, recentPaths);
 
     return PopScope(
@@ -88,6 +88,8 @@ class OrganizeScreen extends ConsumerWidget {
                   },
                   onFolderDrop: (path) =>
                       _handleFolderDrop(context, ref, controller, path),
+                  onTapPreview: (item) =>
+                      OrganizePreviewSheet.show(context, item),
                   onShare: () => _shareCurrent(context, state),
                   onFilter: () => _openFilter(context, ref, controller),
                   onUndo: controller.undo,
@@ -138,9 +140,9 @@ class OrganizeScreen extends ConsumerWidget {
     }
     final moved = await controller.moveToFolder(folderPath);
     if (!moved && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.organizeMoveFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.organizeMoveFailed)));
     }
   }
 
@@ -184,6 +186,7 @@ class _OrganizeActiveBody extends ConsumerStatefulWidget {
     required this.folders,
     required this.onSwipe,
     required this.onFolderDrop,
+    required this.onTapPreview,
     required this.onShare,
     required this.onFilter,
     required this.onUndo,
@@ -193,6 +196,7 @@ class _OrganizeActiveBody extends ConsumerStatefulWidget {
   final List<FolderInfo> folders;
   final OrganizeSwipeCallback onSwipe;
   final OrganizeFolderDropCallback onFolderDrop;
+  final OrganizeTapPreviewCallback onTapPreview;
   final VoidCallback onShare;
   final VoidCallback onFilter;
   final VoidCallback onUndo;
@@ -217,6 +221,7 @@ class _OrganizeActiveBodyState extends ConsumerState<_OrganizeActiveBody> {
           folders: widget.folders,
           onSwipe: widget.onSwipe,
           onFolderDrop: widget.onFolderDrop,
+          onTapPreview: widget.onTapPreview,
           onFolderDragChanged: (active) {
             if (_folderDragActive != active) {
               setState(() => _folderDragActive = active);

@@ -17,8 +17,7 @@ const _progressChannelDescription =
 
 const _statusChannelId = 'desktop_backup_status';
 const _statusChannelName = 'Backup results';
-const _statusChannelDescription =
-    'Backup completed, paused, or failed alerts';
+const _statusChannelDescription = 'Backup completed, paused, or failed alerts';
 
 const _successColor = Color(0xFF2E7D32);
 const _errorColor = Color(0xFFC62828);
@@ -56,8 +55,9 @@ class DesktopBackupNotificationService {
       return;
     }
 
-    const androidSettings =
-        AndroidInitializationSettings(androidNotificationIcon);
+    const androidSettings = AndroidInitializationSettings(
+      androidNotificationIcon,
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -73,7 +73,8 @@ class DesktopBackupNotificationService {
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
         _progressChannelId,
@@ -107,12 +108,14 @@ class DesktopBackupNotificationService {
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.requestNotificationsPermission();
 
     final iosPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+          IOSFlutterLocalNotificationsPlugin
+        >();
     await iosPlugin?.requestPermissions(
       alert: true,
       badge: false,
@@ -300,7 +303,8 @@ class DesktopBackupNotificationService {
 
       final androidPlugin = _plugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+            AndroidFlutterLocalNotificationsPlugin
+          >();
 
       if (!_foregroundServiceActive) {
         await androidPlugin?.startForegroundService(
@@ -347,7 +351,8 @@ class DesktopBackupNotificationService {
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.stopForegroundService();
     _foregroundServiceActive = false;
   }
@@ -361,8 +366,8 @@ class DesktopBackupNotificationService {
     final color = isError
         ? _errorColor
         : isPaused
-            ? _pausedColor
-            : _successColor;
+        ? _pausedColor
+        : _successColor;
 
     final androidDetails = AndroidNotificationDetails(
       _statusChannelId,
@@ -376,9 +381,7 @@ class DesktopBackupNotificationService {
       visibility: NotificationVisibility.public,
       autoCancel: true,
       color: color,
-      styleInformation: body.isNotEmpty
-          ? BigTextStyleInformation(body)
-          : null,
+      styleInformation: body.isNotEmpty ? BigTextStyleInformation(body) : null,
     );
 
     final iosDetails = DarwinNotificationDetails(
@@ -432,5 +435,5 @@ class DesktopBackupNotificationService {
 
 final desktopBackupNotificationServiceProvider =
     Provider<DesktopBackupNotificationService>(
-  (ref) => DesktopBackupNotificationService(),
-);
+      (ref) => DesktopBackupNotificationService(),
+    );

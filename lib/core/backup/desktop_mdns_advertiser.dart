@@ -8,10 +8,7 @@ class DesktopMdnsAdvertiser {
 
   bool get isAdvertising => _broadcast != null;
 
-  Future<void> start({
-    required String deviceName,
-    required int port,
-  }) async {
+  Future<void> start({required String deviceName, required int port}) async {
     await stop();
 
     final service = BonsoirService(

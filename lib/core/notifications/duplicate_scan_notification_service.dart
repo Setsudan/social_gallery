@@ -35,8 +35,9 @@ class DuplicateScanNotificationService {
       return;
     }
 
-    const androidSettings =
-        AndroidInitializationSettings(androidNotificationIcon);
+    const androidSettings = AndroidInitializationSettings(
+      androidNotificationIcon,
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -50,9 +51,10 @@ class DuplicateScanNotificationService {
       ),
     );
 
-    final androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
         _channelId,
@@ -73,14 +75,16 @@ class DuplicateScanNotificationService {
 
     await initialize();
 
-    final androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.requestNotificationsPermission();
 
-    final iosPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+    final iosPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     await iosPlugin?.requestPermissions(
       alert: true,
       badge: false,
@@ -241,7 +245,10 @@ class DuplicateScanNotificationService {
       id: duplicateScanNotificationId,
       title: resolvedTitle,
       body: resolvedBody,
-      notificationDetails: NotificationDetails(android: androidDetails, iOS: iosDetails),
+      notificationDetails: NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      ),
     );
     _notificationVisible = true;
   }

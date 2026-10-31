@@ -54,13 +54,14 @@ void main() {
     expect(state.hasMore, isFalse);
   });
 
-  test('refresh resets state before requesting page zero', () async {
+  test('refresh keeps items visible during fetch then replaces them', () async {
     await load();
     final response = Completer<List<int>>();
     final refreshing = load(refresh: true, fetchPage: (_) => response.future);
-    expect(state.items, isEmpty);
-    expect(state.page, 0);
+    expect(state.items, [0, 1]);
+    expect(state.page, 1);
     expect(state.isLoading, isTrue);
+    expect(state.isRefreshing, isTrue);
     expect(state.hasMore, isTrue);
     response.complete([9]);
     await refreshing;
@@ -92,15 +93,15 @@ void main() {
     expect(state.items, [0, 1, 2, 3]);
   });
 
-  test('refresh error retains reset state and clears hasMore', () async {
+  test('refresh error preserves items and hasMore', () async {
     await load();
     await load(
       refresh: true,
       fetchPage: (_) async => throw StateError('offline'),
     );
-    expect(state.items, isEmpty);
-    expect(state.page, 0);
-    expect(state.hasMore, isFalse);
+    expect(state.items, [0, 1]);
+    expect(state.page, 1);
+    expect(state.hasMore, isTrue);
     expect(state.error, contains('offline'));
     expect(loadedPages.length, 1);
   });

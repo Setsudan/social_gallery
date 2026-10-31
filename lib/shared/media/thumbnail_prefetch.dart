@@ -12,13 +12,14 @@ import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 ///
 /// Resolves [AssetEntity]s into [AssetEntityCache] and warms OS / Flutter
 /// image caches so tiles that enter the viewport soon can paint immediately.
+///
+/// On mobile, uses [PhotoCachingManager] for efficient OS-level thumbnail
+/// caching of visible and nearby items.
 class ThumbnailPrefetcher {
   ThumbnailPrefetcher._();
 
   static final ThumbnailPrefetcher instance = ThumbnailPrefetcher._();
 
-  // Keep ahead windows modest: larger values decode far off-screen thumbs on
-  // the UI isolate and compete with visible tiles during flings.
   static const int defaultAheadCount = 16;
   static const int defaultBehindCount = 6;
   static const Duration _throttle = Duration(milliseconds: 120);
@@ -32,6 +33,7 @@ class ThumbnailPrefetcher {
   int _lastFirstVisible = 0;
   final Set<String> _warmed = {};
   final List<String> _warmedOrder = [];
+  List<AssetEntity>? _lastCacheRequestEntities;
 
   /// Warm a trailing window of asset ids (e.g. right after pagination).
   void warm(
@@ -62,10 +64,11 @@ class ThumbnailPrefetcher {
     _lastFirstVisible = firstVisibleIndex;
 
     final effectiveBehind = scrollingUp ? behindCount : behindCount ~/ 2;
-    final start =
-        (firstVisibleIndex - effectiveBehind).clamp(0, assetIds.length);
-    final end =
-        (firstVisibleIndex + aheadCount).clamp(0, assetIds.length);
+    final start = (firstVisibleIndex - effectiveBehind).clamp(
+      0,
+      assetIds.length,
+    );
+    final end = (firstVisibleIndex + aheadCount).clamp(0, assetIds.length);
     if (start >= end) return;
     final slice = assetIds.sublist(start, end);
     _throttleTimer?.cancel();
@@ -86,7 +89,10 @@ class ThumbnailPrefetcher {
     int behindCount = defaultBehindCount,
   }) {
     if (mainAxisExtent <= 0 || crossAxisCount <= 0) return;
-    final firstRow = (metrics.pixels / mainAxisExtent).floor().clamp(0, 1 << 20);
+    final firstRow = (metrics.pixels / mainAxisExtent).floor().clamp(
+      0,
+      1 << 20,
+    );
     final firstIndex = firstRow * crossAxisCount;
     scheduleFromScroll(
       assetIds: assetIds,
@@ -219,10 +225,7 @@ class ThumbnailPrefetcher {
       return;
     }
 
-    final size = AssetMediaLoader.thumbnailSizeForEntity(
-      entity,
-      maxEdge: edge,
-    );
+    final size = AssetMediaLoader.thumbnailSizeForEntity(entity, maxEdge: edge);
     final provider = AssetEntityImageProvider(
       entity,
       isOriginal: false,
@@ -241,5 +244,49 @@ class ThumbnailPrefetcher {
     _pendingIds = const [];
     _warmed.clear();
     _warmedOrder.clear();
+    cancelOsCacheRequest();
+  }
+
+  /// Request OS-level thumbnail caching for visible window via PhotoCachingManager.
+  /// Only available on mobile; no-op on desktop.
+  Future<void> requestOsCache(
+    List<String> assetIds, {
+    int thumbnailEdge = 256,
+  }) async {
+    if (usesFilesystemGallery || assetIds.isEmpty) return;
+
+    final entities = <AssetEntity>[];
+    for (final id in assetIds) {
+      final entity = await AssetEntityCache.resolve(id);
+      if (entity != null) entities.add(entity);
+    }
+
+    if (entities.isEmpty) return;
+
+    cancelOsCacheRequest();
+    _lastCacheRequestEntities = entities;
+
+    try {
+      await PhotoCachingManager().requestCacheAssets(
+        assets: entities,
+        option: ThumbnailOption(
+          size: ThumbnailSize(thumbnailEdge, thumbnailEdge),
+          quality: 90,
+        ),
+      );
+    } catch (_) {}
+  }
+
+  /// Cancel any pending OS-level cache request.
+  void cancelOsCacheRequest() {
+    final entities = _lastCacheRequestEntities;
+    if (entities == null || entities.isEmpty) return;
+    _lastCacheRequestEntities = null;
+
+    if (usesFilesystemGallery) return;
+
+    try {
+      PhotoCachingManager().cancelCacheRequest();
+    } catch (_) {}
   }
 }

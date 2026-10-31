@@ -186,10 +186,7 @@ abstract final class OneUiTheme {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(
-            color: selected ? accent : onVariant,
-            size: 24,
-          );
+          return IconThemeData(color: selected ? accent : onVariant, size: 24);
         }),
       ),
       bottomSheetTheme: BottomSheetThemeData(

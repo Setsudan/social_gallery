@@ -46,8 +46,7 @@ class _CompressionScreenState extends ConsumerState<CompressionScreen> {
       final path = await _resolvePath(item);
       if (path == null) continue;
       // FlutterImageCompress does not support JPEG XL.
-      if (item.mimeType == 'image/jxl' ||
-          path.toLowerCase().endsWith('.jxl')) {
+      if (item.mimeType == 'image/jxl' || path.toLowerCase().endsWith('.jxl')) {
         continue;
       }
 
@@ -113,10 +112,7 @@ class _CompressionScreenState extends ConsumerState<CompressionScreen> {
                   subtitle: Text(l10n.compressionBestOnMobileSubtitle),
                 ),
               ),
-            if (_result != null) ...[
-              const SizedBox(height: 8),
-              Text(_result!),
-            ],
+            if (_result != null) ...[const SizedBox(height: 8), Text(_result!)],
             const SizedBox(height: 16),
             Text(l10n.compressionCandidatesCount(candidates.length)),
             const SizedBox(height: 8),

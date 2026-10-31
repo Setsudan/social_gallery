@@ -49,8 +49,9 @@ class FindDuplicateGroups {
       if (bucket.length < 2) continue;
 
       for (final cluster in _clusterBucket(bucket, hashesById)) {
-        final unseen =
-            cluster.where((item) => !groupedIds.contains(item.id)).toList();
+        final unseen = cluster
+            .where((item) => !groupedIds.contains(item.id))
+            .toList();
         addGroup(unseen);
       }
     }
