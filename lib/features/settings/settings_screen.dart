@@ -638,42 +638,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           builder: (context, setSheetState) {
             Widget directionTile(OrganizeSwipeDirection direction) {
               final action = draft.actionFor(direction);
+              final isRemappable = OrganizeGestureMapping.isRemappable(direction);
               return OneUiSettingsTile(
                 icon: OneUiSettingsIcon.organize,
                 title: organizeSwipeDirectionLabel(l10n, direction),
                 value: organizeSwipeActionLabel(l10n, action),
+                subtitle: !isRemappable ? l10n.settingsOrganizeGesturesLocked : null,
                 showDivider: direction != OrganizeSwipeDirection.down,
-                onTap: () async {
-                  final picked =
-                      await showOneUiSettingsPicker<OrganizeSwipeAction>(
-                    context: context,
-                    title: organizeSwipeDirectionLabel(l10n, direction),
-                    selected: action,
-                    options: [
-                      for (final value in OrganizeSwipeAction.values)
-                        OneUiPickerOption(
-                          value: value,
-                          label: organizeSwipeActionLabel(l10n, value),
-                          subtitle: () {
-                            if (value == action) {
-                              return null;
-                            }
-                            final owner = draft.directionFor(value);
-                            if (owner == null || owner == direction) {
-                              return null;
-                            }
-                            return l10n.settingsOrganizeGesturesSwapHint(
-                              organizeSwipeDirectionLabel(l10n, owner),
-                            );
-                          }(),
-                        ),
-                    ],
-                  );
-                  if (picked == null || picked == action) return;
-                  setSheetState(() {
-                    draft = draft.remap(direction, picked);
-                  });
-                },
+                showChevron: isRemappable,
+                trailing: !isRemappable
+                    ? Icon(
+                        Icons.lock_outline,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      )
+                    : null,
+                onTap: isRemappable
+                    ? () async {
+                        final remappableActions = OrganizeSwipeAction.values
+                            .where((a) => a != OrganizeSwipeAction.move)
+                            .toList();
+                        final picked =
+                            await showOneUiSettingsPicker<OrganizeSwipeAction>(
+                          context: context,
+                          title: organizeSwipeDirectionLabel(l10n, direction),
+                          selected: action,
+                          options: [
+                            for (final value in remappableActions)
+                              OneUiPickerOption(
+                                value: value,
+                                label: organizeSwipeActionLabel(l10n, value),
+                                subtitle: () {
+                                  if (value == action) {
+                                    return null;
+                                  }
+                                  final owner = draft.directionFor(value);
+                                  if (owner == null || owner == direction) {
+                                    return null;
+                                  }
+                                  if (!OrganizeGestureMapping.isRemappable(owner)) {
+                                    return null;
+                                  }
+                                  return l10n.settingsOrganizeGesturesSwapHint(
+                                    organizeSwipeDirectionLabel(l10n, owner),
+                                  );
+                                }(),
+                              ),
+                          ],
+                        );
+                        if (picked == null || picked == action) return;
+                        setSheetState(() {
+                          draft = draft.remap(direction, picked);
+                        });
+                      }
+                    : null,
               );
             }
 

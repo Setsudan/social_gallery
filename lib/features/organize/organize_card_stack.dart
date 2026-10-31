@@ -13,10 +13,11 @@ import 'package:social_gallery/features/organize/organize_folder_strip.dart';
 
 typedef OrganizeSwipeCallback = void Function(OrganizeSwipeDirection direction);
 typedef OrganizeFolderDropCallback = void Function(String folderPath);
+typedef OrganizeTapPreviewCallback = void Function(MediaItem item);
 
 enum _OverlayBand { none, left, right, up, down }
 
-/// Draggable card stack for organize: swipe gestures and folder drop strip.
+/// Draggable card stack for organize: swipe gestures, folder drop strip, and tap preview.
 class OrganizeCardStack extends ConsumerStatefulWidget {
   const OrganizeCardStack({
     super.key,
@@ -25,6 +26,7 @@ class OrganizeCardStack extends ConsumerStatefulWidget {
     required this.onSwipe,
     this.onFolderDrop,
     this.onFolderDragChanged,
+    this.onTapPreview,
   });
 
   final List<MediaItem> cards;
@@ -32,6 +34,7 @@ class OrganizeCardStack extends ConsumerStatefulWidget {
   final OrganizeSwipeCallback onSwipe;
   final OrganizeFolderDropCallback? onFolderDrop;
   final ValueChanged<bool>? onFolderDragChanged;
+  final OrganizeTapPreviewCallback? onTapPreview;
 
   @override
   ConsumerState<OrganizeCardStack> createState() => _OrganizeCardStackState();
@@ -196,22 +199,23 @@ class _OrganizeCardStackState extends ConsumerState<OrganizeCardStack> {
         label: l10n.organizeCardSemanticLabel(item.displayName, item.folderName),
         hint: semanticHint,
         child: GestureDetector(
-        onPanUpdate: _onPanUpdate,
-        onPanEnd: (details) => _handleRelease(details.velocity),
-        child: ValueListenableBuilder<Offset>(
-          valueListenable: _dragOffset,
-          builder: (context, offset, child) {
-            return Transform.translate(
-              offset: offset,
-              child: Transform.rotate(
-                angle: offset.dx * 0.001,
-                child: child,
-              ),
-            );
-          },
-          child: card,
+          onTap: () => widget.onTapPreview?.call(item),
+          onPanUpdate: _onPanUpdate,
+          onPanEnd: (details) => _handleRelease(details.velocity),
+          child: ValueListenableBuilder<Offset>(
+            valueListenable: _dragOffset,
+            builder: (context, offset, child) {
+              return Transform.translate(
+                offset: offset,
+                child: Transform.rotate(
+                  angle: offset.dx * 0.001,
+                  child: child,
+                ),
+              );
+            },
+            child: card,
+          ),
         ),
-      ),
       );
     } else {
       card = Transform.scale(

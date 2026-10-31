@@ -281,7 +281,11 @@ class PhotoManagerDatasource implements MediaScanSource {
     _resolvedAlbumIds.clear();
   }
 
-  void _deferClearFileCache() {
+  /// Only clears photo_manager's internal file cache when media has moved
+  /// or changed location on disk. Avoids clearing on every operation since
+  /// this invalidates all cached thumbnails and hurts scroll performance.
+  void _deferClearFileCacheIfNeeded({bool mediaLocationChanged = false}) {
+    if (!mediaLocationChanged) return;
     unawaited(
       Future<void>(() async {
         try {
@@ -663,7 +667,7 @@ class PhotoManagerDatasource implements MediaScanSource {
         );
         if (moved) {
           invalidateAlbumsCache();
-          _deferClearFileCache();
+          _deferClearFileCacheIfNeeded(mediaLocationChanged: true);
           return {for (final e in entities) e.id: e.id};
         }
       } catch (e) {
@@ -683,7 +687,7 @@ class PhotoManagerDatasource implements MediaScanSource {
             );
             if (legacyMoved) {
               invalidateAlbumsCache();
-              _deferClearFileCache();
+              _deferClearFileCacheIfNeeded(mediaLocationChanged: true);
               return {entities.first.id: entities.first.id};
             }
           } catch (e) {

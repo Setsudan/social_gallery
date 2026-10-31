@@ -4,6 +4,7 @@ class PaginatedListState<T> {
     this.items = const [],
     this.page = 0,
     this.isLoading = false,
+    this.isRefreshing = false,
     this.hasMore = true,
     this.error,
   });
@@ -11,6 +12,7 @@ class PaginatedListState<T> {
   final List<T> items;
   final int page;
   final bool isLoading;
+  final bool isRefreshing;
   final bool hasMore;
   final String? error;
 
@@ -18,6 +20,7 @@ class PaginatedListState<T> {
     List<T>? items,
     int? page,
     bool? isLoading,
+    bool? isRefreshing,
     bool? hasMore,
     String? error,
     bool clearError = false,
@@ -26,13 +29,14 @@ class PaginatedListState<T> {
       items: items ?? this.items,
       page: page ?? this.page,
       isLoading: isLoading ?? this.isLoading,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
       hasMore: hasMore ?? this.hasMore,
       error: clearError ? null : (error ?? this.error),
     );
   }
 }
 
-/// Refresh clears the current page before fetching; append failures retain it.
+/// Refresh keeps items visible during fetch; append failures retain them.
 /// Refresh may overlap an active request, matching existing notifier behavior.
 Future<void> loadPaginatedPage<T>({
   required PaginatedListState<T> Function() readState,
@@ -46,10 +50,8 @@ Future<void> loadPaginatedPage<T>({
   writeState(
     readState().copyWith(
       isLoading: true,
+      isRefreshing: refresh,
       clearError: true,
-      page: refresh ? 0 : null,
-      hasMore: refresh ? true : null,
-      items: refresh ? const [] : null,
     ),
   );
 
@@ -64,6 +66,7 @@ Future<void> loadPaginatedPage<T>({
         items: nextItems,
         page: pageIndex + 1,
         isLoading: false,
+        isRefreshing: false,
         hasMore: loadedItems.length >= pageSize,
       ),
     );
@@ -72,8 +75,9 @@ Future<void> loadPaginatedPage<T>({
     writeState(
       readState().copyWith(
         isLoading: false,
+        isRefreshing: false,
         error: error.toString(),
-        hasMore: refresh ? false : readState().hasMore,
+        hasMore: refresh ? readState().hasMore : readState().hasMore,
       ),
     );
   }
