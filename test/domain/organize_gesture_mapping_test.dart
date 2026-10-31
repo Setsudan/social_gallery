@@ -6,8 +6,8 @@ void main() {
     test('defaults match historical swipe behavior', () {
       const mapping = OrganizeGestureMapping.defaults;
       expect(mapping.left, OrganizeSwipeAction.trash);
-      expect(mapping.right, OrganizeSwipeAction.favorite);
-      expect(mapping.up, OrganizeSwipeAction.keep);
+      expect(mapping.right, OrganizeSwipeAction.keep);
+      expect(mapping.up, OrganizeSwipeAction.favorite);
       expect(mapping.down, OrganizeSwipeAction.move);
     });
 
@@ -21,8 +21,8 @@ void main() {
         OrganizeSwipeAction.favorite,
       );
       expect(remapped.left, OrganizeSwipeAction.favorite);
-      expect(remapped.right, OrganizeSwipeAction.trash);
-      expect(remapped.up, OrganizeSwipeAction.keep);
+      expect(remapped.right, OrganizeSwipeAction.keep);
+      expect(remapped.up, OrganizeSwipeAction.trash);
       expect(remapped.down, OrganizeSwipeAction.move);
     });
 
