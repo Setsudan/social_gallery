@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:social_gallery/core/media/asset_entity_cache.dart';
+import 'package:social_gallery/core/platform/desktop_gallery_platform.dart';
 import 'package:social_gallery/domain/models/media_item.dart';
 import 'package:social_gallery/shared/widgets/fullscreen_media_content.dart';
 
@@ -82,15 +85,28 @@ class OrganizePreviewSheet extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: FullscreenMediaContent(
-                  assetId: item.uri,
-                  isVideo: item.isVideo,
-                  fit: BoxFit.contain,
-                ),
-              ),
+              child: usesFilesystemGallery
+                  ? FullscreenMediaContent(
+                      entity: null,
+                      assetPath: item.uri,
+                      videoFit: BoxFit.contain,
+                      imageFit: BoxFit.contain,
+                    )
+                  : FutureBuilder<AssetEntity?>(
+                      future: AssetEntityCache.resolve(item.uri),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        return FullscreenMediaContent(
+                          entity: snapshot.data,
+                          videoFit: BoxFit.contain,
+                          imageFit: BoxFit.contain,
+                        );
+                      },
+                    ),
             ),
           ),
           SafeArea(
