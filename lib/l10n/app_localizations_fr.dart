@@ -2467,4 +2467,71 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get cloudArchiveDecryptFailed =>
       'Impossible de dechiffrer cet element';
+
+  @override
+  String get settingsOrganizeGesturesLocked => 'Action fixe (non modifiable)';
+
+  @override
+  String get duplicateReviewSubtitleImproved =>
+      'Appuyez pour basculer la suppression, appui long pour conserver';
+
+  @override
+  String get duplicateDeleteConfirmTitle => 'Supprimer les doublons ?';
+
+  @override
+  String duplicateDeleteConfirmMessage(String keeperName, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count doublons',
+      one: '1 doublon',
+    );
+    return 'Conserver \"$keeperName\" et supprimer definitivement $_temp0 ?';
+  }
+
+  @override
+  String get duplicateDeleteWarning =>
+      'Cette action est irreversible. Les fichiers seront supprimes definitivement de votre appareil.';
+
+  @override
+  String duplicateDeleteAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count elements',
+      one: '1 element',
+    );
+    return 'Supprimer $_temp0';
+  }
+
+  @override
+  String get duplicateBestLabel => 'Meilleur';
+
+  @override
+  String get duplicateKeeperExplanation =>
+      'Nous suggerons quelle photo garder selon la date, la taille et la resolution.';
+
+  @override
+  String get duplicateReasonNewest => 'Selectionne : Photo la plus recente';
+
+  @override
+  String get duplicateReasonLargestFile =>
+      'Selectionne : Taille de fichier la plus grande';
+
+  @override
+  String get duplicateReasonHighestResolution =>
+      'Selectionne : Resolution la plus elevee';
+
+  @override
+  String get duplicateReasonFirst => 'Selectionne : Premier du groupe';
+
+  @override
+  String get duplicateTapToToggle => 'Appuyez pour basculer';
+
+  @override
+  String get duplicateLongPressToKeep => 'Appui long pour conserver';
+
+  @override
+  String get duplicateKeeperInfoSnack =>
+      'Ceci est marque comme la meilleure photo a conserver';
 }
